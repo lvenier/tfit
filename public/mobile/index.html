@@ -1,0 +1,76 @@
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>tfit</title>
+  <link href="/bs/bootstrap.min.css" rel="stylesheet">
+  <script src="/bs/bootstrap.bundle.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/jquery/jquery-3.6.0.min.js"></script>
+  <script src="/js/mobile.js"></script>
+</head>
+
+<body>
+  <main role="main" class="container">
+    <div class="row p-3 mb-2" id="demo-div">
+        <div class="col-sm-6 col-md-4 my-2">
+          <button id="start" class="btn btn-lg btn-success">Start</button>
+        </div>
+        <div class="col-sm-6 col-md-4 my-2">
+          <button id="debug" class="btn btn-lg btn-warning text-white">Debug</button>
+        </div>
+        <div class="col-sm-12 col-md-4 my-2">
+          <select id="device_type" class="btn btn-lg btn-primary">
+            <option>unknown</option>
+            <option>left hand</option>
+            <option>right hand</option>
+          </select>
+        </div>
+
+      <div class="alert alert-secondary bg-white text-center" id="notification">N/A</div>
+
+      <h4 style="margin-top:0.75rem;">Information</h4>
+      <ul>
+        <li>Device Id : <span id="device_id"></span></li>
+        <li>Battery : <span id="battery">0</span></li>
+        <li>Data Points : <span id="num-observed-events">0</span></li>
+        <li>Data Interval: <span id="Accelerometer_i">0</span><span> ms</span></li>
+        <li>Data Timestamp: <span id="Timestamp">0</span><span> ms</span></li>
+      </ul>
+
+      <h4 style="margin-top:0.75rem;">Orientation</h4>
+      <ul>
+        <li>X-axis (&beta;): <span id="Orientation_b">0</span><span>&deg;</span></li>
+        <li>Y-axis (&gamma;): <span id="Orientation_g">0</span><span>&deg;</span></li>
+        <li>Z-axis (&alpha;): <span id="Orientation_a">0</span><span>&deg;</span></li>
+      </ul>
+
+      <h4>Accelerometer</h4>
+      <ul>
+        <li>X-axis: <span id="Accelerometer_x">0</span><span> m/s<sup>2</sup></span></li>
+        <li>Y-axis: <span id="Accelerometer_y">0</span><span> m/s<sup>2</sup></span></li>
+        <li>Z-axis: <span id="Accelerometer_z">0</span><span> m/s<sup>2</sup></span></li>
+      </ul>
+
+      <h4>Accelerometer + gravity</h4>
+
+      <ul>
+        <li>X-axis: <span id="Accelerometer_gx">0</span><span> m/s<sup>2</sup></span></li>
+        <li>Y-axis: <span id="Accelerometer_gy">0</span><span> m/s<sup>2</sup></span></li>
+        <li>Z-axis: <span id="Accelerometer_gz">0</span><span> m/s<sup>2</sup></span></li>
+      </ul>
+
+      <h4>Gyroscope</h4>
+      <ul>
+        <li>X-axis: <span id="Gyroscope_x">0</span><span>&deg;/s</span></li>
+        <li>Y-axis: <span id="Gyroscope_y">0</span><span>&deg;/s</span></li>
+        <li>Z-axis: <span id="Gyroscope_z">0</span><span>&deg;/s</span></li>
+      </ul>
+
+    </div>
+  </main>
+
+</body>
+
+</html>
