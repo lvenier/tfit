@@ -3,15 +3,43 @@ const app = express();
 const fs = require("fs");
 var LOCAL = null;
 var HOME = null;
+var http = null;
+var config = null;
 
-if ('LOCAL' in process.env) LOCAL = {
-  key: fs.readFileSync("key.pem"),
-  cert: fs.readFileSync("cert.pem"),
+try {
+  if (fs.existsSync('config.json')) {
+    config = JSON.parse(fs.readFileSync('config.json'))
+  }
+} catch(err) {
+  console.error(err)
 }
-const http = require('https').createServer(LOCAL, app);
+
+if ('LOCAL' in process.env) { 
+  LOCAL = {
+    key: fs.readFileSync("key.pem"),
+    cert: fs.readFileSync("cert.pem"),
+  }
+  http = require('https').createServer(LOCAL, app);
+} else http = require('http').createServer(LOCAL, app);
+
 const io = require('socket.io')(http);
 
 app.use('/', express.static('public'))
+
+app.get('/api/login',function(req,res) {
+  if (config && 'key' in config) {
+    if (config.key === req.query.key) res.json({ status: "success" })
+    else res.json({ status: "authentication failure" })
+  } else {
+    try {
+      config = { key: req.query.key};
+      fs.writeFileSync('config.json', JSON.stringify(config))
+      res.json({ status: "success" })
+    } catch (err) {
+      console.error(err)
+    }
+  }
+});
 
 io.on('connection', (socket) => {
   console.log(socket.handshake.query.from + ' connected');

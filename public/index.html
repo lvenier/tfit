@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>tfIt</title>
+  <title>TFIT</title>
   <link href="/bs/bootstrap.min.css" rel="stylesheet">
+  <link href="/css/style.css" rel="stylesheet">
   <script src="/bs/bootstrap.bundle.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/jquery/jquery-3.6.0.min.js"></script>
@@ -12,9 +13,9 @@
 </head>
 
 <body>
-  <nav class="navbar navbar-expand-lg bg-light">
+  <nav class="navbar navbar-expand-lg bg-primary">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">tfIt</a>
+      <a class="navbar-brand nav-link text-white" href="/">TFIT</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
         aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -22,27 +23,102 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav">
           <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="#">Boxing</a>
+            <a class="nav-link text-white" href="#" id="boxing-menu">Boxing</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#">Fitness</a>
+            <a class="nav-link text-white" href="#" id="fitness-menu">Fitness</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#">Dancing</a>
+            <a class="nav-link text-white" href="#" id="dancing-menu">Dancing</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link">Settings</a>
+            <a class="nav-link text-white" href="#" id="settings-menu">Settings</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link">Docs</a>
+            <a class="nav-link text-white" href="#" id="docs-menu">Docs</a>
           </li>
         </ul>
       </div>
     </div>
   </nav>
 
-  <header>
-    <div class="container">
+  <main role="main" class="container m-3" style="margin:25px;">
+    <div class="row" id="tfit-page">
+      <div class="container mx-5 my-3">
+        <h1 class="m-4">TFIT</h1>
+        <h3 class="m-3">TRAIN ONLINE</h3>
+        <h5 class="m-3">Build your body with your phone or device</h5>
+      </div>
+      <div class="row text-center mx-5 my-3">
+      <div class="col-sm-4">
+        <button type="button" class="btn btn-primary btn-circle" onclick="$('#boxing-menu').trigger('click');">
+          GO BOXING !
+        </button>
+      </div>
+      <div class="col-sm-4">
+        <button type="button" class="btn btn-primary btn-circle" onclick="$('#fitness-menu').trigger('click');">
+          GO FITNESS !
+        </button>
+      </div>
+      <div class="col-sm-4">
+        <button type="button" class="btn btn-primary btn-circle" onclick="$('#dancing-menu').trigger('click');">
+          GO DANCING !
+        </button>
+      </div>
+      <div class="col-sm-12 m-3">
+        <h3 class="m-3 mt-5">History</h3>
+        <p class="m-3">No history.</p>
+      </div>
+      <div class="col-sm-12 m-3">
+        <h3 class="m-3">News</h3>
+        <p class="m-3 mb-5">New boxing training available.</p>
+      </div>
+      <div class="col-sm-4">
+        <div><img src="/img/sp-icon1.svg" class="rounded"></img></div>
+        <div class="">
+          <p>Muscle building</p> For people who want to get bigger and effectively increase muscle mass while
+          keeping fat increase to a minimum.
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div><img src="/img/sp-icon2.svg" class="rounded"></img></div>
+        <div class="">
+          <p>Weight loss</p> Are you looking to lose a significant amount of weight? Speed up your metabolism with
+          our awesome workouts while eating enough healthy food without going hungry.
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div><img src="/img/sp-icon3.svg" class="rounded"></img></div>
+        <div class="">
+          <p>Sculpted body</p> A great choice for people who want to get ripped, lose excess fat and tone their
+          muscles.
+        </div>
+      </div>
+      <div class="col-sm-12 m-3"></div>
+      <div class="col-sm-4">
+        <div><img src="/img/sp-icon4.svg" class="rounded"></img></div>
+        <div class="">
+          <p>6 pack abs</p> To emphasize the abs it's important to have no more than 10% body fat. Lean out with a
+          focus on creating defined abs and obliques.
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div><img src="/img/sp-icon5.svg" class="rounded"></img></div>
+        <div class="">
+          <p>Growing glutes</p> Grow beautiful buttocks without the large legs. Be ready to follow strict instructions
+          for specific exercises and nutrition.
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div><img src="/img/sp-icon6.svg" class="rounded"></img></div>
+        <div class="">
+          <p>Wide back</p> The back muscles are very difficult to grow properly! Strict adherence to the exercise
+          technique, powerful workouts and a strict diet are the recipes to success.
+        </div>
+      </div>
+    </div>
+  </div>
+    <div class="container m-3 d-none" id="devices">
       <div class="row m-3 text-center">
         <div class="col-3 p-3" id="lefthand">lefthand</div>
         <div class="col-3 p-3" id="righthand">righthand</div>
@@ -50,10 +126,7 @@
         <div class="col-3 p-3" id="rightfeet">rightfeet</div>
       </div>
     </div>
-  </header>
-
-  <main role="main" class="container" style="margin:25px;">
-    <div class="row" id="boxing">
+    <div class="row d-none" id="boxing-page">
       <div class="col-4">
         <div class="col-12 m-5 boxing" id="boxing_lefthandstraight">left straight</div>
         <div class="col-12 m-5 boxing" id="boxing_righthandstraight">right straight</div>
@@ -65,8 +138,17 @@
       <div class="col-4"></div>
       <div class="col-4"></div>
     </div>
+    <div class="row d-none" id="fitness-page">
+      <div class="col-4">
+      </div>
+      <div class="col-4"></div>
+      <div class="col-4"></div>
+    </div>
   </main>
 
+  <footer class="bg-primary text-center text-white p-3">
+    ©2022 Copyright saashup.com
+  </footer>
 </body>
 
 </html>

@@ -1,11 +1,33 @@
 const datas = [];
+const key = localStorage.getItem('key')
+
+if (key === null) window.location.replace("/login.html");
+
 const socket = io({
     query: {
         "from": "home"
     }
 });
 
+$.ajax({
+    url: "/api/login?key=" + key
+  }).done(function(result) {
+    if (result.status !== "success") {
+        window.location.replace("/login.html");
+    }
+  });
+
 $(document).ready(function () {
+
+    $(".nav-link").on('click', function(){
+        $(".nav-link").each(function() {
+            $("#" + $(this).html().toLowerCase() + "-page").addClass('d-none');
+        })
+        $("#" + $(this).html().toLowerCase() + "-page").removeClass('d-none');
+        $("#devices").addClass("d-none")
+        if (["boxing", "fitness", "dancing"].includes($(this).html().toLowerCase())) $("#devices").removeClass("d-none")
+    })
+
     socket.on("action", (msg) => {
         if ("position" in msg) {
             switch (msg.name) {
