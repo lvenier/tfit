@@ -15,7 +15,7 @@
   <main role="main" class="container">
     <div class="row p-3 mb-2" id="demo-div">
         <div class="col-sm-6 col-md-4 my-2">
-          <button id="start" class="btn btn-lg btn-success">Start</button>
+          <button id="start" class="btn btn-lg btn-success" disabled>Start</button>
         </div>
         <div class="col-sm-6 col-md-4 my-2">
           <button id="debug" class="btn btn-lg btn-warning text-white">Debug</button>
@@ -44,6 +44,13 @@
         <li>X-axis (&beta;): <span id="Orientation_b">0</span><span>&deg;</span></li>
         <li>Y-axis (&gamma;): <span id="Orientation_g">0</span><span>&deg;</span></li>
         <li>Z-axis (&alpha;): <span id="Orientation_a">0</span><span>&deg;</span></li>
+      </ul>
+
+      <h4>Accelerometer calc</h4>
+      <ul>
+        <li>X-axis: <span id="Accelerometer_calc_x">0</span><span> m/s<sup>2</sup></span></li>
+        <li>Y-axis: <span id="Accelerometer_calc_y">0</span><span> m/s<sup>2</sup></span></li>
+        <li>Z-axis: <span id="Accelerometer_calc_z">0</span><span> m/s<sup>2</sup></span></li>
       </ul>
 
       <h4>Accelerometer</h4>

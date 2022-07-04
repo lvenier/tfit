@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <link href="/bs/bootstrap.min.css" rel="stylesheet">
+    <script src="/bs/bootstrap.bundle.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/jquery/jquery-3.6.0.min.js"></script>
+  <script type="text/javascript" src="/js/debug/smoothie.js"></script>
+  <script type="text/javascript" src="/js/debug/sensors.js"></script>
+</head>
+
+<style>
+  .chart {
+    width:100%;
+    height:300px;
+  }
+</style>
+
+<body>
+
+  <div class="container">
+    <div class="row my-3">
+      <h6>Aymeric
+        <input class="form-check-input mx-2" type="checkbox" id="aymericCheckX"><span class="text-danger">x</span>
+        <input class="form-check-input mx-2" type="checkbox" id="aymericCheckY"><span class="text-success">y</span>
+        <input class="form-check-input mx-2" type="checkbox" id="aymericCheckZ"><span class="text-primary">z</span>
+      </h6>
+      <canvas id="aymeric-chart" class="chart"></canvas>
+    </div>
+    <div class="row my-3">
+      <h6>Rotation rate
+        <input class="form-check-input mx-2" type="checkbox" id="rotationCheckA"><span class="text-danger">Alpha</span>
+        <input class="form-check-input mx-2" type="checkbox" id="rotationCheckB"><span class="text-success">Beta</span>
+        <input class="form-check-input mx-2" type="checkbox" id="rotationCheckG"><span class="text-primary">Gamma</span>
+      </h6>
+      <canvas id="rotation-rate-chart" class="chart"></canvas>
+    </div>
+    <div class="row my-3">
+      <h6>Acceleration
+        <input class="form-check-input mx-2" type="checkbox" id="accelerationCheckX"><span class="text-danger">x</span>
+        <input class="form-check-input mx-2" type="checkbox" id="accelerationCheckY"><span class="text-success">y</span>
+        <input class="form-check-input mx-2" type="checkbox" id="accelerationCheckZ"><span class="text-primary">z</span>
+      </h6>
+      <canvas id="acceleration-chart" class="chart"></canvas>
+    </div>
+    <div class="row my-3">
+      <h6>Orientation
+        <input class="form-check-input mx-2" type="checkbox" id="orientationCheckX"><span class="text-danger">x</span>
+        <input class="form-check-input mx-2" type="checkbox" id="orientationCheckY"><span class="text-success">y</span>
+        <input class="form-check-input mx-2" type="checkbox" id="orientationCheckZ"><span class="text-primary">z</span>
+      </h6>
+      <canvas id="orientation-chart" class="chart"></canvas>
+    </div>
+  </div>
+</body>
+
+</html>

@@ -17,6 +17,17 @@ const socket = io({
     }
 });
 
+function aymeric(ax, ay, az, gx, gy, gz) {
+    let x = ax * Math.cos(Math.PI / 180 * gy) + ay * Math.sin(Math.PI / 180 * gz) - az * Math.sin(Math.PI / 180 * gy)
+    let y = ax * Math.sin(Math.PI / 180 * gz) + ay * Math.cos(Math.PI / 180 * gz) - az * Math.sin(Math.PI / 180 * gx)
+    let z = ax * Math.sin(Math.PI / 180 * gy) + ay * Math.sin(Math.PI / 180 * gx) - az * Math.cos(Math.PI / 180 * gx)
+    return {
+        x: x,
+        y: y,
+        z: z
+    }
+}
+
 function handleOrientation(event) {
     updateFieldIfNotNull('Orientation_a', event.alpha);
     updateFieldIfNotNull('Orientation_b', event.beta);
@@ -69,13 +80,17 @@ function handleMotion(event) {
             g: event.rotationRate.gamma
         }
     };
+    data.ac = aymeric(data.a.x, data.a.y, data.a.z, data.r.a, data.r.b, data.r.g)
+    updateFieldIfNotNull('Accelerometer_calc_x', data.ac.x);
+    updateFieldIfNotNull('Accelerometer_calc_y', data.ac.y);
+    updateFieldIfNotNull('Accelerometer_calc_z', data.ac.z);
     datas.push(data)
 
-    if (is_debug && socket) {
-        socket.emit('data', data);
-    }
-
-    if (Math.abs(data.a.x) > 2 && Math.abs(data.a.y) < 2) {
+    //if (Math.abs(data.ac.x) > 1 && Math.abs(data.ac.y) > 1) {
+    if (Math.abs(data.ac.x) > 2) {
+        if (is_debug && socket) {
+            socket.emit('data', data);
+        }
         count++;
         if (count === 7) {
             if (socket) socket.emit('action', {
@@ -92,12 +107,13 @@ function handleMotion(event) {
         }
     } else count = 0;
 
-    if (datas.length > 7) datas.shift();
+    if (datas.length > 32) datas.shift();
 }
 
 $(document).ready(function () {
     $('#device_id').html(device_id);
     $('#device_type').val(device_type);
+    if (device_type !== "unknown") $("#start").attr("disabled",false);
 
     navigator.getBattery().then(battery => {
         updateFieldIfNotNull('battery', battery.level * 100, 2);
@@ -112,6 +128,8 @@ $(document).ready(function () {
             position: device_type,
             name: "changetype"
         })
+        if (device_type === "unknown") $("#start").attr("disabled",true);
+        else $("#start").attr("disabled",false);
     })
 
     $("#debug").on("click", function (e) {
