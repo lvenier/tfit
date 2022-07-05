@@ -73,6 +73,7 @@ $.ajax({
 
 $(document).ready(function () {
 
+    $("#qrcode-link").attr("href", window.location.href + 'mobile')
     new QRCode(document.getElementById("qrcode"), {
         text: window.location.href + 'mobile',
         width: 128,
