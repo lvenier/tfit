@@ -4,6 +4,7 @@ var datas = [];
 var move = 0;
 var count = 0;
 var moves = [];
+var orient = {};
 
 var device_id = localStorage.getItem('device_id') || (Math.random() + 1).toString(36).substring(2)
 var device_type = localStorage.getItem('device_type') || 'unknown'
@@ -29,6 +30,11 @@ function aymeric(ax, ay, az, gx, gy, gz) {
 }
 
 function handleOrientation(event) {
+    orient = {
+        a: event.alpha,
+        b: event.beta,
+        c: event.gamma
+    }
     updateFieldIfNotNull('Orientation_a', event.alpha);
     updateFieldIfNotNull('Orientation_b', event.beta);
     updateFieldIfNotNull('Orientation_g', event.gamma);
@@ -78,7 +84,8 @@ function handleMotion(event) {
             a: event.rotationRate.alpha,
             b: event.rotationRate.beta,
             g: event.rotationRate.gamma
-        }
+        },
+        o: orient
     };
     data.ac = aymeric(data.a.x, data.a.y, data.a.z, data.r.a, data.r.b, data.r.g)
     updateFieldIfNotNull('Accelerometer_calc_x', data.ac.x);

@@ -6,21 +6,25 @@ var config = JSON.parse(localStorage.getItem('config'))
 if (config === null) {
   config = {
     ay: {
+      v: true,
       x:true,
       y:true,
       z:true
     },
     r: {
+      v: true,
       a:true,
       b:true,
       g:true
     },
     a: {
+      v: true,
       x:true,
       y:true,
       z:true
     },
     o: {
+      v: true,
       x:true,
       y:true,
       z:true
@@ -178,17 +182,18 @@ function handleMotion(event) {
   if ($("#aymericCheckY").is(':checked')) aymericSeries2.append(now, event.ac.y);
   if ($("#aymericCheckZ").is(':checked')) aymericSeries3.append(now, event.ac.z);
 
-  rotationRateSeries1.append(now, event.r.a);
-  rotationRateSeries2.append(now, event.r.b);
-  rotationRateSeries3.append(now, event.r.g);
+  if ($("#rotationCheckA").is(':checked')) rotationRateSeries1.append(now, event.r.a);
+  if ($("#rotationCheckB").is(':checked')) rotationRateSeries2.append(now, event.r.b);
+  if ($("#rotationCheckG").is(':checked')) rotationRateSeries3.append(now, event.r.g);
 
-  accelerationSeries1.append(now, event.a.x);
-  accelerationSeries2.append(now, event.a.y);
-  accelerationSeries3.append(now, event.a.z);
+  if ($("#accelerationCheckX").is(':checked')) accelerationSeries1.append(now, event.a.x);
+  if ($("#accelerationCheckY").is(':checked')) accelerationSeries2.append(now, event.a.y);
+  if ($("#accelerationCheckZ").is(':checked')) accelerationSeries3.append(now, event.a.z);
 
-  orientationSeries1.append(now, event.awg.x - event.a.x);
-  orientationSeries2.append(now, event.awg.y - event.a.y);
-  orientationSeries3.append(now, event.awg.z - event.a.z);
+  if ($("#orientationCheckX").is(':checked')) orientationSeries1.append(now, event.awg.x - event.a.x);
+  if ($("#orientationCheckY").is(':checked')) orientationSeries2.append(now, event.awg.y - event.a.y);
+  if ($("#orientationCheckZ").is(':checked')) orientationSeries3.append(now, event.awg.z - event.a.z);
+
   updateState(event);
 
 }
@@ -247,6 +252,16 @@ function updateState(event) {
       break;
   }
 }
+
+function chartViewHide (id) {
+  $('#' + id).toggleClass('d-none');
+  config.ay.v = !$("#aymeric-chart").hasClass('d-none');
+  config.r.v = !$("#rotation-rate-chart").hasClass('d-none');
+  config.a.v = !$("#acceleration-chart").hasClass('d-none');
+  config.o.v = !$("#orientation-chart").hasClass('d-none');
+  localStorage.setItem('config', JSON.stringify(config))
+}
+
 $(document).ready(function () {
 
   socket.on("data", (msg) => {
@@ -254,6 +269,10 @@ $(document).ready(function () {
   })
 
   init();
+  if (!('v' in config.ay) || config.ay.v === true) $("#aymeric-chart").removeClass("d-none");
+  if (!('v' in config.r) || config.r.v === true) $("#rotation-rate-chart").removeClass("d-none");
+  if (!('v' in config.a) || config.a.v === true) $("#acceleration-chart").removeClass("d-none");
+  if (!('v' in config.o) || config.o.v === true) $("#orientation-chart").removeClass("d-none");
   $("#aymericCheckX").attr("checked", config.ay.x)
   $("#aymericCheckY").attr("checked", config.ay.y)
   $("#aymericCheckZ").attr("checked", config.ay.z)
@@ -267,7 +286,6 @@ $(document).ready(function () {
   $("#orientationCheckY").attr("checked", config.o.y)
   $("#orientationCheckZ").attr("checked", config.o.z)
 
-  
   aymericChart.streamTo(document.getElementById("aymeric-chart"), DELAY);
   rotationRateChart.streamTo(document.getElementById("rotation-rate-chart"), DELAY);
   accelerationChart.streamTo(document.getElementById("acceleration-chart"), DELAY);

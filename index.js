@@ -33,9 +33,11 @@ app.get('/api/login',function(req,res) {
     else res.json({ status: "authentication failure" })
   } else {
     try {
-      config = { key: req.query.key};
-      fs.writeFileSync(configFile, JSON.stringify(config))
-      res.json({ status: "success" })
+      if (req.query.key !== null && req.query.key.length > 3) {
+        config = { key: req.query.key};
+        fs.writeFileSync(configFile, JSON.stringify(config))
+        res.json({ status: "success" })
+      } else res.json({ status: "authentication failure" })
     } catch (err) {
       console.error(err)
     }

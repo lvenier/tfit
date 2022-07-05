@@ -17,45 +17,52 @@
     width:100%;
     height:300px;
   }
+  footer {
+    clear: both;
+    position: fixed;
+    width: 100vw;
+    bottom: 0;
+}
 </style>
 
 <body>
 
   <div class="container">
     <div class="row my-3">
-      <h6>Aymeric
+      <h6>Aymeric <a href="#" onclick="chartViewHide('aymeric-chart');" style="text-decoration:none;">view/hide</a>
         <input class="form-check-input mx-2" type="checkbox" id="aymericCheckX"><span class="text-danger">x</span>
         <input class="form-check-input mx-2" type="checkbox" id="aymericCheckY"><span class="text-success">y</span>
         <input class="form-check-input mx-2" type="checkbox" id="aymericCheckZ"><span class="text-primary">z</span>
       </h6>
-      <canvas id="aymeric-chart" class="chart"></canvas>
+      <canvas id="aymeric-chart" class="d-none chart"></canvas>
     </div>
     <div class="row my-3">
-      <h6>Rotation rate
+      <h6>Rotation rate <a href="#" onclick="chartViewHide('rotation-rate-chart');" style="text-decoration:none;">view/hide</a>
         <input class="form-check-input mx-2" type="checkbox" id="rotationCheckA"><span class="text-danger">Alpha</span>
         <input class="form-check-input mx-2" type="checkbox" id="rotationCheckB"><span class="text-success">Beta</span>
         <input class="form-check-input mx-2" type="checkbox" id="rotationCheckG"><span class="text-primary">Gamma</span>
       </h6>
-      <canvas id="rotation-rate-chart" class="chart"></canvas>
+      <canvas id="rotation-rate-chart" class="d-none chart"></canvas>
     </div>
     <div class="row my-3">
-      <h6>Acceleration
+      <h6>Acceleration <a href="#" onclick="chartViewHide('acceleration-chart');" style="text-decoration:none;">view/hide</a>
         <input class="form-check-input mx-2" type="checkbox" id="accelerationCheckX"><span class="text-danger">x</span>
         <input class="form-check-input mx-2" type="checkbox" id="accelerationCheckY"><span class="text-success">y</span>
         <input class="form-check-input mx-2" type="checkbox" id="accelerationCheckZ"><span class="text-primary">z</span>
       </h6>
-      <canvas id="acceleration-chart" class="chart"></canvas>
+      <canvas id="acceleration-chart" class="d-none chart"></canvas>
     </div>
     <div class="row my-3">
-      <h6>Orientation
+      <h6>Orientation <a href="#" onclick="chartViewHide('orientation-chart');" style="text-decoration:none;">view/hide</a>
         <input class="form-check-input mx-2" type="checkbox" id="orientationCheckX"><span class="text-danger">x</span>
         <input class="form-check-input mx-2" type="checkbox" id="orientationCheckY"><span class="text-success">y</span>
         <input class="form-check-input mx-2" type="checkbox" id="orientationCheckZ"><span class="text-primary">z</span>
       </h6>
-      <canvas id="orientation-chart" class="chart"></canvas>
+      <canvas id="orientation-chart" class="d-none chart"></canvas>
     </div>
   </div>
 
+  <div class="row m-5"></div>
   <footer class="bg-primary text-center text-white p-3">
     ©2022 Copyright saashup.com
   </footer>
