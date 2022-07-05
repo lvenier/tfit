@@ -11,6 +11,7 @@
   <script src="/font-awesome/all.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/jquery/jquery-3.6.0.min.js"></script>
+  <script src="/qrcode/qrcode.min.js"></script>
   <script src="/js/data/boxing.js"></script>
   <script src="/js/main.js"></script>
 </head>
@@ -47,11 +48,14 @@
 
   <main role="main" class="container">
     <div class="row" id="tfit-page">
-      <div class="container my-3">
-        <h1 class="m-4">TFIT</h1>
-        <h3 class="m-3">TRAIN ONLINE</h3>
-        <h5 class="m-3">Build your body with your phone or device</h5>
-      </div>
+        <div class="col-sm-12 col-md-3 my-5 text-center" id="qrcode">
+
+        </div>
+        <div class="col-sm-12 col-md-9 my-3">
+          <h1 class="m-4">TFIT</h1>
+          <h3 class="m-3">TRAIN ONLINE</h3>
+          <h5 class="m-3">Build your body with your phone or device</h5>
+        </div>
       <div class="row text-center my-3">
         <div class="col-md-4 col-sm-4 my-3">
           <button type="button" class="btn btn-primary btn-circle" onclick="$('#boxing-menu').trigger('click');">
@@ -123,21 +127,21 @@
     </div>
     <div class="container d-none" id="devices">
       <div class="row m-3 text-center">
-        <div class="col-sm-12 col-md-3 py-2"><span class="mx-2"><a href="debug.html" target="_blank">LEFT HAND</a></span> <i
-            id="lefthand" class="fa-solid fa-battery-three-quarters text-white"></i></div>
-        <div class="col-sm-12 col-md-3 py-2"><span class="mx-2"><a href="debug.html" target="_blank">RIGHT HAND</a></span> <i
-            id="righthand" class="fa-solid fa-battery-full text-white"></i></div>
-        <div class="col-sm-12 col-md-3 py-2"><span class="mx-2"><a href="debug.html" target="_blank">LEFT FEET</a></span> <i
-            id="leftfeet" class="fa-solid fa-battery-quarter text-white"></i></div>
-        <div class="col-sm-12 col-md-3 py-2"><span class="mx-2"><a href="debug.html" target="_blank">RIGHT FEET</a></span> <i
-            id="rightfeet" class="fa-solid fa-battery-half text-white"></i></div>
+        <div class="col-sm-12 col-md-3 py-2"><span class="mx-2"><a href="debug.html" target="_blank">LEFT
+              HAND</a></span> <i id="lefthand" class="fa-solid fa-battery-three-quarters text-white"></i></div>
+        <div class="col-sm-12 col-md-3 py-2"><span class="mx-2"><a href="debug.html" target="_blank">RIGHT
+              HAND</a></span> <i id="righthand" class="fa-solid fa-battery-full text-white"></i></div>
+        <div class="col-sm-12 col-md-3 py-2"><span class="mx-2"><a href="debug.html" target="_blank">LEFT
+              FEET</a></span> <i id="leftfeet" class="fa-solid fa-battery-quarter text-white"></i></div>
+        <div class="col-sm-12 col-md-3 py-2"><span class="mx-2"><a href="debug.html" target="_blank">RIGHT
+              FEET</a></span> <i id="rightfeet" class="fa-solid fa-battery-half text-white"></i></div>
       </div>
     </div>
     <div class="row d-none" id="boxing-page">
       <div id="play-boxing" class="row text-center d-none">
         <div class="col-sm-12 col-md-4 my-3" id="boxing-detail">
           <div class="container my-5">
-            <img id="boxing-position" src="/img/footsteps-right.svg" style="opacity:0.8;" width="30%"/>
+            <img id="boxing-position" src="/img/footsteps-right.svg" style="opacity:0.8;" width="30%" />
           </div>
           <div class="container my-3">
             <h1 class="text-primary py-3" id="boxing-score">0</h1>
@@ -146,33 +150,39 @@
             <h1 class="text-primary py-3" id="boxing-timer">0</h1>
           </div>
           <div class="container my-3">
-            <div class="spinner-div text-center" id="boxing-spinner"><div class="spinner-circle"><div class="spinner"></div><h1 class="pt-4 text-primary" style="position:relative;bottom:100px;" id="boxing-spinner-count">3</h1></div></div>
+            <div class="spinner-div text-center" id="boxing-spinner">
+              <div class="spinner-circle">
+                <div class="spinner"></div>
+                <h1 class="pt-4 text-primary" style="position:relative;bottom:100px;" id="boxing-spinner-count">3</h1>
+              </div>
+            </div>
           </div>
           <div class="container my-3">
-            <button class="btn btn-lg btn-outline-primary my-3 p-3 d-none" id="boxing-again" onclick="playBoxing();">Play<br>Again</button>
+            <button class="btn btn-lg btn-outline-primary my-3 p-3 d-none" id="boxing-again"
+              onclick="playBoxing();">Play<br>Again</button>
           </div>
         </div>
         <div class="col-sm-12 col-md-8" id="boxing-game">
 
         </div>
       </div>
-        <div id="default-boxing" class="container text-center">
-          <div class="col-sm-12 col-md-6 offset-md-3 my-5">
-            <select class="form-select form-select-lg">
-              <option>Easy</option>
-              <option>Medium</option>
-              <option>Hard</option>
-            </select>
-          </div>
-          <div class="col-sm-12 col-md-6 offset-md-3 my-5">
-            <select class="form-select form-select-lg">
-              <option>Random</option>
-            </select>
-          </div>
-          <div class="col-12 my-5">
-            <button class="btn btn-lg btn-primary" onclick="playBoxing();">PLAY</button>
-          </div>
+      <div id="default-boxing" class="container text-center">
+        <div class="col-sm-12 col-md-6 offset-md-3 my-5">
+          <select class="form-select form-select-lg">
+            <option>Easy</option>
+            <option>Medium</option>
+            <option>Hard</option>
+          </select>
         </div>
+        <div class="col-sm-12 col-md-6 offset-md-3 my-5">
+          <select class="form-select form-select-lg">
+            <option>Random</option>
+          </select>
+        </div>
+        <div class="col-12 my-5">
+          <button class="btn btn-lg btn-primary" onclick="playBoxing();">PLAY</button>
+        </div>
+      </div>
     </div>
     <div class="row d-none" id="fitness-page">
       <div class="col-12 m-5 text-center">

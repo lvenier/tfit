@@ -73,6 +73,12 @@ $.ajax({
 
 $(document).ready(function () {
 
+    new QRCode(document.getElementById("qrcode"), {
+        text: window.location.href + 'mobile',
+        width: 128,
+        height: 128,
+    });
+
     $(".nav-link").on('click', function(){
 
         $(".nav-link").each(function() {
