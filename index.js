@@ -5,10 +5,11 @@ var LOCAL = null;
 var HOME = null;
 var http = null;
 var config = null;
+const configFile = 'config/config.json';
 
 try {
-  if (fs.existsSync('config.json')) {
-    config = JSON.parse(fs.readFileSync('config.json'))
+  if (fs.existsSync(configFile)) {
+    config = JSON.parse(fs.readFileSync(configFile))
   }
 } catch(err) {
   console.error(err)
@@ -33,7 +34,7 @@ app.get('/api/login',function(req,res) {
   } else {
     try {
       config = { key: req.query.key};
-      fs.writeFileSync('config.json', JSON.stringify(config))
+      fs.writeFileSync(configFile, JSON.stringify(config))
       res.json({ status: "success" })
     } catch (err) {
       console.error(err)

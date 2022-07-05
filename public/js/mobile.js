@@ -178,4 +178,13 @@ $(document).ready(function () {
             is_running = true;
         }
     });
+
+    setInterval(function () {
+        socket.emit('action', {
+            id: device_id,
+            type: "device",
+            position: device_type,
+            name: "ping"
+        })
+    }, 3000);
 })
