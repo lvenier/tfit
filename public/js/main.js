@@ -11,6 +11,8 @@ const socket = io({
 var gtimer = null;
 var audio = null;
 var CURRENTGAME = 0;
+var PLAYING = true;
+var currentSTEP = 0
 
 $.ajax({
     url: "/api/login?key=" + key
@@ -21,7 +23,8 @@ $.ajax({
   });
 
   function playBoxing() {
-    CURRENTGAME = Math.floor(Math.random() * BOXING.length)
+    CURRENTGAME = 2//Math.floor(Math.random() * BOXING.length)
+    currentSTEP = 0;
     audio = new Audio(BOXING[CURRENTGAME].audio);
     audio.pause();
     audio.load()
@@ -32,16 +35,16 @@ $.ajax({
     $("#boxing-spinner").removeClass("d-none");
     $('#default-boxing').addClass('d-none');
     $('#play-boxing').removeClass('d-none');
-    let row = '<div class="row m-5"><div class="marquee-rtl"><h3 class="text-primary" style="opacity:0.8;">Title: ' + BOXING[CURRENTGAME].title + ' - Author: ' + BOXING[CURRENTGAME].author + ' - Song: ' + BOXING[CURRENTGAME].songtitle +'</h3></div></div>';
-    row +='<div class="row my-5">';
+    $("#boxing-score").html(0);
+    let row = '<div class="row m-5"><div class="marquee-rtl"><h3 style="opacity:0.8;">Title: ' + BOXING[CURRENTGAME].title + ' - Author: ' + BOXING[CURRENTGAME].author + ' - Song: ' + BOXING[CURRENTGAME].songtitle +'</h3></div></div>';
+    row +='<div id="screen">';
     let cpt = 0;
+    row +='<div class="row my-5" id="screen">';
     for (const a of BOXING[CURRENTGAME].series) {
-        if (cpt % 4 === 0) row += '</div><div class="row my-5">';
+        if (cpt % 4 === 0 && cpt > 0) row += '</div><div class="row my-5">';
         let gpos = '0';
-        if (a[0] === 'L' && a[1] === 'H') gpos = '90';
-        if (a[0] === 'R' && a[1] === 'H') gpos = '-90';
-        if (a[1] === 'S') gpos = '180';
-        row += '<div class="col-sm-12 col-md-3" id="boxing_action_' + cpt + '"><img width="40%" src="/img/' + ( (a[0] === 'L') ? 'left' : 'right') + '.png" ' + (cpt === 0 ? 'class="pulse-gloves"' : '' )  + ' style="transform: rotate(' + gpos + 'deg);opacity: 0.5;" id="boxing_action_' + cpt + '_img" /></div>'
+        row += '<div class="col-sm-12 col-md-3" id="boxing_action_' + cpt + '"><img width="40%" src="/img/' + a + '.png" ' + (cpt === 0 ? 'class="pulse-gloves"' : '' )  + ' style=";opacity: 0.5;" id="boxing_action_' + cpt + '_img" /></div>'
+        if (cpt === 15) break;
         cpt++;
     }
     row += '</div>';
@@ -52,10 +55,13 @@ $.ajax({
         $("#boxing-spinner-count").html(s)
         if (s <= 0) {
             if (s === 0) audio.play()
+            PLAYING = true
             $("#boxing-spinner").addClass("d-none");
             $("#boxing-timer").html(parseInt($("#boxing-timer").html()) + 1)
         }
         if (parseInt($("#boxing-timer").html()) > BOXING[CURRENTGAME].time) {
+            PLAYING = false;
+            currentSTEP = 0;
             $("#boxing-timer").html("0")
             $("#boxing-position").removeClass("pulse");
             $("#boxing-spinner-count").html("3");
@@ -120,13 +126,48 @@ $(document).ready(function () {
                 case "changetype":
                     $("#" + msg.position.replace(" ", "")).removeClass("text-white").addClass("text-primary")
                     break;
-                case "straight":
-                    /*$("#" + msg.position.replace(" ", "")).removeClass("text-primary").addClass("text-success")
-                    $("#boxing_" + msg.position.replace(" ", "") + msg.name).removeClass("text-success").addClass("text-success")
-                    setTimeout(function () {
-                        $("#boxing_" + msg.position.replace(" ", "") + msg.name).removeClass("text-success");
-                    }, 500);*/
+                case "S":
+                    if (PLAYING) {
+                        //if (BOXING[CURRENTGAME].series[currentSTEP] === msg.position[0].toUpperCase() + msg.name) {
+                            $("#boxing_action_" + currentSTEP + "_img").css('opacity', '1.0')
+                            $("#boxing_action_" + (currentSTEP - 1) + "_img").removeClass("pulse-gloves");
+                            $("#boxing_action_" + currentSTEP + "_img").addClass("pulse-gloves");
+                            $("#boxing-score").html(parseInt($("#boxing-score").html()) + 1)
+                            currentSTEP++;
+                        //}
+                    }
                     break;
+            }
+            if (currentSTEP === BOXING[CURRENTGAME].series.length) {
+                PLAYING = false;
+                currentSTEP = 0;
+                $("#boxing-position").removeClass("pulse");
+                $("#boxing-spinner-count").html("3");
+                $("#boxing-again").removeClass("d-none");
+                for (let i = 0; i < 16; i++) { 
+                    $("#boxing_action_" + i + "_img").css('opacity', '0.5')
+                    $("#boxing_action_" + i + "_img").removeClass("pulse-gloves");
+                }
+                audio.pause();
+                clearInterval(gtimer);
+                gtimer = null;
+            }
+            if (currentSTEP > 0 && currentSTEP % 16 === 0) {
+                let cpt = 0;
+                let row = "";
+                for (let i = currentSTEP; i < currentSTEP + 16 ; i++) {
+                    a = BOXING[CURRENTGAME].series[i];
+                    if (cpt % 4 === 0) row += '</div><div class="row my-5">';
+                    let gpos = '0';
+                    if (a[0] === 'L' && a[1] === 'H') gpos = '90';
+                    if (a[0] === 'R' && a[1] === 'H') gpos = '-90';
+                    if (a[1] === 'S') gpos = '180';
+                    row += '<div class="col-sm-12 col-md-3" id="boxing_action_' + i + '"><img width="40%" src="/img/' + a + '.png" ' + (cpt === 0 ? 'class="pulse-gloves"' : '' )  + ' style="opacity: 0.5;" id="boxing_action_' + i + '_img" /></div>'
+                    if (cpt === 15) break;
+                    cpt++;
+                }
+                $("#screen").html(row)
+                $("#boxing_action_0_img").css('opacity', '1.0')
             }
         }
     })

@@ -5,6 +5,8 @@ var move = 0;
 var count = 0;
 var moves = [];
 var orient = {};
+var popover = false;
+var lastEmit = Date.now()
 
 var device_id = localStorage.getItem('device_id') || (Math.random() + 1).toString(36).substring(2)
 var device_type = localStorage.getItem('device_type') || 'unknown'
@@ -99,12 +101,14 @@ function handleMotion(event) {
             socket.emit('data', data);
         }
         count++;
-        if (count === 7) {
+        if (count === 7 && lastEmit + 500 < Date.now()) {
+            lastEmit = Date.now();
             if (socket) socket.emit('action', {
                 id: device_id,
                 type: "device",
                 position: device_type,
-                name: "straight"
+                name: "S",
+                date: lastEmit
             });
             $("#notification").html((device_type + " STRAIGHT").toUpperCase()).addClass("text-success");
             count = 0;
@@ -118,15 +122,29 @@ function handleMotion(event) {
 }
 
 $(document).ready(function () {
+
+    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+      return new bootstrap.Popover(popoverTriggerEl)
+    })
+
     $('#device_id').html(device_id);
     $('#device_type').val(device_type);
     if (device_type !== "unknown") $("#start").attr("disabled",false);
+    else {
+        $('html, body').animate({
+            scrollTop: $("#device_type").offset().top
+         }, 200);
+        $("#popover-btn").trigger("click");
+        popover = true;
+    }
 
     navigator.getBattery().then(battery => {
         updateFieldIfNotNull('battery', battery.level * 100, 2);
     })
 
     $("#device_type").change(function (e) {
+        if (popover) $("#popover-btn").trigger("click");
         device_type = $("#device_type").val();
         localStorage.setItem('device_type', device_type);
         if (socket) socket.emit('action', {

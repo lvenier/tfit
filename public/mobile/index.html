@@ -9,24 +9,34 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="/jquery/jquery-3.6.0.min.js"></script>
   <script src="/js/mobile.js"></script>
+  <style>
+    .popover-header {
+      color:white;
+      background-color: #0d6efd;
+    }
+  </style>
 </head>
 
 <body>
   <main role="main" class="container">
     <div class="row p-3 mb-2" id="demo-div">
-        <div class="col-sm-6 col-md-4 my-2">
-          <button id="start" class="btn btn-lg btn-success" disabled>Start</button>
-        </div>
-        <div class="col-sm-6 col-md-4 my-2">
-          <button id="debug" class="btn btn-lg btn-warning text-white">Debug</button>
-        </div>
-        <div class="col-sm-12 col-md-4 my-2">
-          <select id="device_type" class="btn btn-lg btn-primary">
-            <option>unknown</option>
-            <option>left hand</option>
-            <option>right hand</option>
-          </select>
-        </div>
+      <div class="col-sm-6 col-md-3 my-2">
+        <button id="start" class="btn btn-lg btn-success" disabled>Start</button>
+      </div>
+      <div class="col-sm-6 col-md-3 my-2">
+        <button id="debug" class="btn btn-lg btn-warning text-white">Debug</button>
+      </div>
+      <div class="col-sm-12 col-md-4 mt-2">
+        <select id="device_type" class="btn btn-lg btn-primary">
+          <option>unknown</option>
+          <option>left hand</option>
+          <option>right hand</option>
+        </select>
+      </div>
+      <div class="col-sm-12 col-md-2">
+        <button class="btn" id="popover-btn" data-bs-placement="bottom" data-bs-toggle="popover" title="Select Type"
+          data-bs-content="Select the device location and type"></button>
+      </div>
 
       <div class="alert alert-secondary bg-white text-center" id="notification">N/A</div>
 
