@@ -7,6 +7,9 @@ var moves = [];
 var orient = {};
 var popover = false;
 var lastEmit = Date.now()
+var data = null;
+var so = null;
+var running = null;
 
 var device_id = localStorage.getItem('device_id') || (Math.random() + 1).toString(36).substring(2)
 var device_type = localStorage.getItem('device_type') || 'unknown'
@@ -20,10 +23,18 @@ const socket = io({
     }
 });
 
-function aymeric(ax, ay, az, gx, gy, gz) {
-    let x = ax * Math.cos(Math.PI / 180 * gy) + ay * Math.sin(Math.PI / 180 * gz) - az * Math.sin(Math.PI / 180 * gy)
-    let y = ax * Math.sin(Math.PI / 180 * gz) + ay * Math.cos(Math.PI / 180 * gz) - az * Math.sin(Math.PI / 180 * gx)
-    let z = ax * Math.sin(Math.PI / 180 * gy) + ay * Math.sin(Math.PI / 180 * gx) - az * Math.cos(Math.PI / 180 * gx)
+function sr(angle) {
+    return Math.sin((Math.PI) / 180 * angle)
+}
+
+function cr(angle) {
+    return Math.cos((Math.PI / 180) * angle)
+}
+
+function aymeric(ax, ay, az, a, b, g) {
+    let x = ax * cr(g) * cr(a) + ay * (sr(b) * sr(g) * cr(a) - cr(b) * sr(a)) + az * (cr(b) * sr(g) * cr(a) + sr(b) * sr(a));
+    let y = ax * cr(g) * sr(a) + ay * (sr(b) * sr(g) * sr(a) + cr(b) * cr(a)) + az * (cr(b) * sr(g) * sr(a) - sr(b) * cr(a));
+    let z = -ax * sr(g) + ay * sr(b) * cr(g) + az * cr(b) * cr(g);
     return {
         x: x,
         y: y,
@@ -32,10 +43,17 @@ function aymeric(ax, ay, az, gx, gy, gz) {
 }
 
 function handleOrientation(event) {
-    orient = {
+    if (so === null) {
+        so = {
+            a: event.alpha,
+            b: event.beta,
+            g: event.gamma
+        }
+    }
+    if (data) data.o = {
         a: event.alpha,
         b: event.beta,
-        c: event.gamma
+        g: event.gamma
     }
     updateFieldIfNotNull('Orientation_a', event.alpha);
     updateFieldIfNotNull('Orientation_b', event.beta);
@@ -67,74 +85,66 @@ function handleMotion(event) {
     updateFieldIfNotNull('Gyroscope_x', event.rotationRate.beta);
     updateFieldIfNotNull('Gyroscope_y', event.rotationRate.gamma);
     incrementEventCount();
-    let data = {
-        id: device_id,
-        t: device_type,
-        i: event.interval,
-        ts: event.timeStamp,
-        awg: {
-            x: event.accelerationIncludingGravity.x,
-            y: event.accelerationIncludingGravity.y,
-            z: event.accelerationIncludingGravity.z
-        },
-        a: {
+
+        data.ts = event.timeStamp,
+            data.awg = {
+                x: event.accelerationIncludingGravity.x,
+                y: event.accelerationIncludingGravity.y,
+                z: event.accelerationIncludingGravity.z
+            }
+        data.a = {
             x: event.acceleration.x,
             y: event.acceleration.y,
             z: event.acceleration.z
-        },
-        r: {
+        }
+        data.r = {
             a: event.rotationRate.alpha,
             b: event.rotationRate.beta,
             g: event.rotationRate.gamma
-        },
-        o: orient
-    };
-    data.ac = aymeric(data.a.x, data.a.y, data.a.z, data.r.a, data.r.b, data.r.g)
-    updateFieldIfNotNull('Accelerometer_calc_x', data.ac.x);
-    updateFieldIfNotNull('Accelerometer_calc_y', data.ac.y);
-    updateFieldIfNotNull('Accelerometer_calc_z', data.ac.z);
-    datas.push(data)
-
-    //if (Math.abs(data.ac.x) > 1 && Math.abs(data.ac.y) > 1) {
-    if (Math.abs(data.ac.x) > 2) {
-        if (is_debug && socket) {
-            socket.emit('data', data);
         }
-        count++;
-        if (count === 7 && lastEmit + 500 < Date.now()) {
-            lastEmit = Date.now();
-            if (socket) socket.emit('action', {
-                id: device_id,
-                type: "device",
-                position: device_type,
-                name: "S",
-                date: lastEmit
-            });
-            $("#notification").html((device_type + " STRAIGHT").toUpperCase()).addClass("text-success");
-            count = 0;
-            setTimeout(function () {
-                $("#notification").html("N/A").removeClass("text-success");
-            }, 800);
-        }
-    } else count = 0;
 
-    if (datas.length > 32) datas.shift();
 }
 
 $(document).ready(function () {
 
     var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
     var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
-      return new bootstrap.Popover(popoverTriggerEl)
+        return new bootstrap.Popover(popoverTriggerEl)
     })
 
     $('#device_id').html(device_id);
     $('#device_type').val(device_type);
-    if (device_type !== "unknown") $("#start").attr("disabled",false);
+    data = {
+        id: device_id,
+        t: device_type,
+        i: 0,
+        ts: 0,
+        awg: {
+            x: 0,
+            y: 0,
+            z: 0
+        },
+        a: {
+            x: 0,
+            y: 0,
+            z: 0
+        },
+        r: {
+            a: 0,
+            b: 0,
+            g: 0
+        },
+        o: {
+            a: 0,
+            b: 0,
+            g: 0
+        }
+    };
+    if (device_type !== "unknown") $("#start").attr("disabled", false);
     else {
         $('html, body').animate({
             scrollTop: $("#device_type").offset().top
-         }, 200);
+        }, 200);
         $("#popover-btn").trigger("click");
         popover = true;
     }
@@ -153,8 +163,8 @@ $(document).ready(function () {
             position: device_type,
             name: "changetype"
         })
-        if (device_type === "unknown") $("#start").attr("disabled",true);
-        else $("#start").attr("disabled",false);
+        if (device_type === "unknown") $("#start").attr("disabled", true);
+        else $("#start").attr("disabled", false);
     })
 
     $("#debug").on("click", function (e) {
@@ -186,6 +196,8 @@ $(document).ready(function () {
             $("#start").addClass('btn-success');
             $("#start").removeClass('btn-danger');
             navigator.vibrate(200);
+            clearInterval(running);
+            running = null;
             is_running = false;
         } else {
             window.addEventListener("devicemotion", handleMotion);
@@ -212,4 +224,42 @@ $(document).ready(function () {
             name: "ping"
         })
     }, 3000);
+
+    running = setInterval(function () {
+        if (so) data.ac = aymeric(data.a.x, data.a.y, data.a.z, data.o.a - so.a, data.o.b - so.b, data.o.g - so.g)
+        updateFieldIfNotNull('Accelerometer_calc_x', data.ac.x);
+        updateFieldIfNotNull('Accelerometer_calc_y', data.ac.y);
+        updateFieldIfNotNull('Accelerometer_calc_z', data.ac.z);
+        datas.push(data)
+
+        //if (Math.abs(data.ac.x) > 1 && Math.abs(data.ac.y) > 1) {
+        if (Math.abs(data.ac.x) > 2) {
+            count++;
+            if (count === 7 && lastEmit + 500 < Date.now()) {
+                lastEmit = Date.now();
+                if (socket) socket.emit('action', {
+                    id: device_id,
+                    type: "device",
+                    position: device_type,
+                    name: "S",
+                    date: lastEmit
+                });
+                $("#notification").html((device_type + " STRAIGHT").toUpperCase()).addClass("text-success");
+                count = 0;
+                setTimeout(function () {
+                    $("#notification").html("N/A").removeClass("text-success");
+                }, 800);
+            }
+        } else count = 0;
+
+        if (datas.length > 32) datas.shift();
+        if (is_debug && socket && data) {
+            socket.emit('data', data);
+        }
+    }, 16);
+
+    console.log(aymeric(1, 0, 0, 0, 0, 0))
+    console.log(aymeric(1, 1, 0, 100, 0, 0))
+    console.log(aymeric(1, 1, 0, 0, 100, 0))
+    console.log(aymeric(1, 1, 0, 0, 0, 100))
 })

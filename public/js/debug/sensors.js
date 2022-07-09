@@ -25,9 +25,12 @@ if (config === null) {
     },
     o: {
       v: true,
-      x:true,
-      y:true,
-      z:true
+      a: true,
+      b: true,
+      g: true,
+      x: true,
+      y: true,
+      z: true
     }
   }
   localStorage.setItem('config', JSON.stringify(config))
@@ -86,6 +89,11 @@ var orientationChart = null;
 var orientationSeries1 = new TimeSeries();
 var orientationSeries2 = new TimeSeries();
 var orientationSeries3 = new TimeSeries();
+
+var orientationChart = null;
+var orientation2Series1 = new TimeSeries();
+var orientation2Series2 = new TimeSeries();
+var orientation2Series3 = new TimeSeries();
 
 function init() {
   aymericChart = new SmoothieChart({
@@ -173,6 +181,27 @@ function init() {
     fillStyle: 'rgba(0, 0, 255, 0.2)',
     lineWidth: 3
   });
+
+  orientation2Chart = new SmoothieChart({
+    tooltip: true,
+    responsive: true,
+    scrollBackwards: false
+  });
+  orientation2Chart.addTimeSeries(orientation2Series1, {
+    strokeStyle: 'rgba(255, 0, 0, 1)',
+    fillStyle: 'rgba(255, 0, 0, 0.2)',
+    lineWidth: 3
+  });
+  orientation2Chart.addTimeSeries(orientation2Series2, {
+    strokeStyle: 'rgba(0, 255, 0, 1)',
+    fillStyle: 'rgba(0, 255, 0, 0.2)',
+    lineWidth: 3
+  });
+  orientation2Chart.addTimeSeries(orientation2Series3, {
+    strokeStyle: 'rgba(0, 0, 255, 1)',
+    fillStyle: 'rgba(0, 0, 255, 0.2)',
+    lineWidth: 3
+  });
 }
 
 function handleMotion(event) {
@@ -193,6 +222,10 @@ function handleMotion(event) {
   if ($("#orientationCheckX").is(':checked')) orientationSeries1.append(now, event.awg.x - event.a.x);
   if ($("#orientationCheckY").is(':checked')) orientationSeries2.append(now, event.awg.y - event.a.y);
   if ($("#orientationCheckZ").is(':checked')) orientationSeries3.append(now, event.awg.z - event.a.z);
+
+  if ($("#orientation2CheckX").is(':checked')) orientation2Series1.append(now, event.o.a);
+  if ($("#orientation2CheckY").is(':checked')) orientation2Series2.append(now, event.o.b);
+  if ($("#orientation2CheckZ").is(':checked')) orientation2Series3.append(now, event.o.g);
 
   updateState(event);
 
@@ -272,7 +305,10 @@ $(document).ready(function () {
   if (!('v' in config.ay) || config.ay.v === true) $("#aymeric-chart").removeClass("d-none");
   if (!('v' in config.r) || config.r.v === true) $("#rotation-rate-chart").removeClass("d-none");
   if (!('v' in config.a) || config.a.v === true) $("#acceleration-chart").removeClass("d-none");
-  if (!('v' in config.o) || config.o.v === true) $("#orientation-chart").removeClass("d-none");
+  if (!('v' in config.o) || config.o.v === true) {
+    $("#orientation-chart").removeClass("d-none");
+    $("#orientation2-chart").removeClass("d-none");
+  }
   $("#aymericCheckX").attr("checked", config.ay.x)
   $("#aymericCheckY").attr("checked", config.ay.y)
   $("#aymericCheckZ").attr("checked", config.ay.z)
@@ -285,11 +321,15 @@ $(document).ready(function () {
   $("#orientationCheckX").attr("checked", config.o.x)
   $("#orientationCheckY").attr("checked", config.o.y)
   $("#orientationCheckZ").attr("checked", config.o.z)
+  $("#orientation2CheckX").attr("checked", config.o.a)
+  $("#orientation2CheckY").attr("checked", config.o.b)
+  $("#orientation2CheckZ").attr("checked", config.o.g)
 
   aymericChart.streamTo(document.getElementById("aymeric-chart"), DELAY);
   rotationRateChart.streamTo(document.getElementById("rotation-rate-chart"), DELAY);
   accelerationChart.streamTo(document.getElementById("acceleration-chart"), DELAY);
   orientationChart.streamTo(document.getElementById("orientation-chart"), DELAY);
+  orientation2Chart.streamTo(document.getElementById("orientation2-chart"), DELAY);
 
   $("#aymericCheckX").on("change", function(){
     config.ay.x = $("#aymericCheckX").is(":checked");
@@ -342,4 +382,18 @@ $(document).ready(function () {
     config.o.z = $("#orientationCheckZ").is(":checked");
     localStorage.setItem('config', JSON.stringify(config))
   })
+
+  $("#orientation2CheckX").on("change", function(){
+    config.o.a = $("#orientation2CheckX").is(":checked");
+    localStorage.setItem('config', JSON.stringify(config))
+  })
+  $("#orientation2CheckY").on("change", function(){
+    config.o.b = $("#orientation2CheckY").is(":checked");
+    localStorage.setItem('config', JSON.stringify(config))
+  })
+  $("#orientation2CheckZ").on("change", function(){
+    config.o.g = $("#orientation2CheckZ").is(":checked");
+    localStorage.setItem('config', JSON.stringify(config))
+  })
+
 })
