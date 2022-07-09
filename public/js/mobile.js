@@ -10,6 +10,7 @@ var lastEmit = Date.now()
 var data = null;
 var so = null;
 var running = null;
+var data_size = 32;
 
 var device_id = localStorage.getItem('device_id') || (Math.random() + 1).toString(36).substring(2)
 var device_type = localStorage.getItem('device_type') || 'unknown'
@@ -86,22 +87,22 @@ function handleMotion(event) {
     updateFieldIfNotNull('Gyroscope_y', event.rotationRate.gamma);
     incrementEventCount();
 
-        data.ts = event.timeStamp,
-            data.awg = {
-                x: event.accelerationIncludingGravity.x,
-                y: event.accelerationIncludingGravity.y,
-                z: event.accelerationIncludingGravity.z
-            }
-        data.a = {
-            x: event.acceleration.x,
-            y: event.acceleration.y,
-            z: event.acceleration.z
+    data.ts = event.timeStamp,
+        data.awg = {
+            x: event.accelerationIncludingGravity.x,
+            y: event.accelerationIncludingGravity.y,
+            z: event.accelerationIncludingGravity.z
         }
-        data.r = {
-            a: event.rotationRate.alpha,
-            b: event.rotationRate.beta,
-            g: event.rotationRate.gamma
-        }
+    data.a = {
+        x: event.acceleration.x,
+        y: event.acceleration.y,
+        z: event.acceleration.z
+    }
+    data.r = {
+        a: event.rotationRate.alpha,
+        b: event.rotationRate.beta,
+        g: event.rotationRate.gamma
+    }
 
 }
 
@@ -169,6 +170,8 @@ $(document).ready(function () {
 
     $("#debug").on("click", function (e) {
         is_debug = !is_debug;
+        if (is_debug) data_size = 512;
+        else data_size = 32;
         $("#debug").removeClass('btn-danger');
         $("#debug-notif").addClass('d-none');
         if (is_debug) {
@@ -226,35 +229,37 @@ $(document).ready(function () {
     }, 3000);
 
     running = setInterval(function () {
-        if (so) data.ac = aymeric(data.a.x, data.a.y, data.a.z, data.o.a - so.a, data.o.b - so.b, data.o.g - so.g)
-        updateFieldIfNotNull('Accelerometer_calc_x', data.ac.x);
-        updateFieldIfNotNull('Accelerometer_calc_y', data.ac.y);
-        updateFieldIfNotNull('Accelerometer_calc_z', data.ac.z);
-        datas.push(data)
+        if (is_running) {
+            if (so) data.ac = aymeric(data.a.x, data.a.y, data.a.z, data.o.a - so.a, data.o.b - so.b, data.o.g - so.g)
+            updateFieldIfNotNull('Accelerometer_calc_x', data.ac.x);
+            updateFieldIfNotNull('Accelerometer_calc_y', data.ac.y);
+            updateFieldIfNotNull('Accelerometer_calc_z', data.ac.z);
+            datas.push(data)
 
-        //if (Math.abs(data.ac.x) > 1 && Math.abs(data.ac.y) > 1) {
-        if (Math.abs(data.ac.x) > 2) {
-            count++;
-            if (count === 7 && lastEmit + 500 < Date.now()) {
-                lastEmit = Date.now();
-                if (socket) socket.emit('action', {
-                    id: device_id,
-                    type: "device",
-                    position: device_type,
-                    name: "S",
-                    date: lastEmit
-                });
-                $("#notification").html((device_type + " STRAIGHT").toUpperCase()).addClass("text-success");
-                count = 0;
-                setTimeout(function () {
-                    $("#notification").html("N/A").removeClass("text-success");
-                }, 800);
+            //if (Math.abs(data.ac.x) > 1 && Math.abs(data.ac.y) > 1) {
+            if (Math.abs(data.ac.x) > 2) {
+                count++;
+                if (count === 7 && lastEmit + 500 < Date.now()) {
+                    lastEmit = Date.now();
+                    if (socket) socket.emit('action', {
+                        id: device_id,
+                        type: "device",
+                        position: device_type,
+                        name: "S",
+                        date: lastEmit
+                    });
+                    $("#notification").html((device_type + " STRAIGHT").toUpperCase()).addClass("text-success");
+                    count = 0;
+                    setTimeout(function () {
+                        $("#notification").html("N/A").removeClass("text-success");
+                    }, 800);
+                }
+            } else count = 0;
+
+            if (datas.length > data_size) datas.shift();
+            if (is_debug && socket && data) {
+                socket.emit('data', data);
             }
-        } else count = 0;
-
-        if (datas.length > 32) datas.shift();
-        if (is_debug && socket && data) {
-            socket.emit('data', data);
         }
     }, 16);
 

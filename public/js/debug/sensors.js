@@ -2,6 +2,7 @@ const DELAY = 100;
 const key = localStorage.getItem('key')
 if (key === null) window.location.replace("/login.html");
 var config = JSON.parse(localStorage.getItem('config'))
+var datas = [];
 
 if (config === null) {
   config = {
@@ -295,10 +296,16 @@ function chartViewHide (id) {
   localStorage.setItem('config', JSON.stringify(config))
 }
 
+function exportData() {
+    datas ? navigator.clipboard.writeText(datas) : ''
+}
+
 $(document).ready(function () {
 
   socket.on("data", (msg) => {
     handleMotion(msg)
+    datas.push(JSON.stringify(msg))
+    if (datas.length > 512) datas.shift();
   })
 
   init();
