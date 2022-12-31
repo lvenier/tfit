@@ -3,37 +3,47 @@ const key = localStorage.getItem('key')
 if (key === null) window.location.replace("/login.html");
 var config = JSON.parse(localStorage.getItem('config'))
 var datas = [];
+var default_config = {
+  ay: {
+    v: true,
+    x:true,
+    y:true,
+    z:true
+  },
+  r: {
+    v: true,
+    a:true,
+    b:true,
+    g:true
+  },
+  a: {
+    v: true,
+    x:true,
+    y:true,
+    z:true
+  },
+  o: {
+    v: true,
+    a: true,
+    b: true,
+    g: true,
+    x: true,
+    y: true,
+    z: true
+  },
+  s: {
+    v: true,
+    x: true,
+    y: true,
+    z: true  
+  }
+}
 
 if (config === null) {
-  config = {
-    ay: {
-      v: true,
-      x:true,
-      y:true,
-      z:true
-    },
-    r: {
-      v: true,
-      a:true,
-      b:true,
-      g:true
-    },
-    a: {
-      v: true,
-      x:true,
-      y:true,
-      z:true
-    },
-    o: {
-      v: true,
-      a: true,
-      b: true,
-      g: true,
-      x: true,
-      y: true,
-      z: true
-    }
-  }
+  config = default_config;
+  localStorage.setItem('config', JSON.stringify(config))
+} else {
+  if (!('s' in config)) config = default_config;
   localStorage.setItem('config', JSON.stringify(config))
 }
 
@@ -71,6 +81,11 @@ const Direction = {
 var accelerationState = AccelerationStates.Stationary;
 var currentDirection = Direction.Undefined;
 
+var aymericSpeedChart = null;
+var aymericSpeedSeries1 = new TimeSeries();
+var aymericSpeedSeries2 = new TimeSeries();
+var aymericSpeedSeries3 = new TimeSeries();
+
 var aymericChart = null;
 var aymericSeries1 = new TimeSeries();
 var aymericSeries2 = new TimeSeries();
@@ -97,6 +112,27 @@ var orientation2Series2 = new TimeSeries();
 var orientation2Series3 = new TimeSeries();
 
 function init() {
+  aymericSpeedChart = new SmoothieChart({
+    tooltip: true,
+    responsive: true,
+    scrollBackwards: false
+  });
+  aymericSpeedChart.addTimeSeries(aymericSpeedSeries1, {
+    strokeStyle: 'rgba(255, 0, 0, 1)',
+    fillStyle: 'rgba(255, 0, 0, 0.2)',
+    lineWidth: 3
+  });
+  aymericSpeedChart.addTimeSeries(aymericSpeedSeries2, {
+    strokeStyle: 'rgba(0, 255, 0, 1)',
+    fillStyle: 'rgba(0, 255, 0, 0.2)',
+    lineWidth: 3
+  });
+  aymericSpeedChart.addTimeSeries(aymericSpeedSeries3, {
+    strokeStyle: 'rgba(0, 0, 255, 1)',
+    fillStyle: 'rgba(0, 0, 255, 0.2)',
+    lineWidth: 3
+  });
+
   aymericChart = new SmoothieChart({
     tooltip: true,
     responsive: true,
@@ -208,6 +244,10 @@ function init() {
 function handleMotion(event) {
 
   var now = Date.now();
+  if ($("#aymericSpeedCheckX").is(':checked')) aymericSpeedSeries1.append(now, event.s.x);
+  if ($("#aymericSpeedCheckY").is(':checked')) aymericSpeedSeries2.append(now, event.s.y);
+  if ($("#aymericSpeedCheckZ").is(':checked')) aymericSpeedSeries3.append(now, event.s.z);
+
   if ($("#aymericCheckX").is(':checked')) aymericSeries1.append(now, event.ac.x);
   if ($("#aymericCheckY").is(':checked')) aymericSeries2.append(now, event.ac.y);
   if ($("#aymericCheckZ").is(':checked')) aymericSeries3.append(now, event.ac.z);
@@ -290,6 +330,7 @@ function updateState(event) {
 function chartViewHide (id) {
   $('#' + id).toggleClass('d-none');
   config.ay.v = !$("#aymeric-chart").hasClass('d-none');
+  config.s.v = !$("#aymeric-speed-chart").hasClass('d-none');
   config.r.v = !$("#rotation-rate-chart").hasClass('d-none');
   config.a.v = !$("#acceleration-chart").hasClass('d-none');
   config.o.v = !$("#orientation-chart").hasClass('d-none');
@@ -309,6 +350,7 @@ $(document).ready(function () {
   })
 
   init();
+  if (!('v' in config.s) || config.s.v === true) $("#aymeric-speed-chart").removeClass("d-none");
   if (!('v' in config.ay) || config.ay.v === true) $("#aymeric-chart").removeClass("d-none");
   if (!('v' in config.r) || config.r.v === true) $("#rotation-rate-chart").removeClass("d-none");
   if (!('v' in config.a) || config.a.v === true) $("#acceleration-chart").removeClass("d-none");
@@ -316,6 +358,9 @@ $(document).ready(function () {
     $("#orientation-chart").removeClass("d-none");
     $("#orientation2-chart").removeClass("d-none");
   }
+  $("#aymericSpeedCheckX").attr("checked", config.s.x)
+  $("#aymericSpeedCheckY").attr("checked", config.s.y)
+  $("#aymericSpeedCheckZ").attr("checked", config.s.z)
   $("#aymericCheckX").attr("checked", config.ay.x)
   $("#aymericCheckY").attr("checked", config.ay.y)
   $("#aymericCheckZ").attr("checked", config.ay.z)
@@ -332,11 +377,25 @@ $(document).ready(function () {
   $("#orientation2CheckY").attr("checked", config.o.b)
   $("#orientation2CheckZ").attr("checked", config.o.g)
 
+  aymericSpeedChart.streamTo(document.getElementById("aymeric-speed-chart"), DELAY);
   aymericChart.streamTo(document.getElementById("aymeric-chart"), DELAY);
   rotationRateChart.streamTo(document.getElementById("rotation-rate-chart"), DELAY);
   accelerationChart.streamTo(document.getElementById("acceleration-chart"), DELAY);
   orientationChart.streamTo(document.getElementById("orientation-chart"), DELAY);
   orientation2Chart.streamTo(document.getElementById("orientation2-chart"), DELAY);
+
+  $("#aymericSpeedCheckX").on("change", function(){
+    config.s.x = $("#aymericSpeedCheckX").is(":checked");
+    localStorage.setItem('config', JSON.stringify(config))
+  })
+  $("#aymericSpeedCheckY").on("change", function(){
+    config.s.y = $("#aymericSpeedCheckY").is(":checked");
+    localStorage.setItem('config', JSON.stringify(config))
+  })
+  $("#aymericSpeedCheckZ").on("change", function(){
+    config.s.z = $("#aymericSpeedCheckZ").is(":checked");
+    localStorage.setItem('config', JSON.stringify(config))
+  })
 
   $("#aymericCheckX").on("change", function(){
     config.ay.x = $("#aymericCheckX").is(":checked");

@@ -1,6 +1,7 @@
 var is_running = false;
 var is_debug = false;
 var datas = [];
+var speed = [{ x:0, y:0, z:0 }];
 var move = 0;
 var count = 0;
 var moves = [];
@@ -40,6 +41,18 @@ function aymeric(ax, ay, az, a, b, g) {
         x: x,
         y: y,
         z: z
+    }
+}
+
+function aymericSpeed(da, ds) {
+    if (ds.length > 0) {
+        let d = ds[ds.length-1]
+        let ns = {}
+        ns.x = speed[speed.length-1].x + ((d.ac.x + da.ac.x)/2)*(da.ts - d.ts)*0.001
+        ns.y = speed[speed.length-1].y + ((d.ac.y + da.ac.y)/2)*(da.ts - d.ts)*0.001
+        ns.z = speed[speed.length-1].z + ((d.ac.z + da.ac.z)/2)*(da.ts - d.ts)*0.001
+        speed.push({ x: ns.x, y: ns.y, z: ns.z })
+        return { x: ns.x, y: ns.y, z: ns.z }
     }
 }
 
@@ -229,15 +242,26 @@ $(document).ready(function () {
     }, 3000);
 
     running = setInterval(function () {
+        //if ('ts' in data) data.ts = data.ts + 16;
         if (is_running) {
-            if (so) data.ac = aymeric(data.a.x, data.a.y, data.a.z, data.o.a - so.a, data.o.b - so.b, data.o.g - so.g)
-            updateFieldIfNotNull('Accelerometer_calc_x', data.ac.x);
-            updateFieldIfNotNull('Accelerometer_calc_y', data.ac.y);
-            updateFieldIfNotNull('Accelerometer_calc_z', data.ac.z);
-            datas.push(data)
+            if (so) {
+                data.ac = aymeric(data.a.x, data.a.y, data.a.z, data.o.a - so.a, data.o.b - so.b, data.o.g - so.g)
+                data.s = aymericSpeed(data, datas);
+                datas.push(JSON.parse(JSON.stringify(data)))
+            }
+            if ('ac' in data) {
+                if ('x' in data.ac) updateFieldIfNotNull('Accelerometer_calc_x', data.ac.x);
+                if ('y' in data.ac) updateFieldIfNotNull('Accelerometer_calc_y', data.ac.y);
+                if ('z' in data.ac) updateFieldIfNotNull('Accelerometer_calc_z', data.ac.z);
+            }
+            if (data.s) {
+                if ('x' in data.s) updateFieldIfNotNull('Accelerometer_speed_calc_x', data.s.x);
+                if ('y' in data.s) updateFieldIfNotNull('Accelerometer_speed_calc_y', data.s.y);
+                if ('z' in data.s) updateFieldIfNotNull('Accelerometer_speed_calc_z', data.s.z);
+            }
 
             //if (Math.abs(data.ac.x) > 1 && Math.abs(data.ac.y) > 1) {
-            if (Math.abs(data.ac.x) > 2) {
+            if ('ac' in data && 'x' in data.ac && Math.abs(data.ac.x) > 2) {
                 count++;
                 if (count === 7 && lastEmit + 500 < Date.now()) {
                     lastEmit = Date.now();
@@ -263,8 +287,4 @@ $(document).ready(function () {
         }
     }, 16);
 
-    console.log(aymeric(1, 0, 0, 0, 0, 0))
-    console.log(aymeric(1, 1, 0, 100, 0, 0))
-    console.log(aymeric(1, 1, 0, 0, 100, 0))
-    console.log(aymeric(1, 1, 0, 0, 0, 100))
 })

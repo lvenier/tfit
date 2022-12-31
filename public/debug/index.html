@@ -31,6 +31,14 @@
     <div class="row my-3 text-end"> <a href="#" onclick="exportData();">export</a>
     </div>
     <div class="row my-3">
+      <h6>Aymeric Speed<a href="#" onclick="chartViewHide('aymeric-speed-chart');" style="text-decoration:none;">view/hide</a>
+        <input class="form-check-input mx-2" type="checkbox" id="aymericSpeedCheckX"><span class="text-danger">x</span>
+        <input class="form-check-input mx-2" type="checkbox" id="aymericSpeedCheckY"><span class="text-success">y</span>
+        <input class="form-check-input mx-2" type="checkbox" id="aymericSpeedCheckZ"><span class="text-primary">z</span>
+      </h6>
+      <canvas id="aymeric-speed-chart" class="d-none chart"></canvas>
+    </div>
+    <div class="row my-3">
       <h6>Aymeric <a href="#" onclick="chartViewHide('aymeric-chart');" style="text-decoration:none;">view/hide</a>
         <input class="form-check-input mx-2" type="checkbox" id="aymericCheckX"><span class="text-danger">x</span>
         <input class="form-check-input mx-2" type="checkbox" id="aymericCheckY"><span class="text-success">y</span>
