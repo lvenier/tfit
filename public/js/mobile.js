@@ -2,6 +2,7 @@ var is_running = false;
 var is_debug = false;
 var datas = [];
 var speed = [{ x:0, y:0, z:0 }];
+var pos = [{ x:0, y:0, z:0 }];
 var move = 0;
 var count = 0;
 var moves = [];
@@ -12,6 +13,8 @@ var data = null;
 var so = null;
 var running = null;
 var data_size = 32;
+
+var incr_t = 0;
 
 var device_id = localStorage.getItem('device_id') || (Math.random() + 1).toString(36).substring(2)
 var device_type = localStorage.getItem('device_type') || 'unknown'
@@ -44,16 +47,31 @@ function aymeric(ax, ay, az, a, b, g) {
     }
 }
 
-function aymericSpeed(da, ds) {
-    if (ds.length > 0) {
-        let d = ds[ds.length-1]
+function aymericSpeed(da) {
         let ns = {}
-        ns.x = speed[speed.length-1].x + ((d.ac.x + da.ac.x)/2)*(da.ts - d.ts)*0.001
-        ns.y = speed[speed.length-1].y + ((d.ac.y + da.ac.y)/2)*(da.ts - d.ts)*0.001
-        ns.z = speed[speed.length-1].z + ((d.ac.z + da.ac.z)/2)*(da.ts - d.ts)*0.001
-        speed.push({ x: ns.x, y: ns.y, z: ns.z })
-        return { x: ns.x, y: ns.y, z: ns.z }
+        
+        ns.x = speed[speed.length-1].x + (da.ac.x)*(16)*1e-3
+        ns.y = speed[speed.length-1].y + (da.ac.y)*(16)*1e-3
+        ns.z = speed[speed.length-1].z + (da.ac.z)*(16)*1e-3
+
+   if(incr_t < 125 ){
+        speed.push({  x: ns.x, y: ns.y, z: ns.z })
+        incr_t += 1
+        
     }
+    else{
+       speed.push({x : 0, y : 0, z : 0})
+        incr_t = 0
+    }
+
+/*
+    let np = {}
+    np.x = pos[pos.length-1].x + (speed[speed.length-1].x)*(16)*1e-3
+    np.y = pos[pos.length-1].y + (speed[speed.length-1].y)*(16)*1e-3
+    np.z = pos[pos.length-1].z + (speed[speed.length-1].z)*(16)*1e-3
+    pos.push({ x: np.x, y: np.y, z: np.z })
+*/
+    return { x: speed[speed.length-1].x, y: speed[speed.length-1].y, z: speed[speed.length-1].z }
 }
 
 function handleOrientation(event) {
