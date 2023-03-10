@@ -26,6 +26,7 @@ if ('LOCAL' in process.env) {
 const io = require('socket.io')(http);
 
 app.use('/', express.static('public'))
+app.use('/records', express.static('db'))
 
 app.get('/api/login',function(req,res) {
   if (config && 'key' in config) {
@@ -50,6 +51,7 @@ io.on('connection', (socket) => {
   if (HOME) socket.to(HOME).emit('action', {
     type: socket.handshake.query.type,
     position: socket.handshake.query.from,
+    record: socket.handshake.query.record,
     name: "connect"
   });
   socket.on('disconnect', () => {
@@ -57,14 +59,22 @@ io.on('connection', (socket) => {
     if (HOME) socket.to(HOME).emit('action', {
       type: socket.handshake.query.type,
       position: socket.handshake.query.from,
+      record: socket.handshake.query.record,
       name: "disconnect"
     });
   });
   socket.on('data', (msg) => {
+    if (msg.rec !== 'unknown') {
+      try {
+          fs.writeFileSync('db/' + msg.t.replace(' ', '-') + '-' + msg.rec + '.json', JSON.stringify(msg) + '\n', { flag: 'a+' })
+      } catch (err) {
+        console.error(err)
+      }
+    }
     if (HOME) socket.to(HOME).emit('data', msg);
   });
   socket.on('action', (msg) => {
-    console.log(msg.position + " " + msg.name)
+    console.log(JSON.stringify(msg))
     if (HOME) socket.to(HOME).emit('action', msg);
   });
 });

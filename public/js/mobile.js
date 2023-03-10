@@ -18,12 +18,14 @@ var incr_t = 0;
 
 var device_id = localStorage.getItem('device_id') || (Math.random() + 1).toString(36).substring(2)
 var device_type = localStorage.getItem('device_type') || 'unknown'
+var record_move = localStorage.getItem('record_move') || 'unknown'
 localStorage.setItem('device_id', device_id)
 
 const socket = io({
     query: {
         "id": device_id,
         "from": device_type,
+        "record": record_move,
         "type": "device"
     }
 });
@@ -140,15 +142,17 @@ function handleMotion(event) {
 $(document).ready(function () {
 
     var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
-    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+    /*var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
         return new bootstrap.Popover(popoverTriggerEl)
-    })
+    })*/
 
     $('#device_id').html(device_id);
     $('#device_type').val(device_type);
+    $('#record_move').val(record_move);
     data = {
         id: device_id,
         t: device_type,
+        rec: record_move,
         i: 0,
         ts: 0,
         awg: {
@@ -185,6 +189,11 @@ $(document).ready(function () {
         updateFieldIfNotNull('battery', battery.level * 100, 2);
     })
 
+    $("#record_move").change(function (e) {
+        record_move = $("#record_move").val();
+        data.rec = record_move;
+    })
+
     $("#device_type").change(function (e) {
         if (popover) $("#popover-btn").trigger("click");
         device_type = $("#device_type").val();
@@ -193,6 +202,7 @@ $(document).ready(function () {
             id: device_id,
             type: "device",
             position: device_type,
+            record: record_move,
             name: "changetype"
         })
         if (device_type === "unknown") $("#start").attr("disabled", true);
@@ -224,6 +234,7 @@ $(document).ready(function () {
                 id: device_id,
                 type: "device",
                 position: device_type,
+                record: record_move,
                 name: "stop"
             })
             $("#start").html("Start");
@@ -240,6 +251,7 @@ $(document).ready(function () {
                 id: device_id,
                 type: "device",
                 position: device_type,
+                record: record_move,
                 name: "start"
             })
             $("#start").html("Stop");
@@ -255,6 +267,7 @@ $(document).ready(function () {
             id: device_id,
             type: "device",
             position: device_type,
+            record: record_move,
             name: "ping"
         })
     }, 3000);
@@ -287,6 +300,7 @@ $(document).ready(function () {
                         id: device_id,
                         type: "device",
                         position: device_type,
+                        record: record_move,
                         name: "S",
                         date: lastEmit
                     });
