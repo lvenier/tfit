@@ -2,7 +2,7 @@
 
 ## Local
 
-LOCAL=1 npm start
+set LOCAL=1&&npm start
 
 PC : https://localhost:3000
 

@@ -64,15 +64,14 @@ io.on('connection', (socket) => {
     });
   });
   socket.on('data', (msg) => {
-    if (msg.rec !== 'unknown') {
       try {
-          fs.writeFileSync('db/' + msg.t.replace(' ', '-') + '-' + msg.rec + '.json', JSON.stringify(msg) + '\n', { flag: 'a+' })
+          fs.writeFileSync('db/' + msg.axe +'.json', JSON.stringify(msg.data_rec) + '\n', { flag: 'a+' })
       } catch (err) {
         console.error(err)
       }
-    }
-    if (HOME) socket.to(HOME).emit('data', msg);
-  });
+
+    if (HOME) socket.to(HOME).emit('data', msg.datarec);
+  });  
   socket.on('action', (msg) => {
     console.log(JSON.stringify(msg))
     if (HOME) socket.to(HOME).emit('action', msg);
