@@ -1,8 +1,16 @@
 var is_running = false;
 var is_debug = false;
 var datas = [];
-var speed = [{ x:0, y:0, z:0 }];
-var pos = [{ x:0, y:0, z:0 }];
+var speed = [{
+    x: 0,
+    y: 0,
+    z: 0
+}];
+var pos = [{
+    x: 0,
+    y: 0,
+    z: 0
+}];
 var move = 0;
 var count = 0;
 var moves = [];
@@ -22,29 +30,41 @@ let calcul = false
 
 
 let Avg = {}
+let Mean = {}
+
+let Var_loc = {}
 let Var = {}
+
 let mean_x = 0
 let mean_y = 0
 let mean_z = 0
-let var_x = 0
-let var_y = 0
-let var_z = 0
+
+let ec_x = 0
+let ec_y = 0
+let ec_z = 0
+
+
 let sum_x = 0
 let sum_y = 0
 let sum_z = 0
 
-let sum_x_sqrt = 0
-let sum_y_sqrt = 0
-let sum_z_sqrt = 0
+let sum_x_sq = 0
+let sum_y_sq = 0
+let sum_z_sq = 0
 
 
 let condition_comparaison = false
-let iter = 0
+let iter_2 = 0
 let data_load = false
 let data_x = {}
 let data_y = {}
 let data_z = {}
 let nb_coup = 0
+
+let score = 0
+let score_x = 0
+let score_y = 0
+let score_z = 0
 
 
 var device_id = localStorage.getItem('device_id') || (Math.random() + 1).toString(36).substring(2)
@@ -81,30 +101,41 @@ function aymeric(ax, ay, az, a, b, g) {
 }
 
 function aymericSpeed(da) {
-        let ns = {}
-        
-        ns.x = speed[speed.length-1].x + (da.ac.x)*(16)*1e-3
-        ns.y = speed[speed.length-1].y + (da.ac.y)*(16)*1e-3
-        ns.z = speed[speed.length-1].z + (da.ac.z)*(16)*1e-3
+    let ns = {}
 
-   if(incr_t < 125 ){
-        speed.push({  x: ns.x, y: ns.y, z: ns.z })
+    ns.x = speed[speed.length - 1].x + (da.ac.x) * (16) * 1e-3
+    ns.y = speed[speed.length - 1].y + (da.ac.y) * (16) * 1e-3
+    ns.z = speed[speed.length - 1].z + (da.ac.z) * (16) * 1e-3
+
+    if (incr_t < 125) {
+        speed.push({
+            x: ns.x,
+            y: ns.y,
+            z: ns.z
+        })
         incr_t += 1
-        
-    }
-    else{
-       speed.push({x : 0, y : 0, z : 0})
+
+    } else {
+        speed.push({
+            x: 0,
+            y: 0,
+            z: 0
+        })
         incr_t = 0
     }
 
-/*
-    let np = {}
-    np.x = pos[pos.length-1].x + (speed[speed.length-1].x)*(16)*1e-3
-    np.y = pos[pos.length-1].y + (speed[speed.length-1].y)*(16)*1e-3
-    np.z = pos[pos.length-1].z + (speed[speed.length-1].z)*(16)*1e-3
-    pos.push({ x: np.x, y: np.y, z: np.z })
-*/
-    return { x: speed[speed.length-1].x, y: speed[speed.length-1].y, z: speed[speed.length-1].z }
+    /*
+        let np = {}
+        np.x = pos[pos.length-1].x + (speed[speed.length-1].x)*(16)*1e-3
+        np.y = pos[pos.length-1].y + (speed[speed.length-1].y)*(16)*1e-3
+        np.z = pos[pos.length-1].z + (speed[speed.length-1].z)*(16)*1e-3
+        pos.push({ x: np.x, y: np.y, z: np.z })
+    */
+    return {
+        x: speed[speed.length - 1].x,
+        y: speed[speed.length - 1].y,
+        z: speed[speed.length - 1].z
+    }
 }
 
 function handleOrientation(event) {
@@ -209,15 +240,15 @@ $(document).ready(function () {
     };
 
 
-    $.get("/records/Mean.json", function(data, status){ //on le fait
-        Avg = JSON.parse(data)
-        $("#notification").html(data);
+    $.get("/records/Mean.json", function (data, status) { //on le fait
+        Avg = data
+        //$("#notification").html('true');
     });
-    $.get("/records/Var.json", function(data, status){
-        Var = JSON.parse(data)
+    $.get("/records/Var.json", function (data, status) {
+        Var = data
     });
     data_load = true //on enregistre le fait qu'on a load la data
-    
+
 
     if (device_type !== "unknown") $("#start").attr("disabled", false);
     else {
@@ -320,7 +351,7 @@ $(document).ready(function () {
         if (is_running) {
             if (so) {
                 data.ac = aymeric(data.a.x, data.a.y, data.a.z, data.o.a - so.a, data.o.b - so.b, data.o.g - so.g)
-                data.s = aymericSpeed(data, datas);
+                data.s = aymericSpeed(data);
                 datas.push(JSON.parse(JSON.stringify(data)))
             }
             if ('ac' in data) {
@@ -356,138 +387,154 @@ $(document).ready(function () {
             } else count = 0;*/
 
             if (datas.length > data_size) datas.shift();
-                if (is_debug && socket && data) {
-                    //$("#notification").html((calcul).toString()) 
-                    
-                    data.ac = aymeric(data.a.x, data.a.y, data.a.z, data.o.a - so.a, data.o.b - so.b, data.o.g - so.g) //projette
-                    data.s = aymericSpeed(data, datas); //calcul la vitesse
+            if (is_debug && socket && data && so) {
+                //$("#notification").html((calcul).toString()) 
+
+                data.ac = aymeric(data.a.x, data.a.y, data.a.z, data.o.a - so.a, data.o.b - so.b, data.o.g - so.g) //projette
+                data.s = aymericSpeed(data); //calcul la vitesse
 
 
-                    if (data.rec == 'punch') //si selection sur punch
-                    {   
-                        calcul = false //Il faudra refaire le calcul
-                        
-                        if (((data.ac.x**2) +( data.ac.y**2) + (data.ac.z**2)) >9 && !condition) //Si l'acc dépasse une valeur et si on n'est pas en mode d'enregistrement
-                        {
-                            
-                            condition = true //on passe en mode enregistrement
-                            nb_point = 0 //on réinitilaise le nombre d'incrément
-                            nb_coup +=1
-                        }
-                        
-                        if (condition && (nb_point< 88)){ //si on est en mode enregistrement et qu'on enregistre depuis moins de 1.4s et que on a pas dépassé 88 points
-                            
-                            //$("#notification").html((nb_point).toString())
+                if (data.rec == 'punch') //si selection sur punch
+                {
+                    calcul = false //Il faudra refaire le calcul
 
-                            if  (data_x[(nb_point).toString()]){
-                                $("#notification").html('0' + (nb_coup).toString())
-                                data_x[(nb_point).toString()].push(data.s.x) //on push les valeurs
-                                data_y[(nb_point).toString()].push(data.s.y)
-                                data_z[(nb_point).toString()].push(data.s.z)
-                            }
-                            else{
-                                $("#notification").html('1'+ (nb_coup).toString())
-                                data_x[(nb_point).toString()] = [data.s.x]
-                                data_y[(nb_point).toString()] = [data.s.y]
-                                data_z[(nb_point).toString()] = [data.s.z]
-                            }
-                            
-                            nb_point = nb_point+1; //on augmente l'incrément de 1
-                        }
-                        else //Si on a dépassé 1.4s ou le nb de point 
-                        {
-                            condition = false //on sort du mode enregistrement
-                        }
-                    }
-                    else if (!calcul){ //Si on a pas fait le calcul
-                        calcul = true
-                        
-                        for (let itera=0; itera<88; itera++){
-                            
-                            
-                            len = data_x[(itera).toString()].length
-                            
-                            for(var i = 0; i < len; i++) {//calcul de la mean et var de chaque point
-                                sum_x += data_x[(itera).toString()][i];
-                                sum_y += data_y[(itera).toString()][i];
-                                sum_z += data_z[(itera).toString()][i];
+                    if (((data.ac.x ** 2) + (data.ac.y ** 2) + (data.ac.z ** 2)) > 9 && !condition) //Si l'acc dépasse une valeur et si on n'est pas en mode d'enregistrement
+                    {
 
-                                sum_x_sqrt += data_x[(itera).toString()][i]**2;
-                                sum_y_sqrt += data_y[(itera).toString()][i]**2;
-                                sum_z_sqrt += data_z[(itera).toString()][i]**2;
-                            }
-
-                            mean_x = sum_x/len
-                            mean_y = sum_y/len
-                            mean_z = sum_z/len
-
-                            var_x = sum_x_sqrt/len - mean_x**2
-                            var_y = sum_y_sqrt/len - mean_y**2
-                            var_z = sum_z_sqrt/len - mean_z**2
-
-                            Mean[(itera).toString()] = {'x':0,'y':0,'z':0}
-                            Var[(itera).toString()] = {'x':0,'y':0,'z':0}
-
-                            Mean[(itera).toString()]['x'] = mean_x
-                            Mean[(itera).toString()]['y'] = mean_y
-                            Mean[(itera).toString()]['z'] = mean_z
-
-                            
-                            Var[(itera).toString()]['x'] = var_x
-                            Var[(itera).toString()]['y'] = var_y
-                            Var[(itera).toString()]['z'] = var_z
-                        }
-                        //$("#notification").html('ok')
-                        Mean_L = {axe :'Mean', data_rec: Mean}
-                        Var_L = {axe :'Var', data_rec: Var}
-
-                        socket.emit('data',Mean_L );
-                        socket.emit('data', Var_L);
-                        
-                    }
-                    if (data.rec == 'unknown'){ //Si on est en mode reconaissance
-                        
-
-                        if((data.ac.x**2) +( data.ac.y**2) + (data.ac.z**2) >9 || condition_comparaison) //Si l'acc dépasse un seil et que on est en mode enregistrement
-                            {    
-                                //on compte un point de plus
-                                
-                                condition_comparaison = true //on passe en mode enregistrement
-                                ecart_x = data.s.x-Avg[(iter).toString()]['x'] //on calcul les écarts à la moyenne
-                                ecart_y = data.s.y-Avg[(iter).toString()]['y']
-                                ecart_z = data.s.z-Avg[(iter).toString()]['z']
-
-                                if ((ecart_x < 2.1544*Var[(iter).toString()]['x']) &&
-                                        (ecart_y < 2.1544*Var[(iter).toString()]['y']) &&
-                                        (ecart_z < 2.1544*Var[(iter).toString()]['z'])) { //Si on est dans la tolérance on compte +1 dans le score
-                                    
-                                    score +=1
-                                }
-                                
-                                iter += 1;
-                            }
-
-                            if(iter>86){ //Si on dépasse le nombre de point 
-                                condition_comparaison = false //on sort du mode enregistrement
-                                
-
-                                if (score/iter >0.8){ //Si le score dépasse un seil
-                                $("#notification").html("coup_droit"); //On affiche que c'est un coup
-                                }
-                                else { //Sinon
-                                    $("#notification").html("N/A"); //On affiche rien
-                                }
-                                iter = 0 //on réinitialise le nombre de point à 0
-                                score = 0 //On réinitialise le score
-                            }
-
-                            
-                    
+                        condition = true //on passe en mode enregistrement
+                        nb_point = 0 //on réinitilaise le nombre d'incrément
+                        nb_coup += 1
 
                     }
+                    if (condition && (nb_point < 88)) { //si on est en mode enregistrement et qu'on enregistre depuis moins de 1.4s et que on a pas dépassé 88 points
+
+                        //$("#notification").html((nb_point).toString())
+
+                        if (data_x[(nb_point).toString()]) {
+                            $("#notification").html('0' + (nb_coup).toString())
+                            data_x[(nb_point).toString()].push(data.s.x) //on push les valeurs
+                            data_y[(nb_point).toString()].push(data.s.y)
+                            data_z[(nb_point).toString()].push(data.s.z)
+                        } else {
+                            $("#notification").html('1' + (nb_coup).toString())
+                            data_x[(nb_point).toString()] = [data.s.x]
+                            data_y[(nb_point).toString()] = [data.s.y]
+                            data_z[(nb_point).toString()] = [data.s.z]
+                        }
+
+                        nb_point = nb_point + 1; //on augmente l'incrément de 1
+                    } else //Si on a dépassé 1.4s ou le nb de point 
+                    {
+
+                        condition = false //on sort du mode enregistrement
+                    }
+                } else if (!calcul) { //Si on a pas fait le calcul
+
+                    calcul = true
+
+                    for (let itera = 0; itera < 87; itera++) {
+
+
+                        len = data_x[(itera).toString()].length
+
+                        for (var i = 0; i < len; i++) { //calcul de la mean et var de chaque point
+
+                            sum_x += data_x[(itera).toString()][i];
+                            sum_y += data_y[(itera).toString()][i];
+                            sum_z += data_z[(itera).toString()][i];
+
+                            sum_x_sq += (data_x[(itera).toString()][i]) ** 2;
+                            sum_y_sq += (data_y[(itera).toString()][i]) ** 2;
+                            sum_z_sq += (data_z[(itera).toString()][i]) ** 2;
+                        }
+
+                        mean_x = (sum_x) / len
+                        mean_y = (sum_y) / len
+                        mean_z = (sum_z) / len
+
+                        ec_x = Math.sqrt(((sum_x_sq / len) - (mean_x) ** 2) / len)
+                        ec_y = Math.sqrt(((sum_y_sq / len) - (mean_y) ** 2) / len)
+                        ec_z = Math.sqrt(((sum_z_sq / len) - (mean_z) ** 2) / len)
+
+                        Mean[(itera).toString()] = {'x' : mean_x, 'y': mean_y, 'z' : mean_z}
+                        Var_loc[(itera).toString()] = {'x' : ec_x, 'y': ec_y, 'z' : ec_z}
+
+                        sum_x = 0
+                        sum_y = 0
+                        sum_z = 0
+
+                        sum_x_sq = 0
+                        sum_y_sq = 0
+                        sum_z_sq = 0
+                    }
+                    //$("#notification").html("ok");
+                    Mean_L = {
+                        axe: 'Mean',
+                        data_rec: Mean
+                    }
+                    Var_L = {
+                        axe: 'Var',
+                        data_rec: Var_loc
+                    }
+
+                    socket.emit('data', Mean_L);
+                    socket.emit('data', Var_L);
+
                 }
+                if (data.rec == 'unknown') { //Si on est en mode reconaissance
+                    if (((data.ac.x ** 2) + (data.ac.y ** 2) + (data.ac.z ** 2)) > 9 || condition_comparaison) { //Si l'acc dépasse un seil et que on est en mode enregistrement    
+                        //on compte un point de plus
+
+                        condition_comparaison = true //on passe en mode enregistrement
+                        ecart_x = (data.s.x) - Avg[(iter_2).toString()]['x'] //on calcul les écarts à la moyenne
+                        ecart_y = (data.s.y) - Avg[(iter_2).toString()]['y']
+                        ecart_z = (data.s.z) - Avg[(iter_2).toString()]['z']
+                        
+                        if ((Math.abs(ecart_x) < 6 * Var[(iter_2).toString()]['x'])
+                        ) { //Si on est dans la tolérance on compte +1 dans le score
+
+                            score_x += 1
+                        }
+                        if ((Math.abs(ecart_y) < 6 * Var[(iter_2).toString()]['y'])
+                        ) { //Si on est dans la tolérance on compte +1 dans le score
+
+                            score_y += 1
+                        }
+                        if ((Math.abs(ecart_z) < 6 * Var[(iter_2).toString()]['z'])
+                        ) { //Si on est dans la tolérance on compte +1 dans le score
+
+                            score_z += 1
+                        }
+                        score = score_x + score_y + score_z
+                        iter_2 += 1;
+                    }
+
+                    if (iter_2 > 86) { //Si on dépasse le nombre de point 
+                        condition_comparaison = false //on sort du mode enregistrement
+
+
+
+                        if (score / 86 > 0.8) { //Si le score dépasse un seil
+                            $("#notification").html("coup_droit"); //On affiche que c'est un coup
+                        } else { //Sinon
+                            $("#notification").html("rien du tout t'en nul"); //On affiche rien
+                        }
+                        $("#notification").html((score_x).toString() + ',' + (score_y).toString() + ',' + (score_z).toString())
+
+                        iter_2 = 0 //on réinitialise le nombre de point à 0
+                        score = 0 //On réinitialise le score
+                        score_x = 0
+                        score_y = 0
+                        score_z = 0
+
+                    }
+
+
+
+
+                }
+            }
         }
     }, 16);
 
 })
-
