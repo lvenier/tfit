@@ -64,9 +64,10 @@ io.on('connection', (socket) => {
     });
   });
   socket.on('data', (msg) => {
+    //console.log(msg.rec)
     if (msg.rec !== 'unknown') {
       try {
-          fs.writeFileSync('db/' + msg.t.replace(' ', '-') + '-' + msg.rec + '.json', JSON.stringify(msg) + '\n', { flag: 'a+' })
+          fs.writeFileSync('db/' + msg.t.replace(' ', '-') + '-' + msg.rec + '.txt', JSON.stringify(msg) + '\n', { flag: 'a+' })
       } catch (err) {
         console.error(err)
       }
@@ -81,3 +82,9 @@ io.on('connection', (socket) => {
 
 http.listen(process.env.PORT || 3000, () => {
 });
+
+
+/*const allFileContents = fs.readFileSync('./db/ref.json', 'utf-8');
+allFileContents.split(/\r?\n/).forEach(line =>  {
+  console.log(`Line from file: ${line}`);
+});*/
