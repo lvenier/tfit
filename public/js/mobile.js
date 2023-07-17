@@ -20,9 +20,9 @@ var running = null;
 var data_size = 32;
 var current=0;
 
-var thresholdx=10;
-var thresholdy=10;
-var thresholdz=10; //à voir à combien je les mets , pour l'instant empiriquement, je veux éviter les faux negatifs
+var thresholdx=20;
+var thresholdy=20;
+var thresholdz=20; //à voir à combien je les mets , pour l'instant empiriquement, je veux éviter les faux negatifs
 var done1=false;
 var done2=false;
 var detection=false;
@@ -54,8 +54,6 @@ $.get("/records/ref.txt", function(data, status){
       for (var i=0; i<ref.length;i++){
           ref[i].ac=aymeric(ref[i].a.x, ref[i].a.y, ref[i].a.z, ref[i].o.a - soa, ref[i].o.b - sob, ref[i].o.g - sog)
           mag=magnitude(ref[i].ac);
-          mag2=magnitude(ref[i].a);
-          console.log(mag,mag2);
           if ((mag>threshold_detection) && (beginpunch==false) && (done1==false)){
             console.log('begin',i)
             beginpunch=true;
@@ -378,7 +376,7 @@ $(document).ready(function () {
         return filteredData;
       }
 
-
+    
 
 
 
@@ -419,49 +417,12 @@ $(document).ready(function () {
                         datas=[];
                         current=0;
                         //on ne considere pas un coup avec trop peu de frames par rapport à la ref sinon on a des positifs avec seulement 3 points
-                    }else{
-                        console.log(datas.length)
-                        for(let i=0;i<datas.length;i++){
-                        console.log(Math.abs(datas[i].ac.x-ref[beginindex+i].ac.x),Math.abs(datas[i].ac.y-ref[beginindex+i].ac.y),Math.abs(datas[i].ac.z-ref[beginindex+i].ac.z))
-                    if ((Math.abs(datas[i].ac.x-ref[beginindex+i].ac.x)<thresholdx) && (Math.abs(datas[i].ac.y-ref[beginindex+i].ac.y)<thresholdy) && (Math.abs(datas[i].ac.z-ref[beginindex+i].ac.z)<thresholdz)){
-                        //jusqu'ici tout va bien
-                        punch=true;
-                        
-                    }else{
-                        //premier point ou c'est pas bon on renitialise pour la prochaine acquisition/essai
-                        console.log('fail ici')
-                        punch=false;
-                        i=datas.length;
-                        detection=false;
-                        done2=false;
-                        datas=[];
-                        current=0;
-                    }
-                }
-                //quand j'ai finis l'inspection du mouvement si on a detecté c'est fini sinon on repart détecter qqch
-                if ((punch==true)&&(done2==false)){
-                        
-                    //le if qui suit est brut de décofrage du code de laurent j'ai rien modifié
-                    if ( lastEmit + 500 < Date.now()) {
-                        lastEmit = Date.now();
-                        if (socket) socket.emit('action', {
-                            id: device_id,
-                            type: "device",
-                            position: device_type,
-                            record: record_move,
-                            name: "S",
-                            date: lastEmit
-                        });
-                        $("#notification").html((device_type + " STRAIGHT").toUpperCase()).addClass("text-success");
-                        count = 0;
-                        setTimeout(function () {
-                            $("#notification").html("N/A").removeClass("text-success");
-                        }, 800);}
-                        done2=true;
-                }}
+                    }else{punch=isJab(datas,ref)}
                 console.log('resultat du coup',punch);
             
             }   
+
+
 
             
 
@@ -493,3 +454,45 @@ $(document).ready(function () {
     }, 16); //toute les 16 millisecs
 
 })
+
+    function isJab(datas,ref){
+
+            for(let i=0;i<datas.length;i++){
+                        if ((Math.abs(datas[i].ac.x-ref[beginindex+i].ac.x)<thresholdx) && (Math.abs(datas[i].ac.y-ref[beginindex+i].ac.y)<thresholdy) && (Math.abs(datas[i].ac.z-ref[beginindex+i].ac.z)<thresholdz)){
+                            //jusqu'ici tout va bien
+                            console.log('ok')
+                            punch=true;
+                            
+                        }else{
+                            //premier point ou c'est pas bon on renitialise pour la prochaine acquisition/essai
+                            console.log('fail ici')
+                            punch=false;
+                            i=datas.length;
+                            detection=false;
+                            done2=false;
+                            datas=[];
+                            current=0;
+                        }
+                    }
+                    //quand j'ai finis l'inspection du mouvement si on a detecté c'est fini sinon on repart détecter qqch
+                    if ((punch==true)&&(done2==false)){
+                        done2=true;
+                        //le if qui suit est brut de décofrage du code de laurent j'ai rien modifié
+                        if ( lastEmit + 500 < Date.now()) {
+                            lastEmit = Date.now();
+                            if (socket) socket.emit('action', {
+                                id: device_id,
+                                type: "device",
+                                position: device_type,
+                                record: record_move,
+                                name: "S",
+                                date: lastEmit
+                            });
+                            $("#notification").html((device_type + " STRAIGHT").toUpperCase()).addClass("text-success");
+                            count = 0;
+                            setTimeout(function () {
+                                $("#notification").html("N/A").removeClass("text-success");
+                            }, 800);}
+                    }
+                return punch;}
+                
