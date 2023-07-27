@@ -42,7 +42,7 @@ var done1 = false;
 var done2 = false;
 var detection = false;
 var ref = [];
-var threshold_detection = 1.0;
+var threshold_detection = 1.7;
 var ref_length = 15;
 var nb_coups = 0;
 var mean_x = null;
@@ -77,10 +77,34 @@ const socket = io({
         "type": "device"
     }
 });
-
-//SI BESOIN REDEFINIR LES THRESHOLD DANS LES IF CI DESSOUS
-
-
+ /*
+function setthresholddetection(nombre_coups_theorique, data_mag){
+    var coup_detect=0;
+    current=0
+    var lim=0;
+    while(coup_detect!=nombre_coups_theorique){
+        for(let k=0;k<data_mag.length;k++){
+            if(data_mag[k]>threshold_detection){
+                current=current+1;
+            }else if((current!=0)&(current>min_frame)){
+                coup_detect=coup_detect+1;
+                current=0
+            }
+        }
+        if (coup_detect>nombre_coups_theorique){
+            threshold_detection=threshold_detection-0.1;
+        }else if(coup_detect < nombre_coups_theorique){
+            threshold_detection=threshold_detection+0.1;
+        }
+        lim=lim+1;
+        coup_detect=0;
+        if(lim==50){coup_detect=nombre_coups_theorique}
+    }
+    if(lim==50){
+        return false
+    }else {return true}
+}
+*/
 //MINIMUM ENTRE A ET B
 function min(a, b) {
     if (a < b) {
@@ -155,28 +179,26 @@ function filtre5(dat) {
     return dat2;
 }
 
-
-
 //NORMALISATION DE LA DATA
 function norm(dat) {
     dat.x = dat.map(({ x }) => x);
     dat.y = dat.map(({ y }) => y);
     dat.z = dat.map(({ z }) => z);
     //console.log('in f',dat)
-    var mean_x = mean(dat.x);
-    var mean_y = mean(dat.y);
-    var mean_z = mean(dat.z);
+    var meanx = mean(dat.x);
+    var meany = mean(dat.y);
+    var meanz = mean(dat.z);
 
-    var std_x = std(dat.x, mean_x);
-    var std_y = std(dat.y, mean_y);
-    var std_z = std(dat.z, mean_z);
+    var std_x = std(dat.x, meanx);
+    var std_y = std(dat.y, meany);
+    var std_z = std(dat.z, meanz);
 
     //.log(S2_x,dat[0].x,mean_x);
     for (let i = 0; i < dat.length; i++) {
 
-        dat[i].x = (dat[i].x - mean_x) / std_x;
-        dat[i].y = (dat[i].x - mean_y) / std_y;
-        dat[i].z = (dat[i].z - mean_z) / std_z;
+        dat[i].x = (dat[i].x - meanx) / std_x;
+        dat[i].y = (dat[i].x - meany) / std_y;
+        dat[i].z = (dat[i].z - meanz) / std_z;
     }
     dat.x = dat.map(({ x }) => x);
     dat.y = dat.map(({ y }) => y);
@@ -673,7 +695,8 @@ $(document).ready(function () {
             $("#debug").addClass('btn-danger');
             $("#debug-notif").removeClass('d-none');
         }
-        
+        socket.emit('debug',[device_type,record_move]);
+
     })
 
     $("#start").on("click", function (e) {
@@ -798,7 +821,6 @@ $(document).ready(function () {
             if (datas.length > data_size) datas.shift();
             if (is_debug && socket && data) {
                 socket.emit('data', data);
-                socket.emit('punch', punch);
 
             }
         }
