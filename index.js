@@ -5,6 +5,7 @@ var LOCAL = null;
 var HOME = null;
 var http = null;
 var config = null;
+var begin=false;
 const configFile = 'config/config.json';
 
 try {
@@ -63,21 +64,47 @@ io.on('connection', (socket) => {
       name: "disconnect"
     });
   });
+
+
   socket.on('data', (msg) => {
     if (msg.rec !== 'unknown') {
+      
       try {
-          fs.writeFileSync('db/' + msg.t.replace(' ', '-') + '-' + msg.rec + '.json', JSON.stringify(msg) + '\n', { flag: 'a+' })
+          if(begin==false){
+          fs.writeFileSync('db/' + msg.t.replace(' ', '-') + '-' + msg.rec + '.txt', JSON.stringify(msg) + '\n', { flag: 'w' });
+          begin=true;
+          }else{fs.writeFileSync('db/' + msg.t.replace(' ', '-') + '-' + msg.rec + '.txt', JSON.stringify(msg) + '\n', { flag: 'a+' })}
       } catch (err) {
         console.error(err)
       }
     }
     if (HOME) socket.to(HOME).emit('data', msg);
   });
+
+
+  socket.on('punch',(msg)=>{
+    if(msg==true){
+    console.log('coup', msg);
+    }
+  });
+
+
   socket.on('action', (msg) => {
     console.log(JSON.stringify(msg))
     if (HOME) socket.to(HOME).emit('action', msg);
   });
 });
 
+
+
 http.listen(process.env.PORT || 3000, () => {
 });
+
+
+/*const allFileContents = fs.readFileSync('./db/ref.json', 'utf-8');
+allFileContents.split(/\r?\n/).forEach(line =>  {
+  console.log(`Line from file: ${line}`);
+});*/
+
+
+  
