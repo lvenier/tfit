@@ -222,17 +222,17 @@ function fetchSong(id = 1, speak = true) {
         song.moves[0] = 0
         let rand = 0;
         for (let i = 1; i < gameLength - 5; i++) {
-          if (i === Math.floor(gameLength/2)) {
-            song.moves.push(10);
-            continue;
+          if (level === 3) rand = Math.floor(Math.random() * 9) + 1;
+          if (level <= 2) rand = Math.floor(Math.random() * 10);
+          if (level === 1) {
+            if (i % 2) rand = 0;
           }
-          if (level === 2) rand = Math.floor(Math.random() * 9) + 1;
-          else rand = Math.floor(Math.random() * 10);
           song.moves.push(rand);
         }
         for (let s = gameLength - 5; s < gameLength; s++) {
           song.moves[s] = 0;
         }
+        song.moves[Math.floor(gameLength/2)] = 10;
       }
       moves = song.moves;
       music = loadSound(song.url);
@@ -1021,14 +1021,16 @@ function draw() {
             punchSound();
           }
         }
-        if (nose.x * coef < left_init_pose_x - OBJECT_POSE_SIZE / 2) {
-          left_dodge = Date.now();
-        }
-        if (nose.x * coef > right_init_pose_x + OBJECT_POSE_SIZE / 2) {
-          right_dodge = Date.now();
-        }
-        if (nose.y * coef > init_uppercut_y) {
-          down_dodge = Date.now();
+        if (Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
+          if (nose.x * coef < left_init_pose_x - OBJECT_POSE_SIZE / 2) {
+            left_dodge = Date.now();
+          }
+          if (nose.x * coef > right_init_pose_x + OBJECT_POSE_SIZE / 2) {
+            right_dodge = Date.now();
+          }
+          if (nose.y * coef > init_uppercut_y) {
+            down_dodge = Date.now();
+          }
         }
       }
       if (rightHand && rightHand.confidence > 0.1) {
@@ -1068,7 +1070,7 @@ function draw() {
         }
         if (rightHand.y * coef < init_jab_y) {
           rect(0, 0, myWindowWidth, init_jab_y);
-          if (Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL) {
+          if (Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
             right_jab = Date.now();
             if (gameCalibration) {
               textSize(32);
