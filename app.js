@@ -278,6 +278,7 @@ function handleChange() {
   if ( menu === 2) {
     if (!gameStarted && mouseX > myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 && mouseX < myWindowWidth / 2 + OBJECT_POSE_SIZE && mouseY > 50 && mouseY < 50 + OBJECT_POSE_SIZE) {
       switch_feet();
+      localStorage.setItem("feet_position", feet_position);
     }
   }
   if ([2, 3].includes(menu)) {
@@ -285,6 +286,7 @@ function handleChange() {
       if (mouseY > height - 148 * coef && mouseY < height - 108 * coef) {
         click_sound.play();
         if (!gameStarted) {
+          feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
           speechSpeak.speak("let's fight!");
           gameStarted = true;
           curMoves = [];
@@ -446,6 +448,7 @@ function keyPressed() {
   }
   if (key === 'f' && [2, 3].includes(menu)) {
     if (!gameStarted) {
+      feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
       speechSpeak.speak("let's fight!");
       gameStarted = true;
       curMoves = [];
@@ -535,7 +538,6 @@ function onEndSpeechRec() {
 function switch_feet() {
   if (feet_position === 0) feet_position = 1;
   else feet_position = 0;
-  localStorage.setItem("feet_position", feet_position);
 }
 
 function hitSuccess() {
@@ -629,6 +631,7 @@ function draw() {
         player.score += player.scores[s].score
       }
       localStorage.setItem("player", JSON.stringify(player));
+      feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
     }
 
     if (Date.now() - gameOverTime < 2000) {
