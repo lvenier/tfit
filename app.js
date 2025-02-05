@@ -64,7 +64,8 @@ const SHADOW_SPECIFIC = {
   "1": "JAB",
   "2": "HOOK",
   "3": "UCUT",
-  "4": "DODGE"
+  "4": "DODGE",
+  "5": "PUNCHES"
 }
 
 var wakeLock = null;
@@ -86,7 +87,7 @@ var rightHand;
 var nose;
 var score = 0;
 var level = parseFloat(localStorage.getItem("level")) || 2;
-var shadow_focus = parseFloat(localStorage.getItem("level")) || 4;
+var shadow_focus = parseFloat(localStorage.getItem("shadow_focus")) || 0;
 var arrayScore = [];
 var background_image;
 var menu_image;
@@ -419,6 +420,16 @@ function keyPressed() {
   if (key === 's' && [2, 3].includes(menu)) {
     gameOver = true;
   }
+  if (key === 't' && [2, 3].includes(menu)) {
+    if (shadow_focus < Object.keys(SHADOW_SPECIFIC).length - 1) shadow_focus++;
+    else shadow_focus = 0;
+    localStorage.setItem("shadow_focus",shadow_focus);
+  }
+  if (key === 'l' && [2, 3].includes(menu)) {
+    if (level < Object.keys(GAME_LEVEL).length -1 ) level++;
+    else level = 0;
+    localStorage.setItem("level",level);
+  }
   if (key === 's' && menu === 0) {
     menu = 2;
   }
@@ -742,7 +753,8 @@ function draw() {
     }
     text("Score: " + score, 15, 30);
     textSize(20);
-    text("Level: " + GAME_LEVEL[level.toString()], 15, 55);
+    text("(L)evel: " + GAME_LEVEL[level.toString()], 15, 55);
+    text("(T)ype: " + SHADOW_SPECIFIC[shadow_focus].toLowerCase(), 15, 80);
     fill(255, 0, 0, hide_sensor);
     if (songwait || songwaittime + 1000 > Date.now()) {
       fill(0, 0, 0, 255);
