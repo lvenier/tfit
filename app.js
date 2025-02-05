@@ -86,7 +86,7 @@ var leftHand;
 var rightHand;
 var nose;
 var score = 0;
-var level = parseFloat(localStorage.getItem("level")) || 2;
+var level = parseFloat(localStorage.getItem("level")) || 0;
 var shadow_focus = parseFloat(localStorage.getItem("shadow_focus")) || 0;
 var arrayScore = [];
 var background_image;
@@ -211,31 +211,51 @@ function fetchBackground(id = 1) {
   background_image = loadImage('assets/backgrounds/' + backgroundId + '.jpg');
 }
 
+function randomInteger(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function loadSongmoves() {
+  if (song) {
+    gameLength = parseInt(song.length);
+    gameDuration = gameLength * FRAME_RATE;
+    if (song.moveLength === 0) {
+      song.moves = [];
+      song.moves[0] = 0
+      let rand = 0;
+      for (let i = 1; i < gameLength - 5; i++) {
+        if (shadow_focus === 0) rand = randomInteger(1,9);
+        if (shadow_focus === 1) rand = randomInteger(1,2);
+        if (shadow_focus === 2) rand = randomInteger(3,4);
+        if (shadow_focus === 3) rand = randomInteger(5,6);
+        if (shadow_focus === 4) rand = randomInteger(7,9);
+        if (shadow_focus === 5) rand = randomInteger(1,6);
+        if (level === 2) {};
+        if (level === 1) {
+          if (i % 5 === 0) rand = 0;
+        }
+        if (level === 0) {
+          if (i % 2 === 0) rand = 0;
+        }
+        song.moves.push(rand);
+      }
+      for (let s = gameLength - 5; s < gameLength; s++) {
+        song.moves[s] = 0;
+      }
+      song.moves[Math.floor(gameLength/2)] = 10;
+    }
+    moves = song.moves;
+  }
+}
+
 function fetchSong(id = 1, speak = true) {
   fetch("/db/" + id + ".json?v=" + hit_success)
     .then(response => response.json())
     .then(data => {
       song = data;
+      song.moveLength = song.moves.length;
       localStorage.setItem("song_id", id);
-      gameLength = parseInt(song.length);
-      gameDuration = gameLength * FRAME_RATE;
-      if (song.moves.length === 0) {
-        song.moves[0] = 0
-        let rand = 0;
-        for (let i = 1; i < gameLength - 5; i++) {
-          if (level === 3) rand = Math.floor(Math.random() * 9) + 1;
-          if (level <= 2) rand = Math.floor(Math.random() * 10);
-          if (level === 1) {
-            if (i % 2) rand = 0;
-          }
-          song.moves.push(rand);
-        }
-        for (let s = gameLength - 5; s < gameLength; s++) {
-          song.moves[s] = 0;
-        }
-        song.moves[Math.floor(gameLength/2)] = 10;
-      }
-      moves = song.moves;
+      loadSongmoves();
       music = loadSound(song.url);
       if (speak) speechSpeak.speak("song " + song.name + " selected !");
     })
@@ -424,11 +444,13 @@ function keyPressed() {
     if (shadow_focus < Object.keys(SHADOW_SPECIFIC).length - 1) shadow_focus++;
     else shadow_focus = 0;
     localStorage.setItem("shadow_focus",shadow_focus);
+    loadSongmoves();
   }
   if (key === 'l' && [2, 3].includes(menu)) {
     if (level < Object.keys(GAME_LEVEL).length -1 ) level++;
     else level = 0;
     localStorage.setItem("level",level);
+    loadSongmoves();
   }
   if (key === 's' && menu === 0) {
     menu = 2;
@@ -872,7 +894,7 @@ function draw() {
 
     if (gameStarted) {
       fill(255, 255, 255, 255);
-      text(`Time Left: ${Math.ceil((gameDuration - gameTimer) / FRAME_RATE)}s`, 15, 80);
+      text(`Time Left: ${Math.ceil((gameDuration - gameTimer) / FRAME_RATE)}s`, 15, 105);
       textSize(10 * coef);
       fill(0, 0, 0);
       rect(myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef, 20);
