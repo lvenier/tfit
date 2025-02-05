@@ -588,6 +588,7 @@ function draw() {
 
   textSize(10 * coef);
   if (menu === 0) {
+    gameResult = Date.now() - 5000;
     image(menu_image, myWindowWidth / 2.5, myWindowHeight / 6, myWindowWidth / 2, myWindowWidth / 2);
     fill(0, 0, 0);
     rect(myWindowWidth / 6, parseInt(myWindowHeight / 6), 100 * coef, 50 * coef, 20);
@@ -651,7 +652,7 @@ function draw() {
       textSize(20);
       song_result = {};
       for (let r in curMoves) {
-        if (curMoves[r].type === 0) continue;
+        if (curMoves[r].type === 0 || curMoves[r].type === 10) continue;
         if (!(curMoves[r].type.toString() in song_result)) {
           song_result[curMoves[r].type.toString()] = {
             "type": parseInt(curMoves[r].type),
