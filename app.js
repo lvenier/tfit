@@ -216,6 +216,7 @@ function randomInteger(min, max) {
 }
 
 function loadSongmoves() {
+  LEVEL = level * 10 + 30
   if (song) {
     gameLength = parseInt(song.length);
     gameDuration = gameLength * FRAME_RATE;
@@ -407,7 +408,7 @@ function preload() {
 }
 
 function keyPressed() {
-  if (key === 'g' && menu === 2) {
+  if (['g','G'].includes(key) && menu === 2) {
     songwait = true;
     songvalue = "";
   }
@@ -426,42 +427,42 @@ function keyPressed() {
       }
     }
   }
-  if (key === 'b' && [1, 2, 3].includes(menu)) {
+  if (['b','B'].includes(key) && [1, 2, 3].includes(menu)) {
     if (!gameStarted) {
       menu = 0;
     }
   }
-  if (key === 'c' && [2, 3].includes(menu)) {
+  if (['c','C'].includes(key) && [2, 3].includes(menu)) {
     if (!gameStarted) {
       gameCalibration = true;
       hide_sensor = 64;
     } else speechRec.resultString = "No calibration in game"
   }
-  if (key === 's' && [2, 3].includes(menu)) {
+  if (['s','S'].includes(key) && [2, 3].includes(menu)) {
     gameOver = true;
   }
-  if (key === 't' && [2, 3].includes(menu)) {
+  if (['t','T'].includes(key) && [2, 3].includes(menu)) {
     if (shadow_focus < Object.keys(SHADOW_SPECIFIC).length - 1) shadow_focus++;
     else shadow_focus = 0;
     localStorage.setItem("shadow_focus",shadow_focus);
     loadSongmoves();
   }
-  if (key === 'l' && [2, 3].includes(menu)) {
+  if (['l','L'].includes(key) && [2, 3].includes(menu)) {
     if (level < Object.keys(GAME_LEVEL).length -1 ) level++;
     else level = 0;
     localStorage.setItem("level",level);
     loadSongmoves();
   }
-  if (key === 's' && menu === 0) {
+  if (['s','S'].includes(key) && menu === 0) {
     menu = 2;
   }
-  if (key === 'p' && menu === 0) {
+  if (['p','P'].includes(key) && menu === 0) {
     menu = 3;
   }
-  if (key === 'f' && menu === 0) {
+  if (['f','F'].includes(key) && menu === 0) {
     menu = 4;
   }
-  if (key === 'r' && [2, 3].includes(menu)) {
+  if (['r','R'].includes(key) && [2, 3].includes(menu)) {
     left_init_pose_x = myWindowWidth / 3;
     localStorage.setItem("left_init_pose_x", left_init_pose_x);
     left_init_pose_y = myWindowWidth / 3;
@@ -479,7 +480,7 @@ function keyPressed() {
     right_init_hook_x = myWindowWidth - 120;
     localStorage.setItem("right_init_hook_x", right_init_hook_x);
   }
-  if (key === 'f' && [2, 3].includes(menu)) {
+  if (['f','F'].includes(key) && [2, 3].includes(menu)) {
     if (!gameStarted) {
       feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
       speechSpeak.speak("let's fight!");
@@ -930,16 +931,16 @@ function draw() {
             switch_guard = Date.now();
             switch_feet();
           }          
-          if (Date.now() - left_jab < LEVEL && curMoves[c].type === 1) {
+          if (Date.now() - left_jab < LEVEL * 10 && left_poses - left_jab < LEVEL * 10 && curMoves[c].type === 1) {
             hitSuccess();
           }
-          if (Date.now() - left_hook < LEVEL * 10 && left_poses > left_hook && curMoves[c].type === 3) {
+          if (Date.now() - left_hook < LEVEL * 10 && left_poses - left_hook < LEVEL * 10 && curMoves[c].type === 3) {
             hitSuccess();
           }
-          if (Date.now() - left_uppercut < LEVEL * 10 && left_poses > left_uppercut && curMoves[c].type === 5) {
+          if (Date.now() - left_uppercut < LEVEL * 10 && left_poses - left_uppercut < LEVEL * 10 && curMoves[c].type === 5) {
             hitSuccess();
           }
-          if (Date.now() - left_dodge < LEVEL * 10 && curMoves[c].type === 7) {
+          if (Date.now() - left_dodge < LEVEL * 10 && left_poses - left_dodge < LEVEL * 10 && curMoves[c].type === 7) {
             hitSuccess();
           }
         }
@@ -949,16 +950,16 @@ function draw() {
             switch_guard = Date.now();
             switch_feet();
           } 
-          if (Date.now() - right_jab < LEVEL && curMoves[c].type === 2) {
+          if (Date.now() - right_jab < LEVEL * 10 && right_poses - right_jab < LEVEL * 10 && curMoves[c].type === 2) {
             hitSuccess();
           }
-          if (Date.now() - right_hook < LEVEL * 10 && right_poses > right_hook && curMoves[c].type === 4) {
+          if (Date.now() - right_hook < LEVEL * 10 && right_poses - right_hook < LEVEL * 10 && curMoves[c].type === 4) {
             hitSuccess();
           }
-          if (Date.now() - right_uppercut < LEVEL * 10 && right_poses > right_uppercut && curMoves[c].type === 6) {
+          if (Date.now() - right_uppercut < LEVEL * 10 && right_poses - right_uppercut < LEVEL * 10 && curMoves[c].type === 6) {
             hitSuccess();
           }
-          if (Date.now() - right_dodge < LEVEL * 10 && curMoves[c].type === 8) {
+          if (Date.now() - right_dodge < LEVEL * 10 && right_poses - right_dodge < LEVEL * 10 && curMoves[c].type === 8) {
             hitSuccess();
           }
           if (Date.now() - down_dodge < LEVEL * 10 && curMoves[c].type === 9) {
