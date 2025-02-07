@@ -80,7 +80,7 @@ myWindowHeight = coef * 480;
 
 const OBJECT_POSE_SIZE = 48 * coef;
 const FRAME_RATE = 30;
-const LEVEL = 50;
+var LEVEL = 50;
 
 var leftHand;
 var rightHand;
@@ -622,7 +622,7 @@ function draw() {
 
   textSize(10 * coef);
   if (menu === 0) {
-    gameResult = Date.now() - 5000;
+    gameResult = Date.now() - 5001;
     image(menu_image, myWindowWidth / 2.5, myWindowHeight / 6, myWindowWidth / 2, myWindowWidth / 2);
     fill(0, 0, 0);
     rect(myWindowWidth / 6, parseInt(myWindowHeight / 6), 100 * coef, 50 * coef, 20);
@@ -727,10 +727,10 @@ function draw() {
         } else if (song_result[mt.toString()].type === 10) {
           fill(0, 200, 0, 255);
         }
-        circle(parseInt((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2) + 80, parseInt(myWindowHeight / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * coef), OBJECT_POSE_SIZE / 2);
+        circle(parseInt((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2) + 100, parseInt(myWindowHeight / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * coef), OBJECT_POSE_SIZE / 2);
         fill(255);
         textSize(9);
-        text(h + song_result[mt.toString()].text, parseInt((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2) + 64, parseInt(myWindowHeight / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * coef));
+        text(h + song_result[mt.toString()].text, parseInt((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2) + 84, parseInt(myWindowHeight / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * coef));
         num++;
       }
       return;
