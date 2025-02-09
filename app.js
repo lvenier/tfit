@@ -701,9 +701,11 @@ function draw() {
       song_result.score = score;
       let num = 0;
       if (!(songId in player.scores)) {
+        song_result.count = 1;
         player.scores[songId] = song_result;
         localStorage.setItem("player", JSON.stringify(player));
       } else if (player.scores[songId].score < score) {
+        "count" in song_result ? song_result.count++ : song_result.count = 2;
         player.scores[songId] = song_result;
         localStorage.setItem("player", JSON.stringify(player));
       }
