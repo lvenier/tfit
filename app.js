@@ -166,7 +166,11 @@ var music;
 var songwait = false;
 var songwaittime = Date.now();
 var songvalue = "";
-
+var playerwait = false;
+//var playerwaittime = Date.now();
+var playervalue = "";
+var players = [];
+var logged_player = false;
 var player = JSON.parse(localStorage.getItem("player")) || {
   "name": (Math.random() + 1).toString(36).substring(2),
   "score": 0,
@@ -176,6 +180,14 @@ for (let s of Object.keys(player.scores)) {
   player.score += player.scores[s].score
 }
 localStorage.setItem("player", JSON.stringify(player));
+
+function getPlayers() {
+  players = [];
+  for (let p of Object.keys(localStorage)) {
+    if (p.startsWith("player-")) players.push(p);
+  }
+}
+getPlayers();
 
 const requestWakeLock = async () => {
   try {
@@ -225,12 +237,12 @@ function loadSongmoves() {
       song.moves[0] = 0
       let rand = 0;
       for (let i = 1; i < gameLength - 5; i++) {
-        if (shadow_focus === 0) rand = randomInteger(1,9);
-        if (shadow_focus === 1) rand = randomInteger(1,2);
-        if (shadow_focus === 2) rand = randomInteger(3,4);
-        if (shadow_focus === 3) rand = randomInteger(5,6);
-        if (shadow_focus === 4) rand = randomInteger(7,9);
-        if (shadow_focus === 5) rand = randomInteger(1,6);
+        if (shadow_focus === 0) rand = randomInteger(1, 9);
+        if (shadow_focus === 1) rand = randomInteger(1, 2);
+        if (shadow_focus === 2) rand = randomInteger(3, 4);
+        if (shadow_focus === 3) rand = randomInteger(5, 6);
+        if (shadow_focus === 4) rand = randomInteger(7, 9);
+        if (shadow_focus === 5) rand = randomInteger(1, 6);
         if (level === 2) {};
         if (level === 1) {
           if (i % 5 === 0) rand = 0;
@@ -243,7 +255,7 @@ function loadSongmoves() {
       for (let s = gameLength - 5; s < gameLength; s++) {
         song.moves[s] = 0;
       }
-      song.moves[Math.floor(gameLength/2)] = 10;
+      song.moves[Math.floor(gameLength / 2)] = 10;
     }
     moves = song.moves;
   }
@@ -276,6 +288,15 @@ function punchSound() {
 
 function handleChange() {
   if (menu === 0) {
+    if (mouseX > myWindowWidth - 100 && mouseX < myWindowWidth - 100 + 25 * coef && mouseY > 20 && mouseY < 20 + 25 * coef) {
+      if (logged_player === false && playerwait === false) {
+        playerwait = true;
+        playervalue = "";
+      } else {
+        logged_player = false;
+        playerwait = false;
+      }
+    }
     if (mouseX < parseInt(myWindowWidth / 6) + 100 * coef && mouseX > parseInt(myWindowWidth / 6)) {
       if (mouseY < parseInt(myWindowHeight / 6 + 50 * coef) && mouseY > parseInt(myWindowHeight / 6)) {
         click_sound.play();
@@ -297,7 +318,7 @@ function handleChange() {
       }
     }
   }
-  if ( menu === 2) {
+  if (menu === 2) {
     if (!gameStarted && mouseX > myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 && mouseX < myWindowWidth / 2 + OBJECT_POSE_SIZE && mouseY > 50 && mouseY < 50 + OBJECT_POSE_SIZE) {
       switch_feet();
       localStorage.setItem("feet_position", feet_position);
@@ -408,7 +429,22 @@ function preload() {
 }
 
 function keyPressed() {
-  if (['g','G'].includes(key) && menu === 2) {
+  if (menu === 0 && playerwait === true && (key.match(/^[\d\w]$/i) || keyCode === 13)) {
+    if (keyCode !== 13) playervalue += key;
+    if (playervalue.length === 16 || keyCode === 13) {
+      playerwait = false;
+      logged_player = true;
+      player = {
+        "name": playervalue,
+        "score": 0,
+        "scores": {}
+      };
+      localStorage.setItem("player-" + playervalue + "-" + Date.now(), JSON.stringify(player));
+      getPlayers();
+    }
+    return;
+  }
+  if (['g', 'G'].includes(key) && menu === 2) {
     songwait = true;
     songvalue = "";
   }
@@ -427,42 +463,42 @@ function keyPressed() {
       }
     }
   }
-  if (['b','B'].includes(key) && [1, 2, 3].includes(menu)) {
+  if (['b', 'B'].includes(key) && [1, 2, 3].includes(menu)) {
     if (!gameStarted) {
       menu = 0;
     }
   }
-  if (['c','C'].includes(key) && [2, 3].includes(menu)) {
+  if (['c', 'C'].includes(key) && [2, 3].includes(menu)) {
     if (!gameStarted) {
       gameCalibration = true;
       hide_sensor = 64;
     } else speechRec.resultString = "No calibration in game"
   }
-  if (['s','S'].includes(key) && [2, 3].includes(menu)) {
+  if (['s', 'S'].includes(key) && [2, 3].includes(menu)) {
     gameOver = true;
   }
-  if (['t','T'].includes(key) && [2, 3].includes(menu)) {
+  if (['t', 'T'].includes(key) && [2, 3].includes(menu)) {
     if (shadow_focus < Object.keys(SHADOW_SPECIFIC).length - 1) shadow_focus++;
     else shadow_focus = 0;
-    localStorage.setItem("shadow_focus",shadow_focus);
+    localStorage.setItem("shadow_focus", shadow_focus);
     loadSongmoves();
   }
-  if (['l','L'].includes(key) && [2, 3].includes(menu)) {
-    if (level < Object.keys(GAME_LEVEL).length -1 ) level++;
+  if (['l', 'L'].includes(key) && [2, 3].includes(menu)) {
+    if (level < Object.keys(GAME_LEVEL).length - 1) level++;
     else level = 0;
-    localStorage.setItem("level",level);
+    localStorage.setItem("level", level);
     loadSongmoves();
   }
-  if (['s','S'].includes(key) && menu === 0) {
+  if (['s', 'S'].includes(key) && menu === 0) {
     menu = 2;
   }
-  if (['p','P'].includes(key) && menu === 0) {
+  if (['p', 'P'].includes(key) && menu === 0) {
     menu = 3;
   }
-  if (['f','F'].includes(key) && menu === 0) {
+  if (['f', 'F'].includes(key) && menu === 0) {
     menu = 4;
   }
-  if (['r','R'].includes(key) && [2, 3].includes(menu)) {
+  if (['r', 'R'].includes(key) && [2, 3].includes(menu)) {
     left_init_pose_x = myWindowWidth / 3;
     localStorage.setItem("left_init_pose_x", left_init_pose_x);
     left_init_pose_y = myWindowWidth / 3;
@@ -480,7 +516,7 @@ function keyPressed() {
     right_init_hook_x = myWindowWidth - 120;
     localStorage.setItem("right_init_hook_x", right_init_hook_x);
   }
-  if (['f','F'].includes(key) && [2, 3].includes(menu)) {
+  if (['f', 'F'].includes(key) && [2, 3].includes(menu)) {
     if (!gameStarted) {
       feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
       speechSpeak.speak("let's fight!");
@@ -622,6 +658,35 @@ function draw() {
 
   textSize(10 * coef);
   if (menu === 0) {
+    for (let i = 0; i < players.length; i++) {
+      fill(0, 0, 0);
+      stroke(192, 64, 204);
+      strokeWeight(4);
+      rect(myWindowWidth - 175 - 75 * i, 20, 25 * coef, 25 * coef, 20);
+      stroke(0);
+      strokeWeight(0);
+      fill(255);
+      text(players[i].split("-")[1].substring(0, 3), myWindowWidth - 162 - 75 * i, 50);
+    }
+    if (logged_player) {
+      fill(0, 0, 0);
+      stroke(192, 204, 0);
+      strokeWeight(4);
+      rect(myWindowWidth - 100, 20, 25 * coef, 25 * coef, 20);
+      stroke(0);
+      strokeWeight(0);
+      fill(255);
+      text('Q', myWindowWidth - 82, 50);
+    } else {
+      fill(0, 0, 0);
+      stroke(192, 204, 0);
+      strokeWeight(4);
+      rect(myWindowWidth - 100, 20, 25 * coef, 25 * coef, 20);
+      stroke(0);
+      strokeWeight(0);
+      fill(255);
+      text('+', myWindowWidth - 82, 50);
+    }
     gameResult = Date.now() - 5001;
     image(menu_image, myWindowWidth / 2.5, myWindowHeight / 6, myWindowWidth / 2, myWindowWidth / 2);
     fill(0, 0, 0);
@@ -632,6 +697,14 @@ function draw() {
     text('(S)HADOW', parseInt(myWindowWidth / 6) + 20 * coef, parseInt(myWindowHeight / 6 + 30 * coef));
     text('(P)AD', parseInt(myWindowWidth / 6) + 20 * coef, parseInt(myWindowHeight / 6 + 130 * coef));
     text('(F)IGHT', parseInt(myWindowWidth / 6) + 20 * coef, parseInt(myWindowHeight / 6 + 230 * coef));
+    if (playerwait) {
+      fill(0, 0, 0, 255);
+      rect(parseInt(myWindowWidth / 3), parseInt(myWindowHeight / 4), parseInt(myWindowWidth / 3), parseInt(myWindowHeight / 5), 20);
+      fill(255);
+      text('Name : ', parseInt(myWindowWidth / 3) + 20 * coef, parseInt(myWindowHeight / 4 + 30 * coef));
+      textSize(40);
+      text(playervalue.padEnd(16, "_"), parseInt(myWindowWidth / 3) + 20 * coef, parseInt(myWindowHeight / 4 + 60 * coef));
+    }
   } else {
     if (menu === 2 && !gameStarted || (menu === 3 || menu === 4)) {
       fill(0, 0, 0);
@@ -837,7 +910,7 @@ function draw() {
 
   if (menu === 2) {
     fill(255, 255, 255, 192);
-    circle(myWindowWidth / 2, 50 + OBJECT_POSE_SIZE/2, OBJECT_POSE_SIZE + 10)
+    circle(myWindowWidth / 2, 50 + OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE + 10)
     if (feet_position === 0) image(lfeet_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
     if (feet_position === 1) image(rfeet_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
 
@@ -932,7 +1005,7 @@ function draw() {
           if (Date.now() - switch_guard > 10000 && curMoves[c].type === 10) {
             switch_guard = Date.now();
             switch_feet();
-          }          
+          }
           if (Date.now() - left_jab < LEVEL * 10 && left_poses - left_jab < LEVEL * 10 && curMoves[c].type === 1) {
             hitSuccess();
           }
@@ -951,7 +1024,7 @@ function draw() {
           if (Date.now() - switch_guard > 10000 && curMoves[c].type === 10) {
             switch_guard = Date.now();
             switch_feet();
-          } 
+          }
           if (Date.now() - right_jab < LEVEL * 10 && right_poses - right_jab < LEVEL * 10 && curMoves[c].type === 2) {
             hitSuccess();
           }
@@ -992,11 +1065,11 @@ function draw() {
         }
         if (curMoves[c].hit === true) fill(0, 255, 0, 127);
         if (curMoves[c].type > 0) circle(curMoves[c].x, curMoves[c].y, OBJECT_POSE_SIZE);
-        if ([9,10].includes(curMoves[c].type)) circle(right_init_pose_x, curMoves[c].y, OBJECT_POSE_SIZE);
+        if ([9, 10].includes(curMoves[c].type)) circle(right_init_pose_x, curMoves[c].y, OBJECT_POSE_SIZE);
         fill(255, 255, 255, 255);
         textSize(20);
         if (curMoves[c].type > 0) text(curMoves[c].text, curMoves[c].x - curMoves[c].text.length * 7, curMoves[c].y + (16 - curMoves[c].text.length * 2));
-        if ([9,10].includes(curMoves[c].type)) text(curMoves[c].text, right_init_pose_x - curMoves[c].text.length * 7, curMoves[c].y + (16 - curMoves[c].text.length * 2));
+        if ([9, 10].includes(curMoves[c].type)) text(curMoves[c].text, right_init_pose_x - curMoves[c].text.length * 7, curMoves[c].y + (16 - curMoves[c].text.length * 2));
       }
       gameTimer++;
     }
