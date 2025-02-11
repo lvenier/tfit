@@ -171,7 +171,8 @@ var playerwait = false;
 var playervalue = "";
 var players = [];
 var logged_player = false;
-var player = JSON.parse(localStorage.getItem("player")) || {
+var selected_player = "player";
+var player = JSON.parse(localStorage.getItem(selected_player)) || {
   "name": (Math.random() + 1).toString(36).substring(2),
   "score": 0,
   "scores": {}
@@ -179,7 +180,7 @@ var player = JSON.parse(localStorage.getItem("player")) || {
 for (let s of Object.keys(player.scores)) {
   player.score += player.scores[s].score
 }
-localStorage.setItem("player", JSON.stringify(player));
+localStorage.setItem(selected_player, JSON.stringify(player));
 
 function getPlayers() {
   players = [];
@@ -288,13 +289,24 @@ function punchSound() {
 
 function handleChange() {
   if (menu === 0) {
+    for (let p = 0; p < players.length; p++) {
+      if (mouseX > myWindowWidth - 175 - 75 * p && mouseX < myWindowWidth - 175 - 75 * p + 25 * coef && mouseY > 10 && mouseY < 25 * coef + 20) {
+        click_sound.play();
+        selected_player = players[p];
+        player = JSON.parse(localStorage.getItem(selected_player));
+        logged_player = true;
+      }
+    }
     if (mouseX > myWindowWidth - 100 && mouseX < myWindowWidth - 100 + 25 * coef && mouseY > 20 && mouseY < 20 + 25 * coef) {
+      click_sound.play();
       if (logged_player === false && playerwait === false) {
         playerwait = true;
         playervalue = "";
       } else {
         logged_player = false;
         playerwait = false;
+        selected_player = "player"
+        player = JSON.parse(localStorage.getItem(selected_player));
       }
     }
     if (mouseX < parseInt(myWindowWidth / 6) + 100 * coef && mouseX > parseInt(myWindowWidth / 6)) {
@@ -661,6 +673,7 @@ function draw() {
     for (let i = 0; i < players.length; i++) {
       fill(0, 0, 0);
       stroke(192, 64, 204);
+      if (players[i].startsWith("player-" + player.name)) stroke(255, 64, 127);
       strokeWeight(4);
       rect(myWindowWidth - 175 - 75 * i, 20, 25 * coef, 25 * coef, 20);
       stroke(0);
@@ -740,7 +753,7 @@ function draw() {
       for (let s of Object.keys(player.scores)) {
         player.score += player.scores[s].score
       }
-      localStorage.setItem("player", JSON.stringify(player));
+      localStorage.setItem(selected_player, JSON.stringify(player));
       feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
     }
 
@@ -778,11 +791,11 @@ function draw() {
       if (!(songId in player.scores)) {
         song_result.count = 1;
         player.scores[songId] = song_result;
-        localStorage.setItem("player", JSON.stringify(player));
+        localStorage.setItem(selected_player, JSON.stringify(player));
       } else if (player.scores[songId].score < score) {
         "count" in song_result ? song_result.count++ : song_result.count = 2;
         player.scores[songId] = song_result;
-        localStorage.setItem("player", JSON.stringify(player));
+        localStorage.setItem(selected_player, JSON.stringify(player));
       }
       for (let mt of Object.keys(song_result)) {
         if (mt === "score") continue;
