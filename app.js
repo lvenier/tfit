@@ -678,14 +678,16 @@ function draw() {
       fill(255);
       text('Q', myWindowWidth - 82, 50);
     } else {
-      fill(0, 0, 0);
-      stroke(192, 204, 0);
-      strokeWeight(4);
-      rect(myWindowWidth - 100, 20, 25 * coef, 25 * coef, 20);
-      stroke(0);
-      strokeWeight(0);
-      fill(255);
-      text('+', myWindowWidth - 82, 50);
+      if (players.length < 6) {
+        fill(0, 0, 0);
+        stroke(192, 204, 0);
+        strokeWeight(4);
+        rect(myWindowWidth - 100, 20, 25 * coef, 25 * coef, 20);
+        stroke(0);
+        strokeWeight(0);
+        fill(255);
+        text('+', myWindowWidth - 82, 50);
+      }
     }
     gameResult = Date.now() - 5001;
     image(menu_image, myWindowWidth / 2.5, myWindowHeight / 6, myWindowWidth / 2, myWindowWidth / 2);
