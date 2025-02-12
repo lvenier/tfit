@@ -171,7 +171,7 @@ var playerwait = false;
 var playervalue = "";
 var players = [];
 var logged_player = false;
-var selected_player = "player";
+var selected_player = localStorage.getItem("selected_player") || "player";
 var player = JSON.parse(localStorage.getItem(selected_player)) || {
   "name": (Math.random() + 1).toString(36).substring(2),
   "score": 0,
@@ -180,13 +180,13 @@ var player = JSON.parse(localStorage.getItem(selected_player)) || {
 for (let s of Object.keys(player.scores)) {
   player.score += player.scores[s].score
 }
-localStorage.setItem(selected_player, JSON.stringify(player));
 
 function getPlayers() {
   players = [];
   for (let p of Object.keys(localStorage)) {
     if (p.startsWith("player-")) players.push(p);
   }
+  if (selected_player && selected_player != "player") logged_player = true;
 }
 getPlayers();
 
@@ -293,6 +293,7 @@ function handleChange() {
       if (mouseX > myWindowWidth - 175 - 75 * p && mouseX < myWindowWidth - 175 - 75 * p + 25 * coef && mouseY > 10 && mouseY < 25 * coef + 20) {
         click_sound.play();
         selected_player = players[p];
+        localStorage.setItem("selected_player", selected_player);
         player = JSON.parse(localStorage.getItem(selected_player));
         logged_player = true;
       }
@@ -445,13 +446,22 @@ function keyPressed() {
     if (keyCode !== 13) playervalue += key;
     if (playervalue.length === 16 || keyCode === 13) {
       playerwait = false;
-      logged_player = true;
-      player = {
-        "name": playervalue,
-        "score": 0,
-        "scores": {}
-      };
-      localStorage.setItem("player-" + playervalue + "-" + Date.now(), JSON.stringify(player));
+      let exists = false;
+      for (let p of players) {
+        if (p.startsWith("player-" + playervalue + "-")) {
+          logged_player = false;
+          exists = true;
+        }
+      }
+      if (!exists) {
+        logged_player = true;
+        player = {
+          "name": playervalue,
+          "score": 0,
+          "scores": {}
+        };
+        localStorage.setItem("player-" + playervalue + "-" + Date.now(), JSON.stringify(player));
+      }
       getPlayers();
     }
     return;
@@ -865,9 +875,11 @@ function draw() {
       score += arrayScore[i];
     }
     text("Score: " + score, 15, 30);
+    textSize(30);
+    text("Name: " + ('name' in player ? player.name : ""), 15, 60);
     textSize(20);
-    text("(L)evel: " + GAME_LEVEL[level.toString()], 15, 55);
-    text("(T)ype: " + SHADOW_SPECIFIC[shadow_focus].toLowerCase(), 15, 80);
+    text("(L)evel: " + GAME_LEVEL[level.toString()], 15, 85);
+    text("(T)ype: " + SHADOW_SPECIFIC[shadow_focus].toLowerCase(), 15, 110);
     fill(255, 0, 0, hide_sensor);
     if (songwait || songwaittime + 1000 > Date.now()) {
       fill(0, 0, 0, 255);
