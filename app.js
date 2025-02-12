@@ -229,7 +229,7 @@ function randomInteger(min, max) {
 }
 
 function loadSongmoves() {
-  LEVEL = level * 10 + 30
+  LEVEL = 50 - level * 10;
   if (song) {
     gameLength = parseInt(song.length);
     gameDuration = gameLength * FRAME_RATE;
@@ -1021,16 +1021,16 @@ function draw() {
             switch_guard = Date.now();
             switch_feet();
           }
-          if (Date.now() - left_jab < LEVEL * 10 && left_poses - left_jab < LEVEL * 10 && curMoves[c].type === 1) {
+          if (Date.now() - left_jab < LEVEL * 10 && left_jab - left_poses < LEVEL * 10 && curMoves[c].type === 1) {
             hitSuccess();
           }
-          if (Date.now() - left_hook < LEVEL * 10 && left_poses - left_hook < LEVEL * 10 && curMoves[c].type === 3) {
+          if (Date.now() - left_hook < LEVEL * 10 && left_hook - left_poses < LEVEL * 10 && curMoves[c].type === 3) {
             hitSuccess();
           }
-          if (Date.now() - left_uppercut < LEVEL * 10 && left_poses - left_uppercut < LEVEL * 10 && curMoves[c].type === 5) {
+          if (Date.now() - left_uppercut < LEVEL * 10 && left_uppercut - left_poses < LEVEL * 10 && curMoves[c].type === 5) {
             hitSuccess();
           }
-          if (Date.now() - left_dodge < LEVEL * 10 && left_poses - left_dodge < LEVEL * 10 && curMoves[c].type === 7) {
+          if (Date.now() - left_dodge < LEVEL * 10 && left_dodge - left_poses < LEVEL * 10 && curMoves[c].type === 7) {
             hitSuccess();
           }
         }
@@ -1040,16 +1040,16 @@ function draw() {
             switch_guard = Date.now();
             switch_feet();
           }
-          if (Date.now() - right_jab < LEVEL * 10 && right_poses - right_jab < LEVEL * 10 && curMoves[c].type === 2) {
+          if (Date.now() - right_jab < LEVEL * 10 && right_jab - right_poses < LEVEL * 10 && curMoves[c].type === 2) {
             hitSuccess();
           }
-          if (Date.now() - right_hook < LEVEL * 10 && right_poses - right_hook < LEVEL * 10 && curMoves[c].type === 4) {
+          if (Date.now() - right_hook < LEVEL * 10 && right_hook - right_poses < LEVEL * 10 && curMoves[c].type === 4) {
             hitSuccess();
           }
-          if (Date.now() - right_uppercut < LEVEL * 10 && right_poses - right_uppercut < LEVEL * 10 && curMoves[c].type === 6) {
+          if (Date.now() - right_uppercut < LEVEL * 10 && right_uppercut - right_poses < LEVEL * 10 && curMoves[c].type === 6) {
             hitSuccess();
           }
-          if (Date.now() - right_dodge < LEVEL * 10 && right_poses - right_dodge < LEVEL * 10 && curMoves[c].type === 8) {
+          if (Date.now() - right_dodge < LEVEL * 10 && right_dodge - right_poses < LEVEL * 10 && curMoves[c].type === 8) {
             hitSuccess();
           }
           if (Date.now() - down_dodge < LEVEL * 10 && curMoves[c].type === 9) {
