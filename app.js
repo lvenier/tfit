@@ -60,7 +60,7 @@ const GAME_LEVEL = {
 }
 
 const SHADOW_SPECIFIC = {
-  "0": "NONE",
+  "0": "ALL",
   "1": "JAB",
   "2": "HOOK",
   "3": "UCUT",
@@ -155,6 +155,7 @@ var punch_sound_time = Date.now() - 1000;
 var hit_success = Date.now() - 1000;
 var gameOverTime = Date.now() - 1000;
 var gameResult = Date.now() - 1000;
+var guard_warning = Date.now();
 
 var speechRec = {
   "resultString": ""
@@ -997,7 +998,7 @@ function draw() {
 
     if (gameStarted) {
       fill(255, 255, 255, 255);
-      text(`Time Left: ${Math.ceil((gameDuration - gameTimer) / FRAME_RATE)}s`, 15, 105);
+      text(`Time Left: ${Math.ceil((gameDuration - gameTimer) / FRAME_RATE)}s`, 15, 135);
       textSize(10 * coef);
       fill(0, 0, 0);
       rect(myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef, 20);
@@ -1024,6 +1025,20 @@ function draw() {
         fill(255, 0, 0, hide_sensor);
         textSize(20);
       }
+      if ((Date.now() - left_poses > 2000 || Date.now() - left_poses > 2000)) {
+        guard_warning+=100;
+        if (guard_warning - Date.now() > 1000) {
+          if (guard_warning - Date.now() < 1099) {
+            speechSpeak.speak("Your guard!");
+          }
+          textSize(40);
+          fill(255, 255, 255, 255);
+          text("Your Guard !!!", myWindowWidth / 2.3, myWindowHeight / 2);
+          fill(255, 0, 0, hide_sensor);
+          textSize(20);
+        }
+        if (guard_warning - Date.now() > 10000) guard_warning = Date.now();
+      } else guard_warning = Date.now();
       for (c = 0; c < curMoves.length; c++) {
         curMoves[c].y = curMoves[c].y - Math.ceil(240 / FRAME_RATE);
         let alpha = 128;
@@ -1091,8 +1106,20 @@ function draw() {
           curMoves[c].text = "SWITCH";
         }
         if (curMoves[c].hit === true) fill(0, 255, 0, 127);
-        if (curMoves[c].type > 0) circle(curMoves[c].x, curMoves[c].y, OBJECT_POSE_SIZE);
-        if ([9, 10].includes(curMoves[c].type)) circle(right_init_pose_x, curMoves[c].y, OBJECT_POSE_SIZE);
+        if (curMoves[c].type > 0) {
+          if (curMoves[c].type === 3) quad(curMoves[c].x-OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/2, curMoves[c].x-OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/2, curMoves[c].x+OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/6, curMoves[c].x+OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/6 )
+          else if (curMoves[c].type === 4) quad(curMoves[c].x+OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/2, curMoves[c].x+OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/2, curMoves[c].x-OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/6, curMoves[c].x-OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/6 )
+          else if (curMoves[c].type === 5) quad(curMoves[c].x-OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/2, curMoves[c].x+OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/2, curMoves[c].x+OBJECT_POSE_SIZE/6, curMoves[c].y-OBJECT_POSE_SIZE/2, curMoves[c].x-OBJECT_POSE_SIZE/6, curMoves[c].y-OBJECT_POSE_SIZE/2 )
+          else if (curMoves[c].type === 6) quad(curMoves[c].x-OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/2, curMoves[c].x+OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/2, curMoves[c].x+OBJECT_POSE_SIZE/6, curMoves[c].y-OBJECT_POSE_SIZE/2, curMoves[c].x-OBJECT_POSE_SIZE/6, curMoves[c].y-OBJECT_POSE_SIZE/2 )
+          else if (curMoves[c].type === 7) quad(curMoves[c].x+OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/2, curMoves[c].x+OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/2, curMoves[c].x-OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/6, curMoves[c].x-OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/6 )
+          else if (curMoves[c].type === 8) quad(curMoves[c].x-OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/2, curMoves[c].x-OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/2, curMoves[c].x+OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/6, curMoves[c].x+OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/6 )
+          else if (curMoves[c].type === 9) {
+            quad(curMoves[c].x-OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/2, curMoves[c].x+OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/2, curMoves[c].x+OBJECT_POSE_SIZE/6, curMoves[c].y+OBJECT_POSE_SIZE/2, curMoves[c].x-OBJECT_POSE_SIZE/6, curMoves[c].y+OBJECT_POSE_SIZE/2 )
+            quad(right_init_pose_x-OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/2, right_init_pose_x+OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/2, right_init_pose_x+OBJECT_POSE_SIZE/6, curMoves[c].y+OBJECT_POSE_SIZE/2, right_init_pose_x-OBJECT_POSE_SIZE/6, curMoves[c].y+OBJECT_POSE_SIZE/2 )
+          }
+          else circle(curMoves[c].x, curMoves[c].y, OBJECT_POSE_SIZE);
+        }
+        if ([10].includes(curMoves[c].type)) circle(right_init_pose_x, curMoves[c].y, OBJECT_POSE_SIZE);
         fill(255, 255, 255, 255);
         textSize(20);
         if (curMoves[c].type > 0) text(curMoves[c].text, curMoves[c].x - curMoves[c].text.length * 7, curMoves[c].y + (16 - curMoves[c].text.length * 2));
