@@ -720,6 +720,7 @@ function draw() {
       }
     }
     gameResult = Date.now() - 5001;
+    fill(0, 0, 0);
     image(menu_image, myWindowWidth / 2.5, myWindowHeight / 6, myWindowWidth / 2, myWindowWidth / 2);
     rect(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2, 20);
     image(fullscreen_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2);
@@ -727,7 +728,6 @@ function draw() {
     image(microphone_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 - 100 * coef, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2);
     rect(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 + 100 * coef, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2, 20);
     image(settings_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 + 100 * coef, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2);
-    fill(0, 0, 0);
     rect(myWindowWidth / 6, parseInt(myWindowHeight / 6), 100 * coef, 50 * coef, 20);
     rect(myWindowWidth / 6, parseInt(myWindowHeight / 6 + 100 * coef), 100 * coef, 50 * coef, 20);
     rect(myWindowWidth / 6, parseInt(myWindowHeight / 6 + 200 * coef), 100 * coef, 50 * coef, 20);
