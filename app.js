@@ -1,4 +1,4 @@
-const NUM_SONG = 250;
+const NUM_SONG = 310;
 
 const MENUTYPE = {
   "0": "main",
@@ -93,6 +93,9 @@ var background_image;
 var menu_image;
 var rfeet_image;
 var lfeet_image;
+var settings_image;
+var microphone_image;
+var fullscreen_image;
 var backgroundId = parseFloat(localStorage.getItem("background_id")) || 1;
 var hide_sensor = 0;
 var video;
@@ -437,6 +440,9 @@ function preload() {
   menu_image = loadImage('assets/images/menu_image.png');
   rfeet_image = loadImage('assets/images/RFoot.png');
   lfeet_image = loadImage('assets/images/LFoot.png');
+  settings_image = loadImage('assets/images/settings.png');
+  microphone_image = loadImage('assets/images/microphone.png');
+  fullscreen_image = loadImage('assets/images/fullscreen.png');
   bodyPose = ml5.bodyPose("BlazePose", {
     flipped: true
   });
@@ -715,6 +721,12 @@ function draw() {
     }
     gameResult = Date.now() - 5001;
     image(menu_image, myWindowWidth / 2.5, myWindowHeight / 6, myWindowWidth / 2, myWindowWidth / 2);
+    rect(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2, 20);
+    image(fullscreen_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2);
+    rect(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 - 100 * coef, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2, 20);
+    image(microphone_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 - 100 * coef, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2);
+    rect(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 + 100 * coef, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2, 20);
+    image(settings_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 + 100 * coef, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2);
     fill(0, 0, 0);
     rect(myWindowWidth / 6, parseInt(myWindowHeight / 6), 100 * coef, 50 * coef, 20);
     rect(myWindowWidth / 6, parseInt(myWindowHeight / 6 + 100 * coef), 100 * coef, 50 * coef, 20);
