@@ -165,7 +165,8 @@ var guard_warning = Date.now();
 var speechRec = {
   "resultString": ""
 };
-var speechRecEnabled = false;
+var speechRecEnabled = true;
+var recognizing = false;
 var speechSpeak;
 var speechTime = Date.now();
 var music;
@@ -173,7 +174,6 @@ var songwait = false;
 var songwaittime = Date.now();
 var songvalue = "";
 var playerwait = false;
-//var playerwaittime = Date.now();
 var playervalue = "";
 var players = [];
 var logged_player = false;
@@ -294,7 +294,18 @@ function punchSound() {
 }
 
 function handleChange() {
+  if (mouseX > myWindowWidth / 4 - OBJECT_POSE_SIZE / 2 - 100 * coef && mouseX < myWindowWidth / 4 - 100 * coef + OBJECT_POSE_SIZE / 2 && mouseY > myWindowHeight - 40 * coef && mouseY < myWindowHeight - 40 * coef + OBJECT_POSE_SIZE / 2) {
+    if (!recognizing) speechRec.start();
+    recognizing = true;
+  }
   if (menu === 0) {
+    if (mouseX > myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 + 100 * coef && mouseX < myWindowWidth / 2 + OBJECT_POSE_SIZE / 2 + 100 * coef && mouseY > myWindowHeight - 40 * coef && mouseY < myWindowHeight - 40 * coef + OBJECT_POSE_SIZE / 2) {
+      menu = 1;
+    }
+    if (mouseX > myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 && mouseX < myWindowWidth / 2 + OBJECT_POSE_SIZE / 2 && mouseY > myWindowHeight - 40 * coef && mouseY < myWindowHeight - 40 * coef + OBJECT_POSE_SIZE / 2) {
+      let fs = fullscreen();
+      fullscreen(!fs);
+    }
     for (let p = 0; p < players.length; p++) {
       if (mouseX > myWindowWidth - 175 - 75 * p && mouseX < myWindowWidth - 175 - 75 * p + 25 * coef && mouseY > 10 && mouseY < 25 * coef + 20) {
         click_sound.play();
@@ -566,76 +577,88 @@ function keyPressed() {
 
 function gotSpeech() {
   if (speechRec.resultValue) {
-    if (speechRec.resultString.includes("fight")) {
-      speechTime = Date.now();
-      if (!gameStarted) {
-        speechSpeak.speak("let's fight!");
-        gameStarted = true;
+    console.log(speechRec.resultString)
+    if (menu === 0) {
+      if (speechRec.resultString.includes("shadow")) {
+        speechTime = Date.now();
+        menu = 2;
+        click_sound.play();
+        menu = 2;
         curMoves = [];
-        gameCalibration = false;
-        hide_sensor = 0;
-        gameTimer = 0;
-        score = 0;
-        arrayScore = [];
-      } else speechRec.resultString = "Already fighting"
-    } else if (speechRec.resultString.includes("calibrate")) {
-      speechTime = Date.now();
-      if (!gameStarted) {
-        gameCalibration = true;
-        hide_sensor = 64;
-      } else speechRec.resultString = "No calibration in game"
-    } else if (speechRec.resultString.includes("stop")) {
-      speechTime = Date.now();
-      gameOver = true;
-    } else if (speechRec.resultString.includes("reset")) {
-      speechTime = Date.now();
-      left_init_pose_x = myWindowWidth / 3;
-      localStorage.setItem("left_init_pose_x", left_init_pose_x);
-      left_init_pose_y = myWindowWidth / 3;
-      localStorage.setItem("left_init_pose_y", left_init_pose_x);
-      right_init_pose_x = 2 * myWindowWidth / 3;
-      localStorage.setItem("right_init_pose_x", right_init_pose_x);
-      right_init_pose_y = myWindowHeight / 3;
-      localStorage.setItem("right_init_pose_y", right_init_pose_y);
-      init_jab_y = myWindowHeight / 4;
-      localStorage.setItem("init_jab_y", init_jab_y);
-      init_uppercut_y = myWindowHeight * 3 / 4;
-      localStorage.setItem("init_uppercut_y", init_uppercut_y);
-      left_init_hook_x = 120;
-      localStorage.setItem("left_init_hook_x", left_init_hook_x);
-      right_init_hook_x = myWindowWidth - 120;
-      localStorage.setItem("right_init_hook_x", right_init_hook_x);
-    } else if (speechRec.resultString.startsWith("song number")) {
-      speechTime = Date.now();
-      if (speechRec.resultString.split(" ").length > 2)
-        songId = text2num(speechRec.resultString.split(" ")[2]);
-      if (songId === 0) {
-        speechSpeak.speak("song not found!");
-        fill(255, 255, 255, 255);
-        textSize(30);
-        text("song not found!", myWindowWidth / 2.1, myWindowHeight - 50);
-        fill(255, 0, 0, hide_sensor);
-      } else fetchSong(songId);
-    } else if (speechRec.resultString.startsWith("background number")) {
-      speechTime = Date.now();
-      if (speechRec.resultString.split(" ").length > 2)
-        backgroundId = text2num(speechRec.resultString.split(" ")[2]);
-      if (backgroundId < 1 || backgroundId > 3) {
-        speechSpeak.speak("background not found!");
-        fill(255, 255, 255, 255);
-        textSize(30);
-        text("background not found!", myWindowWidth / 2.1, myWindowHeight - 50);
-        fill(255, 0, 0, hide_sensor);
-      } else fetchBackground(backgroundId);
-    } else if (speechRec.resultString.startsWith("change feet")) {
-      speechTime = Date.now();
-      switch_feet()
+      }
+    }
+    if (menu === 2) {
+      if (speechRec.resultString.includes("fight")) {
+        speechTime = Date.now();
+        if (!gameStarted) {
+          speechSpeak.speak("let's fight!");
+          gameStarted = true;
+          curMoves = [];
+          gameCalibration = false;
+          hide_sensor = 0;
+          gameTimer = 0;
+          score = 0;
+          arrayScore = [];
+        } else speechRec.resultString = "Already fighting"
+      } else if (speechRec.resultString.includes("calibrate")) {
+        speechTime = Date.now();
+        if (!gameStarted) {
+          gameCalibration = true;
+          hide_sensor = 64;
+        } else speechRec.resultString = "No calibration in game"
+      } else if (speechRec.resultString.includes("stop")) {
+        speechTime = Date.now();
+        gameOver = true;
+      } else if (speechRec.resultString.includes("reset")) {
+        speechTime = Date.now();
+        left_init_pose_x = myWindowWidth / 3;
+        localStorage.setItem("left_init_pose_x", left_init_pose_x);
+        left_init_pose_y = myWindowWidth / 3;
+        localStorage.setItem("left_init_pose_y", left_init_pose_x);
+        right_init_pose_x = 2 * myWindowWidth / 3;
+        localStorage.setItem("right_init_pose_x", right_init_pose_x);
+        right_init_pose_y = myWindowHeight / 3;
+        localStorage.setItem("right_init_pose_y", right_init_pose_y);
+        init_jab_y = myWindowHeight / 4;
+        localStorage.setItem("init_jab_y", init_jab_y);
+        init_uppercut_y = myWindowHeight * 3 / 4;
+        localStorage.setItem("init_uppercut_y", init_uppercut_y);
+        left_init_hook_x = 120;
+        localStorage.setItem("left_init_hook_x", left_init_hook_x);
+        right_init_hook_x = myWindowWidth - 120;
+        localStorage.setItem("right_init_hook_x", right_init_hook_x);
+      } else if (speechRec.resultString.startsWith("song number")) {
+        speechTime = Date.now();
+        if (speechRec.resultString.split(" ").length > 2)
+          songId = text2num(speechRec.resultString.split(" ")[2]);
+        if (songId === 0) {
+          speechSpeak.speak("song not found!");
+          fill(255, 255, 255, 255);
+          textSize(30);
+          text("song not found!", myWindowWidth / 2.1, myWindowHeight - 50);
+          fill(255, 0, 0, hide_sensor);
+        } else fetchSong(songId);
+      } else if (speechRec.resultString.startsWith("background number")) {
+        speechTime = Date.now();
+        if (speechRec.resultString.split(" ").length > 2)
+          backgroundId = text2num(speechRec.resultString.split(" ")[2]);
+        if (backgroundId < 1 || backgroundId > 3) {
+          speechSpeak.speak("background not found!");
+          fill(255, 255, 255, 255);
+          textSize(30);
+          text("background not found!", myWindowWidth / 2.1, myWindowHeight - 50);
+          fill(255, 0, 0, hide_sensor);
+        } else fetchBackground(backgroundId);
+      } else if (speechRec.resultString.startsWith("change feet")) {
+        speechTime = Date.now();
+        switch_feet()
+      }
     }
   }
 }
 
 function onEndSpeechRec() {
-  speechRec.start();
+  recognizing = false;
 }
 
 function switch_feet() {
@@ -666,9 +689,10 @@ function setup() {
   speechSpeak = new p5.Speech();
   if (speechRecEnabled) {
     speechRec = new p5.SpeechRec('en-US', gotSpeech);
-    speechRec.continuous = true;
+    speechRec.continuous = false;
     speechRec.interimResults = false;
     speechRec.start();
+    recognizing = true;
     speechRec.onEnd = onEndSpeechRec;
   }
   cnv = createCanvas(myWindowWidth, myWindowHeight);
@@ -688,8 +712,15 @@ function setup() {
 
 function draw() {
   background(background_image);
-
   textSize(10 * coef);
+  fill(0, 0, 0);
+  if (recognizing){
+    stroke(192, 204, 0);
+    strokeWeight(4);
+  }
+  rect(myWindowWidth / 4 - OBJECT_POSE_SIZE / 2 - 100 * coef, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2, 20);
+  image(microphone_image, myWindowWidth / 4 - OBJECT_POSE_SIZE / 2 - 100 * coef, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2);
+  strokeWeight(0);
   if (menu === 0) {
     for (let i = 0; i < players.length; i++) {
       fill(0, 0, 0);
@@ -728,8 +759,6 @@ function draw() {
     image(menu_image, myWindowWidth / 2.5, myWindowHeight / 6, myWindowWidth / 2, myWindowWidth / 2);
     rect(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2, 20);
     image(fullscreen_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2);
-    rect(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 - 100 * coef, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2, 20);
-    image(microphone_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 - 100 * coef, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2);
     rect(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 + 100 * coef, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2, 20);
     image(settings_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 + 100 * coef, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2);
     rect(myWindowWidth / 6, parseInt(myWindowHeight / 6), 100 * coef, 50 * coef, 20);
@@ -748,7 +777,7 @@ function draw() {
       text(playervalue.padEnd(16, "_"), parseInt(myWindowWidth / 3) + 20 * coef, parseInt(myWindowHeight / 4 + 60 * coef));
     }
   } else {
-    if (menu === 2 && !gameStarted || (menu === 3 || menu === 4)) {
+    if (menu === 2 && !gameStarted || (menu === 3 || menu === 4 || menu === 1)) {
       fill(0, 0, 0);
       rect(myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef, 20);
       fill(255);
@@ -756,7 +785,7 @@ function draw() {
     }
   }
 
-  if (menu !== 0) {
+  if (menu > 1) {
 
     if (gameDuration - gameTimer <= 0) {
       gameOver = true;
@@ -861,6 +890,7 @@ function draw() {
     }
 
     if (speechRec && 'resultString' in speechRec && speechTime > Date.now() - 1000) {
+      console.log(speechRec.resultString)
       fill(255, 255, 255, 255);
       textSize(30);
       text(speechRec.resultString.toUpperCase(), width / 2.1, height - 50);
@@ -1042,7 +1072,7 @@ function draw() {
         textSize(20);
       }
       if ((Date.now() - left_poses > 2000 || Date.now() - left_poses > 2000)) {
-        guard_warning+=100;
+        guard_warning += 100;
         if (guard_warning - Date.now() > 1000) {
           if (guard_warning - Date.now() < 1099) {
             speechSpeak.speak("Your guard!");
@@ -1123,17 +1153,16 @@ function draw() {
         }
         if (curMoves[c].hit === true) fill(0, 255, 0, 127);
         if (curMoves[c].type > 0) {
-          if (curMoves[c].type === 3) quad(curMoves[c].x-OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/2, curMoves[c].x-OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/2, curMoves[c].x+OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/6, curMoves[c].x+OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/6 )
-          else if (curMoves[c].type === 4) quad(curMoves[c].x+OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/2, curMoves[c].x+OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/2, curMoves[c].x-OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/6, curMoves[c].x-OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/6 )
-          else if (curMoves[c].type === 5) quad(curMoves[c].x-OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/2, curMoves[c].x+OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/2, curMoves[c].x+OBJECT_POSE_SIZE/6, curMoves[c].y-OBJECT_POSE_SIZE/2, curMoves[c].x-OBJECT_POSE_SIZE/6, curMoves[c].y-OBJECT_POSE_SIZE/2 )
-          else if (curMoves[c].type === 6) quad(curMoves[c].x-OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/2, curMoves[c].x+OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/2, curMoves[c].x+OBJECT_POSE_SIZE/6, curMoves[c].y-OBJECT_POSE_SIZE/2, curMoves[c].x-OBJECT_POSE_SIZE/6, curMoves[c].y-OBJECT_POSE_SIZE/2 )
-          else if (curMoves[c].type === 7) quad(curMoves[c].x+OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/2, curMoves[c].x+OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/2, curMoves[c].x-OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/6, curMoves[c].x-OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/6 )
-          else if (curMoves[c].type === 8) quad(curMoves[c].x-OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/2, curMoves[c].x-OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/2, curMoves[c].x+OBJECT_POSE_SIZE/2, curMoves[c].y+OBJECT_POSE_SIZE/6, curMoves[c].x+OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/6 )
+          if (curMoves[c].type === 3) quad(curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 6, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 6)
+          else if (curMoves[c].type === 4) quad(curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 6, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 6)
+          else if (curMoves[c].type === 5) quad(curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 6, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 6, curMoves[c].y - OBJECT_POSE_SIZE / 2)
+          else if (curMoves[c].type === 6) quad(curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 6, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 6, curMoves[c].y - OBJECT_POSE_SIZE / 2)
+          else if (curMoves[c].type === 7) quad(curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 6, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 6)
+          else if (curMoves[c].type === 8) quad(curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 6, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 6)
           else if (curMoves[c].type === 9) {
-            quad(curMoves[c].x-OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/2, curMoves[c].x+OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/2, curMoves[c].x+OBJECT_POSE_SIZE/6, curMoves[c].y+OBJECT_POSE_SIZE/2, curMoves[c].x-OBJECT_POSE_SIZE/6, curMoves[c].y+OBJECT_POSE_SIZE/2 )
-            quad(right_init_pose_x-OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/2, right_init_pose_x+OBJECT_POSE_SIZE/2, curMoves[c].y-OBJECT_POSE_SIZE/2, right_init_pose_x+OBJECT_POSE_SIZE/6, curMoves[c].y+OBJECT_POSE_SIZE/2, right_init_pose_x-OBJECT_POSE_SIZE/6, curMoves[c].y+OBJECT_POSE_SIZE/2 )
-          }
-          else circle(curMoves[c].x, curMoves[c].y, OBJECT_POSE_SIZE);
+            quad(curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 6, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 6, curMoves[c].y + OBJECT_POSE_SIZE / 2)
+            quad(right_init_pose_x - OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, right_init_pose_x + OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, right_init_pose_x + OBJECT_POSE_SIZE / 6, curMoves[c].y + OBJECT_POSE_SIZE / 2, right_init_pose_x - OBJECT_POSE_SIZE / 6, curMoves[c].y + OBJECT_POSE_SIZE / 2)
+          } else circle(curMoves[c].x, curMoves[c].y, OBJECT_POSE_SIZE);
         }
         if ([10].includes(curMoves[c].type)) circle(right_init_pose_x, curMoves[c].y, OBJECT_POSE_SIZE);
         fill(255, 255, 255, 255);
