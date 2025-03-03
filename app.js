@@ -96,6 +96,8 @@ var lfeet_image;
 var settings_image;
 var microphone_image;
 var fullscreen_image;
+var leave_image;
+var plus_image;
 var backgroundId = parseFloat(localStorage.getItem("background_id")) || 1;
 var hide_sensor = 0;
 var video;
@@ -443,6 +445,8 @@ function preload() {
   settings_image = loadImage('assets/images/settings.png');
   microphone_image = loadImage('assets/images/microphone.png');
   fullscreen_image = loadImage('assets/images/fullscreen.png');
+  adduser_image = loadImage('assets/images/plus.png');
+  leave_image = loadImage('assets/images/leave.png');
   bodyPose = ml5.bodyPose("BlazePose", {
     flipped: true
   });
@@ -696,7 +700,7 @@ function draw() {
       stroke(0);
       strokeWeight(0);
       fill(255);
-      text(players[i].split("-")[1].substring(0, 3), myWindowWidth - 162 - 75 * i, 50);
+      text(players[i].split("-")[1].substring(0, 3), myWindowWidth - 175 - 75 * i + 5 * coef, 20 + 15 * coef);
     }
     if (logged_player) {
       fill(0, 0, 0);
@@ -706,7 +710,7 @@ function draw() {
       stroke(0);
       strokeWeight(0);
       fill(255);
-      text('Q', myWindowWidth - 82, 50);
+      image(leave_image, myWindowWidth - 100 + 2.5 * coef, 20 + 2.5 * coef, 20 * coef, 20 * coef);
     } else {
       if (players.length < 6) {
         fill(0, 0, 0);
@@ -716,7 +720,7 @@ function draw() {
         stroke(0);
         strokeWeight(0);
         fill(255);
-        text('+', myWindowWidth - 82, 50);
+        image(adduser_image, myWindowWidth - 100 + 2.5 * coef, 20 + 2.5 * coef, 20 * coef, 20 * coef);
       }
     }
     gameResult = Date.now() - 5001;
