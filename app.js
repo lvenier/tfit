@@ -518,8 +518,11 @@ function keyPressed() {
       hide_sensor = 64;
     } else speechRec.resultString = "No calibration in game"
   }
-  if (['s', 'S'].includes(key) && [2, 3].includes(menu)) {
+  if (['n', 'N'].includes(key) && [2, 3].includes(menu)) {
     gameOver = true;
+  }
+  if (['s', 'S'].includes(key) && [2, 3].includes(menu)) {
+    if (gameStarted) gameOver = true;
   }
   if (['t', 'T'].includes(key) && [2, 3].includes(menu)) {
     if (shadow_focus < Object.keys(SHADOW_SPECIFIC).length - 1) shadow_focus++;
@@ -803,7 +806,7 @@ function draw() {
       gameResult = Date.now();
       if (song_random === true) {
         songId = Math.floor(Math.random() * NUM_SONG) + 1
-        fetchSong(songId);
+        fetchSong(songId, false);
       }
       player.score = 0;
       for (let s of Object.keys(player.scores)) {
