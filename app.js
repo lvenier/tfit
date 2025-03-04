@@ -1029,6 +1029,7 @@ function draw() {
       localStorage.setItem("left_init_pose_y", left_init_pose_y);
     }
 
+    stroke(255);
     strokeWeight(hide_sensor / 255);
     fill(255, 255, 255, 64);
     circle(left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE);
