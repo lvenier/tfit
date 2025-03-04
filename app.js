@@ -1072,7 +1072,7 @@ function draw() {
         fill(255, 0, 0, hide_sensor);
         textSize(20);
       }
-      if ((Date.now() - left_poses > 2000 || Date.now() - left_poses > 2000)) {
+      if ((Date.now() - left_poses > 2000 || Date.now() - left_poses > 2000) && Math.ceil((gameDuration - gameTimer) / FRAME_RATE) > 5) {
         guard_warning += 100;
         if (guard_warning - Date.now() > 1000) {
           if (guard_warning - Date.now() < 1099) {
