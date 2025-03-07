@@ -390,8 +390,8 @@ function handleChange() {
   if (menu != 0) {
     if (mouseX > myWindowWidth - 100 * coef && mouseX < myWindowWidth && mouseY < parseInt(myWindowHeight - 10 * coef) && mouseY > parseInt(myWindowHeight - 60 * coef)) {
       click_sound.play();
-      if (menu === 2 && !gameStarted && !gameCalibration) menu = 0;
-      else if (menu === 2 && (gameStarted || gameCalibration)) gameOver = true;
+      if (menu > 1 && !gameStarted && !gameCalibration) menu = 0;
+      else if (menu > 1 && (gameStarted || gameCalibration)) gameOver = true;
       else menu = 0;
       return;
     }
@@ -488,7 +488,7 @@ function keyPressed() {
     }
     return;
   }
-  if (['g', 'G'].includes(key) && menu === 2) {
+  if (['g', 'G'].includes(key) && menu > 1 && !gameStarted) {
     songwait = true;
     songvalue = "";
   }
@@ -780,7 +780,7 @@ function draw() {
       text(playervalue.padEnd(16, "_"), parseInt(myWindowWidth / 3) + 20 * coef, parseInt(myWindowHeight / 4 + 60 * coef));
     }
   } else {
-    if (menu === 2 && !gameStarted || (menu === 3 || menu === 4 || menu === 1)) {
+    if ((menu === 2 || menu === 3 || menu === 4 || menu === 1) && !gameStarted) {
       fill(0, 0, 0);
       rect(myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef, 20);
       fill(255);
@@ -789,6 +789,13 @@ function draw() {
   }
 
   if (menu > 1) {
+    fill(255, 255, 255, 64);
+    circle(left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE);
+    circle(right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE);
+    fill(255, 255, 255, 192);
+    circle(myWindowWidth / 2, 50 + OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE + 10)
+    if (feet_position === 0) image(lfeet_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
+    if (feet_position === 1) image(rfeet_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
 
     if (gameDuration - gameTimer <= 0) {
       gameOver = true;
@@ -824,6 +831,174 @@ function draw() {
       fill(255, 0, 0, hide_sensor);
       textSize(20);
     }
+
+    if (speechRec && 'resultString' in speechRec && speechTime > Date.now() - 1000) {
+      fill(255, 255, 255, 255);
+      textSize(30);
+      text(speechRec.resultString.toUpperCase(), width / 2.1, height - 50);
+      fill(255, 0, 0, hide_sensor);
+    }
+
+    if (!gameStarted && !gameCalibration && !(speechTime > Date.now() - 1000)) {
+      textSize(10 * coef);
+      fill(0, 0, 0);
+      rect(width / 2.5 - 40, height - 148 * coef, 100 * coef, 40 * coef, 20);
+      rect(width / 2.5 - 40, height - 98 * coef, 100 * coef, 40 * coef, 20);
+      rect(width / 2.5 - 40, height - 48 * coef, 100 * coef, 40 * coef, 20);
+      fill(255, 255, 255, 224);
+      text("(F)IGHT", width / 2.5 - 30, height - 125 * coef);
+      text("(C)ALIBRATE", width / 2.5 - 30, height - 75 * coef);
+      text("SON(G) NUM X", width / 2.5 - 30, height - 25 * coef);
+    }
+
+    fill(255, 255, 255, 255);
+    textSize(14);
+    if (song) text(`Song (${songId}): ${song.name}`, myWindowWidth - 200, 30);
+    text(`Length: ${song.length}s`, myWindowWidth - 200, 50);
+    fill(255, 0, 0, hide_sensor);
+
+    textSize(30);
+    fill(255, 255, 255, 255);
+    score = 0;
+    for (let i = 0; i < arrayScore.length; i++) {
+      score += arrayScore[i];
+    }
+    text("Score: " + score, 15, 30);
+    textSize(30);
+    text("Name: " + ('name' in player ? player.name : ""), 15, 60);
+    textSize(20);
+    text("(L)evel: " + GAME_LEVEL[level.toString()], 15, 85);
+    text("(T)ype: " + SHADOW_SPECIFIC[shadow_focus].toLowerCase(), 15, 110);
+    fill(255, 0, 0, hide_sensor);
+    if (songwait || songwaittime + 1000 > Date.now()) {
+      fill(0, 0, 0, 255);
+      rect(parseInt(myWindowWidth / 2.5), parseInt(myWindowHeight / 4), parseInt(myWindowWidth / 4), parseInt(myWindowHeight / 5), 20);
+      fill(255);
+      text('SONG : ', parseInt(myWindowWidth / 2.5) + 20 * coef, parseInt(myWindowHeight / 4 + 30 * coef));
+      textSize(40);
+      text(songvalue.padEnd(3, "_"), parseInt(myWindowWidth / 2.5) + 20 * coef, parseInt(myWindowHeight / 4 + 60 * coef));
+    }
+
+    if (gameCalibration) {
+      fill(0, 0, 0);
+      rect(myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef, 20);
+      fill(255);
+      text('(S)TOP', myWindowWidth - 80 * coef, parseInt(myWindowHeight - 60 * coef) + 30 * coef);
+      if (right_init_pose_dragging) {
+        right_init_pose_x = mouseX;
+        right_init_pose_y = mouseY;
+        localStorage.setItem("right_init_pose_x", right_init_pose_x);
+        localStorage.setItem("right_init_pose_y", right_init_pose_y);
+      }
+  
+      if (left_init_pose_dragging) {
+        left_init_pose_x = mouseX;
+        left_init_pose_y = mouseY;
+        localStorage.setItem("left_init_pose_x", left_init_pose_x);
+        localStorage.setItem("left_init_pose_y", left_init_pose_y);
+      }
+    }
+
+    if (gameTimer === 0) {
+      curMoves = [];
+      gameTimerNext = 0;
+      music.play();
+      for (let i = 0; i < moves.length; i++) arrayScore.push(0);
+    }
+
+    if (gameStarted) {
+      fill(255, 255, 255, 255);
+      text(`Time Left: ${Math.ceil((gameDuration - gameTimer) / FRAME_RATE)}s`, 15, 135);
+      textSize(10 * coef);
+      fill(0, 0, 0);
+      rect(myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef, 20);
+      fill(255);
+      text('(S)TOP', myWindowWidth - 80 * coef, parseInt(myWindowHeight - 60 * coef) + 30 * coef);
+      fill(255, 0, 0, hide_sensor);
+      if (Date.now() - hit_success < 1000) {
+        textSize(40);
+        fill(255, 255, 255, 255);
+        text("Good Hit!", myWindowWidth / 2.3, myWindowHeight / 2);
+        fill(255, 0, 0, hide_sensor);
+        textSize(20);
+      }
+      if ((Date.now() - left_poses > 2000 || Date.now() - left_poses > 2000) && Math.ceil((gameDuration - gameTimer) / FRAME_RATE) > 5) {
+        guard_warning += 100;
+        if (guard_warning - Date.now() > 1000) {
+          if (guard_warning - Date.now() < 1099) {
+            speechSpeak.speak("Your guard!");
+          }
+          textSize(40);
+          fill(255, 255, 255, 255);
+          text("Your Guard !!!", myWindowWidth / 2.3, myWindowHeight / 2);
+          fill(255, 0, 0, hide_sensor);
+          textSize(20);
+        }
+        if (guard_warning - Date.now() > 10000) guard_warning = Date.now();
+      } else guard_warning = Date.now();
+    }
+  }
+
+  if (menu === 3) {
+    if (poses.length > 0) {
+      pose = poses[0];
+      leftHand = pose["left_wrist"];
+      rightHand = pose["right_wrist"];
+      nose = pose["nose"];
+      if (nose && nose.confidence > 0.1) {
+        fill(0, 255, 0, 128);
+        circle(nose.x * coef, nose.y * coef, OBJECT_POSE_SIZE / 8);
+        fill(255, 255, 255, hide_sensor);
+      }
+      if (leftHand && leftHand.confidence > 0.1) {
+        if (leftHand.x * coef < left_init_pose_x + OBJECT_POSE_SIZE && leftHand.x * coef > left_init_pose_x - OBJECT_POSE_SIZE && leftHand.y * coef - OBJECT_POSE_SIZE < left_init_pose_y && leftHand.y * coef + OBJECT_POSE_SIZE > left_init_pose_y) {
+          left_poses = Date.now();
+          fill(255, 255, 255, 128);
+          circle(left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE);
+        }
+        fill(255, 0, 0, 128);
+        circle(leftHand.x * coef, leftHand.y * coef, OBJECT_POSE_SIZE / 2);
+        fill(255, 255, 255, hide_sensor);
+      }
+      if (rightHand && rightHand.confidence > 0.1) {
+        if (rightHand.x * coef < right_init_pose_x + OBJECT_POSE_SIZE && rightHand.x * coef > right_init_pose_x - OBJECT_POSE_SIZE && rightHand.y * coef < right_init_pose_y + OBJECT_POSE_SIZE && rightHand.y * coef > right_init_pose_y - OBJECT_POSE_SIZE) {
+          right_poses = Date.now();
+          fill(255, 255, 255, 128);
+          circle(right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE);
+        }
+        fill(255, 0, 0, 128);
+        circle(rightHand.x * coef, rightHand.y * coef, OBJECT_POSE_SIZE / 2);
+        fill(255, 255, 255, hide_sensor);
+      }
+      if (gameStarted) {
+        if (gameTimer === 0) {
+          pad_x = floor(Math.random() * (width - 100) + 50);
+          pad_y = Math.floor(Math.random() * (height - 100) + 50);
+        }
+        fill(100, 100, 0, 255);
+        circle(pad_x, pad_y, OBJECT_POSE_SIZE);
+        fill(255, 255, 255, 192);
+        if (pad_x < myWindowWidth / 2) {
+          text("LEFT", pad_x - 28, pad_y + 8);
+          if (leftHand.x * coef < pad_x + OBJECT_POSE_SIZE && leftHand.x * coef > pad_x - OBJECT_POSE_SIZE && leftHand.y * coef - OBJECT_POSE_SIZE < pad_y && leftHand.y * coef + OBJECT_POSE_SIZE > pad_y && Date.now() - left_poses < LEVEL * 10) {
+            pad_x = floor(Math.random() * (width - 50) + 50);
+            pad_y = Math.floor(Math.random() * (height - 50) + 50);
+            arrayScore.push(1);
+          }
+        } else {
+          text("RIGHT", pad_x - 32, pad_y + 8);
+          if (rightHand.x * coef < pad_x + OBJECT_POSE_SIZE && rightHand.x * coef > pad_x - OBJECT_POSE_SIZE && rightHand.y * coef - OBJECT_POSE_SIZE < pad_y && rightHand.y * coef + OBJECT_POSE_SIZE > pad_y && Date.now() - right_poses < LEVEL * 10) {
+            pad_x = floor(Math.random() * (width - 50) + 50);
+            pad_y = Math.floor(Math.random() * (height - 50) + 50);
+            arrayScore.push(1);
+          }
+        }
+        gameTimer++;
+      }
+    }
+  }
+
+  if (menu === 2) {
 
     if (Date.now() - gameResult < 5000 && curMoves.length > 0) {
       fill(0, 0, 0, 255);
@@ -885,119 +1060,6 @@ function draw() {
       return;
     }
 
-    if (gameTimer === 0) {
-      curMoves = [];
-      gameTimerNext = 0;
-      music.play();
-      for (let i = 0; i < moves.length; i++) arrayScore.push(0);
-    }
-
-    if (speechRec && 'resultString' in speechRec && speechTime > Date.now() - 1000) {
-      console.log(speechRec.resultString)
-      fill(255, 255, 255, 255);
-      textSize(30);
-      text(speechRec.resultString.toUpperCase(), width / 2.1, height - 50);
-      fill(255, 0, 0, hide_sensor);
-    }
-
-    if (!gameStarted && !(speechTime > Date.now() - 1000)) {
-      textSize(10 * coef);
-      fill(0, 0, 0);
-      rect(width / 2.5 - 40, height - 148 * coef, 100 * coef, 40 * coef, 20);
-      rect(width / 2.5 - 40, height - 98 * coef, 100 * coef, 40 * coef, 20);
-      rect(width / 2.5 - 40, height - 48 * coef, 100 * coef, 40 * coef, 20);
-      fill(255, 255, 255, 224);
-      text("(F)IGHT", width / 2.5 - 30, height - 125 * coef);
-      text("(C)ALIBRATE", width / 2.5 - 30, height - 75 * coef);
-      text("SON(G) NUM X", width / 2.5 - 30, height - 25 * coef);
-    }
-
-    fill(255, 255, 255, 255);
-    textSize(14);
-    if (song) text(`Song (${songId}): ${song.name}`, myWindowWidth - 200, 30);
-    text(`Length: ${song.length}s`, myWindowWidth - 200, 50);
-    fill(255, 0, 0, hide_sensor);
-
-    textSize(30);
-    fill(255, 255, 255, 255);
-    score = 0;
-    for (let i = 0; i < arrayScore.length; i++) {
-      score += arrayScore[i];
-    }
-    text("Score: " + score, 15, 30);
-    textSize(30);
-    text("Name: " + ('name' in player ? player.name : ""), 15, 60);
-    textSize(20);
-    text("(L)evel: " + GAME_LEVEL[level.toString()], 15, 85);
-    text("(T)ype: " + SHADOW_SPECIFIC[shadow_focus].toLowerCase(), 15, 110);
-    fill(255, 0, 0, hide_sensor);
-    if (songwait || songwaittime + 1000 > Date.now()) {
-      fill(0, 0, 0, 255);
-      rect(parseInt(myWindowWidth / 2.5), parseInt(myWindowHeight / 4), parseInt(myWindowWidth / 4), parseInt(myWindowHeight / 5), 20);
-      fill(255);
-      text('SONG : ', parseInt(myWindowWidth / 2.5) + 20 * coef, parseInt(myWindowHeight / 4 + 30 * coef));
-      textSize(40);
-      text(songvalue.padEnd(3, "_"), parseInt(myWindowWidth / 2.5) + 20 * coef, parseInt(myWindowHeight / 4 + 60 * coef));
-    }
-  }
-
-  if (menu === 3) {
-    if (poses.length > 0) {
-      pose = poses[0];
-      leftHand = pose["left_wrist"];
-      rightHand = pose["right_wrist"];
-      nose = pose["nose"];
-      if (nose && nose.confidence > 0.1) {
-        fill(0, 255, 0, 128);
-        circle(nose.x * coef, nose.y * coef, OBJECT_POSE_SIZE / 8);
-        fill(255, 255, 255, hide_sensor);
-      }
-      if (leftHand && leftHand.confidence > 0.1) {
-        fill(255, 0, 0, 128);
-        circle(leftHand.x * coef, leftHand.y * coef, OBJECT_POSE_SIZE / 2);
-        fill(255, 255, 255, hide_sensor);
-      }
-      if (rightHand && rightHand.confidence > 0.1) {
-        fill(255, 0, 0, 128);
-        circle(rightHand.x * coef, rightHand.y * coef, OBJECT_POSE_SIZE / 2);
-        fill(255, 255, 255, hide_sensor);
-      }
-      if (gameStarted) {
-        if (gameTimer === 0) {
-          pad_x = floor(Math.random() * (width - 100) + 50);
-          pad_y = Math.floor(Math.random() * (height - 100) + 50);
-        }
-        fill(255, 255, 255, 64);
-        circle(pad_x, pad_y, OBJECT_POSE_SIZE);
-        if (pad_x < width / 2) {
-          if (leftHand.x * coef < pad_x + OBJECT_POSE_SIZE && leftHand.x * coef > pad_x - OBJECT_POSE_SIZE && leftHand.y * coef - OBJECT_POSE_SIZE < pad_y && leftHand.y * coef + OBJECT_POSE_SIZE > pad_y) {
-            pad_x = floor(Math.random() * (width - 50) + 50);
-            pad_y = Math.floor(Math.random() * (height - 50) + 50);
-          }
-        } else {
-          if (rightHand.x * coef < pad_x + OBJECT_POSE_SIZE && rightHand.x * coef > pad_x - OBJECT_POSE_SIZE && rightHand.y * coef - OBJECT_POSE_SIZE < pad_y && rightHand.y * coef + OBJECT_POSE_SIZE > pad_y) {
-            pad_x = floor(Math.random() * (width - 50) + 50);
-            pad_y = Math.floor(Math.random() * (height - 50) + 50);
-          }
-        }
-        gameTimer++;
-      }
-    }
-  }
-
-  if (menu === 2) {
-    fill(255, 255, 255, 192);
-    circle(myWindowWidth / 2, 50 + OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE + 10)
-    if (feet_position === 0) image(lfeet_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
-    if (feet_position === 1) image(rfeet_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
-
-    if (gameCalibration) {
-      fill(0, 0, 0);
-      rect(myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef, 20);
-      fill(255);
-      text('(S)TOP', myWindowWidth - 80 * coef, parseInt(myWindowHeight - 60 * coef) + 30 * coef);
-    }
-
     if (init_jab_dragging) {
       init_jab_y = mouseY;
       localStorage.setItem("init_jab_y", init_jab_y);
@@ -1018,25 +1080,8 @@ function draw() {
       localStorage.setItem("right_init_hook_x", right_init_hook_x);
     }
 
-    if (right_init_pose_dragging) {
-      right_init_pose_x = mouseX;
-      right_init_pose_y = mouseY;
-      localStorage.setItem("right_init_pose_x", right_init_pose_x);
-      localStorage.setItem("right_init_pose_y", right_init_pose_y);
-    }
-
-    if (left_init_pose_dragging) {
-      left_init_pose_x = mouseX;
-      left_init_pose_y = mouseY;
-      localStorage.setItem("left_init_pose_x", left_init_pose_x);
-      localStorage.setItem("left_init_pose_y", left_init_pose_y);
-    }
-
-    stroke(255);
+    stroke(0);
     strokeWeight(hide_sensor / 255);
-    fill(255, 255, 255, 64);
-    circle(left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE);
-    circle(right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE);
     fill(255, 255, 255, 32);
     rect(left_init_pose_x - OBJECT_POSE_SIZE / 2, 0, OBJECT_POSE_SIZE, myWindowHeight);
     rect(right_init_pose_x - OBJECT_POSE_SIZE / 2, 0, OBJECT_POSE_SIZE, myWindowHeight);
@@ -1047,14 +1092,6 @@ function draw() {
     rect(right_init_hook_x, 0, right_init_hook_x, myWindowHeight);
 
     if (gameStarted) {
-      fill(255, 255, 255, 255);
-      text(`Time Left: ${Math.ceil((gameDuration - gameTimer) / FRAME_RATE)}s`, 15, 135);
-      textSize(10 * coef);
-      fill(0, 0, 0);
-      rect(myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef, 20);
-      fill(255);
-      text('(S)TOP', myWindowWidth - 80 * coef, parseInt(myWindowHeight - 60 * coef) + 30 * coef);
-      fill(255, 0, 0, hide_sensor);
       if (gameTimerNext < Math.ceil(gameTimer / FRAME_RATE)) {
         if (moves.length >= Math.ceil(gameTimer / FRAME_RATE) && moves[Math.ceil(gameTimer / FRAME_RATE)] >= 0) {
           xt = parseInt(moves[Math.ceil(gameTimer / FRAME_RATE)]) % 2 ? left_init_pose_x : right_init_pose_x;
@@ -1068,27 +1105,6 @@ function draw() {
         }
         gameTimerNext++;
       }
-      if (Date.now() - hit_success < 1000) {
-        textSize(40);
-        fill(255, 255, 255, 255);
-        text("Good Hit!", myWindowWidth / 2.3, myWindowHeight / 2);
-        fill(255, 0, 0, hide_sensor);
-        textSize(20);
-      }
-      if ((Date.now() - left_poses > 2000 || Date.now() - left_poses > 2000) && Math.ceil((gameDuration - gameTimer) / FRAME_RATE) > 5) {
-        guard_warning += 100;
-        if (guard_warning - Date.now() > 1000) {
-          if (guard_warning - Date.now() < 1099) {
-            speechSpeak.speak("Your guard!");
-          }
-          textSize(40);
-          fill(255, 255, 255, 255);
-          text("Your Guard !!!", myWindowWidth / 2.3, myWindowHeight / 2);
-          fill(255, 0, 0, hide_sensor);
-          textSize(20);
-        }
-        if (guard_warning - Date.now() > 10000) guard_warning = Date.now();
-      } else guard_warning = Date.now();
       for (c = 0; c < curMoves.length; c++) {
         curMoves[c].y = curMoves[c].y - Math.ceil(240 / FRAME_RATE);
         let alpha = 128;
@@ -1225,7 +1241,7 @@ function draw() {
         if (leftHand.y * coef < init_jab_y) {
           fill(255, 255, 255, hide_sensor);
           rect(0, 0, myWindowWidth, init_jab_y);
-          if (Date.now() - left_poses < LEVEL * 10 && Date.now() - right_poses < LEVEL) {
+          if (Date.now() - left_poses < LEVEL * 10 && Date.now() - right_poses < LEVEL * 10) {
             left_jab = Date.now();
             if (gameCalibration) {
               textSize(32);
