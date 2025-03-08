@@ -1,4 +1,4 @@
-const NUM_SONG = 310;
+const NUM_SONG = 320;
 
 const MENUTYPE = {
   "0": "main",
