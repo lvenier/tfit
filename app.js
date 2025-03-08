@@ -458,6 +458,8 @@ function preload() {
   fullscreen_image = loadImage('assets/images/fullscreen.png');
   adduser_image = loadImage('assets/images/plus.png');
   leave_image = loadImage('assets/images/leave.png');
+  click_sound = loadSound('assets/sounds/click.mp3');
+  punch_sound = loadSound('assets/sounds/punch.mp3');
   bodyPose = ml5.bodyPose("BlazePose", {
     flipped: true
   });
@@ -701,8 +703,6 @@ function setup() {
   cnv = createCanvas(myWindowWidth, myWindowHeight);
   cnv.position((window.innerWidth - myWindowWidth) / 2, 0)
   fetchSong(songId, false);
-  click_sound = loadSound('assets/sounds/click.mp3');
-  punch_sound = loadSound('assets/sounds/punch.mp3');
 
   video = createCapture(VIDEO, {
     flipped: true

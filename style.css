@@ -7,3 +7,21 @@ html, body {
 canvas {
   display: block;
 }
+.loader {
+  width: 10vw;
+  height: 10vw;
+  border: 32px solid #FFF;
+  border-bottom-color: #A020F0;
+  border-radius: 50%;
+  animation: rotation 1s linear infinite;
+  opacity: 0.5;
+  }
+
+  @keyframes rotation {
+  0% {
+      transform: rotate(0deg);
+  }
+  100% {
+      transform: rotate(360deg);
+  }
+  } 
