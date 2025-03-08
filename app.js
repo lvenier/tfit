@@ -714,6 +714,8 @@ function setup() {
 }
 
 function draw() {
+  if (innerWidth < innerHeight) return;
+
   background(background_image);
   textSize(10 * coef);
   fill(0, 0, 0);
