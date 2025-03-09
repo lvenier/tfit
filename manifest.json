@@ -1,15 +1,19 @@
 {
-    "id": "box4fit",
+    "id": "/",
     "name": "Box4Fit",
     "short_name": "Box4Fit",
     "start_url": "/",
-    "display_override": ["window-control-overlay", "minimal-ui"],
+    "display_override": ["window-controls-overlay", "browser", "standalone", "minimal-ui"],
     "display": "standalone",
     "theme_color": "#000000",
     "background_color": "#ffffff",
     "description": "Game for body fit with style and fun",
     "lang": "en",
     "orientation": "landscape",
+    "protocol_handlers": [{
+        "protocol": "web+http",
+        "url": "/?type=%s"
+    }],
     "screenshots": [{
             "src": "assets/logos/logo.512.png",
             "type": "image/png",

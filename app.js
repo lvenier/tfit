@@ -86,6 +86,7 @@ var leftHand;
 var rightHand;
 var nose;
 var score = 0;
+var score_max = 0;
 var level = parseFloat(localStorage.getItem("level")) || 0;
 var shadow_focus = parseFloat(localStorage.getItem("shadow_focus")) || 0;
 var arrayScore = [];
@@ -192,6 +193,8 @@ for (let s of Object.keys(player.scores)) {
   player.score += player.scores[s].score
 }
 
+p5.disableFriendlyErrors = true;
+
 function getPlayers() {
   players = [];
   for (let p of Object.keys(localStorage)) {
@@ -270,6 +273,10 @@ function loadSongmoves() {
       song.moves[Math.floor(gameLength / 2)] = 10;
     }
     moves = song.moves;
+    score_max = 0;
+    for (let m = 0; m < moves.length; m++) {
+      if (moves[m] != 0 && moves[m] != 10) score_max++;
+    }
   }
 }
 
@@ -363,17 +370,17 @@ function handleChange() {
     if (mouseX > width / 2.5 - 40 && mouseX < width / 2.5 - 40 + 100 * coef) {
       if (mouseY > height - 148 * coef && mouseY < height - 108 * coef) {
         click_sound.play();
-        if (!gameStarted) {
-          feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
-          speechSpeak.speak("let's fight!");
-          gameStarted = true;
-          curMoves = [];
-          gameCalibration = false;
-          hide_sensor = 0;
-          gameTimer = 0;
-          score = 0;
-          arrayScore = [];
-        } else speechRec.resultString = "Already fighting"
+        if (gameCalibration) return speechRec.resultString = "Calibating !";
+        if (gameStarted) return speechRec.resultString = "Already fighting !"
+        feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
+        speechSpeak.speak("let's fight!");
+        gameStarted = true;
+        curMoves = [];
+        gameCalibration = false;
+        hide_sensor = 0;
+        gameTimer = 0;
+        score = 0;
+        arrayScore = [];
         return;
       }
       if ([2, 3].includes(menu) && mouseY > height - 98 * coef && mouseY < height - 58 * coef) {
@@ -730,10 +737,10 @@ function draw() {
   background(255);
   tint(255, 236);
   image(background_images[menu], 0, 0, width, height);
-  tint(255,255);
+  tint(255, 255);
   textSize(10 * coef);
   fill(0, 0, 0);
-  if (recognizing){
+  if (recognizing) {
     stroke(192, 204, 0);
     strokeWeight(4);
   }
@@ -879,7 +886,7 @@ function draw() {
     for (let i = 0; i < arrayScore.length; i++) {
       score += arrayScore[i];
     }
-    text("Score: " + score, 15, 30);
+    text("Score: " + score + " / " + score_max, 15, 30);
     textSize(30);
     text("Name: " + ('name' in player ? player.name : ""), 15, 60);
     textSize(20);
@@ -906,7 +913,7 @@ function draw() {
         localStorage.setItem("right_init_pose_x", right_init_pose_x);
         localStorage.setItem("right_init_pose_y", right_init_pose_y);
       }
-  
+
       if (left_init_pose_dragging) {
         left_init_pose_x = mouseX;
         left_init_pose_y = mouseY;
@@ -986,7 +993,7 @@ function draw() {
         circle(rightHand.x * coef, rightHand.y * coef, OBJECT_POSE_SIZE / 2);
         fill(255, 255, 255, hide_sensor);
       }
-      if (gameStarted){
+      if (gameStarted) {
         tint(255, 224);
         image(opponent_image, myWindowWidth / 2 - 1.8 * OBJECT_POSE_SIZE * coef, myWindowHeight * 0.1, 3 * OBJECT_POSE_SIZE * coef, 3 * OBJECT_POSE_SIZE * coef);
         tint(255, 127);
