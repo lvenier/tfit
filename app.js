@@ -98,6 +98,10 @@ var microphone_image;
 var fullscreen_image;
 var leave_image;
 var plus_image;
+
+var me_image;
+var opponent_image;
+
 var backgroundId = parseFloat(localStorage.getItem("background_id")) || 1;
 var hide_sensor = 0;
 var video;
@@ -354,7 +358,7 @@ function handleChange() {
       localStorage.setItem("feet_position", feet_position);
     }
   }
-  if ([2, 3].includes(menu)) {
+  if ([2, 3, 4].includes(menu)) {
     if (mouseX > width / 2.5 - 40 && mouseX < width / 2.5 - 40 + 100 * coef) {
       if (mouseY > height - 148 * coef && mouseY < height - 108 * coef) {
         click_sound.play();
@@ -387,7 +391,7 @@ function handleChange() {
       }
     }
   }
-  if (menu != 0) {
+  if (menu > 0) {
     if (mouseX > myWindowWidth - 100 * coef && mouseX < myWindowWidth && mouseY < parseInt(myWindowHeight - 10 * coef) && mouseY > parseInt(myWindowHeight - 60 * coef)) {
       click_sound.play();
       if (menu > 1 && !gameStarted && !gameCalibration) menu = 0;
@@ -458,6 +462,10 @@ function preload() {
   fullscreen_image = loadImage('assets/images/fullscreen.png');
   adduser_image = loadImage('assets/images/plus.png');
   leave_image = loadImage('assets/images/leave.png');
+
+  me_image = loadImage('assets/images/boxers/0-me.png');
+  opponent_image = loadImage('assets/images/boxers/0-1.png');
+
   click_sound = loadSound('assets/sounds/click.mp3');
   punch_sound = loadSound('assets/sounds/punch.mp3');
   bodyPose = ml5.bodyPose("BlazePose", {
@@ -520,19 +528,19 @@ function keyPressed() {
       hide_sensor = 64;
     } else speechRec.resultString = "No calibration in game"
   }
-  if (['n', 'N'].includes(key) && [2, 3].includes(menu)) {
+  if (['n', 'N'].includes(key) && [2, 3, 4].includes(menu)) {
     gameOver = true;
   }
-  if (['s', 'S'].includes(key) && [2, 3].includes(menu)) {
+  if (['s', 'S'].includes(key) && [2, 3, 4].includes(menu)) {
     if (gameStarted) gameOver = true;
   }
-  if (['t', 'T'].includes(key) && [2, 3].includes(menu)) {
+  if (['t', 'T'].includes(key) && [2, 3, 4].includes(menu)) {
     if (shadow_focus < Object.keys(SHADOW_SPECIFIC).length - 1) shadow_focus++;
     else shadow_focus = 0;
     localStorage.setItem("shadow_focus", shadow_focus);
     loadSongmoves();
   }
-  if (['l', 'L'].includes(key) && [2, 3].includes(menu)) {
+  if (['l', 'L'].includes(key) && [2, 3, 4].includes(menu)) {
     if (level < Object.keys(GAME_LEVEL).length - 1) level++;
     else level = 0;
     localStorage.setItem("level", level);
@@ -565,7 +573,7 @@ function keyPressed() {
     right_init_hook_x = myWindowWidth - 120;
     localStorage.setItem("right_init_hook_x", right_init_hook_x);
   }
-  if (['f', 'F'].includes(key) && [2, 3].includes(menu)) {
+  if (['f', 'F'].includes(key) && [2, 3, 4].includes(menu)) {
     if (!gameStarted) {
       feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
       speechSpeak.speak("let's fight!");
@@ -592,7 +600,7 @@ function gotSpeech() {
         curMoves = [];
       }
     }
-    if (menu === 2) {
+    if ([2, 3, 4].includes(menu)) {
       if (speechRec.resultString.includes("fight")) {
         speechTime = Date.now();
         if (!gameStarted) {
@@ -938,6 +946,48 @@ function draw() {
         }
         if (guard_warning - Date.now() > 10000) guard_warning = Date.now();
       } else guard_warning = Date.now();
+    }
+  }
+
+  if (menu === 4) {
+    if (poses.length > 0) {
+      pose = poses[0];
+      leftHand = pose["left_wrist"];
+      rightHand = pose["right_wrist"];
+      nose = pose["nose"];
+      if (nose && nose.confidence > 0.1) {
+        fill(0, 255, 0, 128);
+        circle(nose.x * coef, nose.y * coef, OBJECT_POSE_SIZE / 8);
+        fill(255, 255, 255, hide_sensor);
+      }
+      if (leftHand && leftHand.confidence > 0.1) {
+        if (leftHand.x * coef < left_init_pose_x + OBJECT_POSE_SIZE && leftHand.x * coef > left_init_pose_x - OBJECT_POSE_SIZE && leftHand.y * coef - OBJECT_POSE_SIZE < left_init_pose_y && leftHand.y * coef + OBJECT_POSE_SIZE > left_init_pose_y) {
+          left_poses = Date.now();
+          fill(255, 255, 255, 128);
+          circle(left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE);
+        }
+        fill(255, 0, 0, 128);
+        circle(leftHand.x * coef, leftHand.y * coef, OBJECT_POSE_SIZE / 2);
+        fill(255, 255, 255, hide_sensor);
+      }
+      if (rightHand && rightHand.confidence > 0.1) {
+        if (rightHand.x * coef < right_init_pose_x + OBJECT_POSE_SIZE && rightHand.x * coef > right_init_pose_x - OBJECT_POSE_SIZE && rightHand.y * coef < right_init_pose_y + OBJECT_POSE_SIZE && rightHand.y * coef > right_init_pose_y - OBJECT_POSE_SIZE) {
+          right_poses = Date.now();
+          fill(255, 255, 255, 128);
+          circle(right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE);
+        }
+        fill(255, 0, 0, 128);
+        circle(rightHand.x * coef, rightHand.y * coef, OBJECT_POSE_SIZE / 2);
+        fill(255, 255, 255, hide_sensor);
+      }
+      if (gameStarted){
+        tint(255, 224);
+        image(opponent_image, myWindowWidth / 2 - 1.8 * OBJECT_POSE_SIZE * coef, myWindowHeight * 0.1, 3 * OBJECT_POSE_SIZE * coef, 3 * OBJECT_POSE_SIZE * coef);
+        tint(255, 127);
+        image(me_image, myWindowWidth / 2 - 2.2 * OBJECT_POSE_SIZE * coef, myWindowHeight * 0.4, 4 * OBJECT_POSE_SIZE * coef, 4 * OBJECT_POSE_SIZE * coef);
+        tint(255, 255);
+        gameTimer++;
+      }
     }
   }
 
