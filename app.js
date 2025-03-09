@@ -805,7 +805,7 @@ function draw() {
   }
 
   if (menu > 1) {
-    fill(255, 255, 255, 64);
+    fill(255, 255, 255, 128);
     circle(left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE);
     circle(right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE);
     fill(255, 255, 255, 192);
