@@ -727,8 +727,10 @@ function setup() {
 
 function draw() {
   if (innerWidth < innerHeight) return;
-
-  background(background_images[menu]);
+  background(255);
+  tint(255, 236);
+  image(background_images[menu], 0, 0, width, height);
+  tint(255,255);
   textSize(10 * coef);
   fill(0, 0, 0);
   if (recognizing){
@@ -1039,6 +1041,7 @@ function draw() {
           if (leftHand.x * coef < pad_x + OBJECT_POSE_SIZE && leftHand.x * coef > pad_x - OBJECT_POSE_SIZE && leftHand.y * coef - OBJECT_POSE_SIZE < pad_y && leftHand.y * coef + OBJECT_POSE_SIZE > pad_y && Date.now() - left_poses < LEVEL * 10) {
             pad_x = floor(Math.random() * (width - 50) + 50);
             pad_y = Math.floor(Math.random() * (height - 50) + 50);
+            left_poses = Date.now() - LEVEL * 10;
             arrayScore.push(1);
           }
         } else {
@@ -1046,6 +1049,7 @@ function draw() {
           if (rightHand.x * coef < pad_x + OBJECT_POSE_SIZE && rightHand.x * coef > pad_x - OBJECT_POSE_SIZE && rightHand.y * coef - OBJECT_POSE_SIZE < pad_y && rightHand.y * coef + OBJECT_POSE_SIZE > pad_y && Date.now() - right_poses < LEVEL * 10) {
             pad_x = floor(Math.random() * (width - 50) + 50);
             pad_y = Math.floor(Math.random() * (height - 50) + 50);
+            right_poses = Date.now() - LEVEL * 10;
             arrayScore.push(1);
           }
         }
@@ -1207,8 +1211,8 @@ function draw() {
         }
         if (curMoves[c].type === 1 || curMoves[c].type === 2) {
           fill(100, 100, 0, alpha);
-          if (feet_position === 1 && curMoves[c].type === 1) curMoves[c].text = "JAB";
-          if (feet_position === 1 && curMoves[c].type === 2) curMoves[c].text = "STG";
+          if (feet_position === 1 && curMoves[c].type === 1) curMoves[c].text = "STG";
+          if (feet_position === 1 && curMoves[c].type === 2) curMoves[c].text = "JAB";
           if (feet_position === 0 && curMoves[c].type === 1) curMoves[c].text = "JAB";
           if (feet_position === 0 && curMoves[c].type === 2) curMoves[c].text = "STG";
         } else if (curMoves[c].type === 3 || curMoves[c].type === 4) {
