@@ -90,6 +90,7 @@ var level = parseFloat(localStorage.getItem("level")) || 0;
 var shadow_focus = parseFloat(localStorage.getItem("shadow_focus")) || 0;
 var arrayScore = [];
 var background_image;
+var background_images = [];
 var menu_image;
 var rfeet_image;
 var lfeet_image;
@@ -453,6 +454,9 @@ function mouseReleased() {
 }
 
 function preload() {
+  for (let m in MENUTYPE) {
+    background_images[m] = loadImage('assets/backgrounds/' + m + '.jpg');
+  }
   background_image = loadImage('assets/backgrounds/' + backgroundId + '.jpg');
   menu_image = loadImage('assets/images/menu_image.png');
   rfeet_image = loadImage('assets/images/RFoot.png');
@@ -724,7 +728,7 @@ function setup() {
 function draw() {
   if (innerWidth < innerHeight) return;
 
-  background(background_image);
+  background(background_images[menu]);
   textSize(10 * coef);
   fill(0, 0, 0);
   if (recognizing){
@@ -1024,8 +1028,8 @@ function draw() {
       }
       if (gameStarted) {
         if (gameTimer === 0) {
-          pad_x = floor(Math.random() * (width - 100) + 50);
-          pad_y = Math.floor(Math.random() * (height - 100) + 50);
+          pad_x = randomInteger(2 * OBJECT_POSE_SIZE, width - 2 * OBJECT_POSE_SIZE);
+          pad_y = randomInteger(2 * OBJECT_POSE_SIZE, height - 2 * OBJECT_POSE_SIZE);
         }
         fill(100, 100, 0, 255);
         circle(pad_x, pad_y, OBJECT_POSE_SIZE);
