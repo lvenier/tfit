@@ -787,9 +787,13 @@ function draw() {
     image(fullscreen_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2);
     rect(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 + 100 * coef, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2, 20);
     image(settings_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 + 100 * coef, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2);
+    stroke(255,192);
+    strokeWeight(2);
     rect(myWindowWidth / 6, parseInt(myWindowHeight / 6), 100 * coef, 50 * coef, 20);
     rect(myWindowWidth / 6, parseInt(myWindowHeight / 6 + 100 * coef), 100 * coef, 50 * coef, 20);
     rect(myWindowWidth / 6, parseInt(myWindowHeight / 6 + 200 * coef), 100 * coef, 50 * coef, 20);
+    stroke(0);
+    strokeWeight(0);
     fill(255);
     text('(S)HADOW', parseInt(myWindowWidth / 6) + 20 * coef, parseInt(myWindowHeight / 6 + 30 * coef));
     text('(P)AD', parseInt(myWindowWidth / 6) + 20 * coef, parseInt(myWindowHeight / 6 + 130 * coef));
@@ -805,7 +809,11 @@ function draw() {
   } else {
     if ((menu === 2 || menu === 3 || menu === 4 || menu === 1) && !gameStarted) {
       fill(0, 0, 0);
+      stroke(255,192);
+      strokeWeight(2);
       rect(myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef, 20);
+      stroke(0);
+      strokeWeight(0);
       fill(255);
       text('(B)ACK', myWindowWidth - 80 * coef, parseInt(myWindowHeight - 60 * coef) + 30 * coef);
     }
@@ -816,10 +824,6 @@ function draw() {
     circle(left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE);
     circle(right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE);
     fill(255, 255, 255, 192);
-    circle(myWindowWidth / 2, 50 + OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE + 10)
-    if (feet_position === 0) image(lfeet_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
-    if (feet_position === 1) image(rfeet_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
-
     if (gameDuration - gameTimer <= 0) {
       gameOver = true;
       speechSpeak.speak("good job! song is over!");
@@ -865,10 +869,14 @@ function draw() {
     if (!gameStarted && !gameCalibration && !(speechTime > Date.now() - 1000)) {
       textSize(10 * coef);
       fill(0, 0, 0);
+      stroke(255,192);
+      strokeWeight(2);
       rect(width / 2.5 - 40, height - 148 * coef, 100 * coef, 40 * coef, 20);
       rect(width / 2.5 - 40, height - 98 * coef, 100 * coef, 40 * coef, 20);
       rect(width / 2.5 - 40, height - 48 * coef, 100 * coef, 40 * coef, 20);
       fill(255, 255, 255, 224);
+      stroke(0);
+      strokeWeight(0);
       text("(F)IGHT", width / 2.5 - 30, height - 125 * coef);
       text("(C)ALIBRATE", width / 2.5 - 30, height - 75 * coef);
       text("SON(G) NUM X", width / 2.5 - 30, height - 25 * coef);
@@ -891,7 +899,7 @@ function draw() {
     text("Name: " + ('name' in player ? player.name : ""), 15, 60);
     textSize(20);
     text("(L)evel: " + GAME_LEVEL[level.toString()], 15, 85);
-    text("(T)ype: " + SHADOW_SPECIFIC[shadow_focus].toLowerCase(), 15, 110);
+    if (menu === 2) text("(T)ype: " + SHADOW_SPECIFIC[shadow_focus].toLowerCase(), 15, 110);
     fill(255, 0, 0, hide_sensor);
     if (songwait || songwaittime + 1000 > Date.now()) {
       fill(0, 0, 0, 255);
@@ -904,7 +912,11 @@ function draw() {
 
     if (gameCalibration) {
       fill(0, 0, 0);
+      stroke(255,192);
+      strokeWeight(2);
       rect(myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef, 20);
+      stroke(0);
+      strokeWeight(0);
       fill(255);
       text('(S)TOP', myWindowWidth - 80 * coef, parseInt(myWindowHeight - 60 * coef) + 30 * coef);
       if (right_init_pose_dragging) {
@@ -1066,7 +1078,10 @@ function draw() {
   }
 
   if (menu === 2) {
-
+    fill(255, 255, 255, 192);
+    circle(myWindowWidth / 2, 50 + OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE + 10)
+    if (feet_position === 0) image(lfeet_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
+    if (feet_position === 1) image(rfeet_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
     if (Date.now() - gameResult < 5000 && curMoves.length > 0) {
       fill(0, 0, 0, 255);
       rect(parseInt(myWindowWidth / 8), parseInt(myWindowHeight / 6), parseInt(3 * myWindowWidth / 4), parseInt(3 * myWindowHeight / 4), 20);

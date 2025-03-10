@@ -1,26 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.2/p5.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.2/addons/p5.sound.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/IDMNYU/p5.js-speech@0.0.3/lib/p5.speech.js"></script>
-    <script src="https://unpkg.com/ml5@1.2.1/dist/ml5.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="style.css">
-    <meta charset="utf-8">
-    <title>box4fit – Game for body fit with style and fun!</title>
-    <link rel="manifest" href="manifest.json" />
-  </head>
-  <body>
-    <main>
-      <div  id="p5_loading">
-      <div style="position: absolute;left:43%;top:30%;" >
-        <h1>BOX<span style="color:#646400;font-weight: 700;">4</span>FIT</h1>
+
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.2/p5.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.2/addons/p5.sound.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/IDMNYU/p5.js-speech@0.0.3/lib/p5.speech.js"></script>
+  <script src="https://unpkg.com/ml5@1.2.1/dist/ml5.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <meta charset="utf-8">
+  <title>box4fit – Game for body fit with style and fun!</title>
+  <link rel="manifest" href="manifest.json" />
+</head>
+
+<body>
+  <main>
+    <div id="p5_loading">
+      <div style="position: absolute;left:50%;top:30%;transform: translate(-50%, -50%);">
+        <h1 style="font-size: 50px">BOX<span style="color:#646400;font-weight: 700;">4</span>FIT</h1>
       </div>
-      <div style="position: absolute;left:40%;top:50%;" >
+      <div style="position: absolute;left:50%;top:50%;transform: translate(-50%, -50%);">
         <div class="loader"></div>
       </div>
+      <div style="position: absolute;left:50%;top:50%;transform: translate(-50%, -50%);">
+        <img src="/assets/logos/logo.256.png" class="logo" />
+      </div>
+      <div style="position: absolute;left:50%;bottom:10px;transform: translate(-50%, -50%);">
+        Box4Fit © 2025
+      </div>
     </div>
-    </main>
-    <script src="app.js"></script>
-  </body>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+
 </html>
