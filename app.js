@@ -290,6 +290,9 @@ function fetchSong(id = 1, speak = true) {
       loadSongmoves();
       music = loadSound(song.url);
       if (speak) speechSpeak.speak("song " + song.name + " selected !");
+      gtag('event', 'song_changed', {
+        'song': id.toString(),
+      });
     })
     .catch(function (err) {
       songId = parseFloat(localStorage.getItem("song_id")) || 1;
