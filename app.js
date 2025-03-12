@@ -290,7 +290,7 @@ function fetchSong(id = 1, speak = true) {
       loadSongmoves();
       music = loadSound(song.url);
       if (speak) speechSpeak.speak("song " + song.name + " selected !");
-      zaraz.track("song_changed", {
+      if (typeof zaraz !== 'undefined' && zaraz) zaraz.track("song_changed", {
         "event_name": "song_changed",
         'song': id.toString(),
       });
