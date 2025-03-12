@@ -290,11 +290,13 @@ function fetchSong(id = 1, speak = true) {
       loadSongmoves();
       music = loadSound(song.url);
       if (speak) speechSpeak.speak("song " + song.name + " selected !");
-      gtag('event', 'song_changed', {
+      zaraz.track("song_changed", {
+        "event_name": "song_changed",
         'song': id.toString(),
       });
     })
     .catch(function (err) {
+      console.log(err)
       songId = parseFloat(localStorage.getItem("song_id")) || 1;
       localStorage.setItem("song_id", songId);
       if (speak) speechSpeak.speak("this song does not exist !");
