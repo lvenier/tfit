@@ -842,6 +842,13 @@ function draw() {
         player.score += player.scores[s].score
       }
       localStorage.setItem(selected_player, JSON.stringify(player));
+      if (typeof zaraz !== 'undefined' && zaraz) zaraz.track("letsfight", {
+        "event_name": "score_result",
+        "song": songId,
+        "player": player.name,
+        "score": player.score,
+        "menu": menu
+      });
       feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
     }
 
