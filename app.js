@@ -1044,26 +1044,51 @@ function draw() {
       }
       if (gameStarted) {
         if (gameTimer === 0) {
-          pad_x = randomInteger(2 * OBJECT_POSE_SIZE, width - 2 * OBJECT_POSE_SIZE);
-          pad_y = randomInteger(2 * OBJECT_POSE_SIZE, height - 2 * OBJECT_POSE_SIZE);
+          pad_x = randomInteger(2 * OBJECT_POSE_SIZE, myWindowWidth - 2 * OBJECT_POSE_SIZE);
+          pad_y = randomInteger(2 * OBJECT_POSE_SIZE, myWindowHeight - 2 * OBJECT_POSE_SIZE);
+          pad_type = 1;
+          if ((pad_x < right_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > right_init_pose_x + 2 * OBJECT_POSE_SIZE) || (pad_y < right_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > right_init_pose_y + 2 * OBJECT_POSE_SIZE) || (pad_x < left_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > left_init_pose_x + 2 * OBJECT_POSE_SIZE) || (pad_y < left_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > left_init_pose_y + 2 * OBJECT_POSE_SIZE))
+            pad_type = 2;
         }
         fill(100, 100, 0, 255);
-        circle(pad_x, pad_y, OBJECT_POSE_SIZE);
+        if (pad_type === 1) circle(pad_x, pad_y, OBJECT_POSE_SIZE);
+        fill(0, 0, 100, 255);
+        if (pad_type === 2) rect(OBJECT_POSE_SIZE, init_uppercut_y - OBJECT_POSE_SIZE / 2, myWindowWidth - 2 * OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, 20);
         fill(255, 255, 255, 192);
-        if (pad_x < myWindowWidth / 2) {
-          text("LEFT", pad_x - 28, pad_y + 8);
-          if (leftHand.x * coef < pad_x + OBJECT_POSE_SIZE && leftHand.x * coef > pad_x - OBJECT_POSE_SIZE && leftHand.y * coef - OBJECT_POSE_SIZE < pad_y && leftHand.y * coef + OBJECT_POSE_SIZE > pad_y && Date.now() - left_poses < LEVEL * 10) {
-            pad_x = floor(Math.random() * (width - 50) + 50);
-            pad_y = Math.floor(Math.random() * (height - 50) + 50);
-            left_poses = Date.now() - LEVEL * 10;
-            arrayScore.push(1);
+        if (pad_type === 1) {
+          if (pad_x < myWindowWidth / 2) {
+            text("LEFT", pad_x - 28, pad_y + 8);
+            if (leftHand.x * coef < pad_x + OBJECT_POSE_SIZE && leftHand.x * coef > pad_x - OBJECT_POSE_SIZE && leftHand.y * coef - OBJECT_POSE_SIZE < pad_y && leftHand.y * coef + OBJECT_POSE_SIZE > pad_y && Date.now() - left_poses < LEVEL * 10) {
+              pad_x = randomInteger(2 * OBJECT_POSE_SIZE, myWindowWidth - 2 * OBJECT_POSE_SIZE);
+              pad_y = randomInteger(2 * OBJECT_POSE_SIZE, myWindowHeight - 2 * OBJECT_POSE_SIZE);
+              pad_type = 1;
+              if ((pad_x < right_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > right_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < right_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > right_init_pose_y - 2 * OBJECT_POSE_SIZE) || (pad_x < left_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > left_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < left_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > left_init_pose_y - 2 * OBJECT_POSE_SIZE))
+                pad_type = 2;
+              left_poses = Date.now() - LEVEL * 10;
+              arrayScore.push(1);
+            }
+          } else {
+            text("RIGHT", pad_x - 32, pad_y + 8);
+            if (rightHand.x * coef < pad_x + OBJECT_POSE_SIZE && rightHand.x * coef > pad_x - OBJECT_POSE_SIZE && rightHand.y * coef - OBJECT_POSE_SIZE < pad_y && rightHand.y * coef + OBJECT_POSE_SIZE > pad_y && Date.now() - right_poses < LEVEL * 10) {
+              pad_x = randomInteger(2 * OBJECT_POSE_SIZE, myWindowWidth - 2 * OBJECT_POSE_SIZE);
+              pad_y = randomInteger(2 * OBJECT_POSE_SIZE, myWindowHeight - 2 * OBJECT_POSE_SIZE);
+              pad_type = 1;
+              if ((pad_x < right_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > right_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < right_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > right_init_pose_y - 2 * OBJECT_POSE_SIZE) || (pad_x < left_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > left_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < left_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > left_init_pose_y - 2 * OBJECT_POSE_SIZE))
+                pad_type = 2;
+              right_poses = Date.now() - LEVEL * 10;
+              arrayScore.push(1);
+            }
           }
-        } else {
-          text("RIGHT", pad_x - 32, pad_y + 8);
-          if (rightHand.x * coef < pad_x + OBJECT_POSE_SIZE && rightHand.x * coef > pad_x - OBJECT_POSE_SIZE && rightHand.y * coef - OBJECT_POSE_SIZE < pad_y && rightHand.y * coef + OBJECT_POSE_SIZE > pad_y && Date.now() - right_poses < LEVEL * 10) {
-            pad_x = floor(Math.random() * (width - 50) + 50);
-            pad_y = Math.floor(Math.random() * (height - 50) + 50);
-            right_poses = Date.now() - LEVEL * 10;
+        }
+        if (pad_type === 2) {
+          text("DODGE", myWindowWidth / 2 - 32, init_uppercut_y);
+          if (nose.y * coef > init_uppercut_y) {
+            down_dodge = Date.now();
+            pad_x = randomInteger(2 * OBJECT_POSE_SIZE, myWindowWidth - 2 * OBJECT_POSE_SIZE);
+            pad_y = randomInteger(2 * OBJECT_POSE_SIZE, myWindowHeight - 2 * OBJECT_POSE_SIZE);
+            pad_type = 1;
+            if ((pad_x < right_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > right_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < right_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > right_init_pose_y - 2 * OBJECT_POSE_SIZE) || (pad_x < left_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > left_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < left_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > left_init_pose_y - 2 * OBJECT_POSE_SIZE))
+              pad_type = 2;
             arrayScore.push(1);
           }
         }
