@@ -323,6 +323,11 @@ function letsfight() {
   gameTimer = 0;
   score = 0;
   arrayScore = [];
+  if (typeof zaraz !== 'undefined' && zaraz) zaraz.track("letsfight", {
+    "event_name": "letsfight",
+    "song": songId,
+    "player": player.name
+  });
 }
 
 function handleChange() {
