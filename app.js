@@ -292,7 +292,7 @@ function fetchSong(id = 1, speak = true) {
       if (speak) speechSpeak.speak("song " + song.name + " selected !");
       if (typeof zaraz !== 'undefined' && zaraz) zaraz.track("song_changed", {
         "event_name": "song_changed",
-        'song': id.toString(),
+        "song": id.toString(),
       });
     })
     .catch(function (err) {
@@ -308,6 +308,21 @@ function punchSound() {
     punch_sound.play();
     punch_sound_time = Date.now();
   }
+}
+
+function letsfight() {
+  click_sound.play();
+  if (gameCalibration) return speechRec.resultString = "Calibating !";
+  if (gameStarted) return speechRec.resultString = "Already fighting !"
+  feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
+  speechSpeak.speak("let's fight!");
+  gameStarted = true;
+  curMoves = [];
+  gameCalibration = false;
+  hide_sensor = 0;
+  gameTimer = 0;
+  score = 0;
+  arrayScore = [];
 }
 
 function handleChange() {
@@ -374,18 +389,7 @@ function handleChange() {
   if ([2, 3, 4].includes(menu)) {
     if (mouseX > width / 2.5 - 40 && mouseX < width / 2.5 - 40 + 100 * coef) {
       if (mouseY > height - 148 * coef && mouseY < height - 108 * coef) {
-        click_sound.play();
-        if (gameCalibration) return speechRec.resultString = "Calibating !";
-        if (gameStarted) return speechRec.resultString = "Already fighting !"
-        feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
-        speechSpeak.speak("let's fight!");
-        gameStarted = true;
-        curMoves = [];
-        gameCalibration = false;
-        hide_sensor = 0;
-        gameTimer = 0;
-        score = 0;
-        arrayScore = [];
+        letsfight()
         return;
       }
       if ([2, 3].includes(menu) && mouseY > height - 98 * coef && mouseY < height - 58 * coef) {
@@ -590,17 +594,7 @@ function keyPressed() {
     localStorage.setItem("right_init_hook_x", right_init_hook_x);
   }
   if (['f', 'F'].includes(key) && [2, 3, 4].includes(menu)) {
-    if (!gameStarted) {
-      feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
-      speechSpeak.speak("let's fight!");
-      gameStarted = true;
-      curMoves = [];
-      gameCalibration = false;
-      hide_sensor = 0;
-      gameTimer = 0;
-      score = 0;
-      arrayScore = [];
-    } else speechRec.resultString = "Already fighting"
+    letsfight();
   }
 }
 
@@ -619,16 +613,7 @@ function gotSpeech() {
     if ([2, 3, 4].includes(menu)) {
       if (speechRec.resultString.includes("fight")) {
         speechTime = Date.now();
-        if (!gameStarted) {
-          speechSpeak.speak("let's fight!");
-          gameStarted = true;
-          curMoves = [];
-          gameCalibration = false;
-          hide_sensor = 0;
-          gameTimer = 0;
-          score = 0;
-          arrayScore = [];
-        } else speechRec.resultString = "Already fighting"
+        letsfight();
       } else if (speechRec.resultString.includes("calibrate")) {
         speechTime = Date.now();
         if (!gameStarted) {
@@ -792,7 +777,7 @@ function draw() {
     image(fullscreen_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2);
     rect(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 + 100 * coef, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2, 20);
     image(settings_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 + 100 * coef, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2);
-    stroke(255,192);
+    stroke(255, 192);
     strokeWeight(2);
     rect(myWindowWidth / 6, parseInt(myWindowHeight / 6), 100 * coef, 50 * coef, 20);
     rect(myWindowWidth / 6, parseInt(myWindowHeight / 6 + 100 * coef), 100 * coef, 50 * coef, 20);
@@ -814,7 +799,7 @@ function draw() {
   } else {
     if ((menu === 2 || menu === 3 || menu === 4 || menu === 1) && !gameStarted) {
       fill(0, 0, 0);
-      stroke(255,192);
+      stroke(255, 192);
       strokeWeight(2);
       rect(myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef, 20);
       stroke(0);
@@ -874,7 +859,7 @@ function draw() {
     if (!gameStarted && !gameCalibration && !(speechTime > Date.now() - 1000)) {
       textSize(10 * coef);
       fill(0, 0, 0);
-      stroke(255,192);
+      stroke(255, 192);
       strokeWeight(2);
       rect(width / 2.5 - 40, height - 148 * coef, 100 * coef, 40 * coef, 20);
       rect(width / 2.5 - 40, height - 98 * coef, 100 * coef, 40 * coef, 20);
@@ -917,7 +902,7 @@ function draw() {
 
     if (gameCalibration) {
       fill(0, 0, 0);
-      stroke(255,192);
+      stroke(255, 192);
       strokeWeight(2);
       rect(myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef, 20);
       stroke(0);
