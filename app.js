@@ -162,6 +162,7 @@ var left_dodge = Date.now() - 1000;
 var right_dodge = Date.now() - 1000;
 var down_dodge = Date.now() - 1000;
 var down_dodge_done = false;
+var down_dodge_switch = false;
 var switch_guard = Date.now() - 10000;
 var punch_sound_time = Date.now() - 1000;
 var hit_success = Date.now() - 1000;
