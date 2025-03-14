@@ -161,6 +161,7 @@ var right_uppercut = Date.now() - 1000;
 var left_dodge = Date.now() - 1000;
 var right_dodge = Date.now() - 1000;
 var down_dodge = Date.now() - 1000;
+var down_dodge_done = false;
 var switch_guard = Date.now() - 10000;
 var punch_sound_time = Date.now() - 1000;
 var hit_success = Date.now() - 1000;
@@ -605,7 +606,6 @@ function keyPressed() {
 
 function gotSpeech() {
   if (speechRec.resultValue) {
-    console.log(speechRec.resultString)
     if (menu === 0) {
       if (speechRec.resultString.includes("shadow")) {
         speechTime = Date.now();
@@ -685,7 +685,7 @@ function switch_feet() {
   else feet_position = 0;
 }
 
-function hitSuccess() {
+function hitSuccess(c) {
   if (arrayScore[c] === 0) {
     if (c < 2) speechSpeak.speak("well done!");
     if (c >= 2 && arrayScore[c - 2] + arrayScore[c - 1] === 2) {
@@ -699,8 +699,8 @@ function hitSuccess() {
     }
     hit_success = Date.now();
   }
-  curMoves[c].hit = true;
   arrayScore[c] = 1;
+  curMoves[c].hit = true;
 }
 
 function setup() {
@@ -940,6 +940,7 @@ function draw() {
       curMoves = [];
       gameTimerNext = 0;
       music.play();
+      arrayScore = [];
       for (let i = 0; i < moves.length; i++) arrayScore.push(0);
     }
 
@@ -948,8 +949,12 @@ function draw() {
       text(`Time Left: ${Math.ceil((gameDuration - gameTimer) / FRAME_RATE)}s`, 15, 135);
       textSize(10 * coef);
       fill(0, 0, 0);
+      stroke(255, 192);
+      strokeWeight(2);
       rect(myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef, 20);
       fill(255);
+      stroke(0);
+      strokeWeight(0);
       text('(S)TOP', myWindowWidth - 80 * coef, parseInt(myWindowHeight - 60 * coef) + 30 * coef);
       fill(255, 0, 0, hide_sensor);
       if (Date.now() - hit_success < 1000) {
@@ -1054,8 +1059,15 @@ function draw() {
           pad_x = randomInteger(2 * OBJECT_POSE_SIZE, myWindowWidth - 2 * OBJECT_POSE_SIZE);
           pad_y = randomInteger(2 * OBJECT_POSE_SIZE, myWindowHeight - 2 * OBJECT_POSE_SIZE);
           pad_type = 1;
-          if ((pad_x < right_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > right_init_pose_x + 2 * OBJECT_POSE_SIZE) || (pad_y < right_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > right_init_pose_y + 2 * OBJECT_POSE_SIZE) || (pad_x < left_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > left_init_pose_x + 2 * OBJECT_POSE_SIZE) || (pad_y < left_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > left_init_pose_y + 2 * OBJECT_POSE_SIZE))
+          curMoves = [];
+          if ((pad_x < right_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > right_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < right_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > right_init_pose_y - 2 * OBJECT_POSE_SIZE) || (pad_x < left_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > left_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < left_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > left_init_pose_y - 2 * OBJECT_POSE_SIZE))
             pad_type = 2;
+          curMoves.push({
+            "hit": false,
+            "type": pad_type,
+            "x": pad_x,
+            "y": pad_y
+          })
         }
         fill(100, 100, 0, 255);
         if (pad_type === 1) circle(pad_x, pad_y, OBJECT_POSE_SIZE);
@@ -1069,10 +1081,16 @@ function draw() {
               pad_x = randomInteger(2 * OBJECT_POSE_SIZE, myWindowWidth - 2 * OBJECT_POSE_SIZE);
               pad_y = randomInteger(2 * OBJECT_POSE_SIZE, myWindowHeight - 2 * OBJECT_POSE_SIZE);
               pad_type = 1;
-              if ((pad_x < right_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > right_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < right_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > right_init_pose_y - 2 * OBJECT_POSE_SIZE) || (pad_x < left_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > left_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < left_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > left_init_pose_y - 2 * OBJECT_POSE_SIZE))
+              if ((pad_x < right_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > right_init_pose_x - 2 * OBJECT_POSE_SIZE) && (pad_y < right_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > right_init_pose_y - 2 * OBJECT_POSE_SIZE) && (pad_x < left_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > left_init_pose_x - 2 * OBJECT_POSE_SIZE) && (pad_y < left_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > left_init_pose_y - 2 * OBJECT_POSE_SIZE))
                 pad_type = 2;
               left_poses = Date.now() - LEVEL * 10;
-              arrayScore.push(1);
+              hitSuccess(curMoves.length - 1);
+              curMoves.push({
+                "hit": false,
+                "type": pad_type,
+                "x": pad_x,
+                "y": pad_y
+              })
             }
           } else {
             text("RIGHT", pad_x - 32, pad_y + 8);
@@ -1080,23 +1098,47 @@ function draw() {
               pad_x = randomInteger(2 * OBJECT_POSE_SIZE, myWindowWidth - 2 * OBJECT_POSE_SIZE);
               pad_y = randomInteger(2 * OBJECT_POSE_SIZE, myWindowHeight - 2 * OBJECT_POSE_SIZE);
               pad_type = 1;
-              if ((pad_x < right_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > right_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < right_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > right_init_pose_y - 2 * OBJECT_POSE_SIZE) || (pad_x < left_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > left_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < left_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > left_init_pose_y - 2 * OBJECT_POSE_SIZE))
+              if ((pad_x < right_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > right_init_pose_x - 2 * OBJECT_POSE_SIZE) && (pad_y < right_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > right_init_pose_y - 2 * OBJECT_POSE_SIZE) && (pad_x < left_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > left_init_pose_x - 2 * OBJECT_POSE_SIZE) && (pad_y < left_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > left_init_pose_y - 2 * OBJECT_POSE_SIZE))
                 pad_type = 2;
               right_poses = Date.now() - LEVEL * 10;
-              arrayScore.push(1);
+              hitSuccess(curMoves.length - 1);
+              curMoves.push({
+                "hit": false,
+                "type": pad_type,
+                "x": pad_x,
+                "y": pad_y
+              })
             }
           }
-        }
-        if (pad_type === 2) {
+        } else if (pad_type === 2) {
           text("DODGE", myWindowWidth / 2 - 32, init_uppercut_y);
           if (nose.y * coef > init_uppercut_y) {
             down_dodge = Date.now();
+            down_dodge_done = true;
+            down_dodge_switch = false;
+          }
+          if (nose.y * coef < init_uppercut_y) {
+            if (down_dodge_done === true) {
+              down_dodge_done = false;
+              down_dodge_switch = true;
+            }
+          }
+          if (Date.now() - down_dodge < LEVEL * 10 && down_dodge_switch === true) {
+            down_dodge = Date.now() - LEVEL * 10;
+            down_dodge_switch = false;
+            down_dodge_done = false;
             pad_x = randomInteger(2 * OBJECT_POSE_SIZE, myWindowWidth - 2 * OBJECT_POSE_SIZE);
             pad_y = randomInteger(2 * OBJECT_POSE_SIZE, myWindowHeight - 2 * OBJECT_POSE_SIZE);
             pad_type = 1;
-            if ((pad_x < right_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > right_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < right_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > right_init_pose_y - 2 * OBJECT_POSE_SIZE) || (pad_x < left_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > left_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < left_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > left_init_pose_y - 2 * OBJECT_POSE_SIZE))
+            if ((pad_x < right_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > right_init_pose_x - 2 * OBJECT_POSE_SIZE) && (pad_y < right_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > right_init_pose_y - 2 * OBJECT_POSE_SIZE) && (pad_x < left_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > left_init_pose_x - 2 * OBJECT_POSE_SIZE) && (pad_y < left_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > left_init_pose_y - 2 * OBJECT_POSE_SIZE))
               pad_type = 2;
-            arrayScore.push(1);
+            hitSuccess(curMoves.length - 1);
+            curMoves.push({
+              "hit": false,
+              "type": pad_type,
+              "x": pad_x,
+              "y": pad_y
+            })
           }
         }
         gameTimer++;
@@ -1224,16 +1266,16 @@ function draw() {
             switch_feet();
           }
           if (Date.now() - left_jab < LEVEL * 10 && left_jab - left_poses < LEVEL * 10 && curMoves[c].type === 1) {
-            hitSuccess();
+            hitSuccess(c);
           }
           if (Date.now() - left_hook < LEVEL * 10 && left_hook - left_poses < LEVEL * 10 && curMoves[c].type === 3) {
-            hitSuccess();
+            hitSuccess(c);
           }
           if (Date.now() - left_uppercut < LEVEL * 10 && left_uppercut - left_poses < LEVEL * 10 && curMoves[c].type === 5) {
-            hitSuccess();
+            hitSuccess(c);
           }
           if (Date.now() - left_dodge < LEVEL * 10 && left_dodge - left_poses < LEVEL * 10 && curMoves[c].type === 7) {
-            hitSuccess();
+            hitSuccess(c);
           }
         }
         if ([2, 4, 6, 8, 9, 10].includes(curMoves[c].type) && curMoves[c].y + OBJECT_POSE_SIZE > right_init_pose_y && curMoves[c].y - OBJECT_POSE_SIZE < right_init_pose_y) {
@@ -1243,19 +1285,19 @@ function draw() {
             switch_feet();
           }
           if (Date.now() - right_jab < LEVEL * 10 && right_jab - right_poses < LEVEL * 10 && curMoves[c].type === 2) {
-            hitSuccess();
+            hitSuccess(c);
           }
           if (Date.now() - right_hook < LEVEL * 10 && right_hook - right_poses < LEVEL * 10 && curMoves[c].type === 4) {
-            hitSuccess();
+            hitSuccess(c);
           }
           if (Date.now() - right_uppercut < LEVEL * 10 && right_uppercut - right_poses < LEVEL * 10 && curMoves[c].type === 6) {
-            hitSuccess();
+            hitSuccess(c);
           }
           if (Date.now() - right_dodge < LEVEL * 10 && right_dodge - right_poses < LEVEL * 10 && curMoves[c].type === 8) {
-            hitSuccess();
+            hitSuccess(c);
           }
           if (Date.now() - down_dodge < LEVEL * 10 && curMoves[c].type === 9) {
-            hitSuccess();
+            hitSuccess(c);
           }
         }
         if (curMoves[c].type === 1 || curMoves[c].type === 2) {
