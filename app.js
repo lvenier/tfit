@@ -68,6 +68,9 @@ const SHADOW_SPECIFIC = {
   "5": "PUNCHES"
 }
 
+var loading_k = 0;
+var loading_m = 0;
+
 var wakeLock = null;
 var menu = 0;
 var myWindowWidth = 480;
@@ -92,6 +95,7 @@ var shadow_focus = parseFloat(localStorage.getItem("shadow_focus")) || 0;
 var arrayScore = [];
 var background_image;
 var background_images = [];
+var logo_image;
 var menu_image;
 var rfeet_image;
 var lfeet_image;
@@ -481,6 +485,7 @@ function preload() {
     background_images[m] = loadImage('assets/backgrounds/' + m + '.jpg');
   }
   background_image = loadImage('assets/backgrounds/' + backgroundId + '.jpg');
+  logo_image = loadImage('assets/logos/logo.512.rounded.png');
   menu_image = loadImage('assets/images/menu_image.png');
   rfeet_image = loadImage('assets/images/RFoot.png');
   lfeet_image = loadImage('assets/images/LFoot.png');
@@ -732,10 +737,28 @@ function setup() {
 
 function draw() {
   if (innerWidth < innerHeight) return;
+  background(0);
   if (!checkStartCondition()) {
+    noStroke();
+    textSize(30 * coef);
+    fill(255);
+    image(logo_image, myWindowWidth / 2 - 50 * coef, myWindowHeight / 4, 100 * coef, 100 * coef, 20);
+    translate(myWindowWidth / 2, myWindowHeight / 2);
+    ellipse(100 * sin(radians(loading_k)), 0, 20 * cos(radians(loading_m)), 20 * cos(radians(loading_m)));
+    ellipse(100 * sin(radians(loading_k) + PI / 3), 0, 20 * cos(radians(loading_m) + PI / 3), 20 * cos(radians(loading_m) + PI / 3));
+    ellipse(100 * sin(radians(loading_k) + PI / 6), 0, 20 * cos(radians(loading_m) + PI / 6), 20 * cos(radians(loading_m) + PI / 6));
+    if (loading_k < 360) {
+      loading_k += 4;
+      if (90 < loading_k) {
+        if (loading_m < 360) loading_m += 8;
+        else loading_m = 0;
+      }
+    } else {
+      loading_k = 0;
+      loading_m = 0;
+    }
     return;
   }
-  background(255);
   tint(255, 236);
   image(background_images[menu], 0, 0, myWindowWidth, myWindowHeight);
   tint(255, 255);
@@ -1502,5 +1525,5 @@ function checkStartCondition() {
 
 function gotPoses(results) {
   poses = results;
-  
+
 }
