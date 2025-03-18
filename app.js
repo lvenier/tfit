@@ -78,7 +78,7 @@ coef = 0.05 * (Math.floor(Math.min(window.innerWidth / 32, window.innerHeight / 
 myWindowWidth = coef * 640;
 myWindowHeight = coef * 480;
 
-const OBJECT_POSE_SIZE = 48 * coef;
+var OBJECT_POSE_SIZE = 48 * coef;
 const FRAME_RATE = 30;
 var LEVEL = 50;
 
@@ -394,12 +394,12 @@ function handleChange() {
     }
   }
   if ([2, 3, 4].includes(menu)) {
-    if (mouseX > width / 2.5 - 40 && mouseX < width / 2.5 - 40 + 100 * coef) {
-      if (mouseY > height - 148 * coef && mouseY < height - 108 * coef) {
+    if (mouseX > myWindowWidth / 2.5 - 40 && mouseX < myWindowWidth / 2.5 - 40 + 100 * coef) {
+      if (mouseY > myWindowHeight - 148 * coef && mouseY < myWindowHeight - 108 * coef) {
         letsfight()
         return;
       }
-      if ([2, 3].includes(menu) && mouseY > height - 98 * coef && mouseY < height - 58 * coef) {
+      if ([2, 3].includes(menu) && mouseY > myWindowHeight - 98 * coef && mouseY < myWindowHeight - 58 * coef) {
         click_sound.play();
         if (!gameStarted) {
           gameCalibration = true;
@@ -407,7 +407,7 @@ function handleChange() {
         }
         return;
       }
-      if (mouseY > height - 48 * coef && mouseY < height - 8 * coef) {
+      if (mouseY > myWindowHeight - 48 * coef && mouseY < myWindowHeight - 8 * coef) {
         click_sound.play();
         songwait = true;
         songvalue = "";
@@ -684,6 +684,9 @@ function onEndSpeechRec() {
 function switch_feet() {
   if (feet_position === 0) feet_position = 1;
   else feet_position = 0;
+  let tmp = left_init_pose_y;
+  left_init_pose_y = right_init_pose_y;
+  right_init_pose_y = tmp;
 }
 
 function hitSuccess(c) {
@@ -724,15 +727,17 @@ function setup() {
   });
   video.hide();
   bodyPose.detectStart(video, gotPoses);
-  checkStartCondition();
 
 }
 
 function draw() {
   if (innerWidth < innerHeight) return;
+  if (!checkStartCondition()) {
+    return;
+  }
   background(255);
   tint(255, 236);
-  image(background_images[menu], 0, 0, width, height);
+  image(background_images[menu], 0, 0, myWindowWidth, myWindowHeight);
   tint(255, 255);
   textSize(10 * coef);
   fill(0, 0, 0);
@@ -865,7 +870,7 @@ function draw() {
     if (speechRec && 'resultString' in speechRec && speechTime > Date.now() - 1000) {
       fill(255, 255, 255, 255);
       textSize(30);
-      text(speechRec.resultString.toUpperCase(), width / 2.1, height - 50);
+      text(speechRec.resultString.toUpperCase(), myWindowWidth / 2.1, myWindowHeight - 50);
       fill(255, 0, 0, hide_sensor);
     }
 
@@ -874,15 +879,15 @@ function draw() {
       fill(0, 0, 0);
       stroke(255, 192);
       strokeWeight(2);
-      rect(width / 2.5 - 40, height - 148 * coef, 100 * coef, 40 * coef, 20);
-      rect(width / 2.5 - 40, height - 98 * coef, 100 * coef, 40 * coef, 20);
-      rect(width / 2.5 - 40, height - 48 * coef, 100 * coef, 40 * coef, 20);
+      rect(myWindowWidth / 2.5 - 40, myWindowHeight - 148 * coef, 100 * coef, 40 * coef, 20);
+      rect(myWindowWidth / 2.5 - 40, myWindowHeight - 98 * coef, 100 * coef, 40 * coef, 20);
+      rect(myWindowWidth / 2.5 - 40, myWindowHeight - 48 * coef, 100 * coef, 40 * coef, 20);
       fill(255, 255, 255, 224);
       stroke(0);
       strokeWeight(0);
-      text("(F)IGHT", width / 2.5 - 30, height - 125 * coef);
-      text("(C)ALIBRATE", width / 2.5 - 30, height - 75 * coef);
-      text("SON(G) NUM X", width / 2.5 - 30, height - 25 * coef);
+      text("(F)IGHT", myWindowWidth / 2.5 - 30, myWindowHeight - 125 * coef);
+      text("(C)ALIBRATE", myWindowWidth / 2.5 - 30, myWindowHeight - 75 * coef);
+      text("SON(G) NUM X", myWindowWidth / 2.5 - 30, myWindowHeight - 25 * coef);
     }
 
     fill(255, 255, 255, 255);
@@ -1365,7 +1370,7 @@ function draw() {
               if (gameCalibration) {
                 textSize(32);
                 fill(255, 255, 255, 127);
-                text("LEFT HOOK!", width / 2.5, height / 2);
+                text("LEFT HOOK!", myWindowWidth / 2.5, myWindowHeight / 2);
               }
               punchSound();
             }
@@ -1373,7 +1378,7 @@ function draw() {
               if (gameCalibration) {
                 textSize(32);
                 fill(255, 255, 255, 127);
-                text("LEFT UPPERCUT!", width / 2.5, height / 2);
+                text("LEFT UPPERCUT!", myWindowWidth / 2.5, myWindowHeight / 2);
               }
               punchSound();
             }
@@ -1398,7 +1403,7 @@ function draw() {
             if (gameCalibration) {
               textSize(32);
               fill(255, 255, 255, 127);
-              text("LEFT JAB!", width / 2.5, height / 2);
+              text("LEFT JAB!", myWindowWidth / 2.5, myWindowHeight / 2);
             }
             punchSound();
           }
@@ -1425,7 +1430,7 @@ function draw() {
               if (gameCalibration) {
                 textSize(32);
                 fill(255, 255, 255, 127);
-                text("RIGHT HOOK!", width / 2.5, height / 2);
+                text("RIGHT HOOK!", myWindowWidth / 2.5, myWindowHeight / 2);
               }
               punchSound();
             }
@@ -1433,7 +1438,7 @@ function draw() {
               if (gameCalibration) {
                 textSize(32);
                 fill(255, 255, 255, 127);
-                text("RIGHT UPPERCUT!", width / 2.5, height / 2);
+                text("RIGHT UPPERCUT!", myWindowWidth / 2.5, myWindowHeight / 2);
               }
               punchSound();
             }
@@ -1457,7 +1462,7 @@ function draw() {
             if (gameCalibration) {
               textSize(32);
               fill(255, 255, 255, 127);
-              text("RIGHT JAB!", width / 2.5, height / 2);
+              text("RIGHT JAB!", myWindowWidth / 2.5, myWindowHeight / 2);
             }
             punchSound();
           }
@@ -1467,8 +1472,16 @@ function draw() {
   }
 }
 
+function windowResized() {
+  coef = 0.05 * (Math.floor(Math.min(window.innerWidth / 32, window.innerHeight / 24)));
+  myWindowWidth = coef * 640;
+  myWindowHeight = coef * 480;
+  resizeCanvas(myWindowWidth, myWindowHeight);
+  OBJECT_POSE_SIZE = 48 * coef;
+}
+
 function checkStartCondition() {
-  if (poses.length > 0) {
+  if (poses.length > 0 || gameReady) {
     pose = poses[0];
     leftHand = pose["left_wrist"];
     rightHand = pose["right_wrist"];
@@ -1483,8 +1496,10 @@ function checkStartCondition() {
       gameReady = true;
     }
   }
+  return gameReady;
 }
 
 function gotPoses(results) {
   poses = results;
+  
 }
