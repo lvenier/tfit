@@ -1481,7 +1481,8 @@ function windowResized() {
 }
 
 function checkStartCondition() {
-  if (poses.length > 0 || gameReady) {
+  if (gameReady) return gameReady;
+  if (poses.length > 0) {
     pose = poses[0];
     leftHand = pose["left_wrist"];
     rightHand = pose["right_wrist"];
