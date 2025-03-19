@@ -659,7 +659,7 @@ function gotSpeech() {
         if (songId === 0) {
           speechSpeak.speak("song not found!");
           fill(255, 255, 255, 255);
-          textSize(30);
+          textSize(15 * coef);
           text("song not found!", myWindowWidth / 2.1, myWindowHeight - 50);
           fill(255, 0, 0, hide_sensor);
         } else fetchSong(songId);
@@ -670,7 +670,7 @@ function gotSpeech() {
         if (backgroundId < 1 || backgroundId > 3) {
           speechSpeak.speak("background not found!");
           fill(255, 255, 255, 255);
-          textSize(30);
+          textSize(15 * coef);
           text("background not found!", myWindowWidth / 2.1, myWindowHeight - 50);
           fill(255, 0, 0, hide_sensor);
         } else fetchBackground(backgroundId);
@@ -827,7 +827,7 @@ function draw() {
       rect(parseInt(myWindowWidth / 3), parseInt(myWindowHeight / 4), parseInt(myWindowWidth / 3), parseInt(myWindowHeight / 5), 20);
       fill(255);
       text('Name : ', parseInt(myWindowWidth / 3) + 20 * coef, parseInt(myWindowHeight / 4 + 30 * coef));
-      textSize(40);
+      textSize(20 * coef);
       text(playervalue.padEnd(16, "_"), parseInt(myWindowWidth / 3) + 20 * coef, parseInt(myWindowHeight / 4 + 60 * coef));
     }
   } else {
@@ -882,17 +882,17 @@ function draw() {
     }
 
     if (Date.now() - gameOverTime < 2000) {
-      textSize(40);
+      textSize(20 * coef);
       fill(255, 255, 255, 255);
       text("Good job!", myWindowWidth / 2.3, myWindowHeight / 6);
       text("Song is over!", myWindowWidth / 2.3, myWindowHeight / 6 + 50);
       fill(255, 0, 0, hide_sensor);
-      textSize(20);
+      textSize(10 * coef);
     }
 
     if (speechRec && 'resultString' in speechRec && speechTime > Date.now() - 1000) {
       fill(255, 255, 255, 255);
-      textSize(30);
+      textSize(15 * coef);
       text(speechRec.resultString.toUpperCase(), myWindowWidth / 2.1, myWindowHeight - 50);
       fill(255, 0, 0, hide_sensor);
     }
@@ -914,21 +914,21 @@ function draw() {
     }
 
     fill(255, 255, 255, 255);
-    textSize(14);
+    textSize(7 * coef);
     if (song) text(`Song (${songId}): ${song.name}`, myWindowWidth - 200, 30);
     text(`Length: ${song.length}s`, myWindowWidth - 200, 50);
     fill(255, 0, 0, hide_sensor);
 
-    textSize(30);
+    textSize(15 * coef);
     fill(255, 255, 255, 255);
     score = 0;
     for (let i = 0; i < arrayScore.length; i++) {
       score += arrayScore[i];
     }
     text("Score: " + score + " / " + score_max, 15, 30);
-    textSize(30);
+    textSize(15 * coef);
     text("Name: " + ('name' in player ? player.name : ""), 15, 60);
-    textSize(20);
+    textSize(10 * coef);
     text("(L)evel: " + GAME_LEVEL[level.toString()], 15, 85);
     if (menu === 2) text("(T)ype: " + SHADOW_SPECIFIC[shadow_focus].toLowerCase(), 15, 110);
     fill(255, 0, 0, hide_sensor);
@@ -937,7 +937,7 @@ function draw() {
       rect(parseInt(myWindowWidth / 2.5), parseInt(myWindowHeight / 4), parseInt(myWindowWidth / 4), parseInt(myWindowHeight / 5), 20);
       fill(255);
       text('SONG : ', parseInt(myWindowWidth / 2.5) + 20 * coef, parseInt(myWindowHeight / 4 + 30 * coef));
-      textSize(40);
+      textSize(20 * coef);
       text(songvalue.padEnd(3, "_"), parseInt(myWindowWidth / 2.5) + 20 * coef, parseInt(myWindowHeight / 4 + 60 * coef));
     }
 
@@ -987,11 +987,11 @@ function draw() {
       text('(S)TOP', myWindowWidth - 80 * coef, parseInt(myWindowHeight - 60 * coef) + 30 * coef);
       fill(255, 0, 0, hide_sensor);
       if (Date.now() - hit_success < 1000) {
-        textSize(40);
+        textSize(20 * coef);
         fill(255, 255, 255, 255);
         text("Good Hit!", myWindowWidth / 2.3, myWindowHeight / 2);
         fill(255, 0, 0, hide_sensor);
-        textSize(20);
+        textSize(10 * coef);
       }
       if ((Date.now() - left_poses > 2000 || Date.now() - left_poses > 2000) && Math.ceil((gameDuration - gameTimer) / FRAME_RATE) > 5) {
         guard_warning += 100;
@@ -999,11 +999,11 @@ function draw() {
           if (guard_warning - Date.now() < 1099) {
             speechSpeak.speak("Your guard!");
           }
-          textSize(40);
+          textSize(20 * coef);
           fill(255, 255, 255, 255);
           text("Your Guard !!!", myWindowWidth / 2.3, myWindowHeight / 2);
           fill(255, 0, 0, hide_sensor);
-          textSize(20);
+          textSize(10 * coef);
         }
         if (guard_warning - Date.now() > 10000) guard_warning = Date.now();
       } else guard_warning = Date.now();
@@ -1084,7 +1084,7 @@ function draw() {
         fill(255, 255, 255, hide_sensor);
       }
       if (gameStarted) {
-        textSize(20);
+        textSize(10 * coef);
         if (gameTimer === 0) {
           pad_x = randomInteger(2 * OBJECT_POSE_SIZE, myWindowWidth - 2 * OBJECT_POSE_SIZE);
           pad_y = randomInteger(2 * OBJECT_POSE_SIZE, myWindowHeight - 2 * OBJECT_POSE_SIZE);
@@ -1186,7 +1186,7 @@ function draw() {
       rect(parseInt(myWindowWidth / 8), parseInt(myWindowHeight / 6), parseInt(3 * myWindowWidth / 4), parseInt(3 * myWindowHeight / 4), 20);
       fill(255);
       text('Score : ' + score, parseInt(myWindowWidth / 2.5) + 20 * coef, parseInt(myWindowHeight / 5 + 30 * coef));
-      textSize(20);
+      textSize(10 * coef);
       song_result = {};
       for (let r in curMoves) {
         if (curMoves[r].type === 0 || curMoves[r].type === 10) continue;
@@ -1215,7 +1215,7 @@ function draw() {
       for (let mt of Object.keys(song_result)) {
         if (mt === "score") continue;
         fill(255);
-        textSize(20);
+        textSize(10 * coef);
         text(song_result[mt.toString()].success + " / " + song_result[mt.toString()].total, parseInt((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2), parseInt(myWindowHeight / 5 + 30 + 30 * Math.ceil((num + 1) / 2) * coef));
         let h = "R_";
         if ([1, 3, 5, 7].includes[song_result[mt.toString()].type]) h = "L_"
@@ -1234,7 +1234,7 @@ function draw() {
         }
         circle(parseInt((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2) + 100, parseInt(myWindowHeight / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * coef), OBJECT_POSE_SIZE / 2);
         fill(255);
-        textSize(9);
+        textSize(5 * coef);
         text(h + song_result[mt.toString()].text, parseInt((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2) + 84, parseInt(myWindowHeight / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * coef));
         num++;
       }
@@ -1367,7 +1367,7 @@ function draw() {
         }
         if ([10].includes(curMoves[c].type)) circle(right_init_pose_x, curMoves[c].y, OBJECT_POSE_SIZE);
         fill(255, 255, 255, 255);
-        textSize(20);
+        textSize(10 * coef);
         if (curMoves[c].type > 0) text(curMoves[c].text, curMoves[c].x - curMoves[c].text.length * 7, curMoves[c].y + (16 - curMoves[c].text.length * 2));
         if ([9, 10].includes(curMoves[c].type)) text(curMoves[c].text, right_init_pose_x - curMoves[c].text.length * 7, curMoves[c].y + (16 - curMoves[c].text.length * 2));
       }
@@ -1392,7 +1392,7 @@ function draw() {
           if (gameStarted || gameCalibration) {
             if (Date.now() - left_hook < LEVEL * 10) {
               if (gameCalibration) {
-                textSize(32);
+                textSize(15 * coef);
                 fill(255, 255, 255, 127);
                 text("LEFT HOOK!", myWindowWidth / 2.5, myWindowHeight / 2);
               }
@@ -1400,7 +1400,7 @@ function draw() {
             }
             if (Date.now() - left_uppercut < LEVEL * 10) {
               if (gameCalibration) {
-                textSize(32);
+                textSize(15 * coef);
                 fill(255, 255, 255, 127);
                 text("LEFT UPPERCUT!", myWindowWidth / 2.5, myWindowHeight / 2);
               }
@@ -1425,7 +1425,7 @@ function draw() {
           if (Date.now() - left_poses < LEVEL * 10 && Date.now() - right_poses < LEVEL * 10) {
             left_jab = Date.now();
             if (gameCalibration) {
-              textSize(32);
+              textSize(15 * coef);
               fill(255, 255, 255, 127);
               text("LEFT JAB!", myWindowWidth / 2.5, myWindowHeight / 2);
             }
@@ -1452,7 +1452,7 @@ function draw() {
           if (gameStarted || gameCalibration) {
             if (Date.now() - right_hook < LEVEL * 10) {
               if (gameCalibration) {
-                textSize(32);
+                textSize(15 * coef);
                 fill(255, 255, 255, 127);
                 text("RIGHT HOOK!", myWindowWidth / 2.5, myWindowHeight / 2);
               }
@@ -1460,7 +1460,7 @@ function draw() {
             }
             if (Date.now() - right_uppercut < LEVEL * 10) {
               if (gameCalibration) {
-                textSize(32);
+                textSize(15 * coef);
                 fill(255, 255, 255, 127);
                 text("RIGHT UPPERCUT!", myWindowWidth / 2.5, myWindowHeight / 2);
               }
@@ -1484,7 +1484,7 @@ function draw() {
           if (Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
             right_jab = Date.now();
             if (gameCalibration) {
-              textSize(32);
+              textSize(15 * coef);
               fill(255, 255, 255, 127);
               text("RIGHT JAB!", myWindowWidth / 2.5, myWindowHeight / 2);
             }
