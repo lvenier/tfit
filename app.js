@@ -198,6 +198,19 @@ var player = JSON.parse(localStorage.getItem(selected_player)) || {
 for (let s of Object.keys(player.scores)) {
   player.score += player.scores[s].score
 }
+if (localStorage.getItem("config-" + selected_player) !== null) {
+  let config_player = JSON.parse(localStorage.getItem("config-" + selected_player));
+  if ('left_init_pose_x' in config_player) left_init_pose_x = config_player.left_init_pose_x;
+  if ('left_init_pose_y' in config_player) left_init_pose_y = config_player.left_init_pose_y;
+  if ('right_init_pose_x' in config_player) right_init_pose_x = config_player.right_init_pose_x;
+  if ('right_init_pose_y' in config_player) right_init_pose_y = config_player.right_init_pose_y;
+  if ('left_init_hook_x' in config_player) left_init_hook_x = config_player.left_init_hook_x;
+  if ('right_init_hook_x' in config_player) right_init_hook_x = config_player.right_init_hook_x;
+  if ('init_uppercut_y' in config_player) init_uppercut_y = config_player.init_uppercut_y;
+  if ('init_jab_y' in config_player) init_jab_y = config_player.init_jab_y;
+  if ('level' in config_player) level = level;
+  if ('feet_position' in config_player) feet_position = feet_position;
+}
 
 p5.disableFriendlyErrors = true;
 
@@ -403,7 +416,7 @@ function handleChange() {
         letsfight()
         return;
       }
-      if ([2, 3].includes(menu) && mouseY > myWindowHeight - 98 * coef && mouseY < myWindowHeight - 58 * coef) {
+      if ([2, 3, 4].includes(menu) && mouseY > myWindowHeight - 98 * coef && mouseY < myWindowHeight - 58 * coef) {
         click_sound.play();
         if (!gameStarted) {
           gameCalibration = true;
@@ -423,8 +436,24 @@ function handleChange() {
     if (mouseX > myWindowWidth - 100 * coef && mouseX < myWindowWidth && mouseY < parseInt(myWindowHeight - 10 * coef) && mouseY > parseInt(myWindowHeight - 60 * coef)) {
       click_sound.play();
       if (menu > 1 && !gameStarted && !gameCalibration) menu = 0;
-      else if (menu > 1 && (gameStarted || gameCalibration)) gameOver = true;
-      else menu = 0;
+      else if (menu > 1 && (gameStarted || gameCalibration)) {
+        if (selected_player != "player") {
+          let config = {
+            "init_jab_y": init_jab_y,
+            "init_uppercut_y": init_uppercut_y,
+            "left_init_hook_x": left_init_hook_x,
+            "left_init_pose_x": left_init_pose_x,
+            "left_init_pose_y": left_init_pose_y,
+            "right_init_hook_x": right_init_hook_x,
+            "right_init_pose_x": right_init_pose_x,
+            "right_init_pose_y": right_init_pose_y,
+            "level": level,
+            "feet_position": feet_position
+          };
+          localStorage.setItem("config-" + selected_player, JSON.stringify(config));
+        }
+        gameOver = true;
+      } else menu = 0;
       return;
     }
   }
@@ -742,7 +771,7 @@ function draw() {
     noStroke();
     textSize(30 * coef);
     fill(255);
-    image(logo_image, myWindowWidth / 2 - 50 * coef, myWindowHeight / 4, 100 * coef, 100 * coef, 20);
+    image(logo_image, myWindowWidth / 2 - 50 * coef, myWindowHeight / 4, 100 * coef, 100 * coef);
     translate(myWindowWidth / 2, myWindowHeight / 2);
     ellipse(100 * sin(radians(loading_k)), 0, 20 * cos(radians(loading_m)), 20 * cos(radians(loading_m)));
     ellipse(100 * sin(radians(loading_k) + PI / 3), 0, 20 * cos(radians(loading_m) + PI / 3), 20 * cos(radians(loading_m) + PI / 3));
@@ -915,8 +944,8 @@ function draw() {
 
     fill(255, 255, 255, 255);
     textSize(7 * coef);
-    if (song) text(`Song (${songId}): ${song.name}`, myWindowWidth - 200, 30);
-    text(`Length: ${song.length}s`, myWindowWidth - 200, 50);
+    if (song) text(`Song (${songId}): ${song.name}`, myWindowWidth - 100 * coef, 30);
+    text(`Length: ${song.length}s`, myWindowWidth - 100 * coef, 50);
     fill(255, 0, 0, hide_sensor);
 
     textSize(15 * coef);
@@ -925,12 +954,12 @@ function draw() {
     for (let i = 0; i < arrayScore.length; i++) {
       score += arrayScore[i];
     }
-    text("Score: " + score + " / " + score_max, 15, 30);
-    textSize(15 * coef);
-    text("Name: " + ('name' in player ? player.name : ""), 15, 60);
+    text("Score: " + score + " / " + score_max, 15, 15 * coef);
     textSize(10 * coef);
-    text("(L)evel: " + GAME_LEVEL[level.toString()], 15, 85);
-    if (menu === 2) text("(T)ype: " + SHADOW_SPECIFIC[shadow_focus].toLowerCase(), 15, 110);
+    text("Name: " + ('name' in player ? player.name : ""), 15, 32 * coef);
+    textSize(10 * coef);
+    text("(L)evel: " + GAME_LEVEL[level.toString()], 15, 44 * coef);
+    if (menu === 2) text("(T)ype: " + SHADOW_SPECIFIC[shadow_focus].toLowerCase(), 15, 56 * coef);
     fill(255, 0, 0, hide_sensor);
     if (songwait || songwaittime + 1000 > Date.now()) {
       fill(0, 0, 0, 255);
@@ -1041,12 +1070,13 @@ function draw() {
         circle(rightHand.x * coef, rightHand.y * coef, OBJECT_POSE_SIZE / 2);
         fill(255, 255, 255, hide_sensor);
       }
+
+      tint(255, 224);
+      image(opponent_image, myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
+      tint(255, 127);
+      image(me_image, myWindowWidth / 3, myWindowHeight / 2, myWindowWidth / 3, myWindowHeight / 2);
+      tint(255, 255);
       if (gameStarted) {
-        tint(255, 224);
-        image(opponent_image, myWindowWidth / 2 - 1.8 * OBJECT_POSE_SIZE * coef, myWindowHeight * 0.1, 3 * OBJECT_POSE_SIZE * coef, 3 * OBJECT_POSE_SIZE * coef);
-        tint(255, 127);
-        image(me_image, myWindowWidth / 2 - 2.2 * OBJECT_POSE_SIZE * coef, myWindowHeight * 0.4, 4 * OBJECT_POSE_SIZE * coef, 4 * OBJECT_POSE_SIZE * coef);
-        tint(255, 255);
         gameTimer++;
       }
     }
