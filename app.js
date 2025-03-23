@@ -1022,6 +1022,16 @@ function draw() {
         fill(255, 0, 0, hide_sensor);
         textSize(10 * coef);
       }
+      if (Date.now() - hit_success > 3000 && Date.now() - hit_success < 4000 && guard_warning - Date.now() < 2000) {
+        textSize(20 * coef);
+        fill(255, 255, 255, 255);
+        text("Keep trying !!!", myWindowWidth / 2.3, myWindowHeight / 2);
+        if (Date.now() - hit_success < 3019) {
+          speechSpeak.speak("Keep trying!");
+        }
+        fill(255, 0, 0, hide_sensor);
+        textSize(10 * coef);
+      }
       if ((Date.now() - left_poses > 2000 || Date.now() - left_poses > 2000) && Math.ceil((gameDuration - gameTimer) / FRAME_RATE) > 5) {
         guard_warning += 100;
         if (guard_warning - Date.now() > 1000) {
