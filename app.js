@@ -593,7 +593,7 @@ function keyPressed() {
     gameOver = true;
   }
   if (['s', 'S'].includes(key) && [2, 3, 4].includes(menu)) {
-    if (gameStarted) gameOver = true;
+    if (gameStarted || gameCalibration) gameOver = true;
   }
   if (['t', 'T'].includes(key) && [2, 3, 4].includes(menu)) {
     if (shadow_focus < Object.keys(SHADOW_SPECIFIC).length - 1) shadow_focus++;
