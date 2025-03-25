@@ -549,7 +549,7 @@ function preload() {
     opponents_image[i] = loadImage('assets/images/boxers/0-1.png');
   }
 
-  for (let i = 0; i < 6; i++){
+  for (let i = 0; i < 7; i++){
     four_me_image[i] = loadImage('assets/images/boxers/4-me-' + i + '.png');
   }
 
@@ -1122,7 +1122,7 @@ function draw() {
       if (punch_animation >= 0) {
         image(four_me_image[punch_animation], myWindowWidth / 3, myWindowHeight / 2, myWindowWidth / 3, myWindowHeight / 2);
         if (punch_animation_delay % 3 === 0) {
-          if (punch_animation >= 5) {
+          if (punch_animation >= 6) {
             punch_animation = -1;
             punch_animation_delay = 0;
           } else punch_animation++;
