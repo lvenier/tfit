@@ -121,8 +121,11 @@ var leave_image;
 var plus_image;
 
 var me_image;
+var two_me_image = [];
 var four_me_image = [];
+var six_me_image = [];
 var punch_animation = -1;
+var punch_animation_type = 0;
 var punch_animation_delay = 0;
 var opponent = 0;
 var opponents_image = [];
@@ -319,7 +322,7 @@ function loadSongmoves() {
 }
 
 function fetchSong(id = 1, speak = true) {
-  fetch("/db/" + id + ".json?v=" + hit_success)
+  fetch("/db/" + id + ".json")
     .then(response => response.json())
     .then(data => {
       song = data;
@@ -550,7 +553,9 @@ function preload() {
   }
 
   for (let i = 0; i < 7; i++){
+    six_me_image[i] = loadImage('assets/images/boxers/6-me-' + i + '.png');
     four_me_image[i] = loadImage('assets/images/boxers/4-me-' + i + '.png');
+    two_me_image[i] = loadImage('assets/images/boxers/2-me-' + i + '.png');
   }
 
   click_sound = loadSound('assets/sounds/click.mp3');
@@ -1018,6 +1023,37 @@ function draw() {
         localStorage.setItem("left_init_pose_x", left_init_pose_x);
         localStorage.setItem("left_init_pose_y", left_init_pose_y);
       }
+
+      if (init_jab_dragging) {
+        init_jab_y = mouseY;
+        localStorage.setItem("init_jab_y", init_jab_y);
+      }
+  
+      if (init_uppercut_dragging) {
+        init_uppercut_y = mouseY;
+        localStorage.setItem("init_uppercut_y", init_uppercut_y);
+      }
+  
+      if (left_init_hook_dragging) {
+        left_init_hook_x = mouseX;
+        localStorage.setItem("left_init_hook_x", left_init_hook_x);
+      }
+  
+      if (right_init_hook_dragging) {
+        right_init_hook_x = mouseX;
+        localStorage.setItem("right_init_hook_x", right_init_hook_x);
+      }
+  
+      stroke(0);
+      strokeWeight(hide_sensor / 255);
+      fill(255, 255, 255, 32);
+      rect(left_init_pose_x - OBJECT_POSE_SIZE / 2, 0, OBJECT_POSE_SIZE, myWindowHeight);
+      rect(right_init_pose_x - OBJECT_POSE_SIZE / 2, 0, OBJECT_POSE_SIZE, myWindowHeight);
+      fill(255, 255, 255, hide_sensor);
+      rect(0, 0, myWindowWidth, init_jab_y);
+      rect(0, init_uppercut_y, myWindowWidth, myWindowHeight - init_uppercut_y);
+      rect(0, 0, left_init_hook_x, myWindowHeight);
+      rect(right_init_hook_x, 0, right_init_hook_x, myWindowHeight);
     }
 
     if (gameTimer === 0) {
@@ -1106,32 +1142,65 @@ function draw() {
         fill(255, 0, 0, 128);
         circle(rightHand.x * coef, rightHand.y * coef, OBJECT_POSE_SIZE / 2);
         fill(255, 255, 255, hide_sensor);
+        if (rightHand.y * coef > init_uppercut_y) {
+          if (Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
+            right_uppercut = Date.now();
+          }
+        }
+        if (rightHand.y * coef < init_jab_y) {
+          if (Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
+            right_jab = Date.now();
+          }
+        }
         if (rightHand.x * coef > right_init_hook_x) {
-          right_hook = Date.now();
-          rect(right_init_hook_x, 0, right_init_hook_x, myWindowHeight);
+          if (Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
+            right_hook = Date.now();
+          }
         }
       }
-      if (Date.now() - right_hook < LEVEL * 10 && right_hook - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
+      if (Date.now() - right_uppercut < LEVEL * 10 && right_uppercut - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
+        punch_animation_type = 6;
         punch_animation = 0;
         punch_animation_delay = 0;
         right_poses = Date.now() - LEVEL * 10;
       }
-      tint(255, 224);
-      image(opponents_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
-      tint(255, 127);
-      if (punch_animation >= 0) {
-        image(four_me_image[punch_animation], myWindowWidth / 3, myWindowHeight / 2, myWindowWidth / 3, myWindowHeight / 2);
-        if (punch_animation_delay % 3 === 0) {
-          if (punch_animation >= 6) {
-            punch_animation = -1;
-            punch_animation_delay = 0;
-          } else punch_animation++;
-        }
-        punch_animation_delay++;
-      } else image(me_image, myWindowWidth / 3, myWindowHeight / 2, myWindowWidth / 3, myWindowHeight / 2);
-      tint(255, 255);
+      if (Date.now() - right_jab < LEVEL * 10 && right_jab - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
+        punch_animation_type = 2;
+        punch_animation = 0;
+        punch_animation_delay = 0;
+        right_poses = Date.now() - LEVEL * 10;
+      }
+      if (Date.now() - right_hook < LEVEL * 10 && right_hook - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
+        punch_animation_type = 4;
+        punch_animation = 0;
+        punch_animation_delay = 0;
+        right_poses = Date.now() - LEVEL * 10;
+      }
       if (gameStarted) {
+        tint(255, 224);
+        image(opponents_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
+        tint(255, 192);
+        if (punch_animation >= 0) {
+          if (punch_animation_type === 6) image(six_me_image[punch_animation], myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);
+          if (punch_animation_type === 4) image(four_me_image[punch_animation], myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);
+          if (punch_animation_type === 2) image(two_me_image[punch_animation], myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);
+          if (punch_animation_delay % 3 === 0) {
+            if (punch_animation >= 6) {
+              punch_animation = -1;
+              punch_animation_delay = 0;
+            } else punch_animation++;
+          }
+          punch_animation_delay++;
+        } else image(me_image, myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);
+        tint(255, 255);
         gameTimer++;
+      } else {
+        if (!gameCalibration) {
+          tint(255, 224);
+          image(opponents_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
+          tint(255, 192);
+          image(me_image, myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);
+        }
       }
     }
   }
@@ -1324,37 +1393,6 @@ function draw() {
       }
       return;
     }
-
-    if (init_jab_dragging) {
-      init_jab_y = mouseY;
-      localStorage.setItem("init_jab_y", init_jab_y);
-    }
-
-    if (init_uppercut_dragging) {
-      init_uppercut_y = mouseY;
-      localStorage.setItem("init_uppercut_y", init_uppercut_y);
-    }
-
-    if (left_init_hook_dragging) {
-      left_init_hook_x = mouseX;
-      localStorage.setItem("left_init_hook_x", left_init_hook_x);
-    }
-
-    if (right_init_hook_dragging) {
-      right_init_hook_x = mouseX;
-      localStorage.setItem("right_init_hook_x", right_init_hook_x);
-    }
-
-    stroke(0);
-    strokeWeight(hide_sensor / 255);
-    fill(255, 255, 255, 32);
-    rect(left_init_pose_x - OBJECT_POSE_SIZE / 2, 0, OBJECT_POSE_SIZE, myWindowHeight);
-    rect(right_init_pose_x - OBJECT_POSE_SIZE / 2, 0, OBJECT_POSE_SIZE, myWindowHeight);
-    fill(255, 255, 255, hide_sensor);
-    rect(0, 0, myWindowWidth, init_jab_y);
-    rect(0, init_uppercut_y, myWindowWidth, myWindowHeight - init_uppercut_y);
-    rect(0, 0, left_init_hook_x, myWindowHeight);
-    rect(right_init_hook_x, 0, right_init_hook_x, myWindowHeight);
 
     if (gameStarted) {
       if (gameTimerNext < Math.ceil(gameTimer / FRAME_RATE)) {
