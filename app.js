@@ -68,6 +68,21 @@ const SHADOW_SPECIFIC = {
   "5": "PUNCHES"
 }
 
+const OPPONENTS = {
+  "0": {
+    "name": "Roman",
+    "stamina": 6
+  },
+  "1": {
+    "name": "Theo",
+    "stamina": 8
+  },
+  "2": {
+    "name": "Vehbo",
+    "stamina": 10
+  }
+}
+
 var loading_k = 0;
 var loading_m = 0;
 
@@ -106,7 +121,11 @@ var leave_image;
 var plus_image;
 
 var me_image;
-var opponent_image;
+var four_me_image = [];
+var punch_animation = -1;
+var punch_animation_delay = 0;
+var opponent = 0;
+var opponents_image = [];
 
 var backgroundId = parseFloat(localStorage.getItem("background_id")) || 1;
 var hide_sensor = 0;
@@ -525,7 +544,14 @@ function preload() {
   leave_image = loadImage('assets/images/leave.png');
 
   me_image = loadImage('assets/images/boxers/0-me.png');
-  opponent_image = loadImage('assets/images/boxers/0-1.png');
+
+  for (let i = 0; i < 2; i++){
+    opponents_image[i] = loadImage('assets/images/boxers/0-1.png');
+  }
+
+  for (let i = 0; i < 6; i++){
+    four_me_image[i] = loadImage('assets/images/boxers/4-me-' + i + '.png');
+  }
 
   click_sound = loadSound('assets/sounds/click.mp3');
   punch_sound = loadSound('assets/sounds/punch.mp3');
@@ -1073,18 +1099,36 @@ function draw() {
       if (rightHand && rightHand.confidence > 0.1) {
         if (rightHand.x * coef < right_init_pose_x + OBJECT_POSE_SIZE && rightHand.x * coef > right_init_pose_x - OBJECT_POSE_SIZE && rightHand.y * coef < right_init_pose_y + OBJECT_POSE_SIZE && rightHand.y * coef > right_init_pose_y - OBJECT_POSE_SIZE) {
           right_poses = Date.now();
+          right_hook = Date.now() - LEVEL * 10;
           fill(255, 255, 255, 128);
           circle(right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE);
         }
         fill(255, 0, 0, 128);
         circle(rightHand.x * coef, rightHand.y * coef, OBJECT_POSE_SIZE / 2);
         fill(255, 255, 255, hide_sensor);
+        if (rightHand.x * coef > right_init_hook_x) {
+          right_hook = Date.now();
+          rect(right_init_hook_x, 0, right_init_hook_x, myWindowHeight);
+        }
       }
-
+      if (Date.now() - right_hook < LEVEL * 10 && right_hook - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
+        punch_animation = 0;
+        punch_animation_delay = 0;
+        right_poses = Date.now() - LEVEL * 10;
+      }
       tint(255, 224);
-      image(opponent_image, myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
+      image(opponents_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
       tint(255, 127);
-      image(me_image, myWindowWidth / 3, myWindowHeight / 2, myWindowWidth / 3, myWindowHeight / 2);
+      if (punch_animation >= 0) {
+        image(four_me_image[punch_animation], myWindowWidth / 3, myWindowHeight / 2, myWindowWidth / 3, myWindowHeight / 2);
+        if (punch_animation_delay % 3 === 0) {
+          if (punch_animation >= 5) {
+            punch_animation = -1;
+            punch_animation_delay = 0;
+          } else punch_animation++;
+        }
+        punch_animation_delay++;
+      } else image(me_image, myWindowWidth / 3, myWindowHeight / 2, myWindowWidth / 3, myWindowHeight / 2);
       tint(255, 255);
       if (gameStarted) {
         gameTimer++;
