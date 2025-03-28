@@ -121,13 +121,12 @@ var leave_image;
 var plus_image;
 
 var me_image;
-var two_me_image = [];
-var four_me_image = [];
-var six_me_image = [];
+var me_images = [];
 var punch_animation = -1;
 var punch_animation_type = 0;
 var punch_animation_delay = 0;
 var opponent = 0;
+var my_opponent = JSON.parse(JSON.stringify(OPPONENTS[opponent]));
 var opponents_image = [];
 
 var backgroundId = parseFloat(localStorage.getItem("background_id")) || 1;
@@ -358,6 +357,8 @@ function letsfight() {
   feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
   speechSpeak.speak("let's fight!");
   gameStarted = true;
+  guard_warning = Date.now();
+  my_opponent = JSON.parse(JSON.stringify(OPPONENTS[opponent]));
   curMoves = [];
   gameCalibration = false;
   hide_sensor = 0;
@@ -422,6 +423,7 @@ function handleChange() {
         click_sound.play();
         menu = 4
         curMoves = [];
+        my_opponent = JSON.parse(JSON.stringify(OPPONENTS[opponent]));
         return;
       }
     }
@@ -548,14 +550,17 @@ function preload() {
 
   me_image = loadImage('assets/images/boxers/0-me.png');
 
-  for (let i = 0; i < 2; i++){
+  for (let i = 0; i < 2; i++) {
     opponents_image[i] = loadImage('assets/images/boxers/0-1.png');
   }
 
-  for (let i = 0; i < 7; i++){
-    six_me_image[i] = loadImage('assets/images/boxers/6-me-' + i + '.png');
-    four_me_image[i] = loadImage('assets/images/boxers/4-me-' + i + '.png');
-    two_me_image[i] = loadImage('assets/images/boxers/2-me-' + i + '.png');
+  me_images[0] = [];
+  me_images[1] = [];
+  for (let j = 2; j < 7; j++) {
+    me_images[j] = [];
+    for (let i = 0; i < 7; i++) {
+      me_images[j][i] = loadImage('assets/images/boxers/' + j + '-me-' + i + '.png');
+    }
   }
 
   click_sound = loadSound('assets/sounds/click.mp3');
@@ -916,6 +921,7 @@ function draw() {
 
     if (gameOver) {
       gameCalibration = false;
+      my_opponent = JSON.parse(JSON.stringify(OPPONENTS[opponent]));
       gameStarted = false;
       hide_sensor = 0;
       gameTimer = -1;
@@ -1028,22 +1034,22 @@ function draw() {
         init_jab_y = mouseY;
         localStorage.setItem("init_jab_y", init_jab_y);
       }
-  
+
       if (init_uppercut_dragging) {
         init_uppercut_y = mouseY;
         localStorage.setItem("init_uppercut_y", init_uppercut_y);
       }
-  
+
       if (left_init_hook_dragging) {
         left_init_hook_x = mouseX;
         localStorage.setItem("left_init_hook_x", left_init_hook_x);
       }
-  
+
       if (right_init_hook_dragging) {
         right_init_hook_x = mouseX;
         localStorage.setItem("right_init_hook_x", right_init_hook_x);
       }
-  
+
       stroke(0);
       strokeWeight(hide_sensor / 255);
       fill(255, 255, 255, 32);
@@ -1094,10 +1100,10 @@ function draw() {
         fill(255, 0, 0, hide_sensor);
         textSize(10 * coef);
       }
-      if ((Date.now() - left_poses > 2000 || Date.now() - left_poses > 2000) && Math.ceil((gameDuration - gameTimer) / FRAME_RATE) > 5) {
+      if ((Date.now() - left_poses > 2000 || Date.now() - right_poses > 2000) && Math.ceil((gameDuration - gameTimer) / FRAME_RATE) > 5 && gameTimer > 100) {
         guard_warning += 100;
         if (guard_warning - Date.now() > 1000) {
-          if (guard_warning - Date.now() < 1099) {
+          if (guard_warning - Date.now() < 1089) {
             speechSpeak.speak("Your guard!");
           }
           textSize(20 * coef);
@@ -1112,6 +1118,20 @@ function draw() {
   }
 
   if (menu === 4) {
+    stroke(0);
+    strokeWeight(4);
+    noFill();
+    rect(myWindowWidth / 2 - 75 * coef, 15, 150 * coef, 20);
+    rect(myWindowWidth / 2 - 75 * coef, 45, 150 * coef, 20);
+
+    noStroke();
+    fill(255,0,0);
+    rect(myWindowWidth / 2 - 75 * coef + 2, 17, 148 * coef, 16);
+    rect(myWindowWidth / 2 - 75 * coef + 2, 45, 148 * coef, 16);
+    fill(255);
+    if (my_opponent.stamina > 0) rect(myWindowWidth / 2 - 75 * coef + 2, 17, 148 * coef - (OPPONENTS[opponent].stamina - my_opponent.stamina) * coef * 24, 16);
+    rect(myWindowWidth / 2 - 75 * coef + 2, 45, 148 * coef, 16);
+
     if (poses.length > 0) {
       pose = poses[0];
       leftHand = pose["left_wrist"];
@@ -1125,12 +1145,28 @@ function draw() {
       if (leftHand && leftHand.confidence > 0.1) {
         if (leftHand.x * coef < left_init_pose_x + OBJECT_POSE_SIZE && leftHand.x * coef > left_init_pose_x - OBJECT_POSE_SIZE && leftHand.y * coef - OBJECT_POSE_SIZE < left_init_pose_y && leftHand.y * coef + OBJECT_POSE_SIZE > left_init_pose_y) {
           left_poses = Date.now();
+          left_hook = Date.now() - LEVEL * 10;
           fill(255, 255, 255, 128);
           circle(left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE);
         }
         fill(255, 0, 0, 128);
         circle(leftHand.x * coef, leftHand.y * coef, OBJECT_POSE_SIZE / 2);
         fill(255, 255, 255, hide_sensor);
+        if (leftHand.y * coef > init_uppercut_y) {
+          if (Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
+            left_uppercut = Date.now();
+          }
+        }
+        if (leftHand.y * coef < init_jab_y) {
+          if (Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
+            left_jab = Date.now();
+          }
+        }
+        if (leftHand.x * coef < left_init_hook_x) {
+          if (Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
+            left_hook = Date.now();
+          }
+        }
       }
       if (rightHand && rightHand.confidence > 0.1) {
         if (rightHand.x * coef < right_init_pose_x + OBJECT_POSE_SIZE && rightHand.x * coef > right_init_pose_x - OBJECT_POSE_SIZE && rightHand.y * coef < right_init_pose_y + OBJECT_POSE_SIZE && rightHand.y * coef > right_init_pose_y - OBJECT_POSE_SIZE) {
@@ -1158,22 +1194,45 @@ function draw() {
           }
         }
       }
+      if (Date.now() - left_uppercut < LEVEL * 10 && left_uppercut - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
+        punch_animation_type = 5;
+        punch_animation = 0;
+        punch_animation_delay = 0;
+        my_opponent.stamina--;
+        left_poses = Date.now() - LEVEL * 10;
+      }
+      /*if (Date.now() - left_jab < LEVEL * 10 && left_jab - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
+        punch_animation_type = 1;
+        punch_animation = 0;
+        punch_animation_delay = 0;
+        left_poses = Date.now() - LEVEL * 10;
+      }*/
+      if (Date.now() - left_hook < LEVEL * 10 && left_hook - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
+        punch_animation_type = 3;
+        punch_animation = 0;
+        punch_animation_delay = 0;
+        my_opponent.stamina--;
+        left_poses = Date.now() - LEVEL * 10;
+      }
       if (Date.now() - right_uppercut < LEVEL * 10 && right_uppercut - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
         punch_animation_type = 6;
         punch_animation = 0;
         punch_animation_delay = 0;
+        my_opponent.stamina--;
         right_poses = Date.now() - LEVEL * 10;
       }
       if (Date.now() - right_jab < LEVEL * 10 && right_jab - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
         punch_animation_type = 2;
         punch_animation = 0;
         punch_animation_delay = 0;
+        my_opponent.stamina--;
         right_poses = Date.now() - LEVEL * 10;
       }
       if (Date.now() - right_hook < LEVEL * 10 && right_hook - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
         punch_animation_type = 4;
         punch_animation = 0;
         punch_animation_delay = 0;
+        my_opponent.stamina--;
         right_poses = Date.now() - LEVEL * 10;
       }
       if (gameStarted) {
@@ -1181,9 +1240,7 @@ function draw() {
         image(opponents_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
         tint(255, 192);
         if (punch_animation >= 0) {
-          if (punch_animation_type === 6) image(six_me_image[punch_animation], myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);
-          if (punch_animation_type === 4) image(four_me_image[punch_animation], myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);
-          if (punch_animation_type === 2) image(two_me_image[punch_animation], myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);
+          image(me_images[punch_animation_type][punch_animation], myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);
           if (punch_animation_delay % 3 === 0) {
             if (punch_animation >= 6) {
               punch_animation = -1;
@@ -1202,6 +1259,11 @@ function draw() {
           image(me_image, myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);
         }
       }
+    } else {
+      tint(255, 224);
+      image(opponents_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
+      tint(255, 192);
+      image(me_image, myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);
     }
   }
 
