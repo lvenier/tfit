@@ -824,7 +824,7 @@ function draw() {
     }
     return;
   }
-  tint(255, 236);
+  tint(255, 64);
   image(background_images[menu], 0, 0, myWindowWidth, myWindowHeight);
   tint(255, 255);
   textSize(10 * coef);
@@ -933,6 +933,7 @@ function draw() {
         fetchSong(songId, false);
       }
       player.score = 0;
+      score = 0;
       for (let s of Object.keys(player.scores)) {
         player.score += player.scores[s].score
       }
@@ -1445,7 +1446,7 @@ function draw() {
         } else if (song_result[mt.toString()].type === 9) {
           fill(0, 0, 200, 255);
         } else if (song_result[mt.toString()].type === 10) {
-          fill(0, 200, 0, 255);
+          fill(255, 176, 156, 255);
         }
         circle(parseInt((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2) + 100, parseInt(myWindowHeight / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * coef), OBJECT_POSE_SIZE / 2);
         fill(255);
