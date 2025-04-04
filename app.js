@@ -83,6 +83,7 @@ const OPPONENTS = {
   }
 }
 
+var error = "";
 var loading_k = 0;
 var loading_m = 0;
 
@@ -556,7 +557,7 @@ function preload() {
 
   me_images[0] = [];
   me_images[1] = [];
-  for (let j = 1; j < 7; j++) {
+  for (let j = 2; j < 7; j++) {
     me_images[j] = [];
     for (let i = 0; i < 7; i++) {
       me_images[j][i] = loadImage('assets/images/boxers/' + j + '-me-' + i + '.png');
@@ -792,17 +793,32 @@ function setup() {
   cnv.position((window.innerWidth - myWindowWidth) / 2, 0)
   fetchSong(songId, false);
 
-  video = createCapture(VIDEO, {
-    flipped: true
-  });
-  video.hide();
-  bodyPose.detectStart(video, gotPoses);
+  navigator.mediaDevices.getUserMedia({
+      video: true
+    })
+    .then(stream => {
+      video = createCapture(VIDEO, {
+        flipped: true
+      });
+      video.hide();
+      bodyPose.detectStart(video, gotPoses);
+    })
+    .catch(err => {
+      error = "Failed to access camera:" + err;
+    });
 
 }
 
 function draw() {
   if (innerWidth < innerHeight) return;
   background(0);
+  if (error.length > 0)  {
+    noStroke();
+    textSize(10 * coef);
+    fill(255);
+    text(error, parseInt(myWindowWidth / 3), parseInt(myWindowHeight / 2));
+    return;
+  }
   if (!checkStartCondition()) {
     noStroke();
     textSize(30 * coef);
@@ -824,7 +840,7 @@ function draw() {
     }
     return;
   }
-  tint(255, 64);
+  tint(255, 236);
   image(background_images[menu], 0, 0, myWindowWidth, myWindowHeight);
   tint(255, 255);
   textSize(10 * coef);
@@ -933,7 +949,6 @@ function draw() {
         fetchSong(songId, false);
       }
       player.score = 0;
-      score = 0;
       for (let s of Object.keys(player.scores)) {
         player.score += player.scores[s].score
       }
@@ -1126,7 +1141,7 @@ function draw() {
     rect(myWindowWidth / 2 - 75 * coef, 45, 150 * coef, 20);
 
     noStroke();
-    fill(255,0,0);
+    fill(255, 0, 0);
     rect(myWindowWidth / 2 - 75 * coef + 2, 17, 148 * coef, 16);
     rect(myWindowWidth / 2 - 75 * coef + 2, 45, 148 * coef, 16);
     fill(255);
@@ -1202,12 +1217,12 @@ function draw() {
         my_opponent.stamina--;
         left_poses = Date.now() - LEVEL * 10;
       }
-      if (Date.now() - left_jab < LEVEL * 10 && left_jab - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
+      /*if (Date.now() - left_jab < LEVEL * 10 && left_jab - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
         punch_animation_type = 1;
         punch_animation = 0;
         punch_animation_delay = 0;
         left_poses = Date.now() - LEVEL * 10;
-      }
+      }*/
       if (Date.now() - left_hook < LEVEL * 10 && left_hook - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
         punch_animation_type = 3;
         punch_animation = 0;
@@ -1446,7 +1461,7 @@ function draw() {
         } else if (song_result[mt.toString()].type === 9) {
           fill(0, 0, 200, 255);
         } else if (song_result[mt.toString()].type === 10) {
-          fill(255, 176, 156, 255);
+          fill(0, 200, 0, 255);
         }
         circle(parseInt((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2) + 100, parseInt(myWindowHeight / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * coef), OBJECT_POSE_SIZE / 2);
         fill(255);
