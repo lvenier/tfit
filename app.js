@@ -1549,7 +1549,7 @@ function draw() {
           fill(0, 0, 200, alpha);
           curMoves[c].text = "DODGE";
         } else if (curMoves[c].type === 10) {
-          fill(0, 200, 0, alpha);
+          fill(224, 224, 224, alpha);
           curMoves[c].text = "SWITCH";
         }
         if (curMoves[c].hit === true) fill(0, 255, 0, 127);
