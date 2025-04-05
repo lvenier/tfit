@@ -84,6 +84,7 @@ const OPPONENTS = {
 }
 
 var error = "";
+var errorTimer = 0;
 var loading_k = 0;
 var loading_m = 0;
 
@@ -1705,7 +1706,10 @@ function windowResized() {
 }
 
 function checkStartCondition() {
-  if (gameReady) return gameReady;
+  if (gameReady) {
+    errorTimer = 0;
+    return gameReady;
+  }
   if (poses.length > 0) {
     pose = poses[0];
     leftHand = pose["left_wrist"];
@@ -1720,6 +1724,10 @@ function checkStartCondition() {
     ) {
       gameReady = true;
     }
+  }
+  errorTimer++;
+  if (errorTimer > 500) {
+    error = "We failed to detect hands or others.";
   }
   return gameReady;
 }
