@@ -107,6 +107,7 @@ var rightHand;
 var nose;
 var score = 0;
 var score_max = 0;
+var score_max_prev = 0;
 var level = parseFloat(localStorage.getItem("level")) || 0;
 var shadow_focus = parseFloat(localStorage.getItem("shadow_focus")) || 0;
 var arrayScore = [];
@@ -945,11 +946,13 @@ function draw() {
       music.stop();
       gameOver = false;
       gameResult = Date.now();
+      score_max_prev = score_max;
       if (song_random === true) {
         songId = Math.floor(Math.random() * NUM_SONG) + 1
         fetchSong(songId, false);
       }
       player.score = 0;
+      score = 0;
       for (let s of Object.keys(player.scores)) {
         player.score += player.scores[s].score
       }
@@ -1005,8 +1008,10 @@ function draw() {
     textSize(15 * coef);
     fill(255, 255, 255, 255);
     score = 0;
-    for (let i = 0; i < arrayScore.length; i++) {
-      score += arrayScore[i];
+    if (gameStarted) {
+      for (let i = 0; i < arrayScore.length; i++) {
+        score += arrayScore[i];
+      }
     }
     text("Score: " + score + " / " + score_max, 15, 15 * coef);
     textSize(10 * coef);
@@ -1417,7 +1422,11 @@ function draw() {
       fill(0, 0, 0, 255);
       rect(parseInt(myWindowWidth / 8), parseInt(myWindowHeight / 6), parseInt(3 * myWindowWidth / 4), parseInt(3 * myWindowHeight / 4), 20);
       fill(255);
-      text('Score : ' + score, parseInt(myWindowWidth / 2.5) + 20 * coef, parseInt(myWindowHeight / 5 + 30 * coef));
+      score = 0;
+      for (let i = 0; i < arrayScore.length; i++) {
+        score += arrayScore[i];
+      }
+      text('Score: ' + score + " / " + score_max_prev, parseInt(myWindowWidth / 2.5) + 20 * coef, parseInt(myWindowHeight / 5 + 30 * coef));
       textSize(10 * coef);
       song_result = {};
       for (let r in curMoves) {
