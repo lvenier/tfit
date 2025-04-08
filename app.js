@@ -559,7 +559,7 @@ function preload() {
 
   me_images[0] = [];
   me_images[1] = [];
-  for (let j = 2; j < 7; j++) {
+  for (let j = 1; j < 7; j++) {
     me_images[j] = [];
     for (let i = 0; i < 7; i++) {
       me_images[j][i] = loadImage('assets/images/boxers/' + j + '-me-' + i + '.png');
@@ -1223,12 +1223,12 @@ function draw() {
         my_opponent.stamina--;
         left_poses = Date.now() - LEVEL * 10;
       }
-      /*if (Date.now() - left_jab < LEVEL * 10 && left_jab - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
+      if (Date.now() - left_jab < LEVEL * 10 && left_jab - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
         punch_animation_type = 1;
         punch_animation = 0;
         punch_animation_delay = 0;
         left_poses = Date.now() - LEVEL * 10;
-      }*/
+      }
       if (Date.now() - left_hook < LEVEL * 10 && left_hook - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
         punch_animation_type = 3;
         punch_animation = 0;
