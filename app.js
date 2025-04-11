@@ -1643,7 +1643,7 @@ function draw() {
               fill(255, 255, 255, 127);
               text("LEFT JAB!", myWindowWidth / 2.5, myWindowHeight / 2);
             }
-            punchSound();
+            if (gameStarted || gameCalibration) punchSound();
           }
         }
         if (Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
@@ -1702,7 +1702,7 @@ function draw() {
               fill(255, 255, 255, 127);
               text("RIGHT JAB!", myWindowWidth / 2.5, myWindowHeight / 2);
             }
-            punchSound();
+            if (gameStarted || gameCalibration) punchSound();
           }
         }
       }
