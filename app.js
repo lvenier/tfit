@@ -206,6 +206,7 @@ var recognizing = false;
 var speechSpeak;
 var speechTime = Date.now();
 var music;
+var music_ready = false;
 var songwait = false;
 var songwaittime = Date.now();
 var songvalue = "";
@@ -331,7 +332,10 @@ function fetchSong(id = 1, speak = true) {
       song.moveLength = song.moves.length;
       localStorage.setItem("song_id", id);
       loadSongmoves();
-      music = loadSound(song.url);
+      music_ready = false;
+      music = loadSound(song.url, function () {
+        music_ready = true;
+      });
       if (speak) speechSpeak.speak("song " + song.name + " selected !");
       if (typeof zaraz !== 'undefined' && zaraz) zaraz.track("song_changed", {
         "event_name": "song_changed",
@@ -414,18 +418,21 @@ function handleChange() {
         click_sound.play();
         menu = 2;
         curMoves = [];
+        loadSongmoves();
         return;
       }
       if (mouseY < parseInt(myWindowHeight / 6 + 150 * coef) && mouseY > parseInt(myWindowHeight / 6 + 100 * coef)) {
         click_sound.play();
         menu = 3;
         curMoves = [];
+        loadSongmoves();
         return;
       }
       if (mouseY < parseInt(myWindowHeight / 6 + 250 * coef) && mouseY > parseInt(myWindowHeight / 6 + 200 * coef)) {
         click_sound.play();
         menu = 4
         curMoves = [];
+        loadSongmoves();
         my_opponent = JSON.parse(JSON.stringify(OPPONENTS[opponent]));
         return;
       }
@@ -639,7 +646,7 @@ function keyPressed() {
       if (shadow_focus < Object.keys(SHADOW_SPECIFIC).length - 1) shadow_focus++;
       else shadow_focus = 0;
       localStorage.setItem("shadow_focus", shadow_focus);
-      loadSongmoves();
+      loadSongmoves
     }
   }
   if (['l', 'L'].includes(key) && [2, 3, 4].includes(menu)) {
@@ -651,12 +658,15 @@ function keyPressed() {
     }
   }
   if (['s', 'S'].includes(key) && menu === 0) {
+    loadSongmoves();
     menu = 2;
   }
   if (['p', 'P'].includes(key) && menu === 0) {
+    loadSongmoves();
     menu = 3;
   }
   if (['f', 'F'].includes(key) && menu === 0) {
+    loadSongmoves();
     menu = 4;
   }
   if (['r', 'R'].includes(key) && [2, 3].includes(menu)) {
@@ -691,6 +701,7 @@ function gotSpeech() {
         click_sound.play();
         menu = 2;
         curMoves = [];
+        loadSongmoves();
       }
     }
     if ([2, 3, 4].includes(menu)) {
@@ -818,7 +829,7 @@ function setup() {
 function draw() {
   if (innerWidth < innerHeight) return;
   background(0);
-  if (error.length > 0)  {
+  if (error.length > 0) {
     noStroke();
     textSize(10 * coef);
     fill(255);
@@ -992,13 +1003,13 @@ function draw() {
       fill(0, 0, 0);
       stroke(255, 192);
       strokeWeight(2);
-      rect(myWindowWidth / 2.5 - 40, myWindowHeight - 148 * coef, 100 * coef, 40 * coef, 20);
+      if (music_ready) rect(myWindowWidth / 2.5 - 40, myWindowHeight - 148 * coef, 100 * coef, 40 * coef, 20);
       rect(myWindowWidth / 2.5 - 40, myWindowHeight - 98 * coef, 100 * coef, 40 * coef, 20);
       rect(myWindowWidth / 2.5 - 40, myWindowHeight - 48 * coef, 100 * coef, 40 * coef, 20);
       fill(255, 255, 255, 224);
       stroke(0);
       strokeWeight(0);
-      text("(F)IGHT", myWindowWidth / 2.5 - 30, myWindowHeight - 125 * coef);
+      if (music_ready) text("(F)IGHT", myWindowWidth / 2.5 - 30, myWindowHeight - 125 * coef);
       text("(C)ALIBRATE", myWindowWidth / 2.5 - 30, myWindowHeight - 75 * coef);
       text("SON(G) NUM X", myWindowWidth / 2.5 - 30, myWindowHeight - 25 * coef);
     }
@@ -1157,7 +1168,6 @@ function draw() {
     fill(255);
     if (my_opponent.stamina > 0) rect(myWindowWidth / 2 - 75 * coef + 2, 17, 148 * coef - (OPPONENTS[opponent].stamina - my_opponent.stamina) * coef * 24, 16);
     rect(myWindowWidth / 2 - 75 * coef + 2, 45, 148 * coef, 16);
-
     if (poses.length > 0) {
       pose = poses[0];
       leftHand = pose["left_wrist"];
@@ -1262,6 +1272,22 @@ function draw() {
         right_poses = Date.now() - LEVEL * 10;
       }
       if (gameStarted) {
+        if (gameTimerNext < Math.ceil(gameTimer / FRAME_RATE)) {
+          if (moves.length >= Math.ceil(gameTimer / FRAME_RATE) && moves[Math.ceil(gameTimer / FRAME_RATE)] >= 0) {
+            curMoves.push({
+              "hit": false,
+              "type": curMoves.length < 4 ? 0 : parseInt(moves[Math.ceil(gameTimer / FRAME_RATE)]),
+              "x": 0,
+              "y": 0
+            })
+          }
+          gameTimerNext++;
+        }
+        if (curMoves.length > 0 && 'type' in curMoves[curMoves.length - 1] && curMoves[curMoves.length - 1].type !== 0) {
+          /*textSize(10 * coef);
+          fill(255, 255, 255, 255);
+          text(MOVE_TYPE[curMoves[curMoves.length - 1].type], myWindowWidth / 2, myWindowHeight / 2);*/
+        }
         tint(255, 224);
         image(opponents_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
         tint(255, 192);
