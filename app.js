@@ -635,16 +635,20 @@ function keyPressed() {
     if (gameStarted || gameCalibration) gameOver = true;
   }
   if (['t', 'T'].includes(key) && [2, 3, 4].includes(menu)) {
-    if (shadow_focus < Object.keys(SHADOW_SPECIFIC).length - 1) shadow_focus++;
-    else shadow_focus = 0;
-    localStorage.setItem("shadow_focus", shadow_focus);
-    loadSongmoves();
+    if (!gameStarted) {
+      if (shadow_focus < Object.keys(SHADOW_SPECIFIC).length - 1) shadow_focus++;
+      else shadow_focus = 0;
+      localStorage.setItem("shadow_focus", shadow_focus);
+      loadSongmoves();
+    }
   }
   if (['l', 'L'].includes(key) && [2, 3, 4].includes(menu)) {
-    if (level < Object.keys(GAME_LEVEL).length - 1) level++;
-    else level = 0;
-    localStorage.setItem("level", level);
-    loadSongmoves();
+    if (!gameStarted) {
+      if (level < Object.keys(GAME_LEVEL).length - 1) level++;
+      else level = 0;
+      localStorage.setItem("level", level);
+      loadSongmoves();
+    }
   }
   if (['s', 'S'].includes(key) && menu === 0) {
     menu = 2;
