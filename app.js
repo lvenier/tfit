@@ -205,7 +205,7 @@ var speechRecEnabled = true;
 var recognizing = false;
 var speechSpeak;
 var speechTime = Date.now();
-var music;
+var music = null;
 var music_ready = false;
 var songwait = false;
 var songwaittime = Date.now();
@@ -325,6 +325,8 @@ function loadSongmoves() {
 }
 
 function fetchSong(id = 1, speak = true) {
+  song = null;
+  music = null;
   fetch("/db/" + id + ".json")
     .then(response => response.json())
     .then(data => {
@@ -1143,11 +1145,13 @@ function draw() {
           if (guard_warning - Date.now() < 1089) {
             speechSpeak.speak("Your guard!");
           }
-          textSize(20 * coef);
-          fill(255, 255, 255, 255);
-          text("Your Guard !!!", myWindowWidth / 2.3, myWindowHeight / 2);
-          fill(255, 0, 0, hide_sensor);
-          textSize(10 * coef);
+          if (guard_warning - Date.now() < 3000) {
+            textSize(20 * coef);
+            fill(255, 255, 255, 255);
+            text("Your Guard !!!", myWindowWidth / 2.3, myWindowHeight / 2);
+            fill(255, 0, 0, hide_sensor);
+            textSize(10 * coef);
+          }
         }
         if (guard_warning - Date.now() > 10000) guard_warning = Date.now();
       } else guard_warning = Date.now();
