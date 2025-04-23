@@ -1488,7 +1488,7 @@ function draw() {
       }
       localStorage.setItem(selected_player, JSON.stringify(player));
       for (let mt of Object.keys(song_result)) {
-        if (mt === "score") continue;
+        if (["score","length"].includes(mt)) continue;
         fill(255);
         textSize(10 * coef);
         text(song_result[mt.toString()].success + " / " + song_result[mt.toString()].total, parseInt((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2), parseInt(myWindowHeight / 5 + 30 + 30 * Math.ceil((num + 1) / 2) * coef));
@@ -1504,8 +1504,6 @@ function draw() {
           fill(0, 0, 100, 255);
         } else if (song_result[mt.toString()].type === 9) {
           fill(0, 0, 200, 255);
-        } else if (song_result[mt.toString()].type === 10) {
-          fill(0, 200, 0, 255);
         }
         circle(parseInt((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2) + 100, parseInt(myWindowHeight / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * coef), OBJECT_POSE_SIZE / 2);
         fill(255);
