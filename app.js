@@ -314,7 +314,7 @@ function loadSongmoves() {
       for (let s = gameLength - 5; s < gameLength; s++) {
         song.moves[s] = 0;
       }
-      song.moves[Math.floor(gameLength / 2)] = 10;
+      if (menu === 2) song.moves[Math.floor(gameLength / 2)] = 10;
     }
     moves = song.moves;
     score_max = 0;
@@ -325,6 +325,7 @@ function loadSongmoves() {
 }
 
 function fetchSong(id = 1, speak = true) {
+  if (id > NUM_SONG) return;
   song = null;
   music = null;
   fetch("/db/" + id + ".json")
@@ -366,6 +367,7 @@ function letsfight() {
   feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
   speechSpeak.speak("let's fight!");
   gameStarted = true;
+  gameResult = Date.now() - 5001;
   guard_warning = Date.now();
   my_opponent = JSON.parse(JSON.stringify(OPPONENTS[opponent]));
   curMoves = [];
@@ -583,6 +585,31 @@ function preload() {
 }
 
 function keyPressed() {
+  if (Date.now() - gameResult < 5000) return;
+  if (songwait) {
+    if (key === "Escape") {
+      songwait = false;
+      music_ready = true;
+    }
+    if ([0, 1, 2, 3, 4, 5, 6, 7, 8, 9].includes(parseInt(key))) {
+        songvalue += key;
+        if (songvalue.length === 3) {
+          songwait = false;
+          songwaittime = Date.now();
+          songId = parseInt(songvalue);
+          if (songId === 0) {
+            song_random = true;
+            songId = Math.floor(Math.random() * NUM_SONG) + 1
+          } else song_random = false
+          fetchSong(songId);
+        }
+      } else return;
+  }
+  if (['g', 'G'].includes(key) && menu > 1 && !gameStarted) {
+    music_ready = false;
+    songwait = true;
+    songvalue = "";
+  }
   if (menu === 0 && playerwait === true && (key.match(/^[\d\w]$/i) || keyCode === 13)) {
     if (keyCode !== 13) playervalue += key;
     if (playervalue.length === 16 || keyCode === 13) {
@@ -606,25 +633,6 @@ function keyPressed() {
       getPlayers();
     }
     return;
-  }
-  if (['g', 'G'].includes(key) && menu > 1 && !gameStarted) {
-    songwait = true;
-    songvalue = "";
-  }
-  if ([0, 1, 2, 3, 4, 5, 6, 7, 8, 9].includes(parseInt(key))) {
-    if (songwait) {
-      songvalue += key;
-      if (songvalue.length === 3) {
-        songwait = false;
-        songwaittime = Date.now();
-        songId = parseInt(songvalue);
-        if (songId === 0) {
-          song_random = true;
-          songId = Math.floor(Math.random() * NUM_SONG) + 1
-        } else song_random = false
-        fetchSong(songId);
-      }
-    }
   }
   if (['b', 'B'].includes(key) && [1, 2, 3].includes(menu)) {
     if (!gameStarted) {
@@ -667,7 +675,7 @@ function keyPressed() {
     loadSongmoves();
     menu = 3;
   }
-  if (['f', 'F'].includes(key) && menu === 0) {
+  if (['i', 'I'].includes(key) && menu === 0) {
     loadSongmoves();
     menu = 4;
   }
@@ -921,7 +929,7 @@ function draw() {
     fill(255);
     text('(S)HADOW', parseInt(myWindowWidth / 6) + 20 * coef, parseInt(myWindowHeight / 6 + 30 * coef));
     text('(P)AD', parseInt(myWindowWidth / 6) + 20 * coef, parseInt(myWindowHeight / 6 + 130 * coef));
-    text('(F)IGHT', parseInt(myWindowWidth / 6) + 20 * coef, parseInt(myWindowHeight / 6 + 230 * coef));
+    text('F(I)GHT', parseInt(myWindowWidth / 6) + 20 * coef, parseInt(myWindowHeight / 6 + 230 * coef));
     if (playerwait) {
       fill(0, 0, 0, 255);
       rect(parseInt(myWindowWidth / 3), parseInt(myWindowHeight / 4), parseInt(myWindowWidth / 3), parseInt(myWindowHeight / 5), 20);
@@ -1005,15 +1013,19 @@ function draw() {
       fill(0, 0, 0);
       stroke(255, 192);
       strokeWeight(2);
-      if (music_ready) rect(myWindowWidth / 2.5 - 40, myWindowHeight - 148 * coef, 100 * coef, 40 * coef, 20);
-      rect(myWindowWidth / 2.5 - 40, myWindowHeight - 98 * coef, 100 * coef, 40 * coef, 20);
-      rect(myWindowWidth / 2.5 - 40, myWindowHeight - 48 * coef, 100 * coef, 40 * coef, 20);
-      fill(255, 255, 255, 224);
-      stroke(0);
-      strokeWeight(0);
-      if (music_ready) text("(F)IGHT", myWindowWidth / 2.5 - 30, myWindowHeight - 125 * coef);
-      text("(C)ALIBRATE", myWindowWidth / 2.5 - 30, myWindowHeight - 75 * coef);
-      text("SON(G) NUM X", myWindowWidth / 2.5 - 30, myWindowHeight - 25 * coef);
+      if (music_ready) {
+        rect(myWindowWidth / 2.5 - 40, myWindowHeight - 148 * coef, 100 * coef, 40 * coef, 20);
+        rect(myWindowWidth / 2.5 - 40, myWindowHeight - 98 * coef, 100 * coef, 40 * coef, 20);
+        rect(myWindowWidth / 2.5 - 40, myWindowHeight - 48 * coef, 100 * coef, 40 * coef, 20);
+      }
+        fill(255, 255, 255, 224);
+        stroke(0);
+        strokeWeight(0);
+      if (music_ready) {
+        text("(F)IGHT", myWindowWidth / 2.5 - 30, myWindowHeight - 125 * coef);
+        text("(C)ALIBRATE", myWindowWidth / 2.5 - 30, myWindowHeight - 75 * coef);
+        text("SON(G) NUM X", myWindowWidth / 2.5 - 30, myWindowHeight - 25 * coef);
+      }
     }
 
     fill(255, 255, 255, 255);
@@ -1238,49 +1250,50 @@ function draw() {
         punch_animation_type = 5;
         punch_animation = 0;
         punch_animation_delay = 0;
-        my_opponent.stamina--;
+        if (curMoves.length > 0 && 'type' in curMoves[curMoves.length - 1] && curMoves[curMoves.length - 1].type === 5) my_opponent.stamina--;
         left_poses = Date.now() - LEVEL * 10;
       }
       if (Date.now() - left_jab < LEVEL * 10 && left_jab - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
         punch_animation_type = 1;
         punch_animation = 0;
         punch_animation_delay = 0;
+        if (curMoves.length > 0 && 'type' in curMoves[curMoves.length - 1] && curMoves[curMoves.length - 1].type === 1) my_opponent.stamina--;
         left_poses = Date.now() - LEVEL * 10;
       }
       if (Date.now() - left_hook < LEVEL * 10 && left_hook - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
         punch_animation_type = 3;
         punch_animation = 0;
         punch_animation_delay = 0;
-        my_opponent.stamina--;
+        if (curMoves.length > 0 && 'type' in curMoves[curMoves.length - 1] && curMoves[curMoves.length - 1].type === 3) my_opponent.stamina--;
         left_poses = Date.now() - LEVEL * 10;
       }
       if (Date.now() - right_uppercut < LEVEL * 10 && right_uppercut - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
         punch_animation_type = 6;
         punch_animation = 0;
         punch_animation_delay = 0;
-        my_opponent.stamina--;
+        if (curMoves.length > 0 && 'type' in curMoves[curMoves.length - 1] && curMoves[curMoves.length - 1].type === 6) my_opponent.stamina--;
         right_poses = Date.now() - LEVEL * 10;
       }
       if (Date.now() - right_jab < LEVEL * 10 && right_jab - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
         punch_animation_type = 2;
         punch_animation = 0;
         punch_animation_delay = 0;
-        my_opponent.stamina--;
+        if (curMoves.length > 0 && 'type' in curMoves[curMoves.length - 1] && curMoves[curMoves.length - 1].type === 2) my_opponent.stamina--;
         right_poses = Date.now() - LEVEL * 10;
       }
       if (Date.now() - right_hook < LEVEL * 10 && right_hook - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
         punch_animation_type = 4;
         punch_animation = 0;
         punch_animation_delay = 0;
-        my_opponent.stamina--;
+        if (curMoves.length > 0 && 'type' in curMoves[curMoves.length - 1] && curMoves[curMoves.length - 1].type === 4) my_opponent.stamina--;
         right_poses = Date.now() - LEVEL * 10;
       }
       if (gameStarted) {
-        if (gameTimerNext < Math.ceil(gameTimer / FRAME_RATE)) {
-          if (moves.length >= Math.ceil(gameTimer / FRAME_RATE) && moves[Math.ceil(gameTimer / FRAME_RATE)] >= 0) {
+        if (gameTimerNext < Math.ceil(gameTimer / (FRAME_RATE + LEVEL / 2))) {
+          if (moves.length >= Math.ceil(gameTimer / (FRAME_RATE + LEVEL / 2)) && moves[Math.ceil(gameTimer / (FRAME_RATE + LEVEL / 2))] >= 0) {
             curMoves.push({
               "hit": false,
-              "type": curMoves.length < 4 ? 0 : parseInt(moves[Math.ceil(gameTimer / FRAME_RATE)]),
+              "type": curMoves.length < 4 ? 0 : parseInt(moves[Math.ceil(gameTimer / (FRAME_RATE + LEVEL / 2))]),
               "x": 0,
               "y": 0
             })
@@ -1288,9 +1301,10 @@ function draw() {
           gameTimerNext++;
         }
         if (curMoves.length > 0 && 'type' in curMoves[curMoves.length - 1] && curMoves[curMoves.length - 1].type !== 0) {
-          /*textSize(10 * coef);
+          textSize(10 * coef);
           fill(255, 255, 255, 255);
-          text(MOVE_TYPE[curMoves[curMoves.length - 1].type], myWindowWidth / 2, myWindowHeight / 2);*/
+          text(MOVE_TYPE[curMoves[curMoves.length - 1].type], myWindowWidth / 2, myWindowHeight / 4);
+          //add shape
         }
         tint(255, 224);
         image(opponents_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
