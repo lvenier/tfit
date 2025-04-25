@@ -639,7 +639,7 @@ function keyPressed() {
       menu = 0;
     }
   }
-  if (['c', 'C'].includes(key) && [2, 3].includes(menu)) {
+  if (['c', 'C'].includes(key) && [2, 3, 4].includes(menu)) {
     if (!gameStarted) {
       gameCalibration = true;
       hide_sensor = 64;
@@ -1141,7 +1141,7 @@ function draw() {
         fill(255, 0, 0, hide_sensor);
         textSize(10 * coef);
       }
-      if (Date.now() - hit_success > 3000 && Date.now() - hit_success < 4000 && guard_warning - Date.now() < 2000) {
+      if (Date.now() - hit_success > 3000 && Date.now() - hit_success < 4000 && guard_warning - Date.now() < 2000 && Math.ceil((gameDuration - gameTimer) / FRAME_RATE) > 5) {
         textSize(20 * coef);
         fill(255, 255, 255, 255);
         text("Keep trying !!!", myWindowWidth / 2.3, myWindowHeight / 2);
@@ -1193,6 +1193,12 @@ function draw() {
         fill(0, 255, 0, 128);
         circle(nose.x * coef, nose.y * coef, OBJECT_POSE_SIZE / 8);
         fill(255, 255, 255, hide_sensor);
+        if (nose.x * coef > right_init_pose_x + OBJECT_POSE_SIZE / 2) {
+          right_dodge = Date.now();
+        }
+        if (nose.x * coef < left_init_pose_x - OBJECT_POSE_SIZE / 2) {
+          left_dodge = Date.now();
+        }
       }
       if (leftHand && leftHand.confidence > 0.1) {
         if (leftHand.x * coef < left_init_pose_x + OBJECT_POSE_SIZE && leftHand.x * coef > left_init_pose_x - OBJECT_POSE_SIZE && leftHand.y * coef - OBJECT_POSE_SIZE < left_init_pose_y && leftHand.y * coef + OBJECT_POSE_SIZE > left_init_pose_y) {
@@ -1245,6 +1251,21 @@ function draw() {
             right_hook = Date.now();
           }
         }
+      }
+      if (Date.now() - right_dodge < LEVEL * 10 && right_dodge - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
+        console.log("dodger")
+        //punch_animation_type = 8;
+        punch_animation_type = 1;
+        punch_animation = 0;
+        punch_animation_delay = 0;
+        left_poses = Date.now() - LEVEL * 10;
+      }
+      if (Date.now() - left_dodge < LEVEL * 10 && left_dodge - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
+        console.log("dodgel")
+        //punch_animation_type = 9;
+        punch_animation_type = 2;
+        punch_animation = 0;
+        punch_animation_delay = 0;
       }
       if (Date.now() - left_uppercut < LEVEL * 10 && left_uppercut - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
         punch_animation_type = 5;
@@ -1300,11 +1321,30 @@ function draw() {
           }
           gameTimerNext++;
         }
-        if (curMoves.length > 0 && 'type' in curMoves[curMoves.length - 1] && curMoves[curMoves.length - 1].type !== 0) {
+        let c = curMoves.length - 1;
+        if (curMoves.length > 0 && 'type' in curMoves[c] && curMoves[c].type !== 0) {
+          if (curMoves[c].type === 1 || curMoves[c].type === 2) {
+            fill(100, 100, 0);
+          } else if (curMoves[c].type === 3 || curMoves[c].type === 4) {
+            fill(100, 0, 100);
+          } else if (curMoves[c].type === 5 || curMoves[c].type === 6) {
+            fill(0, 100, 100);
+          } else if (curMoves[c].type === 7 || curMoves[c].type === 8) {
+            fill(0, 0, 100);
+          } else if (curMoves[c].type === 9) {
+            fill(0, 0, 200);
+          }
+          if ([1,2].includes(curMoves[c].type)) circle(myWindowWidth / 2, myWindowHeight / 5, OBJECT_POSE_SIZE);
+          else if (curMoves[c].type === 3) quad(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 6, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 6)
+          else if (curMoves[c].type === 4) quad(myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 6, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 6)
+          else if (curMoves[c].type === 5) quad(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 6, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 6, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2)
+          else if (curMoves[c].type === 6) quad(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 6, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 6, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2)
+          else if (curMoves[c].type === 7) quad(myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 6, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 6)
+          else if (curMoves[c].type === 8) quad(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 6, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 6)
+          else if (curMoves[c].type === 9) quad(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 6, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 6, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2)
           textSize(10 * coef);
           fill(255, 255, 255, 255);
-          text(MOVE_TYPE[curMoves[curMoves.length - 1].type], myWindowWidth / 2, myWindowHeight / 4);
-          //add shape
+          text(MOVE_TYPE[curMoves[c].type], myWindowWidth / 2 - coef * MOVE_TYPE[curMoves[c].type].length * 3, myWindowHeight / 5);
         }
         tint(255, 224);
         image(opponents_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
