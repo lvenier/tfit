@@ -656,7 +656,7 @@ function keyPressed() {
       if (shadow_focus < Object.keys(SHADOW_SPECIFIC).length - 1) shadow_focus++;
       else shadow_focus = 0;
       localStorage.setItem("shadow_focus", shadow_focus);
-      loadSongmoves
+      loadSongmoves();
     }
   }
   if (['l', 'L'].includes(key) && [2, 3, 4].includes(menu)) {
