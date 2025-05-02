@@ -31,9 +31,7 @@
       text-align: center;
     }
     .button {
-      background-color: grey; /* Green */
       border: none;
-      color: white;
       padding: 15px 32px;
       text-align: center;
       text-decoration: none;
@@ -41,12 +39,24 @@
       font-size: 16px;
       border-radius: 8px;
     }
-    .button:hover {
-      background-color: white; /* Green */
-      color: grey;
+    .button-clear {
+      background-color: #646400;
+      color: white;
     }
+    .button-clear:hover {
+      opacity: 0.7;
+    }
+    .button-play {
+      background-color: #640064;
+      color: white;
+    }
+    .button-play:hover {
+      opacity: 0.7;
+    }
+
   </style>
-  <div style="text-align:right;"><button class="button" id="clear">clear</button></div>
+  <table width="100%" style="text-align:center;"><tr><td><button class="button button-play" id="play" onclick="window.location.href='/';">play</button></td><td><button class="button button-clear" id="clear">clear</button></td></tr></table>
+  <div id="me"></div>
   <script src="me.js"></script>
 </body>
 
