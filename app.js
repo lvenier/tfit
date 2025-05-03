@@ -39,6 +39,8 @@ const OBJECT_NUMBERS = {
   'ninety': 90
 };
 
+const MODELS = ["MoveNet", "BlazePose"]
+
 const MOVE_TYPE = {
   "0": "None",
   "1": "LEFT_JAB",
@@ -102,6 +104,7 @@ var OBJECT_POSE_SIZE = 48 * coef;
 const FRAME_RATE = 30;
 var LEVEL = 50;
 
+var model = 0;
 var leftHand;
 var rightHand;
 var nose;
@@ -581,7 +584,7 @@ function preload() {
 
   click_sound = loadSound('assets/sounds/click.mp3');
   punch_sound = loadSound('assets/sounds/punch.mp3');
-  bodyPose = ml5.bodyPose("BlazePose", {
+  bodyPose = ml5.bodyPose(MODELS[model], {
     flipped: true
   });
 }
