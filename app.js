@@ -1123,7 +1123,7 @@ function draw() {
 
     if (gameStarted) {
       fill(255, 255, 255, 255);
-      text(`Time Left: ${Math.ceil((gameDuration - gameTimer) / FRAME_RATE)}s`, 15, 135);
+      text(`Time Left: ${Math.ceil((gameDuration - gameTimer) / FRAME_RATE)}s`, 15, 68 * coef);
       textSize(10 * coef);
       fill(0, 0, 0);
       stroke(255, 192);
