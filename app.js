@@ -398,11 +398,13 @@ function handleChange() {
     }
     for (let p = 0; p < players.length; p++) {
       if (mouseX > myWindowWidth - 175 - 75 * p && mouseX < myWindowWidth - 175 - 75 * p + 25 * coef && mouseY > 10 && mouseY < 25 * coef + 20) {
-        click_sound.play();
-        selected_player = players[p];
-        localStorage.setItem("selected_player", selected_player);
-        player = JSON.parse(localStorage.getItem(selected_player));
-        logged_player = true;
+        if (selected_player !== players[p]) {
+          click_sound.play();
+          selected_player = players[p];
+          localStorage.setItem("selected_player", selected_player);
+          player = JSON.parse(localStorage.getItem(selected_player));
+          logged_player = true;
+        } else window.location.href = "/me.html"
       }
     }
     if (mouseX > myWindowWidth - 100 && mouseX < myWindowWidth - 100 + 25 * coef && mouseY > 20 && mouseY < 20 + 25 * coef) {

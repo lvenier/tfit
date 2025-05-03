@@ -65,7 +65,6 @@ document.getElementById('clear').addEventListener("click", function(){
         "score": 0,
         "scores": {}
     };
-    localStorage.removeItem("selected_player");
     localStorage.setItem("player",JSON.stringify(guest));
     for (let player of players) {
         let tmp_player = JSON.parse(JSON.stringify(player));
