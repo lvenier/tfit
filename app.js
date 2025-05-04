@@ -101,7 +101,7 @@ myWindowWidth = coef * 640;
 myWindowHeight = coef * 480;
 
 var OBJECT_POSE_SIZE = 48 * coef;
-const FRAME_RATE = 30;
+const FRAME_RATE = 20;
 var LEVEL = 50;
 
 var model = 0;
@@ -1147,14 +1147,16 @@ function draw() {
         textSize(10 * coef);
       }
       if (Date.now() - hit_success > 3000 && Date.now() - hit_success < 4000 && guard_warning - Date.now() < 2000 && Math.ceil((gameDuration - gameTimer) / FRAME_RATE) > 5) {
-        textSize(20 * coef);
-        fill(255, 255, 255, 255);
-        text("Keep trying !!!", myWindowWidth / 2.3, myWindowHeight / 2);
-        if (Date.now() - hit_success < 3019) {
-          speechSpeak.speak("Keep trying!");
+        if (curMoves.length > 3 && curMoves[curMoves.length - 1].hit === false && curMoves[curMoves.length - 2].hit === false && curMoves[curMoves.length - 3].hit === false) {
+          textSize(20 * coef);
+          fill(255, 255, 255, 255);
+          text("Keep trying !!!", myWindowWidth / 2.3, myWindowHeight / 2);
+          if (Date.now() - hit_success < 3019) {
+            speechSpeak.speak("Keep trying!");
+          }
+          fill(255, 0, 0, hide_sensor);
+          textSize(10 * coef);
         }
-        fill(255, 0, 0, hide_sensor);
-        textSize(10 * coef);
       }
       if ((Date.now() - left_poses > 2000 || Date.now() - right_poses > 2000) && Math.ceil((gameDuration - gameTimer) / FRAME_RATE) > 5 && gameTimer > 100) {
         guard_warning += 100;
@@ -1834,5 +1836,4 @@ function checkStartCondition() {
 
 function gotPoses(results) {
   poses = results;
-
 }
