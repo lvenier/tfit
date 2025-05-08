@@ -154,7 +154,7 @@ var gameCalibration = false;
 var song = {};
 var songId = parseFloat(localStorage.getItem("song_id")) || 1;
 var song_result = {};
-var song_random = false;
+var song_random = parseInt(localStorage.getItem("song_random")) || 0;
 var feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
 
 var moves = [];
@@ -297,8 +297,9 @@ function loadSongmoves() {
     if (song.moveLength === 0) {
       song.moves = [];
       song.moves[0] = 0
+      song.moves[1] = 0
       let rand = 0;
-      for (let i = 1; i < gameLength - 5; i++) {
+      for (let i = 2; i < gameLength - 5; i++) {
         if (shadow_focus === 0) rand = randomInteger(1, 9);
         if (shadow_focus === 1) rand = randomInteger(1, 2);
         if (shadow_focus === 2) rand = randomInteger(3, 4);
@@ -603,9 +604,13 @@ function keyPressed() {
           songwaittime = Date.now();
           songId = parseInt(songvalue);
           if (songId === 0) {
-            song_random = true;
+            song_random = 1;
+            localStorage.setItem("song_random", song_random);
             songId = Math.floor(Math.random() * NUM_SONG) + 1
-          } else song_random = false
+          } else {
+            song_random = 0;
+            localStorage.setItem("song_random", song_random);
+          }
           fetchSong(songId);
         }
       } else return;
@@ -977,7 +982,7 @@ function draw() {
       gameOver = false;
       gameResult = Date.now();
       score_max_prev = score_max;
-      if (song_random === true) {
+      if (song_random === 1) {
         songId = Math.floor(Math.random() * NUM_SONG) + 1
         fetchSong(songId, false);
       }
