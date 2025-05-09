@@ -1,0 +1,35 @@
+{
+    "name": "box4fit",
+    "main": "main.js",
+    "version": "1.0.0",
+    "description": "Game for body fit with style and fun",
+    "license":  "ISC",
+    "author": {
+        "name": "saashup.com",
+        "email": "contact@box4.fit",
+        "url": "https://box4.fit"
+    },
+    "scripts": {
+        "start": "electron .",
+        "build-linux": "npx electron-builder --linux",
+        "build-win": "npx electron-builder --win"
+    },
+    "build": {
+        "appId": "app.box4.fit",
+        "productName": "Box4Fit",
+        "linux": {
+            "icon": "assets/logos/logo.256.png",
+            "target": ["AppImage", "deb"],
+            "category": "Game"
+        },
+        "win": {
+            "target": "nsis",
+            "icon": "assets/logos/logo.256.png"
+        }
+    },
+    "devDependencies": {
+        "electron": "*",
+        "electron-builder": "^26.0.12",
+        "electron-packager": "^17.1.2"
+    }
+}

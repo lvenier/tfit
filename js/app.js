@@ -332,7 +332,7 @@ function fetchSong(id = 1, speak = true) {
   if (id > NUM_SONG) return;
   song = null;
   music = null;
-  fetch("/db/" + id + ".json")
+  fetch("db/" + id + ".json")
     .then(response => response.json())
     .then(data => {
       song = data;
@@ -577,7 +577,7 @@ function preload() {
   click_sound = loadSound('assets/sounds/click.mp3');
   punch_sound = loadSound('assets/sounds/punch.mp3');
   bodyPose = ml5.bodyPose(MODELS[model], {
-    modelUrl: "/js/ml5js/model.json",
+    modelUrl: "js/ml5js/model.json",
     flipped: true
   });
 }
