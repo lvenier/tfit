@@ -6,6 +6,17 @@ var guest = JSON.parse(localStorage.getItem("player")) || {
 var players = [];
 var cpt = 0;
 var html = "";
+var songs = {};
+
+const xhr = new XMLHttpRequest();
+xhr.open("GET", "/db/songs.json");
+xhr.send();
+xhr.responseType = "json";
+xhr.onload = () => {
+    if (xhr.readyState == 4 && xhr.status == 200) {
+        songs = xhr.response;
+    }
+}
 
 function loadPlayers() {
     players = [];
@@ -71,8 +82,11 @@ document.getElementById('clear').addEventListener("click", function(){
         tmp_player.scores = {};
         for (let i of Object.keys(player.scores)) {
             if (player.scores[i].score > 5) tmp_player.scores[i] = player.scores[i];
+            if (!("length" in player.scores[i]) || parseInt(player.scores[i]["length"]) === 0) {
+                if ("length" in songs[parseInt(i)]) tmp_player.scores[i]["length"] = songs[parseInt(i)]["length"];
+            }
         }
         localStorage.setItem(tmp_player.id,JSON.stringify(tmp_player));
-    }
+    }   
     init();
 });
