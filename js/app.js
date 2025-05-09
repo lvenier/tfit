@@ -251,6 +251,12 @@ function getPlayers() {
 }
 getPlayers();
 
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('js/service-worker.js')
+    .then(() => console.log('Service Worker registered'))
+    .catch(err => console.error('Service Worker error:', err));
+}
+
 const requestWakeLock = async () => {
   try {
     wakeLock = await navigator.wakeLock.request();
