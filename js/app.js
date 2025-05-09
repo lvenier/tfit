@@ -141,6 +141,7 @@ var video;
 var punch_sound;
 var click_sound;
 var bodyPose;
+var isDetecting = false;
 var pose = {};
 var poses = [];
 var gameTimer = -1;
@@ -837,6 +838,7 @@ function setup() {
       });
       video.hide();
       bodyPose.detectStart(video, gotPoses);
+      isDetecting = true;
     })
     .catch(err => {
       error = "Failed to access camera:" + err;
@@ -888,7 +890,10 @@ function draw() {
   image(microphone_image, myWindowWidth / 4 - OBJECT_POSE_SIZE / 2 - 100 * coef, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2);
   strokeWeight(0);
   if (menu === 0) {
-    bodyPose.detectStop();
+    if (isDetecting === true) {
+      bodyPose.detectStop();
+      isDetecting = false;
+    }
     for (let i = 0; i < players.length; i++) {
       fill(0, 0, 0);
       stroke(192, 64, 204);
@@ -949,7 +954,6 @@ function draw() {
     }
   } else {
     if ((menu === 2 || menu === 3 || menu === 4 || menu === 1) && !gameStarted) {
-      bodyPose.detectStart(video, gotPoses);
       fill(0, 0, 0);
       stroke(255, 192);
       strokeWeight(2);
@@ -962,6 +966,10 @@ function draw() {
   }
 
   if (menu > 1) {
+    if (isDetecting === false) {
+      bodyPose.detectStart(video, gotPoses);
+      isDetecting = true;
+    }
     fill(255, 255, 255, 128);
     circle(left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE);
     circle(right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE);
