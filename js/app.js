@@ -644,7 +644,7 @@ function keyPressed() {
     }
     return;
   }
-  if (['b', 'B'].includes(key) && [1, 2, 3].includes(menu)) {
+  if (['b', 'B'].includes(key) && [1, 2, 3, 4].includes(menu)) {
     if (!gameStarted) {
       menu = 0;
     }
@@ -890,6 +890,7 @@ function draw() {
   image(microphone_image, myWindowWidth / 4 - OBJECT_POSE_SIZE / 2 - 100 * coef, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2);
   strokeWeight(0);
   if (menu === 0) {
+    bodyPose.detectStop();
     for (let i = 0; i < players.length; i++) {
       fill(0, 0, 0);
       stroke(192, 64, 204);
@@ -950,6 +951,7 @@ function draw() {
     }
   } else {
     if ((menu === 2 || menu === 3 || menu === 4 || menu === 1) && !gameStarted) {
+      bodyPose.detectStart(video, gotPoses);
       fill(0, 0, 0);
       stroke(255, 192);
       strokeWeight(2);
