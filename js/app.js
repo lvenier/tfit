@@ -344,10 +344,6 @@ function fetchSong(id = 1, speak = true) {
         music_ready = true;
       });
       if (speak) speechSpeak.speak("song " + song.name + " selected !");
-      if (typeof zaraz !== 'undefined' && zaraz) zaraz.track("song_changed", {
-        "event_name": "song_changed",
-        "song": id.toString(),
-      });
     })
     .catch(function (err) {
       console.log(err)
@@ -380,11 +376,6 @@ function letsfight() {
   gameTimer = 0;
   score = 0;
   arrayScore = [];
-  if (typeof zaraz !== 'undefined' && zaraz) zaraz.track("letsfight", {
-    "event_name": "letsfight",
-    "song": songId,
-    "player": player.name
-  });
 }
 
 function handleChange() {
@@ -586,6 +577,7 @@ function preload() {
   click_sound = loadSound('assets/sounds/click.mp3');
   punch_sound = loadSound('assets/sounds/punch.mp3');
   bodyPose = ml5.bodyPose(MODELS[model], {
+    modelUrl: "/js/ml5js/model.json",
     flipped: true
   });
 }
@@ -994,13 +986,6 @@ function draw() {
         player.score += player.scores[s].score
       }
       localStorage.setItem(selected_player, JSON.stringify(player));
-      if (typeof zaraz !== 'undefined' && zaraz) zaraz.track("letsfight", {
-        "event_name": "score_result",
-        "song": songId,
-        "player": player.name,
-        "score": player.score,
-        "menu": menu
-      });
       feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
     }
 
