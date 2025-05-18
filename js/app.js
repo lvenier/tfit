@@ -310,6 +310,10 @@ function randomInteger(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function gameResultBool() { 
+  return (Date.now() - gameResult < 5000)
+}
+
 function loadSongmoves() {
   LEVEL = 50 - level * 10;
   if (song) {
@@ -404,6 +408,7 @@ function letsfight() {
 }
 
 function handleChange() {
+  if (gameResultBool()) return;
   if (mouseX > myWindowWidth / 4 - OBJECT_POSE_SIZE / 2 - 100 * coef && mouseX < myWindowWidth / 4 - 100 * coef + OBJECT_POSE_SIZE / 2 && mouseY > myWindowHeight - 40 * coef && mouseY < myWindowHeight - 40 * coef + OBJECT_POSE_SIZE / 2) {
     if (!recognizing) speechRec.start();
     recognizing = true;
@@ -623,7 +628,7 @@ function preload() {
 }
 
 function keyPressed() {
-  if (Date.now() - gameResult < 5000) return;
+  if (gameResultBool()) return;
   if (songwait) {
     if (key === "Escape") {
       songwait = false;
@@ -985,7 +990,7 @@ function draw() {
       text(playervalue.padEnd(16, "_"), parseInt(myWindowWidth / 3) + 20 * coef, parseInt(myWindowHeight / 4 + 60 * coef));
     }
   } else {
-    if ((menu === 2 || menu === 3 || menu === 4 || menu === 1) && !gameStarted) {
+    if ((menu === 2 || menu === 3 || menu === 4 || menu === 1) && !gameStarted && !gameResultBool()) {
       fill(0, 0, 0);
       stroke(255, 192);
       strokeWeight(2);
@@ -1051,7 +1056,7 @@ function draw() {
       fill(255, 0, 0, hide_sensor);
     }
 
-    if (!gameStarted && !gameCalibration && !(speechTime > Date.now() - 1000)) {
+    if (!gameStarted && !gameCalibration && !(speechTime > Date.now() - 1000) && !gameResultBool()) {
       textSize(10 * coef);
       fill(0, 0, 0);
       stroke(255, 192);
@@ -1551,7 +1556,7 @@ function draw() {
     circle(myWindowWidth / 2, 50 + OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE + 10)
     if (feet_position === 0) image(lfeet_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
     if (feet_position === 1) image(rfeet_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
-    if (Date.now() - gameResult < 5000 && curMoves.length > 0) {
+    if (gameResultBool() && curMoves.length > 0) {
       fill(0, 0, 0, 255);
       rect(parseInt(myWindowWidth / 8), parseInt(myWindowHeight / 6), parseInt(3 * myWindowWidth / 4), parseInt(3 * myWindowHeight / 4), 20);
       fill(255);
