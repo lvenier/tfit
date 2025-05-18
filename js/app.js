@@ -424,7 +424,7 @@ function handleChange() {
           localStorage.setItem("selected_player", selected_player);
           player = JSON.parse(localStorage.getItem(selected_player));
           logged_player = true;
-        } else window.location.href = "/me.html"
+        } else window.location.href = "me.html"
       }
     }
     if (mouseX > myWindowWidth - 100 && mouseX < myWindowWidth - 100 + 25 * coef && mouseY > 20 && mouseY < 20 + 25 * coef) {

@@ -9,7 +9,7 @@ var html = "";
 var songs = {};
 
 const xhr = new XMLHttpRequest();
-xhr.open("GET", "/db/songs.json");
+xhr.open("GET", "db/songs.json");
 xhr.send();
 xhr.responseType = "json";
 xhr.onload = () => {

@@ -78,3 +78,10 @@ canvas {
 .button-play:hover {
   opacity: 0.7;
 }
+.button-songs {
+  background-color: #006464;
+  color: white;
+}
+.button-songs:hover {
+  opacity: 0.7;
+}
