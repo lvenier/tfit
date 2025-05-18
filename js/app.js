@@ -140,6 +140,21 @@ var hide_sensor = 0;
 var video;
 var punch_sound;
 var click_sound;
+var song_not_exist;
+var song_ready;
+var song_letsfight;
+var song_bg_not_found;
+var song_song_over;
+var song_your_guard;
+var song_keep_trying;
+var song_well_done;
+var song_great;
+var song_awesome;
+var song_good;
+var song_perfect;
+var song_continue;
+var song_thats_it;
+
 var bodyPose;
 var isDetecting = false;
 var pose = {};
@@ -207,7 +222,6 @@ var speechRec = {
 };
 var speechRecEnabled = true;
 var recognizing = false;
-var speechSpeak;
 var speechTime = Date.now();
 var music = null;
 var music_ready = false;
@@ -336,7 +350,11 @@ function loadSongmoves() {
 }
 
 function fetchSong(id = 1, speak = true) {
-  if (id > NUM_SONG) return;
+  if (id > NUM_SONG) {
+    song_not_exist.play();
+    music_ready = true;
+    return;
+  }
   song = null;
   music = null;
   fetch("db/" + id + ".json")
@@ -350,13 +368,13 @@ function fetchSong(id = 1, speak = true) {
       music = loadSound(song.url, function () {
         music_ready = true;
       });
-      if (speak) speechSpeak.speak("song " + song.name + " selected !");
+      song_ready.play();
     })
     .catch(function (err) {
       console.log(err)
       songId = parseFloat(localStorage.getItem("song_id")) || 1;
       localStorage.setItem("song_id", songId);
-      if (speak) speechSpeak.speak("this song does not exist !");
+      song_not_exist.play();
     });
 }
 
@@ -372,7 +390,7 @@ function letsfight() {
   if (gameCalibration) return speechRec.resultString = "Calibating !";
   if (gameStarted) return speechRec.resultString = "Already fighting !"
   feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
-  speechSpeak.speak("let's fight!");
+  song_letsfight.play();
   gameStarted = true;
   gameResult = Date.now() - 5001;
   guard_warning = Date.now();
@@ -583,6 +601,21 @@ function preload() {
 
   click_sound = loadSound('assets/sounds/click.mp3');
   punch_sound = loadSound('assets/sounds/punch.mp3');
+  song_not_exist = loadSound('assets/sounds/song_not_exist.mp3');
+  song_ready = loadSound('assets/sounds/song_ready.mp3');
+  song_letsfight = loadSound('assets/sounds/letsfight.mp3');
+  song_bg_not_found = loadSound('assets/sounds/bg_not_found.mp3');
+  song_song_over = loadSound('assets/sounds/song_over.mp3');
+  song_your_guard = loadSound('assets/sounds/your_guard.mp3');
+  song_keep_trying = loadSound('assets/sounds/keep_trying.mp3');
+  song_well_done = loadSound('assets/sounds/well_done.mp3');
+  song_great = loadSound('assets/sounds/great.mp3');
+  song_awesome = loadSound('assets/sounds/awesome.mp3');
+  song_good = loadSound('assets/sounds/good.mp3');
+  song_perfect = loadSound('assets/sounds/perfect.mp3');
+  song_continue = loadSound('assets/sounds/continue.mp3');
+  song_thats_it = loadSound('assets/sounds/thats_it.mp3');
+
   bodyPose = ml5.bodyPose(MODELS[model], {
     modelUrl: "js/ml5js/model.json",
     flipped: true
@@ -759,7 +792,7 @@ function gotSpeech() {
         if (speechRec.resultString.split(" ").length > 2)
           songId = text2num(speechRec.resultString.split(" ")[2]);
         if (songId === 0) {
-          speechSpeak.speak("song not found!");
+          song_not_exist.play();
           fill(255, 255, 255, 255);
           textSize(15 * coef);
           text("song not found!", myWindowWidth / 2.1, myWindowHeight - 50);
@@ -770,7 +803,7 @@ function gotSpeech() {
         if (speechRec.resultString.split(" ").length > 2)
           backgroundId = text2num(speechRec.resultString.split(" ")[2]);
         if (backgroundId < 1 || backgroundId > 3) {
-          speechSpeak.speak("background not found!");
+          song_bg_not_found.play();
           fill(255, 255, 255, 255);
           textSize(15 * coef);
           text("background not found!", myWindowWidth / 2.1, myWindowHeight - 50);
@@ -798,15 +831,15 @@ function switch_feet() {
 
 function hitSuccess(c) {
   if (arrayScore[c] === 0) {
-    if (c < 2) speechSpeak.speak("well done!");
+    if (c < 2) song_well_done.play();
     if (c >= 2 && arrayScore[c - 2] + arrayScore[c - 1] === 2) {
       let r = Math.floor(Math.random() * 11)
-      if (r === 0 || r === 1) speechSpeak.speak("great!");
-      if (r === 2 || r === 3) speechSpeak.speak("awesome!");
-      if (r === 4 || r === 5) speechSpeak.speak("good!");
-      if (r === 6 || r === 7) speechSpeak.speak("perfect!");
-      if (r === 8 || r === 9) speechSpeak.speak("continue!");
-      if (r === 10 || r === 11) speechSpeak.speak("that's it!");
+      if (r === 0 || r === 1) song_great.play();
+      if (r === 2 || r === 3) song_awesome.play();
+      if (r === 4 || r === 5) song_good.play();
+      if (r === 6 || r === 7) song_perfect.play();
+      if (r === 8 || r === 9) song_continue.play();
+      if (r === 10 || r === 11) song_thats_it.play();
     }
     hit_success = Date.now();
   }
@@ -816,7 +849,6 @@ function hitSuccess(c) {
 
 function setup() {
   frameRate(FRAME_RATE);
-  speechSpeak = new p5.Speech();
   if (speechRecEnabled) {
     speechRec = new p5.SpeechRec('en-US', gotSpeech);
     speechRec.continuous = false;
@@ -976,7 +1008,7 @@ function draw() {
     fill(255, 255, 255, 192);
     if (gameDuration - gameTimer <= 0) {
       gameOver = true;
-      speechSpeak.speak("good job! song is over!");
+      song_song_over.play();
       gameOverTime = Date.now();
     }
 
@@ -1158,7 +1190,7 @@ function draw() {
           fill(255, 255, 255, 255);
           text("Keep trying !!!", myWindowWidth / 2.3, myWindowHeight / 2);
           if (Date.now() - hit_success < 3019) {
-            speechSpeak.speak("Keep trying!");
+            song_keep_trying.play();
           }
           fill(255, 0, 0, hide_sensor);
           textSize(10 * coef);
@@ -1168,7 +1200,7 @@ function draw() {
         guard_warning += 100;
         if (guard_warning - Date.now() > 1000) {
           if (guard_warning - Date.now() < 1089) {
-            speechSpeak.speak("Your guard!");
+            song_your_guard.play();
           }
           if (guard_warning - Date.now() < 3000) {
             textSize(20 * coef);

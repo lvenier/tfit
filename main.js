@@ -1,6 +1,8 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 
+app.commandLine.appendSwitch('gtk-version', '3')
+
 function createWindow() {
   const win = new BrowserWindow({
     fullscreen: true,
