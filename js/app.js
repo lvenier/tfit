@@ -72,7 +72,7 @@ const SHADOW_SPECIFIC = {
 
 const OPPONENTS = {
   "0": {
-    "name": "Roman",
+    "name": "Raja",
     "stamina": 6
   },
   "1": {
@@ -133,7 +133,12 @@ var punch_animation_type = 0;
 var punch_animation_delay = 0;
 var opponent = 0;
 var my_opponent = JSON.parse(JSON.stringify(OPPONENTS[opponent]));
-var opponents_image = [];
+
+var opponent_image = [];
+var opponents_images = [];
+var puncho_animation = -1;
+var puncho_animation_type = 0;
+var puncho_animation_delay = 0;
 
 var backgroundId = parseFloat(localStorage.getItem("background_id")) || 1;
 var hide_sensor = 0;
@@ -590,17 +595,22 @@ function preload() {
   leave_image = loadImage('assets/images/leave.png');
 
   me_image = loadImage('assets/images/boxers/0-me.png');
-
-  for (let i = 0; i < 2; i++) {
-    opponents_image[i] = loadImage('assets/images/boxers/0-1.png');
-  }
-
   me_images[0] = [];
   me_images[1] = [];
   for (let j = 1; j < 7; j++) {
     me_images[j] = [];
     for (let i = 0; i < 7; i++) {
       me_images[j][i] = loadImage('assets/images/boxers/' + j + '-me-' + i + '.png');
+    }
+  }
+
+  opponent_image[0] = loadImage('assets/images/opponents/0/0-1.png');
+  opponents_images[0] = [];
+  opponents_images[1] = [];
+  for (let j = 1; j < 3; j++) {
+    opponents_images[j] = [];
+    for (let i = 0; i < 7; i++) {
+      opponents_images[j][i] = loadImage('assets/images/opponents/0/' + j + '-' + i + '.png');
     }
   }
 
@@ -1395,10 +1405,32 @@ function draw() {
           textSize(10 * coef);
           fill(255, 255, 255, 255);
           text(MOVE_TYPE[curMoves[c].type], myWindowWidth / 2 - coef * MOVE_TYPE[curMoves[c].type].length * 3, myWindowHeight / 5);
+          tint(255, 224);
+          if (curMoves[c].hit === false) {
+            if (gameStarted && puncho_animation === -1 && curMoves[c].hit === false) {
+              if (curMoves[c].type > 2) puncho_animation_type = randomInteger(1,2);
+              else puncho_animation_type = curMoves[c].type;
+              puncho_animation = 0;
+              puncho_animation_delay = 0;
+            }
+            if (puncho_animation >= 0 && curMoves[c].hit === false) {
+              image(opponents_images[puncho_animation_type][puncho_animation], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
+              if (puncho_animation_delay % 3 === 0) {
+                if (puncho_animation >= 6) {
+                  puncho_animation = -1;
+                  puncho_animation_delay = 0;
+                  curMoves[c].hit = true;
+                } else puncho_animation++;
+              }
+              puncho_animation_delay++;
+            }
+          } else image(opponent_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);         
+          tint(255, 192);
+        } else {
+          tint(255, 224);
+          image(opponent_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
+          tint(255, 192);
         }
-        tint(255, 224);
-        image(opponents_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
-        tint(255, 192);
         if (punch_animation >= 0) {
           image(me_images[punch_animation_type][punch_animation], myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);
           if (punch_animation_delay % 3 === 0) {
@@ -1414,14 +1446,14 @@ function draw() {
       } else {
         if (!gameCalibration) {
           tint(255, 224);
-          image(opponents_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
+          image(opponent_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
           tint(255, 192);
           image(me_image, myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);
         }
       }
     } else {
       tint(255, 224);
-      image(opponents_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
+      image(opponent_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
       tint(255, 192);
       image(me_image, myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);
     }
