@@ -846,15 +846,24 @@ function switch_feet() {
 
 function hitSuccess(c) {
   if (arrayScore[c] === 0) {
-    if (c < 2) song_well_done.play();
-    if (c >= 2 && arrayScore[c - 2] + arrayScore[c - 1] === 2) {
-      let r = Math.floor(Math.random() * 11)
-      if (r === 0 || r === 1) song_great.play();
-      if (r === 2 || r === 3) song_awesome.play();
-      if (r === 4 || r === 5) song_good.play();
-      if (r === 6 || r === 7) song_perfect.play();
-      if (r === 8 || r === 9) song_continue.play();
-      if (r === 10 || r === 11) song_thats_it.play();
+    if (c >= 3) {
+      let s = 0;
+      for (let k = 1; k < c - 2; k++) {
+        if (s > 1) break;
+        if (curMoves[c - k].type === 0) continue;
+        if (curMoves[c - k].hit === false) break;
+        s++;
+      }
+      if (s > 1) {
+        let r = Math.floor(Math.random() * 20);
+        if (r === 0 || r === 1) song_great.play();
+        if (r === 2 || r === 3) song_awesome.play();
+        if (r === 4 || r === 5) song_good.play();
+        if (r === 6 || r === 7) song_perfect.play();
+        if (r === 8 || r === 9) song_continue.play();
+        if (r === 10 || r === 11) song_thats_it.play();
+        if (r === 12 || r === 13) song_well_done.play();
+      }
     }
     hit_success = Date.now();
   }
