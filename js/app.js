@@ -329,6 +329,7 @@ function loadSongmoves() {
       song.moves[0] = 0
       song.moves[1] = 0
       let rand = 0;
+      if (menu === 4) shadow_focus = 0;
       for (let i = 2; i < gameLength - 5; i++) {
         if (shadow_focus === 0) rand = randomInteger(1, 9);
         if (shadow_focus === 1) rand = randomInteger(1, 2);
@@ -607,7 +608,7 @@ function preload() {
   opponent_image[0] = loadImage('assets/images/opponents/0/0-1.png');
   opponents_images[0] = [];
   opponents_images[1] = [];
-  for (let j = 1; j < 3; j++) {
+  for (let j = 1; j <= 6; j++) {
     opponents_images[j] = [];
     for (let i = 0; i < 7; i++) {
       opponents_images[j][i] = loadImage('assets/images/opponents/0/' + j + '-' + i + '.png');
@@ -708,7 +709,7 @@ function keyPressed() {
   if (['s', 'S'].includes(key) && [2, 3, 4].includes(menu)) {
     if (gameStarted || gameCalibration) gameOver = true;
   }
-  if (['t', 'T'].includes(key) && [2, 3, 4].includes(menu)) {
+  if (['t', 'T'].includes(key) && [2].includes(menu)) {
     if (!gameStarted) {
       if (shadow_focus < Object.keys(SHADOW_SPECIFIC).length - 1) shadow_focus++;
       else shadow_focus = 0;
@@ -1240,12 +1241,12 @@ function draw() {
   }
 
   if (menu === 4) {
+    shadow_focus = 0;
     stroke(0);
     strokeWeight(4);
     noFill();
     rect(myWindowWidth / 2 - 75 * coef, 15, 150 * coef, 20);
     rect(myWindowWidth / 2 - 75 * coef, 45, 150 * coef, 20);
-
     noStroke();
     fill(255, 0, 0);
     rect(myWindowWidth / 2 - 75 * coef + 2, 17, 148 * coef, 16);
@@ -1417,7 +1418,7 @@ function draw() {
           tint(255, 224);
           if (curMoves[c].hit === false) {
             if (gameStarted && puncho_animation === -1 && curMoves[c].hit === false) {
-              if (curMoves[c].type > 2) puncho_animation_type = randomInteger(1,2);
+              if (curMoves[c].type >= 7) puncho_animation_type = randomInteger(1,2);
               else puncho_animation_type = curMoves[c].type;
               puncho_animation = 0;
               puncho_animation_delay = 0;
