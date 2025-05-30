@@ -264,6 +264,10 @@ function getPlayers() {
 }
 getPlayers();
 
+document.oncontextmenu = function() {
+  return false;
+}
+
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('js/service-worker.js')
     .then(() => console.log('Service Worker registered'))
@@ -622,6 +626,7 @@ function preload() {
 
 function keyPressed() {
   console.log(key)
+  //if (key === "ContextMenu") return;
   if (gameResultBool()) return;
   if (songwait) {
     if (key === "Escape") {
@@ -802,7 +807,6 @@ function setup() {
   frameRate(FRAME_RATE);
   cnv = createCanvas(myWindowWidth, myWindowHeight);
   cnv.elt.addEventListener('contextmenu', handleRightClick);
-  cnv.elt.oncontextmenu = () => false;
   cnv.position((window.innerWidth - myWindowWidth) / 2, 0)
   fetchSong(songId, false);
 
