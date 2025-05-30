@@ -120,8 +120,6 @@ var logo_image;
 var menu_image;
 var rfeet_image;
 var lfeet_image;
-var settings_image;
-var fullscreen_image;
 var leave_image;
 var plus_image;
 
@@ -414,10 +412,6 @@ function handleChange() {
     if (mouseX > myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 + 100 * coef && mouseX < myWindowWidth / 2 + OBJECT_POSE_SIZE / 2 + 100 * coef && mouseY > myWindowHeight - 40 * coef && mouseY < myWindowHeight - 40 * coef + OBJECT_POSE_SIZE / 2) {
       menu = 1;
     }
-    if (mouseX > myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 && mouseX < myWindowWidth / 2 + OBJECT_POSE_SIZE / 2 && mouseY > myWindowHeight - 40 * coef && mouseY < myWindowHeight - 40 * coef + OBJECT_POSE_SIZE / 2) {
-      let fs = fullscreen();
-      fullscreen(!fs);
-    }
     for (let p = 0; p < players.length; p++) {
       if (mouseX > myWindowWidth - 175 - 75 * p && mouseX < myWindowWidth - 175 - 75 * p + 25 * coef && mouseY > 10 && mouseY < 25 * coef + 20) {
         if (selected_player !== players[p]) {
@@ -580,8 +574,6 @@ function preload() {
   menu_image = loadImage('assets/images/menu_image.png');
   rfeet_image = loadImage('assets/images/RFoot.png');
   lfeet_image = loadImage('assets/images/LFoot.png');
-  settings_image = loadImage('assets/images/settings.png');
-  fullscreen_image = loadImage('assets/images/fullscreen.png');
   adduser_image = loadImage('assets/images/plus.png');
   leave_image = loadImage('assets/images/leave.png');
 
@@ -629,6 +621,7 @@ function preload() {
 }
 
 function keyPressed() {
+  console.log(key)
   if (gameResultBool()) return;
   if (songwait) {
     if (key === "Escape") {
@@ -785,9 +778,31 @@ function hitSuccess(c) {
   curMoves[c].hit = true;
 }
 
+function handleRightClick(e) {
+  e.preventDefault();
+  if (gameStarted) {
+    return window.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 's',
+      keyCode: 83,
+      code: 'KeyS',
+      which: 83,
+      bubbles: true
+    }))
+  }
+  return window.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'b',
+      keyCode: 66,
+      code: 'KeyB',
+      which: 66,
+      bubbles: true
+  }))
+}
+
 function setup() {
   frameRate(FRAME_RATE);
   cnv = createCanvas(myWindowWidth, myWindowHeight);
+  cnv.elt.addEventListener('contextmenu', handleRightClick);
+  cnv.elt.oncontextmenu = () => false;
   cnv.position((window.innerWidth - myWindowWidth) / 2, 0)
   fetchSong(songId, false);
 
@@ -885,10 +900,6 @@ function draw() {
     gameResult = Date.now() - 5001;
     fill(0, 0, 0);
     image(menu_image, myWindowWidth / 2.5, myWindowHeight / 6, myWindowWidth / 2, myWindowWidth / 2);
-    rect(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2, 20);
-    image(fullscreen_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2);
-    rect(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 + 100 * coef, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2, 20);
-    image(settings_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 + 100 * coef, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2);
     stroke(255, 192);
     strokeWeight(2);
     rect(myWindowWidth / 6, parseInt(myWindowHeight / 6), 100 * coef, 50 * coef, 20);
@@ -984,15 +995,13 @@ function draw() {
       if (music_ready) {
         rect(myWindowWidth / 2.5 - 40, myWindowHeight - 148 * coef, 100 * coef, 40 * coef, 20);
         rect(myWindowWidth / 2.5 - 40, myWindowHeight - 98 * coef, 100 * coef, 40 * coef, 20);
-        rect(myWindowWidth / 2.5 - 40, myWindowHeight - 48 * coef, 100 * coef, 40 * coef, 20);
       }
-        fill(255, 255, 255, 224);
-        stroke(0);
-        strokeWeight(0);
+      fill(255, 255, 255, 224);
+      stroke(0);
+      strokeWeight(0);
       if (music_ready) {
         text("(F)IGHT", myWindowWidth / 2.5 - 30, myWindowHeight - 125 * coef);
         text("(C)ALIBRATE", myWindowWidth / 2.5 - 30, myWindowHeight - 75 * coef);
-        text("SON(G) NUM X", myWindowWidth / 2.5 - 30, myWindowHeight - 25 * coef);
       }
     }
 
