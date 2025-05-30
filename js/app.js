@@ -121,7 +121,6 @@ var menu_image;
 var rfeet_image;
 var lfeet_image;
 var settings_image;
-var microphone_image;
 var fullscreen_image;
 var leave_image;
 var plus_image;
@@ -222,11 +221,7 @@ var gameOverTime = Date.now() - 1000;
 var gameResult = Date.now() - 1000;
 var guard_warning = Date.now();
 
-var speechRec = {
-  "resultString": ""
-};
-var speechRecEnabled = true;
-var recognizing = false;
+var speechString = null;
 var speechTime = Date.now();
 var music = null;
 var music_ready = false;
@@ -397,8 +392,8 @@ function punchSound() {
 
 function letsfight() {
   click_sound.play();
-  if (gameCalibration) return speechRec.resultString = "Calibating !";
-  if (gameStarted) return speechRec.resultString = "Already fighting !"
+  if (gameCalibration) return speechString = "Calibating !";
+  if (gameStarted) return speechString = "Already fighting !"
   feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
   song_letsfight.play();
   gameStarted = true;
@@ -415,10 +410,6 @@ function letsfight() {
 
 function handleChange() {
   if (gameResultBool()) return;
-  if (mouseX > myWindowWidth / 4 - OBJECT_POSE_SIZE / 2 - 100 * coef && mouseX < myWindowWidth / 4 - 100 * coef + OBJECT_POSE_SIZE / 2 && mouseY > myWindowHeight - 40 * coef && mouseY < myWindowHeight - 40 * coef + OBJECT_POSE_SIZE / 2) {
-    if (!recognizing) speechRec.start();
-    recognizing = true;
-  }
   if (menu === 0) {
     if (mouseX > myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 + 100 * coef && mouseX < myWindowWidth / 2 + OBJECT_POSE_SIZE / 2 + 100 * coef && mouseY > myWindowHeight - 40 * coef && mouseY < myWindowHeight - 40 * coef + OBJECT_POSE_SIZE / 2) {
       menu = 1;
@@ -590,7 +581,6 @@ function preload() {
   rfeet_image = loadImage('assets/images/RFoot.png');
   lfeet_image = loadImage('assets/images/LFoot.png');
   settings_image = loadImage('assets/images/settings.png');
-  microphone_image = loadImage('assets/images/microphone.png');
   fullscreen_image = loadImage('assets/images/fullscreen.png');
   adduser_image = loadImage('assets/images/plus.png');
   leave_image = loadImage('assets/images/leave.png');
@@ -701,7 +691,7 @@ function keyPressed() {
     if (!gameStarted) {
       gameCalibration = true;
       hide_sensor = 64;
-    } else speechRec.resultString = "No calibration in game"
+    } else speechString = "No calibration in game"
   }
   if (['n', 'N'].includes(key) && [2, 3, 4].includes(menu)) {
     gameOver = true;
@@ -760,83 +750,6 @@ function keyPressed() {
   }
 }
 
-function gotSpeech() {
-  if (speechRec.resultValue) {
-    if (menu === 0) {
-      if (speechRec.resultString.includes("shadow")) {
-        speechTime = Date.now();
-        menu = 2;
-        click_sound.play();
-        menu = 2;
-        curMoves = [];
-        loadSongmoves();
-      }
-    }
-    if ([2, 3, 4].includes(menu)) {
-      if (speechRec.resultString.includes("fight")) {
-        speechTime = Date.now();
-        letsfight();
-      } else if (speechRec.resultString.includes("calibrate")) {
-        speechTime = Date.now();
-        if (!gameStarted) {
-          gameCalibration = true;
-          hide_sensor = 64;
-        } else speechRec.resultString = "No calibration in game"
-      } else if (speechRec.resultString.includes("stop")) {
-        speechTime = Date.now();
-        gameOver = true;
-      } else if (speechRec.resultString.includes("reset")) {
-        speechTime = Date.now();
-        left_init_pose_x = myWindowWidth / 3;
-        localStorage.setItem("left_init_pose_x", left_init_pose_x);
-        left_init_pose_y = myWindowWidth / 3;
-        localStorage.setItem("left_init_pose_y", left_init_pose_x);
-        right_init_pose_x = 2 * myWindowWidth / 3;
-        localStorage.setItem("right_init_pose_x", right_init_pose_x);
-        right_init_pose_y = myWindowHeight / 3;
-        localStorage.setItem("right_init_pose_y", right_init_pose_y);
-        init_jab_y = myWindowHeight / 4;
-        localStorage.setItem("init_jab_y", init_jab_y);
-        init_uppercut_y = myWindowHeight * 3 / 4;
-        localStorage.setItem("init_uppercut_y", init_uppercut_y);
-        left_init_hook_x = 120;
-        localStorage.setItem("left_init_hook_x", left_init_hook_x);
-        right_init_hook_x = myWindowWidth - 120;
-        localStorage.setItem("right_init_hook_x", right_init_hook_x);
-      } else if (speechRec.resultString.startsWith("song number")) {
-        speechTime = Date.now();
-        if (speechRec.resultString.split(" ").length > 2)
-          songId = text2num(speechRec.resultString.split(" ")[2]);
-        if (songId === 0) {
-          song_not_exist.play();
-          fill(255, 255, 255, 255);
-          textSize(15 * coef);
-          text("song not found!", myWindowWidth / 2.1, myWindowHeight - 50);
-          fill(255, 0, 0, hide_sensor);
-        } else fetchSong(songId);
-      } else if (speechRec.resultString.startsWith("background number")) {
-        speechTime = Date.now();
-        if (speechRec.resultString.split(" ").length > 2)
-          backgroundId = text2num(speechRec.resultString.split(" ")[2]);
-        if (backgroundId < 1 || backgroundId > 3) {
-          song_bg_not_found.play();
-          fill(255, 255, 255, 255);
-          textSize(15 * coef);
-          text("background not found!", myWindowWidth / 2.1, myWindowHeight - 50);
-          fill(255, 0, 0, hide_sensor);
-        } else fetchBackground(backgroundId);
-      } else if (speechRec.resultString.startsWith("change feet")) {
-        speechTime = Date.now();
-        switch_feet()
-      }
-    }
-  }
-}
-
-function onEndSpeechRec() {
-  recognizing = false;
-}
-
 function switch_feet() {
   if (feet_position === 0) feet_position = 1;
   else feet_position = 0;
@@ -874,14 +787,6 @@ function hitSuccess(c) {
 
 function setup() {
   frameRate(FRAME_RATE);
-  if (speechRecEnabled) {
-    speechRec = new p5.SpeechRec('en-US', gotSpeech);
-    speechRec.continuous = false;
-    speechRec.interimResults = false;
-    speechRec.start();
-    recognizing = true;
-    speechRec.onEnd = onEndSpeechRec;
-  }
   cnv = createCanvas(myWindowWidth, myWindowHeight);
   cnv.position((window.innerWidth - myWindowWidth) / 2, 0)
   fetchSong(songId, false);
@@ -939,12 +844,6 @@ function draw() {
   tint(255, 255);
   textSize(10 * coef);
   fill(0, 0, 0);
-  if (recognizing) {
-    stroke(192, 204, 0);
-    strokeWeight(4);
-  }
-  rect(myWindowWidth / 4 - OBJECT_POSE_SIZE / 2 - 100 * coef, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2, 20);
-  image(microphone_image, myWindowWidth / 4 - OBJECT_POSE_SIZE / 2 - 100 * coef, myWindowHeight - 40 * coef, OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE / 2);
   strokeWeight(0);
   if (menu === 0) {
     if (isDetecting === true) {
@@ -1069,11 +968,12 @@ function draw() {
       textSize(10 * coef);
     }
 
-    if (speechRec && 'resultString' in speechRec && speechTime > Date.now() - 1000) {
+    if (speechString && speechTime > Date.now() - 1000) {
       fill(255, 255, 255, 255);
       textSize(15 * coef);
-      text(speechRec.resultString.toUpperCase(), myWindowWidth / 2.1, myWindowHeight - 50);
+      text(speechString.toUpperCase(), myWindowWidth / 2.1, myWindowHeight - 50);
       fill(255, 0, 0, hide_sensor);
+      speechString = null;
     }
 
     if (!gameStarted && !gameCalibration && !(speechTime > Date.now() - 1000) && !gameResultBool()) {
