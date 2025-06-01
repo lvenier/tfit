@@ -1,4 +1,5 @@
-const NUM_SONG = 360;
+//const NUM_SONG = 360;
+const NUM_SONG = 2;
 
 const MENUTYPE = {
   "0": "main",
@@ -90,7 +91,6 @@ var errorTimer = 0;
 var loading_k = 0;
 var loading_m = 0;
 
-var wakeLock = null;
 var menu = 0;
 var myWindowWidth = 480;
 var myWindowHeight = 320;
@@ -274,19 +274,6 @@ if ('serviceWorker' in navigator) {
     .catch(err => console.error('Service Worker error:', err));
 }
 
-const requestWakeLock = async () => {
-  try {
-    wakeLock = await navigator.wakeLock.request();
-    wakeLock.addEventListener('release', () => {
-      console.log('Screen Wake Lock released:', wakeLock.released);
-    });
-    console.log('Screen Wake Lock released:', wakeLock.released);
-  } catch (err) {
-    console.error(`${err.name}, ${err.message}`);
-  }
-};
-requestWakeLock();
-
 function feach(w) {
   var x = OBJECT_NUMBERS[w];
   if (x != null) {
@@ -326,7 +313,7 @@ function loadSongmoves() {
       song.moves[0] = 0
       song.moves[1] = 0
       let rand = 0;
-      if (menu === 4) shadow_focus = 0;
+      if (menu === 4) shadow_focus = parseFloat(localStorage.getItem("shadow_focus"));
       for (let i = 2; i < gameLength - 5; i++) {
         if (shadow_focus === 0) rand = randomInteger(1, 9);
         if (shadow_focus === 1) rand = randomInteger(1, 2);
@@ -394,7 +381,7 @@ function punchSound() {
 
 function letsfight() {
   click_sound.play();
-  if (gameCalibration) return speechString = "Calibating !";
+  if (gameCalibration) return speechString = "Calibrating !";
   if (gameStarted) return speechString = "Already fighting !"
   feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
   song_letsfight.play();
@@ -937,10 +924,6 @@ function draw() {
   }
 
   if (menu > 1) {
-    if (isDetecting === false) {
-      bodyPose.detectStart(video, gotPoses);
-      isDetecting = true;
-    }
     fill(255, 255, 255, 128);
     circle(left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE);
     circle(right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE);
@@ -952,6 +935,10 @@ function draw() {
     }
 
     if (gameOver) {
+      if (isDetecting === true) {
+        bodyPose.detectStop();
+        isDetecting = false;
+      }
       gameCalibration = false;
       my_opponent = JSON.parse(JSON.stringify(OPPONENTS[opponent]));
       gameStarted = false;
@@ -1019,6 +1006,10 @@ function draw() {
     fill(255, 255, 255, 255);
     score = 0;
     if (gameStarted) {
+      if (isDetecting === false) {
+        bodyPose.detectStart(video, gotPoses);
+        isDetecting = true;
+      } 
       for (let i = 0; i < arrayScore.length; i++) {
         score += arrayScore[i];
       }
@@ -1040,6 +1031,11 @@ function draw() {
     }
 
     if (gameCalibration) {
+      gameResult = Date.now() - 5001;
+      if (isDetecting === false) {
+        bodyPose.detectStart(video, gotPoses);
+        isDetecting = true;
+      } 
       fill(0, 0, 0);
       stroke(255, 192);
       strokeWeight(2);
@@ -1092,6 +1088,13 @@ function draw() {
       rect(0, init_uppercut_y, myWindowWidth, myWindowHeight - init_uppercut_y);
       rect(0, 0, left_init_hook_x, myWindowHeight);
       rect(right_init_hook_x, 0, right_init_hook_x, myWindowHeight);
+    } 
+
+    if (!gameCalibration && !gameStarted) {
+      if (isDetecting === true) {
+        bodyPose.detectStop();
+        isDetecting = false;
+      }
     }
 
     if (gameTimer === 0) {
