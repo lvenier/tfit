@@ -612,8 +612,6 @@ function preload() {
 }
 
 function keyPressed() {
-  console.log(key)
-  //if (key === "ContextMenu") return;
   if (gameResultBool()) return;
   if (songwait) {
     if (key === "Escape") {
@@ -1391,7 +1389,7 @@ function draw() {
       leftHand = pose["left_wrist"];
       rightHand = pose["right_wrist"];
       nose = pose["nose"];
-      if (nose && nose.confidence > 0.1) {
+      if (nose && nose.confidence > 0.1 && isDetecting) {
         fill(0, 255, 0, 128);
         circle(nose.x * coef, nose.y * coef, OBJECT_POSE_SIZE / 8);
         fill(255, 255, 255, hide_sensor);
@@ -1683,7 +1681,7 @@ function draw() {
       leftHand = pose["left_wrist"];
       rightHand = pose["right_wrist"];
       nose = pose["nose"];
-      if (nose && nose.confidence > 0.1) {
+      if (nose && nose.confidence > 0.1 && isDetecting) {
         fill(0, 255, 0, 128);
         circle(nose.x * coef, nose.y * coef, OBJECT_POSE_SIZE / 8);
         fill(255, 255, 255, hide_sensor);
@@ -1773,7 +1771,7 @@ function draw() {
           }
         }
         fill(255, 0, 0, 128);
-        circle(rightHand.x * coef, rightHand.y * coef, OBJECT_POSE_SIZE / 2);
+        if (isDetecting) circle(rightHand.x * coef, rightHand.y * coef, OBJECT_POSE_SIZE / 2);
         fill(255, 255, 255, hide_sensor);
         if (rightHand.x * coef > right_init_hook_x) {
           right_hook = Date.now();

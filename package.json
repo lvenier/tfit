@@ -1,7 +1,7 @@
 {
     "name": "box4fit",
     "main": "main.js",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "description": "Game for body fit with style and fun",
     "license":  "ISC",
     "author": {
