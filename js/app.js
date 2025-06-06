@@ -357,12 +357,12 @@ function fetchSong(id = 1, speak = true) {
       song = data;
       song.moveLength = song.moves.length;
       localStorage.setItem("song_id", id);
-      loadSongmoves();
+      //loadSongmoves();
       music_ready = false;
       music = loadSound(song.url, function () {
         music_ready = true;
       });
-      song_ready.play();
+      //song_ready.play();
     })
     .catch(function (err) {
       console.log(err)
@@ -395,6 +395,7 @@ function letsfight() {
   gameTimer = 0;
   score = 0;
   arrayScore = [];
+  loadSongmoves();
 }
 
 function handleChange() {
@@ -565,7 +566,7 @@ function preload() {
   menu_image = loadImage('assets/images/menu_image.png');
   rfeet_image = loadImage('assets/images/RFoot.png');
   lfeet_image = loadImage('assets/images/LFoot.png');
-  adduser_image = loadImage('assets/images/plus.png');
+  //adduser_image = loadImage('assets/images/plus.png');
   leave_image = loadImage('assets/images/leave.png');
 
   me_image = loadImage('assets/images/boxers/0-me.png');
@@ -865,7 +866,7 @@ function draw() {
       fill(255);
       text(players[i].split("-")[1].substring(0, 3), myWindowWidth - 175 - 75 * i + 5 * coef, 20 + 15 * coef);
     }
-    if (logged_player) {
+    /*if (logged_player) {
       fill(0, 0, 0);
       stroke(192, 204, 0);
       strokeWeight(4);
@@ -885,7 +886,7 @@ function draw() {
         fill(255);
         image(adduser_image, myWindowWidth - 100 + 2.5 * coef, 20 + 2.5 * coef, 20 * coef, 20 * coef);
       }
-    }
+    }*/
     gameResult = Date.now() - 5001;
     fill(0, 0, 0);
     image(menu_image, myWindowWidth / 2.5, myWindowHeight / 6, myWindowWidth / 2, myWindowWidth / 2);
@@ -1013,10 +1014,9 @@ function draw() {
       }
     }
     text("Score: " + score + " / " + score_max, 15, 15 * coef);
-    textSize(10 * coef);
-    text("Name: " + ('name' in player ? player.name : ""), 15, 32 * coef);
-    textSize(10 * coef);
-    text("(L)evel: " + GAME_LEVEL[level.toString()], 15, 44 * coef);
+    textSize(12 * coef);
+    //text("Name: " + ('name' in player ? player.name : ""), 15, 32 * coef);
+    text("(L)evel: " + GAME_LEVEL[level.toString()], 15, 36 * coef);
     if (menu === 2) text("(T)ype: " + SHADOW_SPECIFIC[shadow_focus].toLowerCase(), 15, 56 * coef);
     fill(255, 0, 0, hide_sensor);
     if (songwait || songwaittime + 1000 > Date.now()) {
@@ -1105,7 +1105,7 @@ function draw() {
 
     if (gameStarted) {
       fill(255, 255, 255, 255);
-      text(`Time Left: ${Math.ceil((gameDuration - gameTimer) / FRAME_RATE)}s`, 15, 68 * coef);
+      text(`Time Left: ${Math.ceil((gameDuration - gameTimer) / FRAME_RATE)}s`, 15, 76 * coef);
       textSize(10 * coef);
       fill(0, 0, 0);
       stroke(255, 192);
