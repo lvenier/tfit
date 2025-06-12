@@ -1003,10 +1003,10 @@ function draw() {
       }
     }
 
-    fill(255, 255, 255, 255);
+    //fill(255, 255, 255, 255);
     textSize(7 * coef);
-    if (song) text(`Song (${songId}): ${song.name}`, myWindowWidth - 100 * coef, 30);
-    if (song) text(`Length: ${song.length}s`, myWindowWidth - 100 * coef, 50);
+    //if (song) text(`Song (${songId}): ${song.name}`, myWindowWidth - 100 * coef, 30);
+    //if (song) text(`Length: ${song.length}s`, myWindowWidth - 100 * coef, 50);
     fill(255, 0, 0, hide_sensor);
 
     textSize(15 * coef);
