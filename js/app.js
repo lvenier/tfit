@@ -101,7 +101,7 @@ myWindowWidth = coef * 640;
 myWindowHeight = coef * 480;
 
 var OBJECT_POSE_SIZE = 48 * coef;
-const FRAME_RATE = 20;
+const FRAME_RATE = 30;
 var LEVEL = 50;
 
 var model = 0;
@@ -349,8 +349,16 @@ function fetchSong(id = 1, speak = true) {
     music_ready = true;
     return;
   }
-  song = null;
+  song = {};
   music = null;
+  song.name = "";
+  song.url = "";
+  song.author = "";
+  song.moves = [];
+  song.length = 120;
+  song.moveLength = song.moves.length;
+  music_ready = true;
+  return;
   fetch("db/" + id + ".json")
     .then(response => response.json())
     .then(data => {
@@ -943,7 +951,7 @@ function draw() {
       gameStarted = false;
       hide_sensor = 0;
       gameTimer = -1;
-      music.stop();
+      //music.stop();
       gameOver = false;
       gameResult = Date.now();
       score_max_prev = score_max;
@@ -1015,7 +1023,6 @@ function draw() {
     }
     text("Score: " + score + " / " + score_max, 15, 15 * coef);
     textSize(12 * coef);
-    //text("Name: " + ('name' in player ? player.name : ""), 15, 32 * coef);
     text("(L)evel: " + GAME_LEVEL[level.toString()], 15, 36 * coef);
     if (menu === 2) text("(T)ype: " + SHADOW_SPECIFIC[shadow_focus].toLowerCase(), 15, 56 * coef);
     fill(255, 0, 0, hide_sensor);
@@ -1098,7 +1105,7 @@ function draw() {
     if (gameTimer === 0) {
       curMoves = [];
       gameTimerNext = 0;
-      music.play();
+      //music.play();
       arrayScore = [];
       for (let i = 0; i < moves.length; i++) arrayScore.push(0);
     }
