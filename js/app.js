@@ -1,6 +1,3 @@
-//const NUM_SONG = 360;
-const NUM_SONG = 2;
-
 const MENUTYPE = {
   "0": "main",
   "1": "settings",
@@ -8,37 +5,6 @@ const MENUTYPE = {
   "3": "pad",
   "4": "fight"
 }
-
-const OBJECT_NUMBERS = {
-  'zero': 0,
-  'one': 1,
-  'two': 2,
-  'three': 3,
-  'four': 4,
-  'five': 5,
-  'six': 6,
-  'seven': 7,
-  'eight': 8,
-  'nine': 9,
-  'ten': 10,
-  'eleven': 11,
-  'twelve': 12,
-  'thirteen': 13,
-  'fourteen': 14,
-  'fifteen': 15,
-  'sixteen': 16,
-  'seventeen': 17,
-  'eighteen': 18,
-  'nineteen': 19,
-  'twenty': 20,
-  'thirty': 30,
-  'forty': 40,
-  'fifty': 50,
-  'sixty': 60,
-  'seventy': 70,
-  'eighty': 80,
-  'ninety': 90
-};
 
 const MODELS = ["MoveNet", "BlazePose"]
 
@@ -142,8 +108,6 @@ var hide_sensor = 0;
 var video;
 var punch_sound;
 var click_sound;
-var song_not_exist;
-var song_ready;
 var song_letsfight;
 var song_bg_not_found;
 var song_song_over;
@@ -172,7 +136,6 @@ var gameCalibration = false;
 var song = {};
 var songId = parseFloat(localStorage.getItem("song_id")) || 1;
 var song_result = {};
-var song_random = parseInt(localStorage.getItem("song_random")) || 0;
 var feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
 
 var moves = [];
@@ -221,15 +184,6 @@ var guard_warning = Date.now();
 
 var speechString = null;
 var speechTime = Date.now();
-var music = null;
-var music_ready = false;
-var songwait = false;
-var songwaittime = Date.now();
-var songvalue = "";
-var playerwait = false;
-var playervalue = "";
-var players = [];
-var logged_player = false;
 var selected_player = localStorage.getItem("selected_player") || "player";
 var player = JSON.parse(localStorage.getItem(selected_player)) || {
   "name": (Math.random() + 1).toString(36).substring(2),
@@ -255,15 +209,6 @@ if (localStorage.getItem("config-" + selected_player) !== null) {
 
 p5.disableFriendlyErrors = true;
 
-function getPlayers() {
-  players = [];
-  for (let p of Object.keys(localStorage)) {
-    if (p.startsWith("player-")) players.push(p);
-  }
-  if (selected_player && selected_player != "player") logged_player = true;
-}
-getPlayers();
-
 document.oncontextmenu = function() {
   return false;
 }
@@ -272,27 +217,6 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('js/service-worker.js')
     .then(() => console.log('Service Worker registered'))
     .catch(err => console.error('Service Worker error:', err));
-}
-
-function feach(w) {
-  var x = OBJECT_NUMBERS[w];
-  if (x != null) {
-    g = g + x;
-  } else if (w == "hundred") {
-    g = g * 100;
-  }
-}
-
-function text2num(s) {
-  a = s.toString().split(/[\s-]+/);
-  n = 0;
-  g = 0;
-  a.forEach(feach);
-  return n + g;
-}
-
-function fetchBackground(id = 1) {
-  background_image = loadImage('assets/backgrounds/' + backgroundId + '.jpg');
 }
 
 function randomInteger(min, max) {
@@ -306,7 +230,7 @@ function gameResultBool() {
 function loadSongmoves() {
   LEVEL = 50 - level * 10;
   if (song) {
-    gameLength = parseInt(song.length);
+    gameLength = parseInt(song.length) + LEVEL;
     gameDuration = gameLength * FRAME_RATE;
     if (song.moveLength === 0) {
       song.moves = [];
@@ -343,41 +267,14 @@ function loadSongmoves() {
   }
 }
 
-function fetchSong(id = 1, speak = true) {
-  if (id > NUM_SONG) {
-    song_not_exist.play();
-    music_ready = true;
-    return;
-  }
+function fetchSong(id = 1) {
   song = {};
-  music = null;
   song.name = "";
   song.url = "";
   song.author = "";
   song.moves = [];
   song.length = 120;
-  song.moveLength = song.moves.length;
-  music_ready = true;
-  return;
-  fetch("db/" + id + ".json")
-    .then(response => response.json())
-    .then(data => {
-      song = data;
-      song.moveLength = song.moves.length;
-      localStorage.setItem("song_id", id);
-      //loadSongmoves();
-      music_ready = false;
-      music = loadSound(song.url, function () {
-        music_ready = true;
-      });
-      //song_ready.play();
-    })
-    .catch(function (err) {
-      console.log(err)
-      songId = parseFloat(localStorage.getItem("song_id")) || 1;
-      localStorage.setItem("song_id", songId);
-      song_not_exist.play();
-    });
+  song.moveLength = 0;
 }
 
 function punchSound() {
@@ -411,29 +308,6 @@ function handleChange() {
   if (menu === 0) {
     if (mouseX > myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 + 100 * coef && mouseX < myWindowWidth / 2 + OBJECT_POSE_SIZE / 2 + 100 * coef && mouseY > myWindowHeight - 40 * coef && mouseY < myWindowHeight - 40 * coef + OBJECT_POSE_SIZE / 2) {
       menu = 1;
-    }
-    for (let p = 0; p < players.length; p++) {
-      if (mouseX > myWindowWidth - 175 - 75 * p && mouseX < myWindowWidth - 175 - 75 * p + 25 * coef && mouseY > 10 && mouseY < 25 * coef + 20) {
-        if (selected_player !== players[p]) {
-          click_sound.play();
-          selected_player = players[p];
-          localStorage.setItem("selected_player", selected_player);
-          player = JSON.parse(localStorage.getItem(selected_player));
-          logged_player = true;
-        } else window.location.href = "me.html"
-      }
-    }
-    if (mouseX > myWindowWidth - 100 && mouseX < myWindowWidth - 100 + 25 * coef && mouseY > 20 && mouseY < 20 + 25 * coef) {
-      click_sound.play();
-      if (logged_player === false && playerwait === false) {
-        playerwait = true;
-        playervalue = "";
-      } else {
-        logged_player = false;
-        playerwait = false;
-        selected_player = "player"
-        player = JSON.parse(localStorage.getItem(selected_player));
-      }
     }
     if (mouseX < parseInt(myWindowWidth / 6) + 100 * coef && mouseX > parseInt(myWindowWidth / 6)) {
       if (mouseY < parseInt(myWindowHeight / 6 + 50 * coef) && mouseY > parseInt(myWindowHeight / 6)) {
@@ -478,12 +352,6 @@ function handleChange() {
           gameCalibration = true;
           hide_sensor = 64;
         }
-        return;
-      }
-      if (mouseY > myWindowHeight - 48 * coef && mouseY < myWindowHeight - 8 * coef) {
-        click_sound.play();
-        songwait = true;
-        songvalue = "";
         return;
       }
     }
@@ -599,8 +467,6 @@ function preload() {
 
   click_sound = loadSound('assets/sounds/click.mp3');
   punch_sound = loadSound('assets/sounds/punch.mp3');
-  song_not_exist = loadSound('assets/sounds/song_not_exist.mp3');
-  song_ready = loadSound('assets/sounds/song_ready.mp3');
   song_letsfight = loadSound('assets/sounds/letsfight.mp3');
   song_bg_not_found = loadSound('assets/sounds/bg_not_found.mp3');
   song_song_over = loadSound('assets/sounds/song_over.mp3');
@@ -622,58 +488,6 @@ function preload() {
 
 function keyPressed() {
   if (gameResultBool()) return;
-  if (songwait) {
-    if (key === "Escape") {
-      songwait = false;
-      music_ready = true;
-    }
-    if ([0, 1, 2, 3, 4, 5, 6, 7, 8, 9].includes(parseInt(key))) {
-        songvalue += key;
-        if (songvalue.length === 3) {
-          songwait = false;
-          songwaittime = Date.now();
-          songId = parseInt(songvalue);
-          if (songId === 0) {
-            song_random = 1;
-            localStorage.setItem("song_random", song_random);
-            songId = Math.floor(Math.random() * NUM_SONG) + 1
-          } else {
-            song_random = 0;
-            localStorage.setItem("song_random", song_random);
-          }
-          fetchSong(songId);
-        }
-      } else return;
-  }
-  if (['g', 'G'].includes(key) && menu > 1 && !gameStarted) {
-    music_ready = false;
-    songwait = true;
-    songvalue = "";
-  }
-  if (menu === 0 && playerwait === true && (key.match(/^[\d\w]$/i) || keyCode === 13)) {
-    if (keyCode !== 13) playervalue += key;
-    if (playervalue.length === 16 || keyCode === 13) {
-      playerwait = false;
-      let exists = false;
-      for (let p of players) {
-        if (p.startsWith("player-" + playervalue + "-")) {
-          logged_player = false;
-          exists = true;
-        }
-      }
-      if (!exists) {
-        logged_player = true;
-        player = {
-          "name": playervalue,
-          "score": 0,
-          "scores": {}
-        };
-        localStorage.setItem("player-" + playervalue + "-" + Date.now(), JSON.stringify(player));
-      }
-      getPlayers();
-    }
-    return;
-  }
   if (['b', 'B'].includes(key) && [1, 2, 3, 4].includes(menu)) {
     if (!gameStarted) {
       menu = 0;
@@ -684,9 +498,6 @@ function keyPressed() {
       gameCalibration = true;
       hide_sensor = 64;
     } else speechString = "No calibration in game"
-  }
-  if (['n', 'N'].includes(key) && [2, 3, 4].includes(menu)) {
-    gameOver = true;
   }
   if (['s', 'S'].includes(key) && [2, 3, 4].includes(menu)) {
     if (gameStarted || gameCalibration) gameOver = true;
@@ -798,11 +609,11 @@ function handleRightClick(e) {
 }
 
 function setup() {
-  frameRate(FRAME_RATE);
+  frameRate(FRAME_RATE*2);
   cnv = createCanvas(myWindowWidth, myWindowHeight);
   cnv.elt.addEventListener('contextmenu', handleRightClick);
   cnv.position((window.innerWidth - myWindowWidth) / 2, 0)
-  fetchSong(songId, false);
+  fetchSong(1);
 
   navigator.mediaDevices.getUserMedia({
       video: true
@@ -863,38 +674,6 @@ function draw() {
       bodyPose.detectStop();
       isDetecting = false;
     }
-    for (let i = 0; i < players.length; i++) {
-      fill(0, 0, 0);
-      stroke(192, 64, 204);
-      if (players[i].startsWith("player-" + player.name)) stroke(255, 64, 127);
-      strokeWeight(4);
-      rect(myWindowWidth - 175 - 75 * i, 20, 25 * coef, 25 * coef, 20);
-      stroke(0);
-      strokeWeight(0);
-      fill(255);
-      text(players[i].split("-")[1].substring(0, 3), myWindowWidth - 175 - 75 * i + 5 * coef, 20 + 15 * coef);
-    }
-    /*if (logged_player) {
-      fill(0, 0, 0);
-      stroke(192, 204, 0);
-      strokeWeight(4);
-      rect(myWindowWidth - 100, 20, 25 * coef, 25 * coef, 20);
-      stroke(0);
-      strokeWeight(0);
-      fill(255);
-      image(leave_image, myWindowWidth - 100 + 2.5 * coef, 20 + 2.5 * coef, 20 * coef, 20 * coef);
-    } else {
-      if (players.length < 6) {
-        fill(0, 0, 0);
-        stroke(192, 204, 0);
-        strokeWeight(4);
-        rect(myWindowWidth - 100, 20, 25 * coef, 25 * coef, 20);
-        stroke(0);
-        strokeWeight(0);
-        fill(255);
-        image(adduser_image, myWindowWidth - 100 + 2.5 * coef, 20 + 2.5 * coef, 20 * coef, 20 * coef);
-      }
-    }*/
     gameResult = Date.now() - 5001;
     fill(0, 0, 0);
     image(menu_image, myWindowWidth / 2.5, myWindowHeight / 6, myWindowWidth / 2, myWindowWidth / 2);
@@ -909,14 +688,6 @@ function draw() {
     text('(S)HADOW', parseInt(myWindowWidth / 6) + 20 * coef, parseInt(myWindowHeight / 6 + 30 * coef));
     text('(P)AD', parseInt(myWindowWidth / 6) + 20 * coef, parseInt(myWindowHeight / 6 + 130 * coef));
     text('F(I)GHT', parseInt(myWindowWidth / 6) + 20 * coef, parseInt(myWindowHeight / 6 + 230 * coef));
-    if (playerwait) {
-      fill(0, 0, 0, 255);
-      rect(parseInt(myWindowWidth / 3), parseInt(myWindowHeight / 4), parseInt(myWindowWidth / 3), parseInt(myWindowHeight / 5), 20);
-      fill(255);
-      text('Name : ', parseInt(myWindowWidth / 3) + 20 * coef, parseInt(myWindowHeight / 4 + 30 * coef));
-      textSize(20 * coef);
-      text(playervalue.padEnd(16, "_"), parseInt(myWindowWidth / 3) + 20 * coef, parseInt(myWindowHeight / 4 + 60 * coef));
-    }
   } else {
     if ((menu === 2 || menu === 3 || menu === 4 || menu === 1) && !gameStarted && !gameResultBool()) {
       fill(0, 0, 0);
@@ -951,14 +722,9 @@ function draw() {
       gameStarted = false;
       hide_sensor = 0;
       gameTimer = -1;
-      //music.stop();
       gameOver = false;
       gameResult = Date.now();
       score_max_prev = score_max;
-      if (song_random === 1) {
-        songId = Math.floor(Math.random() * NUM_SONG) + 1
-        fetchSong(songId, false);
-      }
       player.score = 0;
       score = 0;
       for (let s of Object.keys(player.scores)) {
@@ -990,23 +756,15 @@ function draw() {
       fill(0, 0, 0);
       stroke(255, 192);
       strokeWeight(2);
-      if (music_ready) {
-        rect(myWindowWidth / 2.5 - 40, myWindowHeight - 148 * coef, 100 * coef, 40 * coef, 20);
-        rect(myWindowWidth / 2.5 - 40, myWindowHeight - 98 * coef, 100 * coef, 40 * coef, 20);
-      }
+      rect(myWindowWidth / 2.5 - 40, myWindowHeight - 148 * coef, 100 * coef, 40 * coef, 20);
+      rect(myWindowWidth / 2.5 - 40, myWindowHeight - 98 * coef, 100 * coef, 40 * coef, 20);
       fill(255, 255, 255, 224);
       stroke(0);
       strokeWeight(0);
-      if (music_ready) {
-        text("(F)IGHT", myWindowWidth / 2.5 - 30, myWindowHeight - 125 * coef);
-        text("(C)ALIBRATE", myWindowWidth / 2.5 - 30, myWindowHeight - 75 * coef);
-      }
+      text("(F)IGHT", myWindowWidth / 2.5 - 30, myWindowHeight - 125 * coef);
+      text("(C)ALIBRATE", myWindowWidth / 2.5 - 30, myWindowHeight - 75 * coef);
     }
-
-    //fill(255, 255, 255, 255);
     textSize(7 * coef);
-    //if (song) text(`Song (${songId}): ${song.name}`, myWindowWidth - 100 * coef, 30);
-    //if (song) text(`Length: ${song.length}s`, myWindowWidth - 100 * coef, 50);
     fill(255, 0, 0, hide_sensor);
 
     textSize(15 * coef);
@@ -1026,15 +784,6 @@ function draw() {
     text("(L)evel: " + GAME_LEVEL[level.toString()], 15, 36 * coef);
     if (menu === 2) text("(T)ype: " + SHADOW_SPECIFIC[shadow_focus].toLowerCase(), 15, 56 * coef);
     fill(255, 0, 0, hide_sensor);
-    if (songwait || songwaittime + 1000 > Date.now()) {
-      fill(0, 0, 0, 255);
-      rect(parseInt(myWindowWidth / 2.5), parseInt(myWindowHeight / 4), parseInt(myWindowWidth / 4), parseInt(myWindowHeight / 5), 20);
-      fill(255);
-      text('SONG : ', parseInt(myWindowWidth / 2.5) + 20 * coef, parseInt(myWindowHeight / 4 + 30 * coef));
-      textSize(20 * coef);
-      text(songvalue.padEnd(3, "_"), parseInt(myWindowWidth / 2.5) + 20 * coef, parseInt(myWindowHeight / 4 + 60 * coef));
-    }
-
     if (gameCalibration) {
       gameResult = Date.now() - 5001;
       if (isDetecting === false) {
@@ -1105,7 +854,6 @@ function draw() {
     if (gameTimer === 0) {
       curMoves = [];
       gameTimerNext = 0;
-      //music.play();
       arrayScore = [];
       for (let i = 0; i < moves.length; i++) arrayScore.push(0);
     }
