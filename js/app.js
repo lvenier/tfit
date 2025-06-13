@@ -67,7 +67,7 @@ myWindowWidth = coef * 640;
 myWindowHeight = coef * 480;
 
 var OBJECT_POSE_SIZE = 48 * coef;
-const FRAME_RATE = 30;
+const FRAME_RATE = 20;
 var LEVEL = 50;
 
 var model = 0;
@@ -127,8 +127,8 @@ var pose = {};
 var poses = [];
 var gameTimer = -1;
 var gameTimerNext = 0;
-var gameLength = 60;
-var gameDuration = FRAME_RATE * 100;
+var gameLength = 120;
+var gameDuration = gameLength * 100;
 var gameOver = false;
 var gameStarted = false;
 var gameReady = false;
@@ -136,7 +136,7 @@ var gameCalibration = false;
 var song = {};
 var songId = parseFloat(localStorage.getItem("song_id")) || 1;
 var song_result = {};
-var feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
+var feet_position = 0;
 
 var moves = [];
 var curMoves = [];
@@ -230,7 +230,7 @@ function gameResultBool() {
 function loadSongmoves() {
   LEVEL = 50 - level * 10;
   if (song) {
-    gameLength = parseInt(song.length) + LEVEL;
+    gameLength = parseInt(song.length);
     gameDuration = gameLength * FRAME_RATE;
     if (song.moveLength === 0) {
       song.moves = [];
@@ -288,7 +288,9 @@ function letsfight() {
   click_sound.play();
   if (gameCalibration) return speechString = "Calibrating !";
   if (gameStarted) return speechString = "Already fighting !"
-  feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
+  feet_position = 0;
+  left_init_pose_y = parseInt(localStorage.getItem("left_init_pose_y"));
+  right_init_pose_y = parseInt(localStorage.getItem("right_init_pose_y"));
   song_letsfight.play();
   gameStarted = true;
   gameResult = Date.now() - 5001;
@@ -332,12 +334,6 @@ function handleChange() {
         my_opponent = JSON.parse(JSON.stringify(OPPONENTS[opponent]));
         return;
       }
-    }
-  }
-  if (menu === 2) {
-    if (!gameStarted && mouseX > myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 && mouseX < myWindowWidth / 2 + OBJECT_POSE_SIZE && mouseY > 50 && mouseY < 50 + OBJECT_POSE_SIZE) {
-      switch_feet();
-      localStorage.setItem("feet_position", feet_position);
     }
   }
   if ([2, 3, 4].includes(menu)) {
@@ -554,11 +550,9 @@ function keyPressed() {
 }
 
 function switch_feet() {
-  if (feet_position === 0) feet_position = 1;
-  else feet_position = 0;
-  let tmp = left_init_pose_y;
-  left_init_pose_y = right_init_pose_y;
-  right_init_pose_y = tmp;
+  feet_position = 1;
+  left_init_pose_y = parseInt(localStorage.getItem("right_init_pose_y"));
+  right_init_pose_y = parseInt(localStorage.getItem("left_init_pose_y"));
 }
 
 function hitSuccess(c) {
@@ -609,7 +603,7 @@ function handleRightClick(e) {
 }
 
 function setup() {
-  frameRate(FRAME_RATE*2);
+  frameRate(60);
   cnv = createCanvas(myWindowWidth, myWindowHeight);
   cnv.elt.addEventListener('contextmenu', handleRightClick);
   cnv.position((window.innerWidth - myWindowWidth) / 2, 0)
@@ -708,7 +702,6 @@ function draw() {
     fill(255, 255, 255, 192);
     if (gameDuration - gameTimer <= 0) {
       gameOver = true;
-      song_song_over.play();
       gameOverTime = Date.now();
     }
 
@@ -731,7 +724,9 @@ function draw() {
         player.score += player.scores[s].score
       }
       localStorage.setItem(selected_player, JSON.stringify(player));
-      feet_position = parseInt(localStorage.getItem("feet_position")) || 0;
+      feet_position = 0;
+      left_init_pose_y = parseInt(localStorage.getItem("left_init_pose_y"));
+      right_init_pose_y = parseInt(localStorage.getItem("right_init_pose_y"));
     }
 
     if (Date.now() - gameOverTime < 2000) {
@@ -783,6 +778,9 @@ function draw() {
     textSize(12 * coef);
     text("(L)evel: " + GAME_LEVEL[level.toString()], 15, 36 * coef);
     if (menu === 2) text("(T)ype: " + SHADOW_SPECIFIC[shadow_focus].toLowerCase(), 15, 56 * coef);
+    fill(255, 255, 255, 255);
+    text(`Time Left: ${Math.ceil((gameDuration - gameTimer - 1) / FRAME_RATE)}s`, 15, 76 * coef);
+    textSize(10 * coef);
     fill(255, 0, 0, hide_sensor);
     if (gameCalibration) {
       gameResult = Date.now() - 5001;
@@ -859,9 +857,6 @@ function draw() {
     }
 
     if (gameStarted) {
-      fill(255, 255, 255, 255);
-      text(`Time Left: ${Math.ceil((gameDuration - gameTimer) / FRAME_RATE)}s`, 15, 76 * coef);
-      textSize(10 * coef);
       fill(0, 0, 0);
       stroke(255, 192);
       strokeWeight(2);
@@ -1294,14 +1289,6 @@ function draw() {
       song_result.score = score;
       song_result.length = curMoves.length;
       let num = 0;
-      if (!(songId in player.scores)) {
-        song_result.count = 1;
-        player.scores[songId] = song_result;
-      } else if (player.scores[songId].score < score) {
-        "count" in song_result ? song_result.count++ : song_result.count = 2;
-        player.scores[songId] = song_result;
-      }
-      localStorage.setItem(selected_player, JSON.stringify(player));
       for (let mt of Object.keys(song_result)) {
         if (["score","length"].includes(mt)) continue;
         fill(255);
@@ -1346,12 +1333,15 @@ function draw() {
       for (c = 0; c < curMoves.length; c++) {
         curMoves[c].y = curMoves[c].y - Math.ceil(240 / FRAME_RATE);
         let alpha = 128;
-        if ([1, 3, 5, 7, 10].includes(curMoves[c].type) && curMoves[c].y + OBJECT_POSE_SIZE > left_init_pose_y && curMoves[c].y - OBJECT_POSE_SIZE < left_init_pose_y) {
+        if ([10].includes(curMoves[c].type) && curMoves[c].y + OBJECT_POSE_SIZE > left_init_pose_y && curMoves[c].y - OBJECT_POSE_SIZE < left_init_pose_y) {
           alpha = 255;
           if (Date.now() - switch_guard > 10000 && curMoves[c].type === 10) {
             switch_guard = Date.now();
             switch_feet();
           }
+        }
+        if ([1, 3, 5, 7].includes(curMoves[c].type) && curMoves[c].y + OBJECT_POSE_SIZE > left_init_pose_y && curMoves[c].y - OBJECT_POSE_SIZE < left_init_pose_y) {
+          alpha = 255;
           if (Date.now() - left_jab < LEVEL * 10 && left_jab - left_poses < LEVEL * 10 && curMoves[c].type === 1) {
             hitSuccess(c);
           }
@@ -1365,12 +1355,8 @@ function draw() {
             hitSuccess(c);
           }
         }
-        if ([2, 4, 6, 8, 9, 10].includes(curMoves[c].type) && curMoves[c].y + OBJECT_POSE_SIZE > right_init_pose_y && curMoves[c].y - OBJECT_POSE_SIZE < right_init_pose_y) {
+        if ([2, 4, 6, 8, 9].includes(curMoves[c].type) && curMoves[c].y + OBJECT_POSE_SIZE > right_init_pose_y && curMoves[c].y - OBJECT_POSE_SIZE < right_init_pose_y) {
           alpha = 255;
-          if (Date.now() - switch_guard > 10000 && curMoves[c].type === 10) {
-            switch_guard = Date.now();
-            switch_feet();
-          }
           if (Date.now() - right_jab < LEVEL * 10 && right_jab - right_poses < LEVEL * 10 && curMoves[c].type === 2) {
             hitSuccess(c);
           }
