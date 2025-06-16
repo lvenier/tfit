@@ -28,6 +28,14 @@ const GAME_LEVEL = {
   "2": "hard"
 }
 
+const GAME_LENGTH = {
+  "1": "30",
+  "2": "60",
+  "3": "120",
+  "4": "180",
+  "5": "300"
+}
+
 const SHADOW_SPECIFIC = {
   "0": "ALL",
   "1": "JAB",
@@ -127,7 +135,10 @@ var pose = {};
 var poses = [];
 var gameTimer = -1;
 var gameTimerNext = 0;
-var gameLength = 120;
+var gameLengthIndex = parseInt(localStorage.getItem("length")) || 2;
+var gameLength = GAME_LENGTH[gameLengthIndex.toString()];
+var gameSeries = parseInt(localStorage.getItem("series")) || 1;
+var gameCurrentSeries = 1;
 var gameDuration = gameLength * 100;
 var gameOver = false;
 var gameStarted = false;
@@ -179,7 +190,7 @@ var switch_guard = Date.now() - 10000;
 var punch_sound_time = Date.now() - 1000;
 var hit_success = Date.now() - 1000;
 var gameOverTime = Date.now() - 1000;
-var gameResult = Date.now() - 1000;
+var gameResult = Date.now() - 5000;
 var guard_warning = Date.now();
 
 var speechString = null;
@@ -230,7 +241,6 @@ function gameResultBool() {
 function loadSongmoves() {
   LEVEL = 50 - level * 10;
   if (song) {
-    gameLength = parseInt(song.length);
     gameDuration = gameLength * FRAME_RATE;
     if (song.moveLength === 0) {
       song.moves = [];
@@ -497,6 +507,11 @@ function keyPressed() {
   }
   if (['s', 'S'].includes(key) && [2, 3, 4].includes(menu)) {
     if (gameStarted || gameCalibration) gameOver = true;
+    else {
+      if (gameSeries < 5) gameSeries++;
+      else gameSeries = 1;
+      localStorage.setItem("series", gameSeries);
+    }
   }
   if (['t', 'T'].includes(key) && [2].includes(menu)) {
     if (!gameStarted) {
@@ -511,6 +526,15 @@ function keyPressed() {
       if (level < Object.keys(GAME_LEVEL).length - 1) level++;
       else level = 0;
       localStorage.setItem("level", level);
+      loadSongmoves();
+    }
+  }
+  if (['d', 'D'].includes(key) && [2].includes(menu)) {
+    if (!gameStarted) {
+      if (gameLengthIndex < Object.keys(GAME_LENGTH).length) gameLengthIndex++;
+      else gameLengthIndex = 1;
+      localStorage.setItem("length", gameLengthIndex);
+      gameLength = GAME_LENGTH[gameLengthIndex.toString()];
       loadSongmoves();
     }
   }
@@ -717,6 +741,12 @@ function draw() {
       gameTimer = -1;
       gameOver = false;
       gameResult = Date.now();
+      if (gameCurrentSeries < gameSeries) {
+        setTimeout(function() {
+          letsfight();
+        }, 5100);
+        gameCurrentSeries++;
+      } else gameCurrentSeries = 1;
       score_max_prev = score_max;
       player.score = 0;
       score = 0;
@@ -776,10 +806,13 @@ function draw() {
     }
     text("Score: " + score + " / " + score_max, 15, 15 * coef);
     textSize(12 * coef);
-    text("(L)evel: " + GAME_LEVEL[level.toString()], 15, 36 * coef);
-    if (menu === 2) text("(T)ype: " + SHADOW_SPECIFIC[shadow_focus].toLowerCase(), 15, 56 * coef);
-    fill(255, 255, 255, 255);
-    text(`Time Left: ${Math.ceil((gameDuration - gameTimer - 1) / FRAME_RATE)}s`, 15, 76 * coef);
+    text(`Time Left: ${Math.ceil((gameDuration - gameTimer - 1) / FRAME_RATE)}s`, 15, 36 * coef);
+    text("(L)evel: " + GAME_LEVEL[level.toString()], 15, 56 * coef);
+    if (menu === 2) {
+      text("(T)ype: " + SHADOW_SPECIFIC[shadow_focus].toLowerCase(), 15, 76 * coef);
+      text("(D)uration: " + GAME_LENGTH[gameLengthIndex.toString()] + 's', 15, 96 * coef);
+      text("(S)eries: " + gameSeries, 15, 116 * coef);
+    }
     textSize(10 * coef);
     fill(255, 0, 0, hide_sensor);
     if (gameCalibration) {
