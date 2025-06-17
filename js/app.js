@@ -811,7 +811,7 @@ function draw() {
     if (menu === 2) {
       text("(T)ype: " + SHADOW_SPECIFIC[shadow_focus].toLowerCase(), 15, 76 * coef);
       text("(D)uration: " + GAME_LENGTH[gameLengthIndex.toString()] + 's', 15, 96 * coef);
-      text("(S)eries: " + gameSeries, 15, 116 * coef);
+      text("(S)eries: " + gameCurrentSeries + " / " + gameSeries, 15, 116 * coef);
     }
     textSize(10 * coef);
     fill(255, 0, 0, hide_sensor);
