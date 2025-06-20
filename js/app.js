@@ -75,7 +75,7 @@ myWindowWidth = coef * 640;
 myWindowHeight = coef * 480;
 
 var OBJECT_POSE_SIZE = 48 * coef;
-const FRAME_RATE = 20;
+var FRAME_RATE = parseInt(localStorage.getItem("frame_rate")) || 20;
 var LEVEL = 50;
 
 var model = 0;
@@ -570,7 +570,11 @@ function keyPressed() {
     localStorage.setItem("right_init_hook_x", right_init_hook_x);
   }
   if (['f', 'F'].includes(key) && [2, 3, 4].includes(menu)) {
-    letsfight();
+    if (gameCalibration) {
+      if (FRAME_RATE === 120) FRAME_RATE = 20
+      else FRAME_RATE = FRAME_RATE + 20;
+      localStorage.setItem("frame_rate", FRAME_RATE);
+    } else letsfight();
   }
 }
 
@@ -817,6 +821,10 @@ function draw() {
     textSize(10 * coef);
     fill(255, 0, 0, hide_sensor);
     if (gameCalibration) {
+      textSize(12 * coef);
+      fill(255);
+      text("(F)rame Rate: " + FRAME_RATE, myWindowWidth - 100 * coef, 15 * coef);
+      fill(255, 0, 0, hide_sensor);
       gameResult = Date.now() - 5001;
       if (isDetecting === false) {
         bodyPose.detectStart(video, gotPoses);
