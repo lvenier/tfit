@@ -194,7 +194,6 @@ var gameResult = Date.now() - 5000;
 var guard_warning = Date.now();
 
 var speechString = null;
-var speechTime = Date.now();
 var selected_player = localStorage.getItem("selected_player") || "player";
 var player = JSON.parse(localStorage.getItem(selected_player)) || {
   "name": (Math.random() + 1).toString(36).substring(2),
@@ -356,6 +355,7 @@ function handleChange() {
         click_sound.play();
         if (!gameStarted) {
           gameCalibration = true;
+          curMoves = [];
           hide_sensor = 64;
         }
         return;
@@ -502,6 +502,7 @@ function keyPressed() {
   if (['c', 'C'].includes(key) && [2, 3, 4].includes(menu)) {
     if (!gameStarted) {
       gameCalibration = true;
+      curMoves = [];
       hide_sensor = 64;
     } else speechString = "No calibration in game"
   }
@@ -740,7 +741,7 @@ function draw() {
       hide_sensor = 0;
       gameTimer = -1;
       gameOver = false;
-      gameResult = Date.now();
+      if (curMoves.length > 0) gameResult = Date.now();
       if (gameCurrentSeries < gameSeries) {
         setTimeout(function() {
           letsfight();
@@ -768,7 +769,7 @@ function draw() {
       textSize(10 * coef);
     }
 
-    if (speechString && speechTime > Date.now() - 1000) {
+    if (speechString) {
       fill(255, 255, 255, 255);
       textSize(15 * coef);
       text(speechString.toUpperCase(), myWindowWidth / 2.1, myWindowHeight - 50);
@@ -776,7 +777,7 @@ function draw() {
       speechString = null;
     }
 
-    if (!gameStarted && !gameCalibration && !(speechTime > Date.now() - 1000) && !gameResultBool()) {
+    if (!gameStarted && !gameCalibration && !gameResultBool()) {
       textSize(10 * coef);
       fill(0, 0, 0);
       stroke(255, 192);
