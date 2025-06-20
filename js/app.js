@@ -94,8 +94,17 @@ var logo_image;
 var menu_image;
 var rfeet_image;
 var lfeet_image;
-var leave_image;
-var plus_image;
+var good_hit_image;
+var your_guard_image;
+var fight_button_image;
+var fight_menu_button_image;
+var calibrate_button_image;
+var back_button_image;
+var stop_button_image;
+var shadow_button_image;
+var pad_button_image;
+
+var keep_trying;
 
 var me_image;
 var me_images = [];
@@ -448,8 +457,16 @@ function preload() {
   menu_image = loadImage('assets/images/menu_image.png');
   rfeet_image = loadImage('assets/images/RFoot.png');
   lfeet_image = loadImage('assets/images/LFoot.png');
-  //adduser_image = loadImage('assets/images/plus.png');
-  leave_image = loadImage('assets/images/leave.png');
+  your_guard_image = loadImage('assets/images/your_guard.png');
+  fight_button_image = loadImage('assets/images/fight.png');
+  fight_menu_button_image = loadImage('assets/images/fightmenu.png');
+  shadow_button_image = loadImage('assets/images/shadow.png');
+  pad_button_image = loadImage('assets/images/pad.png');
+  calibrate_button_image = loadImage('assets/images/calibrate.png');
+  back_button_image = loadImage('assets/images/back.png');
+  stop_button_image = loadImage('assets/images/stop.png');
+  keep_trying_image = loadImage('assets/images/keep_trying.png');
+  good_hit_image = loadImage('assets/images/good_hit.png');
 
   me_image = loadImage('assets/images/boxers/0-me.png');
   me_images[0] = [];
@@ -700,27 +717,12 @@ function draw() {
     gameResult = Date.now() - 5001;
     fill(0, 0, 0);
     image(menu_image, myWindowWidth / 2.5, myWindowHeight / 6, myWindowWidth / 2, myWindowWidth / 2);
-    stroke(255, 192);
-    strokeWeight(2);
-    rect(myWindowWidth / 6, parseInt(myWindowHeight / 6), 100 * coef, 50 * coef, 20);
-    rect(myWindowWidth / 6, parseInt(myWindowHeight / 6 + 100 * coef), 100 * coef, 50 * coef, 20);
-    rect(myWindowWidth / 6, parseInt(myWindowHeight / 6 + 200 * coef), 100 * coef, 50 * coef, 20);
-    stroke(0);
-    strokeWeight(0);
-    fill(255);
-    text('(S)HADOW', parseInt(myWindowWidth / 6) + 20 * coef, parseInt(myWindowHeight / 6 + 30 * coef));
-    text('(P)AD', parseInt(myWindowWidth / 6) + 20 * coef, parseInt(myWindowHeight / 6 + 130 * coef));
-    text('F(I)GHT', parseInt(myWindowWidth / 6) + 20 * coef, parseInt(myWindowHeight / 6 + 230 * coef));
+    image(shadow_button_image, myWindowWidth / 6, parseInt(myWindowHeight / 6), 100 * coef);
+    image(pad_button_image, myWindowWidth / 6, parseInt(myWindowHeight / 6 + 100 * coef), 100 * coef);
+    image(fight_menu_button_image, myWindowWidth / 6, parseInt(myWindowHeight / 6 + 200 * coef), 100 * coef);
   } else {
     if ((menu === 2 || menu === 3 || menu === 4 || menu === 1) && !gameStarted && !gameResultBool()) {
-      fill(0, 0, 0);
-      stroke(255, 192);
-      strokeWeight(2);
-      rect(myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef, 20);
-      stroke(0);
-      strokeWeight(0);
-      fill(255);
-      text('(B)ACK', myWindowWidth - 80 * coef, parseInt(myWindowHeight - 60 * coef) + 30 * coef);
+      image(back_button_image,myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef);
     }
   }
 
@@ -745,7 +747,7 @@ function draw() {
       hide_sensor = 0;
       gameTimer = -1;
       gameOver = false;
-      if (curMoves.length > 0) gameResult = Date.now();
+      if (curMoves.length > 0 && score > 0) gameResult = Date.now();
       if (gameCurrentSeries < gameSeries) {
         setTimeout(function() {
           letsfight();
@@ -764,15 +766,6 @@ function draw() {
       right_init_pose_y = parseInt(localStorage.getItem("right_init_pose_y"));
     }
 
-    if (Date.now() - gameOverTime < 2000) {
-      textSize(20 * coef);
-      fill(255, 255, 255, 255);
-      text("Good job!", myWindowWidth / 2.3, myWindowHeight / 6);
-      text("Song is over!", myWindowWidth / 2.3, myWindowHeight / 6 + 50);
-      fill(255, 0, 0, hide_sensor);
-      textSize(10 * coef);
-    }
-
     if (speechString) {
       fill(255, 255, 255, 255);
       textSize(15 * coef);
@@ -782,17 +775,8 @@ function draw() {
     }
 
     if (!gameStarted && !gameCalibration && !gameResultBool()) {
-      textSize(10 * coef);
-      fill(0, 0, 0);
-      stroke(255, 192);
-      strokeWeight(2);
-      rect(myWindowWidth / 2.5 - 40, myWindowHeight - 148 * coef, 100 * coef, 40 * coef, 20);
-      rect(myWindowWidth / 2.5 - 40, myWindowHeight - 98 * coef, 100 * coef, 40 * coef, 20);
-      fill(255, 255, 255, 224);
-      stroke(0);
-      strokeWeight(0);
-      text("(F)IGHT", myWindowWidth / 2.5 - 30, myWindowHeight - 125 * coef);
-      text("(C)ALIBRATE", myWindowWidth / 2.5 - 30, myWindowHeight - 75 * coef);
+      image(fight_button_image, myWindowWidth / 2 - 50 * coef, myWindowHeight - 150 * coef, 120 * coef);
+      image(calibrate_button_image, myWindowWidth / 2 - 50 * coef, myWindowHeight - 100 * coef, 120 * coef);
     }
     textSize(7 * coef);
     fill(255, 0, 0, hide_sensor);
@@ -830,14 +814,7 @@ function draw() {
         bodyPose.detectStart(video, gotPoses);
         isDetecting = true;
       } 
-      fill(0, 0, 0);
-      stroke(255, 192);
-      strokeWeight(2);
-      rect(myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef, 20);
-      stroke(0);
-      strokeWeight(0);
-      fill(255);
-      text('(S)TOP', myWindowWidth - 80 * coef, parseInt(myWindowHeight - 60 * coef) + 30 * coef);
+      image(stop_button_image, myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef);
       if (right_init_pose_dragging) {
         right_init_pose_x = mouseX;
         right_init_pose_y = mouseY;
@@ -899,32 +876,17 @@ function draw() {
     }
 
     if (gameStarted) {
-      fill(0, 0, 0);
-      stroke(255, 192);
-      strokeWeight(2);
-      rect(myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef, 20);
-      fill(255);
-      stroke(0);
-      strokeWeight(0);
-      text('(S)TOP', myWindowWidth - 80 * coef, parseInt(myWindowHeight - 60 * coef) + 30 * coef);
+      image(stop_button_image, myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef);
       fill(255, 0, 0, hide_sensor);
       if (Date.now() - hit_success < 1000) {
-        textSize(20 * coef);
-        fill(255, 255, 255, 255);
-        text("Good Hit!", myWindowWidth / 2.3, myWindowHeight / 2);
-        fill(255, 0, 0, hide_sensor);
-        textSize(10 * coef);
+        image(good_hit_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 3 * 2, 5 * OBJECT_POSE_SIZE);
       }
       if (Date.now() - hit_success > 3000 && Date.now() - hit_success < 4000 && guard_warning - Date.now() < 2000 && Math.ceil((gameDuration - gameTimer) / FRAME_RATE) > 5) {
         if (curMoves.length > 3 && curMoves[curMoves.length - 1].hit === false && curMoves[curMoves.length - 2].hit === false && curMoves[curMoves.length - 3].hit === false) {
-          textSize(20 * coef);
-          fill(255, 255, 255, 255);
-          text("Keep trying !!!", myWindowWidth / 2.3, myWindowHeight / 2);
+          image(keep_trying_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 3 * 2, 5 * OBJECT_POSE_SIZE);
           if (Date.now() - hit_success < 3019) {
             song_keep_trying.play();
           }
-          fill(255, 0, 0, hide_sensor);
-          textSize(10 * coef);
         }
       }
       if ((Date.now() - left_poses > 2000 || Date.now() - right_poses > 2000) && Math.ceil((gameDuration - gameTimer) / FRAME_RATE) > 5 && gameTimer > 100) {
@@ -934,15 +896,15 @@ function draw() {
             song_your_guard.play();
           }
           if (guard_warning - Date.now() < 3000) {
-            textSize(20 * coef);
-            fill(255, 255, 255, 255);
-            text("Your Guard !!!", myWindowWidth / 2.3, myWindowHeight / 2);
-            fill(255, 0, 0, hide_sensor);
-            textSize(10 * coef);
+            image(your_guard_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 3 * 2, 5 * OBJECT_POSE_SIZE);
           }
         }
-        if (guard_warning - Date.now() > 10000) guard_warning = Date.now();
-      } else guard_warning = Date.now();
+        if (guard_warning - Date.now() > 10000) {
+          guard_warning = Date.now();
+        }
+      } else {
+        guard_warning = Date.now();
+      }
     }
   }
 
@@ -1160,18 +1122,18 @@ function draw() {
         tint(255, 255);
         gameTimer++;
       } else {
-        if (!gameCalibration) {
+        /*if (!gameCalibration) {
           tint(255, 224);
           image(opponent_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
           tint(255, 192);
           image(me_image, myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);
-        }
+        }*/
       }
     } else {
-      tint(255, 224);
+      /*tint(255, 224);
       image(opponent_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
       tint(255, 192);
-      image(me_image, myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);
+      image(me_image, myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);*/
     }
   }
 
@@ -1306,13 +1268,14 @@ function draw() {
     if (feet_position === 1) image(rfeet_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
     if (gameResultBool() && curMoves.length > 0) {
       fill(0, 0, 0, 255);
-      rect(parseInt(myWindowWidth / 8), parseInt(myWindowHeight / 6), parseInt(3 * myWindowWidth / 4), parseInt(3 * myWindowHeight / 4), 20);
+      rect(0, 0, myWindowWidth,myWindowHeight, 20);
       fill(255);
       score = 0;
       for (let i = 0; i < arrayScore.length; i++) {
         score += arrayScore[i];
       }
-      text('Score: ' + score + " / " + score_max_prev, parseInt(myWindowWidth / 2.5) + 20 * coef, parseInt(myWindowHeight / 5 + 30 * coef));
+      textSize(20 * coef);
+      text('Score: ' + score + " / " + score_max_prev, parseInt(myWindowWidth / 2.5) + 20 * coef, parseInt(myWindowHeight / 5));
       textSize(10 * coef);
       song_result = {};
       for (let r in curMoves) {
