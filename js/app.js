@@ -568,7 +568,7 @@ function keyPressed() {
     loadSongmoves();
     menu = 4;
   }
-  if (['r', 'R'].includes(key) && [2, 3].includes(menu)) {
+  if (['r', 'R'].includes(key) && [2, 3].includes(menu) && gameCalibration) {
     left_init_pose_x = myWindowWidth / 3;
     localStorage.setItem("left_init_pose_x", left_init_pose_x);
     left_init_pose_y = myWindowWidth / 3;
@@ -716,14 +716,14 @@ function draw() {
     }
     gameResult = Date.now() - 5001;
     fill(0, 0, 0);
-    image(logo_image, myWindowWidth - 60 * coef, myWindowHeight - 100, 50 * coef, 50 * coef);
+    image(logo_image, myWindowWidth - 60 * coef, myWindowHeight - 55 * coef, 50 * coef, 50 * coef);
     image(menu_image, myWindowWidth / 2.5, myWindowHeight / 6, myWindowWidth / 2, myWindowWidth / 2);
-    image(shadow_button_image, myWindowWidth / 6, parseInt(myWindowHeight / 6), 100 * coef);
-    image(pad_button_image, myWindowWidth / 6, parseInt(myWindowHeight / 6 + 100 * coef), 100 * coef);
-    image(fight_menu_button_image, myWindowWidth / 6, parseInt(myWindowHeight / 6 + 200 * coef), 100 * coef);
+    image(shadow_button_image, myWindowWidth / 6, parseInt(myWindowHeight / 6), 100 * coef, 50 * coef);
+    image(pad_button_image, myWindowWidth / 6, parseInt(myWindowHeight / 6 + 100 * coef), 100 * coef, 50 * coef);
+    image(fight_menu_button_image, myWindowWidth / 6, parseInt(myWindowHeight / 6 + 200 * coef), 100 * coef, 50 * coef);
   } else {
     if ((menu === 2 || menu === 3 || menu === 4 || menu === 1) && !gameStarted && !gameResultBool()) {
-      image(back_button_image,myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef);
+      image(back_button_image,myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
     }
   }
 
@@ -776,8 +776,8 @@ function draw() {
     }
 
     if (!gameStarted && !gameCalibration && !gameResultBool()) {
-      image(fight_button_image, myWindowWidth / 2 - 50 * coef, myWindowHeight - 150 * coef, 120 * coef);
-      image(calibrate_button_image, myWindowWidth / 2 - 50 * coef, myWindowHeight - 100 * coef, 120 * coef);
+      image(fight_button_image, myWindowWidth / 2 - 50 * coef, myWindowHeight - 150 * coef, 120 * coef, 60 * coef);
+      image(calibrate_button_image, myWindowWidth / 2 - 50 * coef, myWindowHeight - 100 * coef, 120 * coef, 60 * coef);
     }
     textSize(7 * coef);
     fill(255, 0, 0, hide_sensor);
@@ -815,7 +815,7 @@ function draw() {
         bodyPose.detectStart(video, gotPoses);
         isDetecting = true;
       } 
-      image(stop_button_image, myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef);
+      image(stop_button_image, myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
       if (right_init_pose_dragging) {
         right_init_pose_x = mouseX;
         right_init_pose_y = mouseY;
@@ -877,7 +877,7 @@ function draw() {
     }
 
     if (gameStarted) {
-      image(stop_button_image, myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef);
+      image(stop_button_image, myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
       fill(255, 0, 0, hide_sensor);
       if (Date.now() - hit_success < 1000) {
         image(good_hit_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 3 * 2, 5 * OBJECT_POSE_SIZE);
@@ -1268,9 +1268,7 @@ function draw() {
     if (feet_position === 0) image(lfeet_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
     if (feet_position === 1) image(rfeet_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
     if (gameResultBool() && curMoves.length > 0) {
-      fill(0, 0, 0, 255);
-      rect(0, 0, myWindowWidth,myWindowHeight, 20);
-      fill(255);
+      image(background_images[0],0, 0, myWindowWidth,myWindowHeight)
       score = 0;
       for (let i = 0; i < arrayScore.length; i++) {
         score += arrayScore[i];
