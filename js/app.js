@@ -717,7 +717,7 @@ function draw() {
     gameResult = Date.now() - 5001;
     fill(0, 0, 0);
     image(logo_image, myWindowWidth - 60 * coef, myWindowHeight - 55 * coef, 50 * coef, 50 * coef);
-    image(menu_image, myWindowWidth / 2.5, myWindowHeight / 6, myWindowWidth / 2, myWindowWidth / 2);
+    image(menu_image, myWindowWidth / 2.5, myWindowHeight / 8, myWindowWidth / 2, myWindowWidth / 2);
     image(shadow_button_image, myWindowWidth / 6, parseInt(myWindowHeight / 6), 100 * coef, 50 * coef);
     image(pad_button_image, myWindowWidth / 6, parseInt(myWindowHeight / 6 + 100 * coef), 100 * coef, 50 * coef);
     image(fight_menu_button_image, myWindowWidth / 6, parseInt(myWindowHeight / 6 + 200 * coef), 100 * coef, 50 * coef);
