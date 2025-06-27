@@ -98,6 +98,8 @@ var good_hit_image;
 var your_guard_image;
 var fight_button_image;
 var fight_menu_button_image;
+var config_menu_button_image;
+var framerate_button_image = [];
 var calibrate_button_image;
 var back_button_image;
 var stop_button_image;
@@ -326,8 +328,10 @@ function letsfight() {
 function handleChange() {
   if (gameResultBool()) return;
   if (menu === 0) {
-    if (mouseX > myWindowWidth / 2 - OBJECT_POSE_SIZE / 2 + 100 * coef && mouseX < myWindowWidth / 2 + OBJECT_POSE_SIZE / 2 + 100 * coef && mouseY > myWindowHeight - 40 * coef && mouseY < myWindowHeight - 40 * coef + OBJECT_POSE_SIZE / 2) {
-      menu = 1;
+    if (mouseY < parseInt(myWindowHeight / 6 + 350 * coef) && mouseY > parseInt(myWindowHeight / 6 + 300 * coef)) {
+        click_sound.play();
+        menu = 1;
+        return;
     }
     if (mouseX < parseInt(myWindowWidth / 6) + 100 * coef && mouseX > parseInt(myWindowWidth / 6)) {
       if (mouseY < parseInt(myWindowHeight / 6 + 50 * coef) && mouseY > parseInt(myWindowHeight / 6)) {
@@ -360,37 +364,31 @@ function handleChange() {
         letsfight()
         return;
       }
-      if ([2, 3, 4].includes(menu) && mouseY > myWindowHeight - 98 * coef && mouseY < myWindowHeight - 58 * coef) {
-        click_sound.play();
-        if (!gameStarted) {
-          gameCalibration = true;
-          curMoves = [];
-          hide_sensor = 64;
-        }
-        return;
+    }
+  }
+  if ([1].includes(menu)) {
+    if (mouseX > myWindowWidth / 2 - 40 * coef && mouseX < myWindowWidth / 2 + 60 * coef) {
+      if (mouseY > myWindowHeight - 148 * coef && mouseY < myWindowHeight - 108 * coef) {
+        if (FRAME_RATE === 120) FRAME_RATE = 20
+        else FRAME_RATE = FRAME_RATE + 20;
+        localStorage.setItem("frame_rate", FRAME_RATE);
       }
+    }
+  }
+  if ([1].includes(menu) && mouseY > myWindowHeight - 98 * coef && mouseY < myWindowHeight - 58 * coef) {
+    if (mouseX > myWindowWidth / 2 - 40 * coef && mouseX < myWindowWidth / 2 + 60 * coef) {
+      click_sound.play();
+      gameCalibration = true;
+      curMoves = [];
+      hide_sensor = 64;
+      return;
     }
   }
   if (menu > 0) {
     if (mouseX > myWindowWidth - 100 * coef && mouseX < myWindowWidth && mouseY < parseInt(myWindowHeight - 10 * coef) && mouseY > parseInt(myWindowHeight - 60 * coef)) {
       click_sound.play();
-      if (menu > 1 && !gameStarted && !gameCalibration) menu = 0;
-      else if (menu > 1 && (gameStarted || gameCalibration)) {
-        if (selected_player != "player") {
-          let config = {
-            "init_jab_y": init_jab_y,
-            "init_uppercut_y": init_uppercut_y,
-            "left_init_hook_x": left_init_hook_x,
-            "left_init_pose_x": left_init_pose_x,
-            "left_init_pose_y": left_init_pose_y,
-            "right_init_hook_x": right_init_hook_x,
-            "right_init_pose_x": right_init_pose_x,
-            "right_init_pose_y": right_init_pose_y,
-            "level": level,
-            "feet_position": feet_position
-          };
-          localStorage.setItem("config-" + selected_player, JSON.stringify(config));
-        }
+      if (menu > 0 && !gameStarted && !gameCalibration) menu = 0;
+      else if (menu > 0 && (gameStarted || gameCalibration)) {
         gameOver = true;
       } else menu = 0;
       return;
@@ -460,6 +458,7 @@ function preload() {
   your_guard_image = loadImage('assets/images/your_guard.png');
   fight_button_image = loadImage('assets/images/fight.png');
   fight_menu_button_image = loadImage('assets/images/fightmenu.png');
+  config_menu_button_image = loadImage('assets/images/config.png');
   shadow_button_image = loadImage('assets/images/shadow.png');
   pad_button_image = loadImage('assets/images/pad.png');
   calibrate_button_image = loadImage('assets/images/calibrate.png');
@@ -467,6 +466,7 @@ function preload() {
   stop_button_image = loadImage('assets/images/stop.png');
   keep_trying_image = loadImage('assets/images/keep_trying.png');
   good_hit_image = loadImage('assets/images/good_hit.png');
+  for (let i = 0; i < 7; i++ ) framerate_button_image[i] = loadImage('assets/images/fr' + (i * 20) + '.png');
 
   me_image = loadImage('assets/images/boxers/0-me.png');
   me_images[0] = [];
@@ -556,6 +556,9 @@ function keyPressed() {
       loadSongmoves();
     }
   }
+  if (['c', 'C'].includes(key) && menu === 0) {
+    menu = 1;
+  }
   if (['s', 'S'].includes(key) && menu === 0) {
     loadSongmoves();
     menu = 2;
@@ -586,12 +589,13 @@ function keyPressed() {
     right_init_hook_x = myWindowWidth - 120;
     localStorage.setItem("right_init_hook_x", right_init_hook_x);
   }
+  if (['f', 'F'].includes(key) && [1].includes(menu)) {
+    if (FRAME_RATE === 120) FRAME_RATE = 20
+    else FRAME_RATE = FRAME_RATE + 20;
+    localStorage.setItem("frame_rate", FRAME_RATE);
+  }
   if (['f', 'F'].includes(key) && [2, 3, 4].includes(menu)) {
-    if (gameCalibration) {
-      if (FRAME_RATE === 120) FRAME_RATE = 20
-      else FRAME_RATE = FRAME_RATE + 20;
-      localStorage.setItem("frame_rate", FRAME_RATE);
-    } else letsfight();
+    letsfight();
   }
 }
 
@@ -684,6 +688,8 @@ function draw() {
   }
   if (!checkStartCondition()) {
     noStroke();
+    textSize(10 * coef);
+    text("detecting hands and movements...", parseInt(2 * myWindowWidth / 5), parseInt(3 * myWindowHeight / 5));
     textSize(30 * coef);
     fill(255);
     image(logo_image, myWindowWidth / 2 - 50 * coef, myWindowHeight / 4, 100 * coef, 100 * coef);
@@ -721,9 +727,74 @@ function draw() {
     image(shadow_button_image, myWindowWidth / 6, parseInt(myWindowHeight / 6), 100 * coef, 50 * coef);
     image(pad_button_image, myWindowWidth / 6, parseInt(myWindowHeight / 6 + 100 * coef), 100 * coef, 50 * coef);
     image(fight_menu_button_image, myWindowWidth / 6, parseInt(myWindowHeight / 6 + 200 * coef), 100 * coef, 50 * coef);
+    image(config_menu_button_image, myWindowWidth / 6, parseInt(myWindowHeight / 6 + 300 * coef), 100 * coef, 50 * coef);
   } else {
     if ((menu === 2 || menu === 3 || menu === 4 || menu === 1) && !gameStarted && !gameResultBool()) {
       image(back_button_image,myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
+    }
+  }
+
+  if (menu === 1) {
+    if (gameOver) {
+      if (isDetecting === true) {
+        bodyPose.detectStop();
+        isDetecting = false;
+      }
+      gameCalibration = false;
+      gameOver = false;
+    }
+    if (gameCalibration) {
+      fill(255, 255, 255, 128);
+      circle(left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE);
+      circle(right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE);
+      fill(255, 0, 0, hide_sensor);
+      gameResult = Date.now() - 5001;
+      if (isDetecting === false) {
+        bodyPose.detectStart(video, gotPoses);
+        isDetecting = true;
+      } 
+      image(stop_button_image, myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
+      if (right_init_pose_dragging) {
+        right_init_pose_x = mouseX;
+        right_init_pose_y = mouseY;
+        localStorage.setItem("right_init_pose_x", right_init_pose_x);
+        localStorage.setItem("right_init_pose_y", right_init_pose_y);
+      }
+      if (left_init_pose_dragging) {
+        left_init_pose_x = mouseX;
+        left_init_pose_y = mouseY;
+        localStorage.setItem("left_init_pose_x", left_init_pose_x);
+        localStorage.setItem("left_init_pose_y", left_init_pose_y);
+      }
+      if (init_jab_dragging) {
+        init_jab_y = mouseY;
+        localStorage.setItem("init_jab_y", init_jab_y);
+      }
+      if (init_uppercut_dragging) {
+        init_uppercut_y = mouseY;
+        localStorage.setItem("init_uppercut_y", init_uppercut_y);
+      }
+      if (left_init_hook_dragging) {
+        left_init_hook_x = mouseX;
+        localStorage.setItem("left_init_hook_x", left_init_hook_x);
+      }
+      if (right_init_hook_dragging) {
+        right_init_hook_x = mouseX;
+        localStorage.setItem("right_init_hook_x", right_init_hook_x);
+      }
+      stroke(0);
+      strokeWeight(hide_sensor / 255);
+      fill(255, 255, 255, 32);
+      rect(left_init_pose_x - OBJECT_POSE_SIZE / 2, 0, OBJECT_POSE_SIZE, myWindowHeight);
+      rect(right_init_pose_x - OBJECT_POSE_SIZE / 2, 0, OBJECT_POSE_SIZE, myWindowHeight);
+      fill(255, 255, 255, hide_sensor);
+      rect(0, 0, myWindowWidth, init_jab_y);
+      rect(0, init_uppercut_y, myWindowWidth, myWindowHeight - init_uppercut_y);
+      rect(0, 0, left_init_hook_x, myWindowHeight);
+      rect(right_init_hook_x, 0, right_init_hook_x, myWindowHeight);
+    } else {
+      image(framerate_button_image[FRAME_RATE/20], myWindowWidth / 2 - 50 * coef, myWindowHeight - 150 * coef, 120 * coef, 60 * coef);
+      image(calibrate_button_image, myWindowWidth / 2 - 50 * coef, myWindowHeight - 100 * coef, 120 * coef, 60 * coef);
     }
   }
 
@@ -736,7 +807,6 @@ function draw() {
       gameOver = true;
       gameOverTime = Date.now();
     }
-
     if (gameOver) {
       if (isDetecting === true) {
         bodyPose.detectStop();
@@ -755,13 +825,6 @@ function draw() {
         }, 5100);
         gameCurrentSeries++;
       } else gameCurrentSeries = 1;
-      score_max_prev = score_max;
-      player.score = 0;
-      score = 0;
-      for (let s of Object.keys(player.scores)) {
-        player.score += player.scores[s].score
-      }
-      localStorage.setItem(selected_player, JSON.stringify(player));
       feet_position = 0;
       left_init_pose_y = parseInt(localStorage.getItem("left_init_pose_y"));
       right_init_pose_y = parseInt(localStorage.getItem("right_init_pose_y"));
@@ -777,7 +840,6 @@ function draw() {
 
     if (!gameStarted && !gameCalibration && !gameResultBool()) {
       image(fight_button_image, myWindowWidth / 2 - 50 * coef, myWindowHeight - 150 * coef, 120 * coef, 60 * coef);
-      image(calibrate_button_image, myWindowWidth / 2 - 50 * coef, myWindowHeight - 100 * coef, 120 * coef, 60 * coef);
     }
     textSize(7 * coef);
     fill(255, 0, 0, hide_sensor);
@@ -805,62 +867,6 @@ function draw() {
     }
     textSize(10 * coef);
     fill(255, 0, 0, hide_sensor);
-    if (gameCalibration) {
-      textSize(12 * coef);
-      fill(255);
-      text("(F)rame Rate: " + FRAME_RATE, myWindowWidth - 100 * coef, 15 * coef);
-      fill(255, 0, 0, hide_sensor);
-      gameResult = Date.now() - 5001;
-      if (isDetecting === false) {
-        bodyPose.detectStart(video, gotPoses);
-        isDetecting = true;
-      } 
-      image(stop_button_image, myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
-      if (right_init_pose_dragging) {
-        right_init_pose_x = mouseX;
-        right_init_pose_y = mouseY;
-        localStorage.setItem("right_init_pose_x", right_init_pose_x);
-        localStorage.setItem("right_init_pose_y", right_init_pose_y);
-      }
-
-      if (left_init_pose_dragging) {
-        left_init_pose_x = mouseX;
-        left_init_pose_y = mouseY;
-        localStorage.setItem("left_init_pose_x", left_init_pose_x);
-        localStorage.setItem("left_init_pose_y", left_init_pose_y);
-      }
-
-      if (init_jab_dragging) {
-        init_jab_y = mouseY;
-        localStorage.setItem("init_jab_y", init_jab_y);
-      }
-
-      if (init_uppercut_dragging) {
-        init_uppercut_y = mouseY;
-        localStorage.setItem("init_uppercut_y", init_uppercut_y);
-      }
-
-      if (left_init_hook_dragging) {
-        left_init_hook_x = mouseX;
-        localStorage.setItem("left_init_hook_x", left_init_hook_x);
-      }
-
-      if (right_init_hook_dragging) {
-        right_init_hook_x = mouseX;
-        localStorage.setItem("right_init_hook_x", right_init_hook_x);
-      }
-
-      stroke(0);
-      strokeWeight(hide_sensor / 255);
-      fill(255, 255, 255, 32);
-      rect(left_init_pose_x - OBJECT_POSE_SIZE / 2, 0, OBJECT_POSE_SIZE, myWindowHeight);
-      rect(right_init_pose_x - OBJECT_POSE_SIZE / 2, 0, OBJECT_POSE_SIZE, myWindowHeight);
-      fill(255, 255, 255, hide_sensor);
-      rect(0, 0, myWindowWidth, init_jab_y);
-      rect(0, init_uppercut_y, myWindowWidth, myWindowHeight - init_uppercut_y);
-      rect(0, 0, left_init_hook_x, myWindowHeight);
-      rect(right_init_hook_x, 0, right_init_hook_x, myWindowHeight);
-    } 
 
     if (!gameCalibration && !gameStarted) {
       if (isDetecting === true) {
