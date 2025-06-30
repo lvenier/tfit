@@ -102,6 +102,7 @@ var config_menu_button_image;
 var framerate_button_image = [];
 var level_button_image = [];
 var duration_button_image = [];
+var series_button_image = [];
 var calibrate_button_image;
 var back_button_image;
 var stop_button_image;
@@ -370,6 +371,11 @@ function handleChange() {
         localStorage.setItem("length", gameLengthIndex);
         gameLength = GAME_LENGTH[gameLengthIndex.toString()];
       }
+      if (mouseY > myWindowHeight - 298 * coef && mouseY < myWindowHeight - 258 * coef) {
+        if (gameSeries < 5) gameSeries++;
+        else gameSeries = 1;
+        localStorage.setItem("series", gameSeries);
+      }
     }
   }
   if ([1].includes(menu) && mouseY > myWindowHeight - 98 * coef && mouseY < myWindowHeight - 58 * coef) {
@@ -466,6 +472,7 @@ function preload() {
   for (let i = 0; i < 7; i++ ) framerate_button_image[i] = loadImage('assets/images/fr' + (i * 20) + '.png');
   for (let i = 0; i < Object.keys(GAME_LEVEL).length; i++ ) level_button_image[i] = loadImage('assets/images/' + GAME_LEVEL[i.toString()] + '.png');
   for (let i = 1; i <= Object.keys(GAME_LENGTH).length; i++ ) duration_button_image[i] = loadImage('assets/images/' + GAME_LENGTH[i.toString()] + '.png');
+  for (let i = 1; i <= 5; i++ ) series_button_image[i]  = loadImage('assets/images/s' + i + '.png');
 
   me_image = loadImage('assets/images/boxers/0-me.png');
   me_images[0] = [];
@@ -522,13 +529,10 @@ function keyPressed() {
       hide_sensor = 64;
     } else speechString = "No calibration in game"
   }
-  if (['s', 'S'].includes(key) && [2, 3, 4].includes(menu)) {
-    if (gameStarted || gameCalibration) gameOver = true;
-    else {
+  if (['s', 'S'].includes(key) && [1].includes(menu)) {
       if (gameSeries < 5) gameSeries++;
       else gameSeries = 1;
       localStorage.setItem("series", gameSeries);
-    }
   }
   if (['t', 'T'].includes(key) && [2].includes(menu)) {
     if (!gameStarted) {
@@ -786,6 +790,7 @@ function draw() {
       rect(0, 0, left_init_hook_x, myWindowHeight);
       rect(right_init_hook_x, 0, right_init_hook_x, myWindowHeight);
     } else {
+      image(series_button_image[gameSeries], myWindowWidth / 2 - 50 * coef, myWindowHeight - 300 * coef, 120 * coef, 60 * coef)
       image(duration_button_image[gameLengthIndex], myWindowWidth / 2 - 50 * coef, myWindowHeight - 250 * coef, 120 * coef, 60 * coef);
       image(level_button_image[level], myWindowWidth / 2 - 50 * coef, myWindowHeight - 200 * coef, 120 * coef, 60 * coef);
       image(framerate_button_image[FRAME_RATE/20], myWindowWidth / 2 - 50 * coef, myWindowHeight - 150 * coef, 120 * coef, 60 * coef);
