@@ -100,6 +100,8 @@ var fight_button_image;
 var fight_menu_button_image;
 var config_menu_button_image;
 var framerate_button_image = [];
+var level_button_image = [];
+var duration_button_image = [];
 var calibrate_button_image;
 var back_button_image;
 var stop_button_image;
@@ -211,22 +213,6 @@ var player = JSON.parse(localStorage.getItem(selected_player)) || {
   "score": 0,
   "scores": {}
 };
-for (let s of Object.keys(player.scores)) {
-  player.score += player.scores[s].score
-}
-if (localStorage.getItem("config-" + selected_player) !== null) {
-  let config_player = JSON.parse(localStorage.getItem("config-" + selected_player));
-  if ('left_init_pose_x' in config_player) left_init_pose_x = config_player.left_init_pose_x;
-  if ('left_init_pose_y' in config_player) left_init_pose_y = config_player.left_init_pose_y;
-  if ('right_init_pose_x' in config_player) right_init_pose_x = config_player.right_init_pose_x;
-  if ('right_init_pose_y' in config_player) right_init_pose_y = config_player.right_init_pose_y;
-  if ('left_init_hook_x' in config_player) left_init_hook_x = config_player.left_init_hook_x;
-  if ('right_init_hook_x' in config_player) right_init_hook_x = config_player.right_init_hook_x;
-  if ('init_uppercut_y' in config_player) init_uppercut_y = config_player.init_uppercut_y;
-  if ('init_jab_y' in config_player) init_jab_y = config_player.init_jab_y;
-  if ('level' in config_player) level = level;
-  if ('feet_position' in config_player) feet_position = feet_position;
-}
 
 p5.disableFriendlyErrors = true;
 
@@ -373,6 +359,17 @@ function handleChange() {
         else FRAME_RATE = FRAME_RATE + 20;
         localStorage.setItem("frame_rate", FRAME_RATE);
       }
+      if (mouseY > myWindowHeight - 198 * coef && mouseY < myWindowHeight - 158 * coef) {
+        if (level < Object.keys(GAME_LEVEL).length - 1) level++;
+        else level = 0;
+        localStorage.setItem("level", level);
+      }
+      if (mouseY > myWindowHeight - 248 * coef && mouseY < myWindowHeight - 208 * coef) {
+        if (gameLengthIndex < Object.keys(GAME_LENGTH).length) gameLengthIndex++;
+        else gameLengthIndex = 1;
+        localStorage.setItem("length", gameLengthIndex);
+        gameLength = GAME_LENGTH[gameLengthIndex.toString()];
+      }
     }
   }
   if ([1].includes(menu) && mouseY > myWindowHeight - 98 * coef && mouseY < myWindowHeight - 58 * coef) {
@@ -467,6 +464,8 @@ function preload() {
   keep_trying_image = loadImage('assets/images/keep_trying.png');
   good_hit_image = loadImage('assets/images/good_hit.png');
   for (let i = 0; i < 7; i++ ) framerate_button_image[i] = loadImage('assets/images/fr' + (i * 20) + '.png');
+  for (let i = 0; i < Object.keys(GAME_LEVEL).length; i++ ) level_button_image[i] = loadImage('assets/images/' + GAME_LEVEL[i.toString()] + '.png');
+  for (let i = 1; i <= Object.keys(GAME_LENGTH).length; i++ ) duration_button_image[i] = loadImage('assets/images/' + GAME_LENGTH[i.toString()] + '.png');
 
   me_image = loadImage('assets/images/boxers/0-me.png');
   me_images[0] = [];
@@ -539,22 +538,16 @@ function keyPressed() {
       loadSongmoves();
     }
   }
-  if (['l', 'L'].includes(key) && [2, 3, 4].includes(menu)) {
-    if (!gameStarted) {
-      if (level < Object.keys(GAME_LEVEL).length - 1) level++;
-      else level = 0;
-      localStorage.setItem("level", level);
-      loadSongmoves();
-    }
+  if (['l', 'L'].includes(key) && [1].includes(menu)) {
+    if (level < Object.keys(GAME_LEVEL).length - 1) level++;
+    else level = 0;
+    localStorage.setItem("level", level);
   }
-  if (['d', 'D'].includes(key) && [2].includes(menu)) {
-    if (!gameStarted) {
+  if (['d', 'D'].includes(key) && [1].includes(menu)) {
       if (gameLengthIndex < Object.keys(GAME_LENGTH).length) gameLengthIndex++;
       else gameLengthIndex = 1;
       localStorage.setItem("length", gameLengthIndex);
       gameLength = GAME_LENGTH[gameLengthIndex.toString()];
-      loadSongmoves();
-    }
   }
   if (['c', 'C'].includes(key) && menu === 0) {
     menu = 1;
@@ -571,11 +564,11 @@ function keyPressed() {
     loadSongmoves();
     menu = 4;
   }
-  if (['r', 'R'].includes(key) && [2, 3].includes(menu) && gameCalibration) {
+  if (['r', 'R'].includes(key) && [1].includes(menu) && gameCalibration) {
     left_init_pose_x = myWindowWidth / 3;
     localStorage.setItem("left_init_pose_x", left_init_pose_x);
-    left_init_pose_y = myWindowWidth / 3;
-    localStorage.setItem("left_init_pose_y", left_init_pose_x);
+    left_init_pose_y = myWindowHeight / 3;
+    localStorage.setItem("left_init_pose_y", left_init_pose_y);
     right_init_pose_x = 2 * myWindowWidth / 3;
     localStorage.setItem("right_init_pose_x", right_init_pose_x);
     right_init_pose_y = myWindowHeight / 3;
@@ -793,6 +786,8 @@ function draw() {
       rect(0, 0, left_init_hook_x, myWindowHeight);
       rect(right_init_hook_x, 0, right_init_hook_x, myWindowHeight);
     } else {
+      image(duration_button_image[gameLengthIndex], myWindowWidth / 2 - 50 * coef, myWindowHeight - 250 * coef, 120 * coef, 60 * coef);
+      image(level_button_image[level], myWindowWidth / 2 - 50 * coef, myWindowHeight - 200 * coef, 120 * coef, 60 * coef);
       image(framerate_button_image[FRAME_RATE/20], myWindowWidth / 2 - 50 * coef, myWindowHeight - 150 * coef, 120 * coef, 60 * coef);
       image(calibrate_button_image, myWindowWidth / 2 - 50 * coef, myWindowHeight - 100 * coef, 120 * coef, 60 * coef);
     }
@@ -859,11 +854,9 @@ function draw() {
     text("Score: " + score + " / " + score_max, 15, 15 * coef);
     textSize(12 * coef);
     text(`Time Left: ${Math.ceil((gameDuration - gameTimer - 1) / FRAME_RATE)}s`, 15, 36 * coef);
-    text("(L)evel: " + GAME_LEVEL[level.toString()], 15, 56 * coef);
     if (menu === 2) {
-      text("(T)ype: " + SHADOW_SPECIFIC[shadow_focus].toLowerCase(), 15, 76 * coef);
-      text("(D)uration: " + GAME_LENGTH[gameLengthIndex.toString()] + 's', 15, 96 * coef);
-      text("(S)eries: " + gameCurrentSeries + " / " + gameSeries, 15, 116 * coef);
+      text("(T)ype: " + SHADOW_SPECIFIC[shadow_focus].toLowerCase(), 15, 56 * coef);
+      text("(S)eries: " + gameCurrentSeries + " / " + gameSeries, 15, 96 * coef);
     }
     textSize(10 * coef);
     fill(255, 0, 0, hide_sensor);
