@@ -560,6 +560,9 @@ function keyPressed() {
     loadSongmoves();
     menu = 2;
   }
+  if (['s', 'S'].includes(key) && menu > 1) {
+    gameOver = true;
+  }
   if (['p', 'P'].includes(key) && menu === 0) {
     loadSongmoves();
     menu = 3;
@@ -651,6 +654,7 @@ function handleRightClick(e) {
 
 function setup() {
   frameRate(60);
+  angleMode(DEGREES);
   cnv = createCanvas(myWindowWidth, myWindowHeight);
   cnv.elt.addEventListener('contextmenu', handleRightClick);
   cnv.position((window.innerWidth - myWindowWidth) / 2, 0)
@@ -856,12 +860,37 @@ function draw() {
         score += arrayScore[i];
       }
     }
-    text("Score: " + score + " / " + score_max, 15, 15 * coef);
     textSize(12 * coef);
-    text(`Time Left: ${Math.ceil((gameDuration - gameTimer - 1) / FRAME_RATE)}s`, 15, 36 * coef);
+    let currentTime = Math.ceil((gameDuration - gameTimer - 1) / FRAME_RATE);
+    strokeWeight(20);
+    stroke(80);
+    noFill();
+    ellipse(myWindowWidth / 3, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
+    stroke(0,128,128);
+    arc(myWindowWidth / 3, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, -90, -90 + map(Math.ceil(gameDuration / FRAME_RATE) - currentTime, 0, Math.ceil(gameDuration / FRAME_RATE), 0, 360));
+    noStroke();
+    fill(255);
+    textSize(20 * coef);
+    textAlign(CENTER,CENTER)
+    text(currentTime, myWindowWidth / 3, OBJECT_POSE_SIZE);
+    textAlign(LEFT,CENTER)
+    textSize(12 * coef);
+    strokeWeight(20);
+    stroke(80);
+    noFill();
+    ellipse(2 * myWindowWidth / 3, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
+    stroke(128,0,128);
+    arc(2 * myWindowWidth / 3, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, -90, -90 + map(score, 0, score_max, 0, 360));
+    noStroke();
+    fill(255);
+    textSize(20 * coef);
+    textAlign(CENTER,CENTER)
+    text(score, 2 * myWindowWidth / 3, OBJECT_POSE_SIZE);
+    textAlign(LEFT,CENTER)
+    textSize(12 * coef);
     if (menu === 2) {
-      text("(T)ype: " + SHADOW_SPECIFIC[shadow_focus].toLowerCase(), 15, 56 * coef);
-      text("(S)eries: " + gameCurrentSeries + " / " + gameSeries, 15, 96 * coef);
+      text("(T)ype: " + SHADOW_SPECIFIC[shadow_focus].toLowerCase(), 15, 36 * coef);
+      text("(S)eries: " + gameCurrentSeries + " / " + gameSeries, 15, 56 * coef);
     }
     textSize(10 * coef);
     fill(255, 0, 0, hide_sensor);
