@@ -860,6 +860,7 @@ function draw() {
         score += arrayScore[i];
       }
     }
+    textStyle(BOLD);
     textSize(12 * coef);
     let currentTime = Math.ceil((gameDuration - gameTimer - 1) / FRAME_RATE);
     strokeWeight(20);
@@ -884,9 +885,10 @@ function draw() {
     noStroke();
     fill(255);
     textSize(20 * coef);
-    textAlign(CENTER,CENTER)
+    textAlign(CENTER,CENTER);
     text(score, 2 * myWindowWidth / 3, OBJECT_POSE_SIZE);
-    textAlign(LEFT,CENTER)
+    textAlign(LEFT,CENTER);
+    textStyle(NORMAL);
     textSize(12 * coef);
     if (menu === 2) {
       text("(T)ype: " + SHADOW_SPECIFIC[shadow_focus].toLowerCase(), 15, 36 * coef);
@@ -913,11 +915,11 @@ function draw() {
       image(stop_button_image, myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
       fill(255, 0, 0, hide_sensor);
       if (Date.now() - hit_success < 1000) {
-        image(good_hit_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 3 * 2, 5 * OBJECT_POSE_SIZE);
+        image(good_hit_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
       }
       if (Date.now() - hit_success > 3000 && Date.now() - hit_success < 4000 && guard_warning - Date.now() < 2000 && Math.ceil((gameDuration - gameTimer) / FRAME_RATE) > 5) {
         if (curMoves.length > 3 && curMoves[curMoves.length - 1].hit === false && curMoves[curMoves.length - 2].hit === false && curMoves[curMoves.length - 3].hit === false) {
-          image(keep_trying_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 3 * 2, 5 * OBJECT_POSE_SIZE);
+          image(keep_trying_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
           if (Date.now() - hit_success < 3019) {
             song_keep_trying.play();
           }
@@ -930,7 +932,7 @@ function draw() {
             song_your_guard.play();
           }
           if (guard_warning - Date.now() < 3000) {
-            image(your_guard_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 3 * 2, 5 * OBJECT_POSE_SIZE);
+            image(your_guard_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
           }
         }
         if (guard_warning - Date.now() > 10000) {
@@ -1155,19 +1157,7 @@ function draw() {
         } else image(me_image, myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);
         tint(255, 255);
         gameTimer++;
-      } else {
-        /*if (!gameCalibration) {
-          tint(255, 224);
-          image(opponent_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
-          tint(255, 192);
-          image(me_image, myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);
-        }*/
       }
-    } else {
-      /*tint(255, 224);
-      image(opponent_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
-      tint(255, 192);
-      image(me_image, myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);*/
     }
   }
 
@@ -1203,7 +1193,9 @@ function draw() {
         fill(255, 255, 255, hide_sensor);
       }
       if (gameStarted) {
-        textSize(10 * coef);
+        textSize(20 * coef);
+        textAlign(CENTER,CENTER);
+        textStyle(BOLD);
         if (gameTimer === 0) {
           pad_x = randomInteger(2 * OBJECT_POSE_SIZE, myWindowWidth - 2 * OBJECT_POSE_SIZE);
           pad_y = randomInteger(2 * OBJECT_POSE_SIZE, myWindowHeight - 2 * OBJECT_POSE_SIZE);
@@ -1225,7 +1217,7 @@ function draw() {
         fill(255, 255, 255, 192);
         if (pad_type === 1) {
           if (pad_x < myWindowWidth / 2) {
-            text("LEFT", pad_x - 28, pad_y + 8);
+            text("L", pad_x, pad_y);
             if (leftHand.x * coef < pad_x + OBJECT_POSE_SIZE && leftHand.x * coef > pad_x - OBJECT_POSE_SIZE && leftHand.y * coef - OBJECT_POSE_SIZE < pad_y && leftHand.y * coef + OBJECT_POSE_SIZE > pad_y && Date.now() - left_poses < LEVEL * 10) {
               pad_x = randomInteger(2 * OBJECT_POSE_SIZE, myWindowWidth - 2 * OBJECT_POSE_SIZE);
               pad_y = randomInteger(2 * OBJECT_POSE_SIZE, myWindowHeight - 2 * OBJECT_POSE_SIZE);
@@ -1242,7 +1234,7 @@ function draw() {
               })
             }
           } else {
-            text("RIGHT", pad_x - 32, pad_y + 8);
+            text("R", pad_x, pad_y);
             if (rightHand.x * coef < pad_x + OBJECT_POSE_SIZE && rightHand.x * coef > pad_x - OBJECT_POSE_SIZE && rightHand.y * coef - OBJECT_POSE_SIZE < pad_y && rightHand.y * coef + OBJECT_POSE_SIZE > pad_y && Date.now() - right_poses < LEVEL * 10) {
               pad_x = randomInteger(2 * OBJECT_POSE_SIZE, myWindowWidth - 2 * OBJECT_POSE_SIZE);
               pad_y = randomInteger(2 * OBJECT_POSE_SIZE, myWindowHeight - 2 * OBJECT_POSE_SIZE);
@@ -1260,7 +1252,7 @@ function draw() {
             }
           }
         } else if (pad_type === 2) {
-          text("DODGE", myWindowWidth / 2 - 32, init_uppercut_y);
+          text("D", myWindowWidth / 2, init_uppercut_y);
           if (nose.y * coef > init_uppercut_y) {
             down_dodge = Date.now();
             down_dodge_done = true;
@@ -1290,6 +1282,9 @@ function draw() {
             })
           }
         }
+        textSize(10 * coef);
+        textAlign(LEFT,CENTER);
+        textStyle(NORMAL);
         gameTimer++;
       }
     }
@@ -1412,25 +1407,25 @@ function draw() {
         }
         if (curMoves[c].type === 1 || curMoves[c].type === 2) {
           fill(100, 100, 0, alpha);
-          if (feet_position === 1 && curMoves[c].type === 1) curMoves[c].text = "STG";
-          if (feet_position === 1 && curMoves[c].type === 2) curMoves[c].text = "JAB";
-          if (feet_position === 0 && curMoves[c].type === 1) curMoves[c].text = "JAB";
-          if (feet_position === 0 && curMoves[c].type === 2) curMoves[c].text = "STG";
+          if (feet_position === 1 && curMoves[c].type === 1) curMoves[c].text = "S";
+          if (feet_position === 1 && curMoves[c].type === 2) curMoves[c].text = "J";
+          if (feet_position === 0 && curMoves[c].type === 1) curMoves[c].text = "J";
+          if (feet_position === 0 && curMoves[c].type === 2) curMoves[c].text = "S";
         } else if (curMoves[c].type === 3 || curMoves[c].type === 4) {
           fill(100, 0, 100, alpha);
-          curMoves[c].text = "HOOK";
+          curMoves[c].text = "H";
         } else if (curMoves[c].type === 5 || curMoves[c].type === 6) {
           fill(0, 100, 100, alpha);
-          curMoves[c].text = "UCUT";
+          curMoves[c].text = "U";
         } else if (curMoves[c].type === 7 || curMoves[c].type === 8) {
           fill(0, 0, 100, alpha);
-          curMoves[c].text = "DODGE";
+          curMoves[c].text = "D";
         } else if (curMoves[c].type === 9) {
           fill(0, 0, 200, alpha);
-          curMoves[c].text = "DODGE";
+          curMoves[c].text = "D";
         } else if (curMoves[c].type === 10) {
           fill(224, 224, 224, alpha);
-          curMoves[c].text = "SWITCH";
+          curMoves[c].text = "S";
         }
         if (curMoves[c].hit === true) fill(0, 255, 0, 127);
         if (curMoves[c].type > 0) {
@@ -1447,9 +1442,13 @@ function draw() {
         }
         if ([10].includes(curMoves[c].type)) circle(right_init_pose_x, curMoves[c].y, OBJECT_POSE_SIZE);
         fill(255, 255, 255, 255);
-        textSize(10 * coef);
-        if (curMoves[c].type > 0) text(curMoves[c].text, curMoves[c].x - curMoves[c].text.length * 7, curMoves[c].y + (16 - curMoves[c].text.length * 2));
-        if ([9, 10].includes(curMoves[c].type)) text(curMoves[c].text, right_init_pose_x - curMoves[c].text.length * 7, curMoves[c].y + (16 - curMoves[c].text.length * 2));
+        textSize(20 * coef);
+        textStyle(BOLD);
+        textAlign(CENTER,CENTER);
+        if (curMoves[c].type > 0) text(curMoves[c].text, curMoves[c].x, curMoves[c].y);
+        if ([9, 10].includes(curMoves[c].type)) text(curMoves[c].text, right_init_pose_x, curMoves[c].y);
+        textAlign(LEFT,CENTER);
+        textStyle(NORMAL);
       }
       gameTimer++;
     }
