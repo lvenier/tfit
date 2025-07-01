@@ -104,6 +104,7 @@ var level_button_image = [];
 var duration_button_image = [];
 var series_button_image = [];
 var calibrate_button_image;
+var reset_button_image;
 var back_button_image;
 var stop_button_image;
 var shadow_button_image;
@@ -353,25 +354,29 @@ function handleChange() {
       }
     }
   }
-  if ([1].includes(menu)) {
+  if ([1].includes(menu) && !gameCalibration) {
     if (mouseX > myWindowWidth / 2 - 40 * coef && mouseX < myWindowWidth / 2 + 60 * coef) {
       if (mouseY > myWindowHeight - 148 * coef && mouseY < myWindowHeight - 108 * coef) {
+        click_sound.play();
         if (FRAME_RATE === 120) FRAME_RATE = 20
         else FRAME_RATE = FRAME_RATE + 20;
         localStorage.setItem("frame_rate", FRAME_RATE);
       }
       if (mouseY > myWindowHeight - 198 * coef && mouseY < myWindowHeight - 158 * coef) {
+        click_sound.play();
         if (level < Object.keys(GAME_LEVEL).length - 1) level++;
         else level = 0;
         localStorage.setItem("level", level);
       }
       if (mouseY > myWindowHeight - 248 * coef && mouseY < myWindowHeight - 208 * coef) {
+        click_sound.play();
         if (gameLengthIndex < Object.keys(GAME_LENGTH).length) gameLengthIndex++;
         else gameLengthIndex = 1;
         localStorage.setItem("length", gameLengthIndex);
         gameLength = GAME_LENGTH[gameLengthIndex.toString()];
       }
       if (mouseY > myWindowHeight - 298 * coef && mouseY < myWindowHeight - 258 * coef) {
+        click_sound.play();
         if (gameSeries < 5) gameSeries++;
         else gameSeries = 1;
         localStorage.setItem("series", gameSeries);
@@ -380,10 +385,21 @@ function handleChange() {
   }
   if ([1].includes(menu) && mouseY > myWindowHeight - 98 * coef && mouseY < myWindowHeight - 58 * coef) {
     if (mouseX > myWindowWidth / 2 - 40 * coef && mouseX < myWindowWidth / 2 + 60 * coef) {
-      click_sound.play();
-      gameCalibration = true;
-      curMoves = [];
-      hide_sensor = 64;
+      if (gameCalibration) {
+        click_sound.play();
+        window.dispatchEvent(new KeyboardEvent('keydown', {
+            key: 'r',
+            keyCode: 82,
+            code: 'KeyR',
+            which: 82,
+            bubbles: true
+          }))
+      } else {
+        click_sound.play();
+        gameCalibration = true;
+        curMoves = [];
+        hide_sensor = 64;
+      }
       return;
     }
   }
@@ -465,6 +481,7 @@ function preload() {
   shadow_button_image = loadImage('assets/images/shadow.png');
   pad_button_image = loadImage('assets/images/pad.png');
   calibrate_button_image = loadImage('assets/images/calibrate.png');
+  reset_button_image = loadImage('assets/images/reset.png');
   back_button_image = loadImage('assets/images/back.png');
   stop_button_image = loadImage('assets/images/stop.png');
   keep_trying_image = loadImage('assets/images/keep_trying.png');
@@ -690,7 +707,7 @@ function draw() {
   if (!checkStartCondition()) {
     noStroke();
     textSize(10 * coef);
-    text("detecting hands and movements...", parseInt(2 * myWindowWidth / 5), parseInt(3 * myWindowHeight / 5));
+    text("Detecting hands and movements...", parseInt(2 * myWindowWidth / 5), parseInt(3 * myWindowHeight / 5));
     textSize(30 * coef);
     fill(255);
     image(logo_image, myWindowWidth / 2 - 50 * coef, myWindowHeight / 4, 100 * coef, 100 * coef);
@@ -755,6 +772,7 @@ function draw() {
         isDetecting = true;
       } 
       image(stop_button_image, myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
+      image(reset_button_image, myWindowWidth / 2 - 50 * coef, myWindowHeight - 100 * coef, 120 * coef, 60 * coef);
       if (right_init_pose_dragging) {
         right_init_pose_x = mouseX;
         right_init_pose_y = mouseY;
