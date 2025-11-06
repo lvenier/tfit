@@ -316,12 +316,12 @@ function letsfight() {
 function handleChange() {
   if (gameResultBool()) return;
   if (menu === 0) {
-    if (mouseY < parseInt(myWindowHeight / 6 + 350 * coef) && mouseY > parseInt(myWindowHeight / 6 + 300 * coef)) {
-        click_sound.play();
-        menu = 1;
-        return;
-    }
     if (mouseX < parseInt(myWindowWidth / 6) + 100 * coef && mouseX > parseInt(myWindowWidth / 6)) {
+      if (mouseY < parseInt(myWindowHeight / 6 + 350 * coef) && mouseY > parseInt(myWindowHeight / 6 + 300 * coef)) {
+          click_sound.play();
+          menu = 1;
+          return;
+      }
       if (mouseY < parseInt(myWindowHeight / 6 + 50 * coef) && mouseY > parseInt(myWindowHeight / 6)) {
         click_sound.play();
         menu = 2;
@@ -539,17 +539,15 @@ function keyPressed() {
       menu = 0;
     }
   }
-  if (['c', 'C'].includes(key) && [2, 3, 4].includes(menu)) {
-    if (!gameStarted) {
-      gameCalibration = true;
-      curMoves = [];
-      hide_sensor = 64;
-    } else speechString = "No calibration in game"
-  }
   if (['s', 'S'].includes(key) && [1].includes(menu)) {
-      if (gameSeries < 5) gameSeries++;
-      else gameSeries = 1;
-      localStorage.setItem("series", gameSeries);
+      if (!gameCalibration) {
+        if (gameSeries < 5) gameSeries++;
+        else gameSeries = 1;
+        localStorage.setItem("series", gameSeries);
+      } else {
+        gameCalibration = false;
+        menu = 1;
+      }
   }
   if (['t', 'T'].includes(key) && [2].includes(menu)) {
     if (!gameStarted) {
@@ -569,6 +567,10 @@ function keyPressed() {
       else gameLengthIndex = 1;
       localStorage.setItem("length", gameLengthIndex);
       gameLength = GAME_LENGTH[gameLengthIndex.toString()];
+  }
+  if (['c', 'C'].includes(key) && menu === 1) {
+      gameCalibration = true;
+      hide_sensor = 64;
   }
   if (['c', 'C'].includes(key) && menu === 0) {
     menu = 1;
@@ -597,13 +599,13 @@ function keyPressed() {
     localStorage.setItem("right_init_pose_x", right_init_pose_x);
     right_init_pose_y = myWindowHeight / 3;
     localStorage.setItem("right_init_pose_y", right_init_pose_y);
-    init_jab_y = myWindowHeight / 4;
+    init_jab_y = myWindowHeight / 3 - OBJECT_POSE_SIZE * coef / 2;
     localStorage.setItem("init_jab_y", init_jab_y);
-    init_uppercut_y = myWindowHeight * 3 / 4;
+    init_uppercut_y = myWindowHeight / 3 + OBJECT_POSE_SIZE * coef / 2;
     localStorage.setItem("init_uppercut_y", init_uppercut_y);
-    left_init_hook_x = 120;
+    left_init_hook_x = myWindowWidth / 3 - OBJECT_POSE_SIZE * coef;
     localStorage.setItem("left_init_hook_x", left_init_hook_x);
-    right_init_hook_x = myWindowWidth - 120;
+    right_init_hook_x = myWindowWidth * 2 / 3 + OBJECT_POSE_SIZE * coef;
     localStorage.setItem("right_init_hook_x", right_init_hook_x);
   }
   if (['f', 'F'].includes(key) && [1].includes(menu)) {
@@ -881,7 +883,7 @@ function draw() {
     textStyle(BOLD);
     textSize(12 * coef);
     let currentTime = Math.ceil((gameDuration - gameTimer - 1) / FRAME_RATE);
-    strokeWeight(20);
+    strokeWeight(8 * coef);
     stroke(80);
     noFill();
     ellipse(myWindowWidth / 3, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
@@ -894,7 +896,7 @@ function draw() {
     text(currentTime, myWindowWidth / 3, OBJECT_POSE_SIZE);
     textAlign(LEFT,CENTER)
     textSize(12 * coef);
-    strokeWeight(20);
+    strokeWeight(8 * coef);
     stroke(80);
     noFill();
     ellipse(2 * myWindowWidth / 3, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
@@ -1381,7 +1383,7 @@ function draw() {
         gameTimerNext++;
       }
       for (c = 0; c < curMoves.length; c++) {
-        curMoves[c].y = curMoves[c].y - Math.ceil(240 / FRAME_RATE);
+        curMoves[c].y = curMoves[c].y - Math.ceil(120 * (LEVEL + 1) / FRAME_RATE);
         let alpha = 128;
         if ([10].includes(curMoves[c].type) && curMoves[c].y + OBJECT_POSE_SIZE > left_init_pose_y && curMoves[c].y - OBJECT_POSE_SIZE < left_init_pose_y) {
           alpha = 255;
