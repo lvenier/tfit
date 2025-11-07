@@ -1383,7 +1383,7 @@ function draw() {
         gameTimerNext++;
       }
       for (c = 0; c < curMoves.length; c++) {
-        curMoves[c].y = curMoves[c].y - Math.ceil(120 * (LEVEL + 1) / FRAME_RATE);
+        curMoves[c].y = curMoves[c].y - Math.ceil(240 / FRAME_RATE);
         let alpha = 128;
         if ([10].includes(curMoves[c].type) && curMoves[c].y + OBJECT_POSE_SIZE > left_init_pose_y && curMoves[c].y - OBJECT_POSE_SIZE < left_init_pose_y) {
           alpha = 255;
