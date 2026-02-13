@@ -84,7 +84,6 @@ var rightHand;
 var nose;
 var score = 0;
 var score_max = 0;
-var score_max_prev = 0;
 var level = parseFloat(localStorage.getItem("level")) || 0;
 var shadow_focus = parseFloat(localStorage.getItem("shadow_focus")) || 0;
 var arrayScore = [];
@@ -1322,7 +1321,7 @@ function draw() {
         score += arrayScore[i];
       }
       textSize(20 * coef);
-      text('Score: ' + score + " / " + score_max_prev, parseInt(myWindowWidth / 2.5) + 20 * coef, parseInt(myWindowHeight / 5));
+      text('Score: ' + score + " / " + score_max, parseInt(myWindowWidth / 2.5) + 20 * coef, parseInt(myWindowHeight / 5));
       textSize(10 * coef);
       song_result = {};
       for (let r in curMoves) {
