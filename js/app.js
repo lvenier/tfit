@@ -527,7 +527,7 @@ function preload() {
   song_thats_it = loadSound('assets/sounds/thats_it.mp3');
 
   bodyPose = ml5.bodyPose(MODELS[model], {
-    modelUrl: "js/ml5js/model.json",
+    //modelUrl: "js/ml5js/model.json",
     flipped: true
   });
 }
