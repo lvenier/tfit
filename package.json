@@ -2,7 +2,7 @@
     "name": "box4fit",
     "main": "main.js",
     "version": "1.11.3",
-    "description": "Game for body fit with style and fun",
+    "description": "A webcam boxing fitness game with motion detection",
     "license":  "ISC",
     "author": {
         "name": "saashup.com",
@@ -11,6 +11,11 @@
     },
     "scripts": {
         "start": "electron .",
+        "serve": "python3 -m http.server 8000",
+        "test": "npm run test:unit && npm run test:e2e",
+        "test:unit": "node --test tests/unit/*.test.js",
+        "test:e2e": "node ./node_modules/@playwright/test/cli.js test",
+        "test:e2e:headed": "node ./node_modules/@playwright/test/cli.js test --headed",
         "build-linux": "npx electron-builder --linux",
         "build-win": "npx electron-builder --win"
     },
@@ -28,6 +33,7 @@
         }
     },
     "devDependencies": {
+        "@playwright/test": "^1.60.0",
         "electron": "*",
         "electron-builder": "*",
         "electron-packager": "*"

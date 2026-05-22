@@ -60,26 +60,10 @@ const OPPONENTS = {
   }
 }
 
-function storageNumber(key, fallback, options = {}) {
-  const value = Number(localStorage.getItem(key));
-  if (!Number.isFinite(value)) return fallback;
-  if (Number.isFinite(options.min) && value < options.min) return fallback;
-  if (Number.isFinite(options.max) && value > options.max) return fallback;
-  if (options.allowed && !options.allowed.includes(value)) return fallback;
-  return value;
-}
-
-function storageJson(key, fallback) {
-  try {
-    return JSON.parse(localStorage.getItem(key)) || fallback;
-  } catch (err) {
-    localStorage.removeItem(key);
-    return fallback;
-  }
-}
+const { cloneFromMap, randomInteger, storageJson, storageNumber } = window.TfitUtils;
 
 function cloneOpponent(id) {
-  return JSON.parse(JSON.stringify(OPPONENTS[id] || OPPONENTS[0]));
+  return cloneFromMap(OPPONENTS, id, "0");
 }
 
 var error = "";
@@ -250,10 +234,6 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js')
     .then(() => console.log('Service Worker registered'))
     .catch(err => console.error('Service Worker error:', err));
-}
-
-function randomInteger(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 function positionCanvas() {
