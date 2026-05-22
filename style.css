@@ -27,7 +27,7 @@ canvas {
   width: clamp(96px, 10vw, 168px);
   height: clamp(96px, 10vw, 168px);
   border: clamp(12px, 2vw, 32px) solid rgba(255, 255, 255, 0.82);
-  border-bottom-color: #ff3d81;
+  border-bottom-color: #A020F0;
   border-radius: 50%;
   animation: rotation 1s linear infinite;
   opacity: 0.72;
