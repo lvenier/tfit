@@ -84,7 +84,7 @@ var OBJECT_POSE_SIZE = 48 * coef;
 var FRAME_RATE = storageNumber("frame_rate", 20, { allowed: [20, 40, 60, 80, 100, 120] });
 var LEVEL = 50;
 
-var model = 0;
+var poseModelIndex = 0;
 var leftHand;
 var rightHand;
 var nose;
@@ -261,20 +261,27 @@ function resetCalibrationDefaults() {
 }
 
 function drawMessagePanel(title, details) {
+  push();
+  resetMatrix();
+  const cx = width / 2;
+  const cy = height / 2;
+  const panelW = 340 * coef;
+  const panelH = 108 * coef;
+  rectMode(CENTER);
+  textAlign(CENTER, CENTER);
   stroke(255, 255, 255, 48);
   strokeWeight(1);
   fill(0, 0, 0, 184);
-  rect(myWindowWidth / 2 - 170 * coef, myWindowHeight / 2 - 54 * coef, 340 * coef, 108 * coef, 8 * coef);
+  rect(cx, cy, panelW, panelH, 8 * coef);
   noStroke();
   fill(255);
-  textAlign(CENTER, CENTER);
   textStyle(BOLD);
   textSize(16 * coef);
-  text(title, myWindowWidth / 2, myWindowHeight / 2 - 18 * coef);
+  text(title, cx, cy - 18 * coef);
   textStyle(NORMAL);
   textSize(8 * coef);
-  text(details, myWindowWidth / 2, myWindowHeight / 2 + 18 * coef);
-  textAlign(LEFT, CENTER);
+  text(details, cx, cy + 18 * coef);
+  pop();
 }
 
 function gameResultBool() { 
@@ -511,71 +518,71 @@ function mouseReleased() {
   }
 }
 
-function preload() {
+async function loadAssets() {
   for (let m in MENUTYPE) {
-    background_images[m] = loadImage('assets/backgrounds/' + m + '.jpg');
+    background_images[m] = await loadImage('assets/backgrounds/' + m + '.jpg');
   }
-  background_image = loadImage('assets/backgrounds/' + backgroundId + '.jpg');
-  logo_image = loadImage('assets/logos/logo.512.rounded.png');
-  menu_image = loadImage('assets/images/menu_image.png');
-  rfeet_image = loadImage('assets/images/RFoot.png');
-  lfeet_image = loadImage('assets/images/LFoot.png');
-  your_guard_image = loadImage('assets/images/your_guard.png');
-  fight_button_image = loadImage('assets/images/fight.png');
-  fight_menu_button_image = loadImage('assets/images/fightmenu.png');
-  config_menu_button_image = loadImage('assets/images/config.png');
-  shadow_button_image = loadImage('assets/images/shadow.png');
-  pad_button_image = loadImage('assets/images/pad.png');
-  calibrate_button_image = loadImage('assets/images/calibrate.png');
-  reset_button_image = loadImage('assets/images/reset.png');
-  back_button_image = loadImage('assets/images/back.png');
-  stop_button_image = loadImage('assets/images/stop.png');
-  keep_trying_image = loadImage('assets/images/keep_trying.png');
-  good_hit_image = loadImage('assets/images/good_hit.png');
-  for (let i = 0; i < 7; i++ ) framerate_button_image[i] = loadImage('assets/images/fr' + (i * 20) + '.png');
-  for (let i = 0; i < Object.keys(GAME_LEVEL).length; i++ ) level_button_image[i] = loadImage('assets/images/' + GAME_LEVEL[i.toString()] + '.png');
-  for (let i = 1; i <= Object.keys(GAME_LENGTH).length; i++ ) duration_button_image[i] = loadImage('assets/images/' + GAME_LENGTH[i.toString()] + '.png');
-  for (let i = 1; i <= 5; i++ ) series_button_image[i]  = loadImage('assets/images/s' + i + '.png');
+  background_image = await loadImage('assets/backgrounds/' + backgroundId + '.jpg');
+  logo_image = await loadImage('assets/logos/logo.512.rounded.png');
+  menu_image = await loadImage('assets/images/menu_image.png');
+  rfeet_image = await loadImage('assets/images/RFoot.png');
+  lfeet_image = await loadImage('assets/images/LFoot.png');
+  your_guard_image = await loadImage('assets/images/your_guard.png');
+  fight_button_image = await loadImage('assets/images/fight.png');
+  fight_menu_button_image = await loadImage('assets/images/fightmenu.png');
+  config_menu_button_image = await loadImage('assets/images/config.png');
+  shadow_button_image = await loadImage('assets/images/shadow.png');
+  pad_button_image = await loadImage('assets/images/pad.png');
+  calibrate_button_image = await loadImage('assets/images/calibrate.png');
+  reset_button_image = await loadImage('assets/images/reset.png');
+  back_button_image = await loadImage('assets/images/back.png');
+  stop_button_image = await loadImage('assets/images/stop.png');
+  keep_trying_image = await loadImage('assets/images/keep_trying.png');
+  good_hit_image = await loadImage('assets/images/good_hit.png');
+  for (let i = 0; i < 7; i++ ) framerate_button_image[i] = await loadImage('assets/images/fr' + (i * 20) + '.png');
+  for (let i = 0; i < Object.keys(GAME_LEVEL).length; i++ ) level_button_image[i] = await loadImage('assets/images/' + GAME_LEVEL[i.toString()] + '.png');
+  for (let i = 1; i <= Object.keys(GAME_LENGTH).length; i++ ) duration_button_image[i] = await loadImage('assets/images/' + GAME_LENGTH[i.toString()] + '.png');
+  for (let i = 1; i <= 5; i++ ) series_button_image[i]  = await loadImage('assets/images/s' + i + '.png');
 
-  me_image = loadImage('assets/images/boxers/0-me.png');
+  me_image = await loadImage('assets/images/boxers/0-me.png');
   me_images[0] = [];
   me_images[1] = [];
   for (let j = 1; j < 7; j++) {
     me_images[j] = [];
     for (let i = 0; i < 7; i++) {
-      me_images[j][i] = loadImage('assets/images/boxers/' + j + '-me-' + i + '.png');
+      me_images[j][i] = await loadImage('assets/images/boxers/' + j + '-me-' + i + '.png');
     }
   }
 
-  opponent_image[0] = loadImage('assets/images/opponents/0/0-1.png');
+  opponent_image[0] = await loadImage('assets/images/opponents/0/0-1.png');
   opponents_images[0] = [];
   opponents_images[1] = [];
   for (let j = 1; j <= 6; j++) {
     opponents_images[j] = [];
     for (let i = 0; i < 7; i++) {
-      opponents_images[j][i] = loadImage('assets/images/opponents/0/' + j + '-' + i + '.png');
+      opponents_images[j][i] = await loadImage('assets/images/opponents/0/' + j + '-' + i + '.png');
     }
   }
 
-  click_sound = loadSound('assets/sounds/click.mp3');
-  punch_sound = loadSound('assets/sounds/punch.mp3');
-  song_letsfight = loadSound('assets/sounds/letsfight.mp3');
-  song_bg_not_found = loadSound('assets/sounds/bg_not_found.mp3');
-  song_song_over = loadSound('assets/sounds/song_over.mp3');
-  song_your_guard = loadSound('assets/sounds/your_guard.mp3');
-  song_keep_trying = loadSound('assets/sounds/keep_trying.mp3');
-  song_well_done = loadSound('assets/sounds/well_done.mp3');
-  song_great = loadSound('assets/sounds/great.mp3');
-  song_awesome = loadSound('assets/sounds/awesome.mp3');
-  song_good = loadSound('assets/sounds/good.mp3');
-  song_perfect = loadSound('assets/sounds/perfect.mp3');
-  song_continue = loadSound('assets/sounds/continue.mp3');
-  song_thats_it = loadSound('assets/sounds/thats_it.mp3');
+  click_sound = await loadSound('assets/sounds/click.mp3');
+  punch_sound = await loadSound('assets/sounds/punch.mp3');
+  song_letsfight = await loadSound('assets/sounds/letsfight.mp3');
+  song_bg_not_found = await loadSound('assets/sounds/bg_not_found.mp3');
+  song_song_over = await loadSound('assets/sounds/song_over.mp3');
+  song_your_guard = await loadSound('assets/sounds/your_guard.mp3');
+  song_keep_trying = await loadSound('assets/sounds/keep_trying.mp3');
+  song_well_done = await loadSound('assets/sounds/well_done.mp3');
+  song_great = await loadSound('assets/sounds/great.mp3');
+  song_awesome = await loadSound('assets/sounds/awesome.mp3');
+  song_good = await loadSound('assets/sounds/good.mp3');
+  song_perfect = await loadSound('assets/sounds/perfect.mp3');
+  song_continue = await loadSound('assets/sounds/continue.mp3');
+  song_thats_it = await loadSound('assets/sounds/thats_it.mp3');
 
-  bodyPose = ml5.bodyPose(MODELS[model], {
+  /*bodyPose = ml5.bodyPose(MODELS[poseModelIndex], {
     modelUrl: "js/ml5js/model.json",
     flipped: true
-  });
+  });*/
 }
 
 function keyPressed() {
@@ -702,11 +709,13 @@ function handleRightClick(e) {
   }))
 }
 
-function setup() {
+async function setup() {
+  await loadAssets();
   frameRate(60);
   angleMode(DEGREES);
+
   cnv = createCanvas(myWindowWidth, myWindowHeight);
-  cnv.elt.addEventListener('contextmenu', handleRightClick);
+  cnv.elt.addEventListener("contextmenu", handleRightClick);
   positionCanvas();
   fetchSong(1);
 
@@ -715,21 +724,19 @@ function setup() {
     return;
   }
 
-  navigator.mediaDevices.getUserMedia({
-      video: true
-    })
-    .then(stream => {
-      video = createCapture(VIDEO, {
-        flipped: true
-      });
-      video.hide();
-      bodyPose.detectStart(video, gotPoses);
-      isDetecting = true;
-    })
-    .catch(err => {
-      error = "Failed to access camera: " + err.message;
-    });
+  video = createCapture(VIDEO, {
+    flipped: true
+  });
 
+  video.hide();
+
+  bodyPose = await ml5.bodyPose(MODELS[poseModelIndex], {
+    modelUrl: "js/ml5js/model.json",
+    flipped: true
+  });
+
+  bodyPose.detectStart(video, gotPoses);
+  isDetecting = true;
 }
 
 function draw() {
@@ -741,7 +748,7 @@ function draw() {
   }
   if (!checkStartCondition()) {
     fill(255);
-    image(logo_image, myWindowWidth / 2 - 50 * coef, myWindowHeight / 4, 100 * coef, 100 * coef);
+    image(logo_image, myWindowWidth / 2 - 50 * coef, 50 * coef, 100 * coef, 100 * coef);
     translate(myWindowWidth / 2, myWindowHeight / 2);
     ellipse(100 * sin(radians(loading_k)), 0, 20 * cos(radians(loading_m)), 20 * cos(radians(loading_m)));
     ellipse(100 * sin(radians(loading_k) + PI / 3), 0, 20 * cos(radians(loading_m) + PI / 3), 20 * cos(radians(loading_m) + PI / 3));
