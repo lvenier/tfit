@@ -3,18 +3,14 @@
     "name": "Box4Fit",
     "short_name": "Box4Fit",
     "start_url": ".",
-    "scope": "/",
+    "scope": ".",
     "display_override": ["window-controls-overlay", "browser", "standalone", "minimal-ui"],
     "display": "standalone",
-    "theme_color": "#000000",
-    "background_color": "#ffffff",
-    "description": "Game for body fit with style and fun",
+    "theme_color": "#050505",
+    "background_color": "#050505",
+    "description": "A webcam boxing fitness game with motion detection",
     "lang": "en",
     "orientation": "landscape",
-    "protocol_handlers": [{
-        "protocol": "web+http",
-        "url": "/?type=%s"
-    }],
     "screenshots": [{
             "src": "assets/logos/logo.512.png",
             "type": "image/png",

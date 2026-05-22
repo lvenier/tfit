@@ -2,8 +2,14 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background-color: black;
+  min-width: 320px;
+  min-height: 100vh;
+  overflow: hidden;
+  background: #050505;
   color: white;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 canvas {
@@ -11,19 +17,32 @@ canvas {
 }
 
 .logo {
-  border-radius: 50%; 
-  width: 8vw;
-  height: 8vw;
+  width: clamp(72px, 8vw, 132px);
+  height: clamp(72px, 8vw, 132px);
+  border-radius: 50%;
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.5));
 }
 
 .loader {
-  width: 10vw;
-  height: 10vw;
-  border: 32px solid #FFF;
-  border-bottom-color: #A020F0;
+  width: clamp(96px, 10vw, 168px);
+  height: clamp(96px, 10vw, 168px);
+  border: clamp(12px, 2vw, 32px) solid rgba(255, 255, 255, 0.82);
+  border-bottom-color: #ff3d81;
   border-radius: 50%;
   animation: rotation 1s linear infinite;
-  opacity: 0.5;
+  opacity: 0.72;
+}
+
+.loading-version {
+  position: absolute;
+  left: 50%;
+  bottom: max(10px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: min(90vw, 420px);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: clamp(12px, 1.6vw, 16px);
+  letter-spacing: 0;
+  text-align: center;
 }
 
 @keyframes rotation {
@@ -44,9 +63,12 @@ canvas {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.9);
     color: white;
-    font-size: 32px;
+    padding: 24px;
+    box-sizing: border-box;
+    font-size: clamp(24px, 8vw, 40px);
+    font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -63,18 +85,35 @@ canvas {
   display: inline-block;
   font-size: 16px;
   border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+.button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
 }
 .button-clear {
-  background-color: #646400;
+  background-color: #4f5d2f;
   color: white;
 }
-.button-clear:hover {
-  opacity: 0.7;
-}
-.button-play {
-  background-color: #640064;
-  color: white;
-}
+.button-clear:hover,
 .button-play:hover {
   opacity: 0.7;
+  transform: translateY(-1px);
+}
+.button-play {
+  background-color: #8f1d5a;
+  color: white;
+}
+
+noscript {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #050505;
+  color: white;
+  text-align: center;
+  z-index: 10000;
 }

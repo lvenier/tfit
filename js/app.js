@@ -60,6 +60,28 @@ const OPPONENTS = {
   }
 }
 
+function storageNumber(key, fallback, options = {}) {
+  const value = Number(localStorage.getItem(key));
+  if (!Number.isFinite(value)) return fallback;
+  if (Number.isFinite(options.min) && value < options.min) return fallback;
+  if (Number.isFinite(options.max) && value > options.max) return fallback;
+  if (options.allowed && !options.allowed.includes(value)) return fallback;
+  return value;
+}
+
+function storageJson(key, fallback) {
+  try {
+    return JSON.parse(localStorage.getItem(key)) || fallback;
+  } catch (err) {
+    localStorage.removeItem(key);
+    return fallback;
+  }
+}
+
+function cloneOpponent(id) {
+  return JSON.parse(JSON.stringify(OPPONENTS[id] || OPPONENTS[0]));
+}
+
 var error = "";
 var errorTimer = 0;
 var loading_k = 0;
@@ -70,12 +92,12 @@ var myWindowWidth = 480;
 var myWindowHeight = 320;
 var coef = 0.75;
 
-coef = 0.05 * (Math.floor(Math.min(window.innerWidth / 32, window.innerHeight / 24)));
+coef = Math.max(0.5, 0.05 * (Math.floor(Math.min(window.innerWidth / 32, window.innerHeight / 24))));
 myWindowWidth = coef * 640;
 myWindowHeight = coef * 480;
 
 var OBJECT_POSE_SIZE = 48 * coef;
-var FRAME_RATE = parseInt(localStorage.getItem("frame_rate")) || 20;
+var FRAME_RATE = storageNumber("frame_rate", 20, { allowed: [20, 40, 60, 80, 100, 120] });
 var LEVEL = 50;
 
 var model = 0;
@@ -85,8 +107,8 @@ var nose;
 var score = 0;
 var score_max = 0;
 var score_max_prev = 0;
-var level = parseFloat(localStorage.getItem("level")) || 0;
-var shadow_focus = parseFloat(localStorage.getItem("shadow_focus")) || 0;
+var level = storageNumber("level", 0, { min: 0, max: Object.keys(GAME_LEVEL).length - 1 });
+var shadow_focus = storageNumber("shadow_focus", 0, { min: 0, max: Object.keys(SHADOW_SPECIFIC).length - 1 });
 var arrayScore = [];
 var background_image;
 var background_images = [];
@@ -110,7 +132,7 @@ var stop_button_image;
 var shadow_button_image;
 var pad_button_image;
 
-var keep_trying;
+var keep_trying_image;
 
 var me_image;
 var me_images = [];
@@ -118,7 +140,7 @@ var punch_animation = -1;
 var punch_animation_type = 0;
 var punch_animation_delay = 0;
 var opponent = 0;
-var my_opponent = JSON.parse(JSON.stringify(OPPONENTS[opponent]));
+var my_opponent = cloneOpponent(opponent);
 
 var opponent_image = [];
 var opponents_images = [];
@@ -126,7 +148,7 @@ var puncho_animation = -1;
 var puncho_animation_type = 0;
 var puncho_animation_delay = 0;
 
-var backgroundId = parseFloat(localStorage.getItem("background_id")) || 1;
+var backgroundId = storageNumber("background_id", 1, { min: 0, max: Object.keys(MENUTYPE).length - 1 });
 var hide_sensor = 0;
 var video;
 var punch_sound;
@@ -146,13 +168,14 @@ var song_thats_it;
 
 var bodyPose;
 var isDetecting = false;
+var cnv;
 var pose = {};
 var poses = [];
 var gameTimer = -1;
 var gameTimerNext = 0;
-var gameLengthIndex = parseInt(localStorage.getItem("length")) || 2;
+var gameLengthIndex = storageNumber("length", 2, { min: 1, max: Object.keys(GAME_LENGTH).length });
 var gameLength = GAME_LENGTH[gameLengthIndex.toString()];
-var gameSeries = parseInt(localStorage.getItem("series")) || 1;
+var gameSeries = storageNumber("series", 1, { min: 1, max: 5 });
 var gameCurrentSeries = 1;
 var gameDuration = gameLength * 100;
 var gameOver = false;
@@ -160,7 +183,7 @@ var gameStarted = false;
 var gameReady = false;
 var gameCalibration = false;
 var song = {};
-var songId = parseFloat(localStorage.getItem("song_id")) || 1;
+var songId = storageNumber("song_id", 1, { min: 1 });
 var song_result = {};
 var feet_position = 0;
 
@@ -169,24 +192,25 @@ var curMoves = [];
 
 var pad_x;
 var pad_y;
+var pad_type = 1;
 
 var left_init_pose_dragging = false;
-var left_init_pose_x = parseFloat(localStorage.getItem("left_init_pose_x")) || myWindowWidth / 3;
-var left_init_pose_y = parseFloat(localStorage.getItem("left_init_pose_y")) || myWindowWidth / 3;
+var left_init_pose_x = storageNumber("left_init_pose_x", myWindowWidth / 3);
+var left_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
 var right_init_pose_dragging = false;
-var right_init_pose_x = parseFloat(localStorage.getItem("right_init_pose_x")) || 2 * myWindowWidth / 3;
-var right_init_pose_y = parseFloat(localStorage.getItem("right_init_pose_y")) || myWindowHeight / 3;
+var right_init_pose_x = storageNumber("right_init_pose_x", 2 * myWindowWidth / 3);
+var right_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
 
 var left_init_hook_dragging = false;
-var left_init_hook_x = parseFloat(localStorage.getItem("left_init_hook_x")) || 120;
+var left_init_hook_x = storageNumber("left_init_hook_x", 120);
 var right_init_hook_dragging = false;
-var right_init_hook_x = parseFloat(localStorage.getItem("right_init_hook_x")) || myWindowWidth - 120;
+var right_init_hook_x = storageNumber("right_init_hook_x", myWindowWidth - 120);
 
 var init_uppercut_dragging = false;
-var init_uppercut_y = parseFloat(localStorage.getItem("init_uppercut_y")) || myWindowHeight * 3 / 4;
+var init_uppercut_y = storageNumber("init_uppercut_y", myWindowHeight * 3 / 4);
 
 var init_jab_dragging = false;
-var init_jab_y = parseFloat(localStorage.getItem("init_jab_y")) || myWindowHeight / 4;
+var init_jab_y = storageNumber("init_jab_y", myWindowHeight / 4);
 
 var left_poses = Date.now() - 1000;
 var right_poses = Date.now() - 1000;
@@ -210,11 +234,11 @@ var guard_warning = Date.now();
 
 var speechString = null;
 var selected_player = localStorage.getItem("selected_player") || "player";
-var player = JSON.parse(localStorage.getItem(selected_player)) || {
+var player = storageJson(selected_player, {
   "name": (Math.random() + 1).toString(36).substring(2),
   "score": 0,
   "scores": {}
-};
+});
 
 p5.disableFriendlyErrors = true;
 
@@ -223,13 +247,54 @@ document.oncontextmenu = function() {
 }
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('js/service-worker.js')
+  navigator.serviceWorker.register('service-worker.js')
     .then(() => console.log('Service Worker registered'))
     .catch(err => console.error('Service Worker error:', err));
 }
 
 function randomInteger(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function positionCanvas() {
+  if (!cnv) return;
+  cnv.position(Math.max((window.innerWidth - myWindowWidth) / 2, 0), 0);
+}
+
+function resetCalibrationDefaults() {
+  left_init_pose_x = myWindowWidth / 3;
+  localStorage.setItem("left_init_pose_x", left_init_pose_x);
+  left_init_pose_y = myWindowHeight / 3;
+  localStorage.setItem("left_init_pose_y", left_init_pose_y);
+  right_init_pose_x = 2 * myWindowWidth / 3;
+  localStorage.setItem("right_init_pose_x", right_init_pose_x);
+  right_init_pose_y = myWindowHeight / 3;
+  localStorage.setItem("right_init_pose_y", right_init_pose_y);
+  init_jab_y = myWindowHeight / 3 - OBJECT_POSE_SIZE * coef;
+  localStorage.setItem("init_jab_y", init_jab_y);
+  init_uppercut_y = myWindowHeight / 3 + OBJECT_POSE_SIZE * coef;
+  localStorage.setItem("init_uppercut_y", init_uppercut_y);
+  left_init_hook_x = myWindowWidth / 3 - OBJECT_POSE_SIZE * coef;
+  localStorage.setItem("left_init_hook_x", left_init_hook_x);
+  right_init_hook_x = myWindowWidth * 2 / 3 + OBJECT_POSE_SIZE * coef;
+  localStorage.setItem("right_init_hook_x", right_init_hook_x);
+}
+
+function drawMessagePanel(title, details) {
+  stroke(255, 255, 255, 48);
+  strokeWeight(1);
+  fill(0, 0, 0, 184);
+  rect(myWindowWidth / 2 - 170 * coef, myWindowHeight / 2 - 54 * coef, 340 * coef, 108 * coef, 8 * coef);
+  noStroke();
+  fill(255);
+  textAlign(CENTER, CENTER);
+  textStyle(BOLD);
+  textSize(16 * coef);
+  text(title, myWindowWidth / 2, myWindowHeight / 2 - 18 * coef);
+  textStyle(NORMAL);
+  textSize(8 * coef);
+  text(details, myWindowWidth / 2, myWindowHeight / 2 + 18 * coef);
+  textAlign(LEFT, CENTER);
 }
 
 function gameResultBool() { 
@@ -245,7 +310,7 @@ function loadSongmoves() {
       song.moves[0] = 0
       song.moves[1] = 0
       let rand = 0;
-      if (menu === 4) shadow_focus = parseFloat(localStorage.getItem("shadow_focus"));
+      if (menu === 4) shadow_focus = storageNumber("shadow_focus", shadow_focus, { min: 0, max: Object.keys(SHADOW_SPECIFIC).length - 1 });
       for (let i = 2; i < gameLength - 5; i++) {
         if (shadow_focus === 0) rand = randomInteger(1, 9);
         if (shadow_focus === 1) rand = randomInteger(1, 2);
@@ -297,13 +362,13 @@ function letsfight() {
   if (gameCalibration) return speechString = "Calibrating !";
   if (gameStarted) return speechString = "Already fighting !"
   feet_position = 0;
-  left_init_pose_y = parseInt(localStorage.getItem("left_init_pose_y"));
-  right_init_pose_y = parseInt(localStorage.getItem("right_init_pose_y"));
+  left_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
+  right_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
   song_letsfight.play();
   gameStarted = true;
   gameResult = Date.now() - 5001;
   guard_warning = Date.now();
-  my_opponent = JSON.parse(JSON.stringify(OPPONENTS[opponent]));
+  my_opponent = cloneOpponent(opponent);
   curMoves = [];
   gameCalibration = false;
   hide_sensor = 0;
@@ -311,6 +376,7 @@ function letsfight() {
   score = 0;
   arrayScore = [];
   loadSongmoves();
+  score_max_prev = score_max;
 }
 
 function handleChange() {
@@ -591,22 +657,7 @@ function keyPressed() {
     menu = 4;
   }
   if (['r', 'R'].includes(key) && [1].includes(menu) && gameCalibration) {
-    left_init_pose_x = myWindowWidth / 3;
-    localStorage.setItem("left_init_pose_x", left_init_pose_x);
-    left_init_pose_y = myWindowHeight / 3;
-    localStorage.setItem("left_init_pose_y", left_init_pose_y);
-    right_init_pose_x = 2 * myWindowWidth / 3;
-    localStorage.setItem("right_init_pose_x", right_init_pose_x);
-    right_init_pose_y = myWindowHeight / 3;
-    localStorage.setItem("right_init_pose_y", right_init_pose_y);
-    init_jab_y = myWindowHeight / 3 - OBJECT_POSE_SIZE * coef / 2;
-    localStorage.setItem("init_jab_y", init_jab_y);
-    init_uppercut_y = myWindowHeight / 3 + OBJECT_POSE_SIZE * coef / 2;
-    localStorage.setItem("init_uppercut_y", init_uppercut_y);
-    left_init_hook_x = myWindowWidth / 3 - OBJECT_POSE_SIZE * coef;
-    localStorage.setItem("left_init_hook_x", left_init_hook_x);
-    right_init_hook_x = myWindowWidth * 2 / 3 + OBJECT_POSE_SIZE * coef;
-    localStorage.setItem("right_init_hook_x", right_init_hook_x);
+    resetCalibrationDefaults();
   }
   if (['f', 'F'].includes(key) && [1].includes(menu)) {
     if (FRAME_RATE === 120) FRAME_RATE = 20
@@ -620,8 +671,8 @@ function keyPressed() {
 
 function switch_feet() {
   feet_position = 1;
-  left_init_pose_y = parseInt(localStorage.getItem("right_init_pose_y"));
-  right_init_pose_y = parseInt(localStorage.getItem("left_init_pose_y"));
+  left_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
+  right_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
 }
 
 function hitSuccess(c) {
@@ -676,8 +727,13 @@ function setup() {
   angleMode(DEGREES);
   cnv = createCanvas(myWindowWidth, myWindowHeight);
   cnv.elt.addEventListener('contextmenu', handleRightClick);
-  cnv.position((window.innerWidth - myWindowWidth) / 2, 0)
+  positionCanvas();
   fetchSong(1);
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    error = "Camera access is not available in this browser.";
+    return;
+  }
 
   navigator.mediaDevices.getUserMedia({
       video: true
@@ -691,7 +747,7 @@ function setup() {
       isDetecting = true;
     })
     .catch(err => {
-      error = "Failed to access camera:" + err;
+      error = "Failed to access camera: " + err.message;
     });
 
 }
@@ -700,17 +756,10 @@ function draw() {
   if (innerWidth < innerHeight) return;
   background(0);
   if (error.length > 0) {
-    noStroke();
-    textSize(10 * coef);
-    fill(255);
-    text(error, parseInt(myWindowWidth / 3), parseInt(myWindowHeight / 2));
+    drawMessagePanel("Camera unavailable", error);
     return;
   }
   if (!checkStartCondition()) {
-    noStroke();
-    textSize(10 * coef);
-    text("Detecting hands and movements...", parseInt(2 * myWindowWidth / 5), parseInt(3 * myWindowHeight / 5));
-    textSize(30 * coef);
     fill(255);
     image(logo_image, myWindowWidth / 2 - 50 * coef, myWindowHeight / 4, 100 * coef, 100 * coef);
     translate(myWindowWidth / 2, myWindowHeight / 2);
@@ -727,6 +776,7 @@ function draw() {
       loading_k = 0;
       loading_m = 0;
     }
+    drawMessagePanel("Detecting your guard", "Stand in frame with both hands visible");
     return;
   }
   tint(255, 236);
@@ -772,7 +822,20 @@ function draw() {
       if (isDetecting === false) {
         bodyPose.detectStart(video, gotPoses);
         isDetecting = true;
-      } 
+      }
+
+      if (poses.length > 0) {
+        pose = poses[0];
+        leftHand = pose["left_wrist"];
+        rightHand = pose["right_wrist"];
+        nose = pose["nose"];
+        if (nose && nose.confidence > 0.1 && isDetecting) {
+          fill(0, 255, 0, 128);
+          circle(nose.x * coef, nose.y * coef, OBJECT_POSE_SIZE / 8);
+          fill(255, 255, 255, hide_sensor);
+        }
+      }
+
       image(stop_button_image, myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
       image(reset_button_image, myWindowWidth / 2 - 50 * coef, myWindowHeight - 100 * coef, 120 * coef, 60 * coef);
       if (right_init_pose_dragging) {
@@ -837,7 +900,7 @@ function draw() {
         isDetecting = false;
       }
       gameCalibration = false;
-      my_opponent = JSON.parse(JSON.stringify(OPPONENTS[opponent]));
+      my_opponent = cloneOpponent(opponent);
       gameStarted = false;
       hide_sensor = 0;
       gameTimer = -1;
@@ -850,8 +913,8 @@ function draw() {
         gameCurrentSeries++;
       } else gameCurrentSeries = 1;
       feet_position = 0;
-      left_init_pose_y = parseInt(localStorage.getItem("left_init_pose_y"));
-      right_init_pose_y = parseInt(localStorage.getItem("right_init_pose_y"));
+      left_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
+      right_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
     }
 
     if (speechString) {
@@ -882,18 +945,18 @@ function draw() {
     }
     textStyle(BOLD);
     textSize(12 * coef);
-    let currentTime = Math.ceil((gameDuration - gameTimer - 1) / FRAME_RATE);
+    let myCurrentTime = Math.ceil((gameDuration - gameTimer - 1) / FRAME_RATE);
     strokeWeight(8 * coef);
     stroke(80);
     noFill();
     ellipse(myWindowWidth / 3, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
     stroke(0,128,128);
-    arc(myWindowWidth / 3, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, -90, -90 + map(Math.ceil(gameDuration / FRAME_RATE) - currentTime, 0, Math.ceil(gameDuration / FRAME_RATE), 0, 360));
+    arc(myWindowWidth / 3, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, -90, -90 + map(Math.ceil(gameDuration / FRAME_RATE) - myCurrentTime, 0, Math.ceil(gameDuration / FRAME_RATE), 0, 360));
     noStroke();
     fill(255);
     textSize(20 * coef);
     textAlign(CENTER,CENTER)
-    text(currentTime, myWindowWidth / 3, OBJECT_POSE_SIZE);
+    text(myCurrentTime, myWindowWidth / 3, OBJECT_POSE_SIZE);
     textAlign(LEFT,CENTER)
     textSize(12 * coef);
     strokeWeight(8 * coef);
@@ -1047,7 +1110,6 @@ function draw() {
         }
       }
       if (Date.now() - right_dodge < LEVEL * 10 && right_dodge - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
-        console.log("dodger")
         //punch_animation_type = 8;
         punch_animation_type = 1;
         punch_animation = 0;
@@ -1055,7 +1117,6 @@ function draw() {
         left_poses = Date.now() - LEVEL * 10;
       }
       if (Date.now() - left_dodge < LEVEL * 10 && left_dodge - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
-        console.log("dodgel")
         //punch_animation_type = 9;
         punch_animation_type = 2;
         punch_animation = 0;
@@ -1238,7 +1299,7 @@ function draw() {
         if (pad_type === 1) {
           if (pad_x < myWindowWidth / 2) {
             text("L", pad_x, pad_y);
-            if (leftHand.x * coef < pad_x + OBJECT_POSE_SIZE && leftHand.x * coef > pad_x - OBJECT_POSE_SIZE && leftHand.y * coef - OBJECT_POSE_SIZE < pad_y && leftHand.y * coef + OBJECT_POSE_SIZE > pad_y && Date.now() - left_poses < LEVEL * 10) {
+            if (leftHand && leftHand.confidence > 0.1 && leftHand.x * coef < pad_x + OBJECT_POSE_SIZE && leftHand.x * coef > pad_x - OBJECT_POSE_SIZE && leftHand.y * coef - OBJECT_POSE_SIZE < pad_y && leftHand.y * coef + OBJECT_POSE_SIZE > pad_y && Date.now() - left_poses < LEVEL * 10) {
               pad_x = randomInteger(2 * OBJECT_POSE_SIZE, myWindowWidth - 2 * OBJECT_POSE_SIZE);
               pad_y = randomInteger(2 * OBJECT_POSE_SIZE, myWindowHeight - 2 * OBJECT_POSE_SIZE);
               pad_type = 1;
@@ -1255,7 +1316,7 @@ function draw() {
             }
           } else {
             text("R", pad_x, pad_y);
-            if (rightHand.x * coef < pad_x + OBJECT_POSE_SIZE && rightHand.x * coef > pad_x - OBJECT_POSE_SIZE && rightHand.y * coef - OBJECT_POSE_SIZE < pad_y && rightHand.y * coef + OBJECT_POSE_SIZE > pad_y && Date.now() - right_poses < LEVEL * 10) {
+            if (rightHand && rightHand.confidence > 0.1 && rightHand.x * coef < pad_x + OBJECT_POSE_SIZE && rightHand.x * coef > pad_x - OBJECT_POSE_SIZE && rightHand.y * coef - OBJECT_POSE_SIZE < pad_y && rightHand.y * coef + OBJECT_POSE_SIZE > pad_y && Date.now() - right_poses < LEVEL * 10) {
               pad_x = randomInteger(2 * OBJECT_POSE_SIZE, myWindowWidth - 2 * OBJECT_POSE_SIZE);
               pad_y = randomInteger(2 * OBJECT_POSE_SIZE, myWindowHeight - 2 * OBJECT_POSE_SIZE);
               pad_type = 1;
@@ -1273,12 +1334,12 @@ function draw() {
           }
         } else if (pad_type === 2) {
           text("D", myWindowWidth / 2, init_uppercut_y);
-          if (nose.y * coef > init_uppercut_y) {
+          if (nose && nose.confidence > 0.1 && nose.y * coef > init_uppercut_y) {
             down_dodge = Date.now();
             down_dodge_done = true;
             down_dodge_switch = false;
           }
-          if (nose.y * coef < init_uppercut_y) {
+          if (nose && nose.confidence > 0.1 && nose.y * coef < init_uppercut_y) {
             if (down_dodge_done === true) {
               down_dodge_done = false;
               down_dodge_switch = true;
@@ -1347,7 +1408,7 @@ function draw() {
         textSize(10 * coef);
         text(song_result[mt.toString()].success + " / " + song_result[mt.toString()].total, parseInt((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2), parseInt(myWindowHeight / 5 + 30 + 30 * Math.ceil((num + 1) / 2) * coef));
         let h = "R_";
-        if ([1, 3, 5, 7].includes[song_result[mt.toString()].type]) h = "L_"
+        if ([1, 3, 5, 7].includes(song_result[mt.toString()].type)) h = "L_"
         if (song_result[mt.toString()].type === 1 || song_result[mt.toString()].type === 2) {
           fill(100, 100, 0, 255);
         } else if (song_result[mt.toString()].type === 3 || song_result[mt.toString()].type === 4) {
@@ -1371,7 +1432,7 @@ function draw() {
     if (gameStarted) {
       if (gameTimerNext < Math.ceil(gameTimer / FRAME_RATE)) {
         if (moves.length >= Math.ceil(gameTimer / FRAME_RATE) && moves[Math.ceil(gameTimer / FRAME_RATE)] >= 0) {
-          xt = parseInt(moves[Math.ceil(gameTimer / FRAME_RATE)]) % 2 ? left_init_pose_x : right_init_pose_x;
+          let xt = parseInt(moves[Math.ceil(gameTimer / FRAME_RATE)]) % 2 ? left_init_pose_x : right_init_pose_x;
           if (moves[Math.ceil(gameTimer / FRAME_RATE)] === 10) xt = left_init_pose_x;
           curMoves.push({
             "hit": moves[Math.ceil(gameTimer / FRAME_RATE)] === 0 ? true : false,
@@ -1382,7 +1443,7 @@ function draw() {
         }
         gameTimerNext++;
       }
-      for (c = 0; c < curMoves.length; c++) {
+      for (let c = 0; c < curMoves.length; c++) {
         curMoves[c].y = curMoves[c].y - Math.ceil(240 / FRAME_RATE);
         let alpha = 128;
         if ([10].includes(curMoves[c].type) && curMoves[c].y + OBJECT_POSE_SIZE > left_init_pose_y && curMoves[c].y - OBJECT_POSE_SIZE < left_init_pose_y) {
@@ -1488,21 +1549,11 @@ function draw() {
           left_poses = Date.now();
           fill(255, 255, 255, 128);
           circle(left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE);
-          if (gameStarted || gameCalibration) {
+          if (gameStarted ) {
             if (Date.now() - left_hook < LEVEL * 10) {
-              if (gameCalibration) {
-                textSize(15 * coef);
-                fill(255, 255, 255, 127);
-                text("LEFT HOOK!", myWindowWidth / 2.5, myWindowHeight / 2);
-              }
               punchSound();
             }
             if (Date.now() - left_uppercut < LEVEL * 10) {
-              if (gameCalibration) {
-                textSize(15 * coef);
-                fill(255, 255, 255, 127);
-                text("LEFT UPPERCUT!", myWindowWidth / 2.5, myWindowHeight / 2);
-              }
               punchSound();
             }
           }
@@ -1523,12 +1574,7 @@ function draw() {
           rect(0, 0, myWindowWidth, init_jab_y);
           if (Date.now() - left_poses < LEVEL * 10 && Date.now() - right_poses < LEVEL * 10) {
             left_jab = Date.now();
-            if (gameCalibration) {
-              textSize(15 * coef);
-              fill(255, 255, 255, 127);
-              text("LEFT JAB!", myWindowWidth / 2.5, myWindowHeight / 2);
-            }
-            if (gameStarted || gameCalibration) punchSound();
+            if (gameStarted) punchSound();
           }
         }
         if (Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
@@ -1550,19 +1596,9 @@ function draw() {
           circle(right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE);
           if (gameStarted || gameCalibration) {
             if (Date.now() - right_hook < LEVEL * 10) {
-              if (gameCalibration) {
-                textSize(15 * coef);
-                fill(255, 255, 255, 127);
-                text("RIGHT HOOK!", myWindowWidth / 2.5, myWindowHeight / 2);
-              }
               punchSound();
             }
             if (Date.now() - right_uppercut < LEVEL * 10) {
-              if (gameCalibration) {
-                textSize(15 * coef);
-                fill(255, 255, 255, 127);
-                text("RIGHT UPPERCUT!", myWindowWidth / 2.5, myWindowHeight / 2);
-              }
               punchSound();
             }
           }
@@ -1582,12 +1618,7 @@ function draw() {
           rect(0, 0, myWindowWidth, init_jab_y);
           if (Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
             right_jab = Date.now();
-            if (gameCalibration) {
-              textSize(15 * coef);
-              fill(255, 255, 255, 127);
-              text("RIGHT JAB!", myWindowWidth / 2.5, myWindowHeight / 2);
-            }
-            if (gameStarted || gameCalibration) punchSound();
+            if (gameStarted) punchSound();
           }
         }
       }
@@ -1596,11 +1627,12 @@ function draw() {
 }
 
 function windowResized() {
-  coef = 0.05 * (Math.floor(Math.min(window.innerWidth / 32, window.innerHeight / 24)));
+  coef = Math.max(0.5, 0.05 * (Math.floor(Math.min(window.innerWidth / 32, window.innerHeight / 24))));
   myWindowWidth = coef * 640;
   myWindowHeight = coef * 480;
   resizeCanvas(myWindowWidth, myWindowHeight);
   OBJECT_POSE_SIZE = 48 * coef;
+  positionCanvas();
 }
 
 function checkStartCondition() {
