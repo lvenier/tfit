@@ -3,7 +3,7 @@
     "main": "main.js",
     "version": "1.11.3",
     "description": "A webcam boxing fitness game with motion detection",
-    "license":  "ISC",
+    "license": "ISC",
     "author": {
         "name": "saashup.com",
         "email": "contact@box4.fit",
@@ -11,7 +11,7 @@
     },
     "scripts": {
         "start": "electron .",
-        "serve": "python3 -m http.server 8000",
+        "serve": "http-server . -p 8000 -c-1",
         "test": "npm run test:unit && npm run test:e2e",
         "test:unit": "node --test tests/unit/*.test.js",
         "test:e2e": "node ./node_modules/@playwright/test/cli.js test",
@@ -24,7 +24,10 @@
         "productName": "Box4Fit",
         "linux": {
             "icon": "assets/logos/logo.256.png",
-            "target": ["AppImage", "deb"],
+            "target": [
+                "AppImage",
+                "deb"
+            ],
             "category": "Game"
         },
         "win": {
@@ -36,6 +39,7 @@
         "@playwright/test": "^1.60.0",
         "electron": "*",
         "electron-builder": "*",
-        "electron-packager": "*"
+        "electron-packager": "*",
+        "http-server": "^14.1.1"
     }
 }
