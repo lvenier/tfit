@@ -13,7 +13,7 @@
         "start": "electron .",
         "serve": "http-server . -p 8000 -c-1",
         "test": "npm run test:unit && npm run test:e2e",
-        "test:unit": "node --test tests/unit/*.test.js",
+        "test:unit": "vitest run --config vitest.unit.config.mjs",
         "test:e2e": "node ./node_modules/@playwright/test/cli.js test",
         "test:e2e:headed": "node ./node_modules/@playwright/test/cli.js test --headed",
         "build-linux": "npx electron-builder --linux",
@@ -37,6 +37,7 @@
     },
     "devDependencies": {
         "@playwright/test": "^1.60.0",
+        "@vitest/coverage-v8": "^4.1.7",
         "electron": "*",
         "electron-builder": "*",
         "electron-packager": "*",
