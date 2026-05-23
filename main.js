@@ -1,5 +1,5 @@
 const { app, BrowserWindow } = require('electron');
-const path = require('path');
+const path = require('node:path');
 
 app.commandLine.appendSwitch('gtk-version', '3')
 

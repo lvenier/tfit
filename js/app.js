@@ -60,165 +60,165 @@ const OPPONENTS = {
   }
 }
 
-const { cloneFromMap, randomInteger, storageJson, storageNumber } = window.TfitUtils;
+const { cloneFromMap, randomInteger, storageJson, storageNumber } = globalThis.TfitUtils;
 
 function cloneOpponent(id) {
   return cloneFromMap(OPPONENTS, id, "0");
 }
 
-var error = "";
-var errorTimer = 0;
-var loading_k = 0;
-var loading_m = 0;
+let error = "";
+let errorTimer = 0;
+let loading_k = 0;
+let loading_m = 0;
 
-var menu = 0;
-var myWindowWidth = 480;
-var myWindowHeight = 320;
-var coef = 0.75;
+let menu = 0;
+let myWindowWidth = 480;
+let myWindowHeight = 320;
+let coef = 0.75;
 
 coef = Math.max(0.5, 0.05 * (Math.floor(Math.min(window.innerWidth / 32, window.innerHeight / 24))));
 myWindowWidth = coef * 640;
 myWindowHeight = coef * 480;
 
-var OBJECT_POSE_SIZE = 48 * coef;
-var FRAME_RATE = storageNumber("frame_rate", 20, { allowed: [20, 40, 60, 80, 100, 120] });
-var LEVEL = 50;
+let OBJECT_POSE_SIZE = 48 * coef;
+let FRAME_RATE = storageNumber("frame_rate", 20, { allowed: [20, 40, 60, 80, 100, 120] });
+let LEVEL = 50;
 
-var poseModelIndex = 0;
-var leftHand;
-var rightHand;
-var nose;
-var score = 0;
-var score_max = 0;
-var score_max_prev = 0;
-var level = storageNumber("level", 0, { min: 0, max: Object.keys(GAME_LEVEL).length - 1 });
-var shadow_focus = storageNumber("shadow_focus", 0, { min: 0, max: Object.keys(SHADOW_SPECIFIC).length - 1 });
-var arrayScore = [];
-var background_image;
-var background_images = [];
-var logo_image;
-var menu_image;
-var rfeet_image;
-var lfeet_image;
-var good_hit_image;
-var your_guard_image;
-var fight_button_image;
-var fight_menu_button_image;
-var config_menu_button_image;
-var framerate_button_image = [];
-var level_button_image = [];
-var duration_button_image = [];
-var series_button_image = [];
-var calibrate_button_image;
-var reset_button_image;
-var back_button_image;
-var stop_button_image;
-var shadow_button_image;
-var pad_button_image;
+let poseModelIndex = 0;
+let leftHand;
+let rightHand;
+let nose;
+let score = 0;
+let score_max = 0;
+let score_max_prev = 0;
+let level = storageNumber("level", 0, { min: 0, max: Object.keys(GAME_LEVEL).length - 1 });
+let shadow_focus = storageNumber("shadow_focus", 0, { min: 0, max: Object.keys(SHADOW_SPECIFIC).length - 1 });
+let arrayScore = [];
+let background_image;
+let background_images = [];
+let logo_image;
+let menu_image;
+let rfeet_image;
+let lfeet_image;
+let good_hit_image;
+let your_guard_image;
+let fight_button_image;
+let fight_menu_button_image;
+let config_menu_button_image;
+let framerate_button_image = [];
+let level_button_image = [];
+let duration_button_image = [];
+let series_button_image = [];
+let calibrate_button_image;
+let reset_button_image;
+let back_button_image;
+let stop_button_image;
+let shadow_button_image;
+let pad_button_image;
 
-var keep_trying_image;
+let keep_trying_image;
 
-var me_image;
-var me_images = [];
-var punch_animation = -1;
-var punch_animation_type = 0;
-var punch_animation_delay = 0;
-var opponent = 0;
-var my_opponent = cloneOpponent(opponent);
+let me_image;
+let me_images = [];
+let punch_animation = -1;
+let punch_animation_type = 0;
+let punch_animation_delay = 0;
+let opponent = 0;
+let my_opponent = cloneOpponent(opponent);
 
-var opponent_image = [];
-var opponents_images = [];
-var puncho_animation = -1;
-var puncho_animation_type = 0;
-var puncho_animation_delay = 0;
+let opponent_image = [];
+let opponents_images = [];
+let puncho_animation = -1;
+let puncho_animation_type = 0;
+let puncho_animation_delay = 0;
 
-var backgroundId = storageNumber("background_id", 1, { min: 0, max: Object.keys(MENUTYPE).length - 1 });
-var hide_sensor = 0;
-var video;
-var punch_sound;
-var click_sound;
-var song_letsfight;
-var song_bg_not_found;
-var song_song_over;
-var song_your_guard;
-var song_keep_trying;
-var song_well_done;
-var song_great;
-var song_awesome;
-var song_good;
-var song_perfect;
-var song_continue;
-var song_thats_it;
+let backgroundId = storageNumber("background_id", 1, { min: 0, max: Object.keys(MENUTYPE).length - 1 });
+let hide_sensor = 0;
+let video;
+let punch_sound;
+let click_sound;
+let song_letsfight;
+let song_bg_not_found;
+let song_song_over;
+let song_your_guard;
+let song_keep_trying;
+let song_well_done;
+let song_great;
+let song_awesome;
+let song_good;
+let song_perfect;
+let song_continue;
+let song_thats_it;
 
-var bodyPose;
-var isDetecting = false;
-var cnv;
-var pose = {};
-var poses = [];
-var gameTimer = -1;
-var gameTimerNext = 0;
-var gameLengthIndex = storageNumber("length", 2, { min: 1, max: Object.keys(GAME_LENGTH).length });
-var gameLength = GAME_LENGTH[gameLengthIndex.toString()];
-var gameSeries = storageNumber("series", 1, { min: 1, max: 5 });
-var gameCurrentSeries = 1;
-var gameDuration = gameLength * 100;
-var gameOver = false;
-var gameStarted = false;
-var gameReady = false;
-var gameCalibration = false;
-var song = {};
-var songId = storageNumber("song_id", 1, { min: 1 });
-var song_result = {};
-var feet_position = 0;
+let bodyPose;
+let isDetecting = false;
+let cnv;
+let pose = {};
+let poses = [];
+let gameTimer = -1;
+let gameTimerNext = 0;
+let gameLengthIndex = storageNumber("length", 2, { min: 1, max: Object.keys(GAME_LENGTH).length });
+let gameLength = GAME_LENGTH[gameLengthIndex.toString()];
+let gameSeries = storageNumber("series", 1, { min: 1, max: 5 });
+let gameCurrentSeries = 1;
+let gameDuration = gameLength * 100;
+let gameOver = false;
+let gameStarted = false;
+let gameReady = false;
+let gameCalibration = false;
+let song = {};
+let songId = storageNumber("song_id", 1, { min: 1 });
+let song_result = {};
+let feet_position = 0;
 
-var moves = [];
-var curMoves = [];
+let moves = [];
+let curMoves = [];
 
-var pad_x;
-var pad_y;
-var pad_type = 1;
+let pad_x;
+let pad_y;
+let pad_type = 1;
 
-var left_init_pose_dragging = false;
-var left_init_pose_x = storageNumber("left_init_pose_x", myWindowWidth / 3);
-var left_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
-var right_init_pose_dragging = false;
-var right_init_pose_x = storageNumber("right_init_pose_x", 2 * myWindowWidth / 3);
-var right_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
+let left_init_pose_dragging = false;
+let left_init_pose_x = storageNumber("left_init_pose_x", myWindowWidth / 3);
+let left_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
+let right_init_pose_dragging = false;
+let right_init_pose_x = storageNumber("right_init_pose_x", 2 * myWindowWidth / 3);
+let right_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
 
-var left_init_hook_dragging = false;
-var left_init_hook_x = storageNumber("left_init_hook_x", 120);
-var right_init_hook_dragging = false;
-var right_init_hook_x = storageNumber("right_init_hook_x", myWindowWidth - 120);
+let left_init_hook_dragging = false;
+let left_init_hook_x = storageNumber("left_init_hook_x", 120);
+let right_init_hook_dragging = false;
+let right_init_hook_x = storageNumber("right_init_hook_x", myWindowWidth - 120);
 
-var init_uppercut_dragging = false;
-var init_uppercut_y = storageNumber("init_uppercut_y", myWindowHeight * 3 / 4);
+let init_uppercut_dragging = false;
+let init_uppercut_y = storageNumber("init_uppercut_y", myWindowHeight * 3 / 4);
 
-var init_jab_dragging = false;
-var init_jab_y = storageNumber("init_jab_y", myWindowHeight / 4);
+let init_jab_dragging = false;
+let init_jab_y = storageNumber("init_jab_y", myWindowHeight / 4);
 
-var left_poses = Date.now() - 1000;
-var right_poses = Date.now() - 1000;
-var left_hook = Date.now() - 1000;
-var right_hook = Date.now() - 1000;
-var left_jab = Date.now() - 1000;
-var right_jab = Date.now() - 1000;
-var left_uppercut = Date.now() - 1000;
-var right_uppercut = Date.now() - 1000;
-var left_dodge = Date.now() - 1000;
-var right_dodge = Date.now() - 1000;
-var down_dodge = Date.now() - 1000;
-var down_dodge_done = false;
-var down_dodge_switch = false;
-var switch_guard = Date.now() - 10000;
-var punch_sound_time = Date.now() - 1000;
-var hit_success = Date.now() - 1000;
-var gameOverTime = Date.now() - 1000;
-var gameResult = Date.now() - 5000;
-var guard_warning = Date.now();
+let left_poses = Date.now() - 1000;
+let right_poses = Date.now() - 1000;
+let left_hook = Date.now() - 1000;
+let right_hook = Date.now() - 1000;
+let left_jab = Date.now() - 1000;
+let right_jab = Date.now() - 1000;
+let left_uppercut = Date.now() - 1000;
+let right_uppercut = Date.now() - 1000;
+let left_dodge = Date.now() - 1000;
+let right_dodge = Date.now() - 1000;
+let down_dodge = Date.now() - 1000;
+let down_dodge_done = false;
+let down_dodge_switch = false;
+let switch_guard = Date.now() - 10000;
+let punch_sound_time = Date.now() - 1000;
+let hit_success = Date.now() - 1000;
+let gameOverTime = Date.now() - 1000;
+let gameResult = Date.now() - 5000;
+let guard_warning = Date.now();
 
-var speechString = null;
-var selected_player = localStorage.getItem("selected_player") || "player";
-var player = storageJson(selected_player, {
+let speechString = null;
+let selected_player = localStorage.getItem("selected_player") || "player";
+let player = storageJson(selected_player, {
   "name": (Math.random() + 1).toString(36).substring(2),
   "score": 0,
   "scores": {}
@@ -305,7 +305,6 @@ function loadSongmoves() {
         if (shadow_focus === 3) rand = randomInteger(5, 6);
         if (shadow_focus === 4) rand = randomInteger(7, 9);
         if (shadow_focus === 5) rand = randomInteger(1, 6);
-        if (level === 2) {};
         if (level === 1) {
           if (i % 5 === 0) rand = 0;
         }
@@ -321,8 +320,8 @@ function loadSongmoves() {
     }
     moves = song.moves;
     score_max = 0;
-    for (let m = 0; m < moves.length; m++) {
-      if (moves[m] != 0 && moves[m] != 10) score_max++;
+    for (const element of moves) {
+      if (element != 0 && element != 10) score_max++;
     }
   }
 }
@@ -369,32 +368,32 @@ function letsfight() {
 function handleChange() {
   if (gameResultBool()) return;
   if (menu === 0) {
-    if (mouseX < parseInt(myWindowWidth / 6) + 100 * coef && mouseX > parseInt(myWindowWidth / 6)) {
-      if (mouseY < parseInt(myWindowHeight / 6 + 350 * coef) && mouseY > parseInt(myWindowHeight / 6 + 300 * coef)) {
+    if (mouseX < Number.parseInt(myWindowWidth / 6) + 100 * coef && mouseX > Number.parseInt(myWindowWidth / 6)) {
+      if (mouseY < Number.parseInt(myWindowHeight / 6 + 350 * coef) && mouseY > Number.parseInt(myWindowHeight / 6 + 300 * coef)) {
           click_sound.play();
           menu = 1;
           return;
       }
-      if (mouseY < parseInt(myWindowHeight / 6 + 50 * coef) && mouseY > parseInt(myWindowHeight / 6)) {
+      if (mouseY < Number.parseInt(myWindowHeight / 6 + 50 * coef) && mouseY > Number.parseInt(myWindowHeight / 6)) {
         click_sound.play();
         menu = 2;
         curMoves = [];
         loadSongmoves();
         return;
       }
-      if (mouseY < parseInt(myWindowHeight / 6 + 150 * coef) && mouseY > parseInt(myWindowHeight / 6 + 100 * coef)) {
+      if (mouseY < Number.parseInt(myWindowHeight / 6 + 150 * coef) && mouseY > Number.parseInt(myWindowHeight / 6 + 100 * coef)) {
         click_sound.play();
         menu = 3;
         curMoves = [];
         loadSongmoves();
         return;
       }
-      if (mouseY < parseInt(myWindowHeight / 6 + 250 * coef) && mouseY > parseInt(myWindowHeight / 6 + 200 * coef)) {
+      if (mouseY < Number.parseInt(myWindowHeight / 6 + 250 * coef) && mouseY > Number.parseInt(myWindowHeight / 6 + 200 * coef)) {
         click_sound.play();
         menu = 4
         curMoves = [];
         loadSongmoves();
-        my_opponent = JSON.parse(JSON.stringify(OPPONENTS[opponent]));
+        my_opponent = structuredClone(OPPONENTS[opponent]);
         return;
       }
     }
@@ -440,7 +439,7 @@ function handleChange() {
     if (mouseX > myWindowWidth / 2 - 40 * coef && mouseX < myWindowWidth / 2 + 60 * coef) {
       if (gameCalibration) {
         click_sound.play();
-        window.dispatchEvent(new KeyboardEvent('keydown', {
+        globalThis.dispatchEvent(new KeyboardEvent('keydown', {
             key: 'r',
             keyCode: 82,
             code: 'KeyR',
@@ -457,7 +456,7 @@ function handleChange() {
     }
   }
   if (menu > 0) {
-    if (mouseX > myWindowWidth - 100 * coef && mouseX < myWindowWidth && mouseY < parseInt(myWindowHeight - 10 * coef) && mouseY > parseInt(myWindowHeight - 60 * coef)) {
+    if (mouseX > myWindowWidth - 100 * coef && mouseX < myWindowWidth && mouseY < Number.parseInt(myWindowHeight - 10 * coef) && mouseY > Number.parseInt(myWindowHeight - 60 * coef)) {
       click_sound.play();
       if (menu > 0 && !gameStarted && !gameCalibration) menu = 0;
       else if (menu > 0 && (gameStarted || gameCalibration)) {
@@ -579,10 +578,6 @@ async function loadAssets() {
   song_continue = await loadSound('assets/sounds/continue.mp3');
   song_thats_it = await loadSound('assets/sounds/thats_it.mp3');
 
-  /*bodyPose = ml5.bodyPose(MODELS[poseModelIndex], {
-    modelUrl: "js/ml5js/model.json",
-    flipped: true
-  });*/
 }
 
 function keyPressed() {
@@ -593,13 +588,13 @@ function keyPressed() {
     }
   }
   if (['s', 'S'].includes(key) && [1].includes(menu)) {
-      if (!gameCalibration) {
+      if (gameCalibration) {
+        gameCalibration = false;
+        menu = 1;
+      } else {
         if (gameSeries < 5) gameSeries++;
         else gameSeries = 1;
         localStorage.setItem("series", gameSeries);
-      } else {
-        gameCalibration = false;
-        menu = 1;
       }
   }
   if (['t', 'T'].includes(key) && [2].includes(menu)) {
@@ -692,7 +687,7 @@ function hitSuccess(c) {
 function handleRightClick(e) {
   e.preventDefault();
   if (gameStarted) {
-    return window.dispatchEvent(new KeyboardEvent('keydown', {
+    return globalThis.dispatchEvent(new KeyboardEvent('keydown', {
       key: 's',
       keyCode: 83,
       code: 'KeyS',
@@ -700,7 +695,7 @@ function handleRightClick(e) {
       bubbles: true
     }))
   }
-  return window.dispatchEvent(new KeyboardEvent('keydown', {
+  return globalThis.dispatchEvent(new KeyboardEvent('keydown', {
       key: 'b',
       keyCode: 66,
       code: 'KeyB',
@@ -781,13 +776,13 @@ function draw() {
     fill(0, 0, 0);
     image(logo_image, myWindowWidth - 60 * coef, myWindowHeight - 55 * coef, 50 * coef, 50 * coef);
     image(menu_image, myWindowWidth / 2.5, myWindowHeight / 8, myWindowWidth / 2, myWindowWidth / 2);
-    image(shadow_button_image, myWindowWidth / 6, parseInt(myWindowHeight / 6), 100 * coef, 50 * coef);
-    image(pad_button_image, myWindowWidth / 6, parseInt(myWindowHeight / 6 + 100 * coef), 100 * coef, 50 * coef);
-    image(fight_menu_button_image, myWindowWidth / 6, parseInt(myWindowHeight / 6 + 200 * coef), 100 * coef, 50 * coef);
-    image(config_menu_button_image, myWindowWidth / 6, parseInt(myWindowHeight / 6 + 300 * coef), 100 * coef, 50 * coef);
+    image(shadow_button_image, myWindowWidth / 6, Number.parseInt(myWindowHeight / 6), 100 * coef, 50 * coef);
+    image(pad_button_image, myWindowWidth / 6, Number.parseInt(myWindowHeight / 6 + 100 * coef), 100 * coef, 50 * coef);
+    image(fight_menu_button_image, myWindowWidth / 6, Number.parseInt(myWindowHeight / 6 + 200 * coef), 100 * coef, 50 * coef);
+    image(config_menu_button_image, myWindowWidth / 6, Number.parseInt(myWindowHeight / 6 + 300 * coef), 100 * coef, 50 * coef);
   } else {
     if ((menu === 2 || menu === 3 || menu === 4 || menu === 1) && !gameStarted && !gameResultBool()) {
-      image(back_button_image,myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
+      image(back_button_image,myWindowWidth - 100 * coef - 10, Number.parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
     }
   }
 
@@ -823,7 +818,7 @@ function draw() {
         }
       }
 
-      image(stop_button_image, myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
+      image(stop_button_image, myWindowWidth - 100 * coef - 10, Number.parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
       image(reset_button_image, myWindowWidth / 2 - 50 * coef, myWindowHeight - 100 * coef, 120 * coef, 60 * coef);
       if (right_init_pose_dragging) {
         right_init_pose_x = mouseX;
@@ -926,8 +921,8 @@ function draw() {
         bodyPose.detectStart(video, gotPoses);
         isDetecting = true;
       } 
-      for (let i = 0; i < arrayScore.length; i++) {
-        score += arrayScore[i];
+      for (const element of arrayScore) {
+        score += element;
       }
     }
     textStyle(BOLD);
@@ -978,17 +973,17 @@ function draw() {
       curMoves = [];
       gameTimerNext = 0;
       arrayScore = [];
-      for (let i = 0; i < moves.length; i++) arrayScore.push(0);
+      for (const element of moves) arrayScore.push(0);
     }
 
     if (gameStarted) {
-      image(stop_button_image, myWindowWidth - 100 * coef - 10, parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
+      image(stop_button_image, myWindowWidth - 100 * coef - 10, Number.parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
       fill(255, 0, 0, hide_sensor);
       if (Date.now() - hit_success < 1000) {
         image(good_hit_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
       }
       if (Date.now() - hit_success > 3000 && Date.now() - hit_success < 4000 && guard_warning - Date.now() < 2000 && Math.ceil((gameDuration - gameTimer) / FRAME_RATE) > 5) {
-        if (curMoves.length > 3 && curMoves[curMoves.length - 1].hit === false && curMoves[curMoves.length - 2].hit === false && curMoves[curMoves.length - 3].hit === false) {
+        if (curMoves.length > 3 && curMoves.at(-1).hit === false && curMoves.at(-2).hit === false && curMoves.at(-3).hit === false) {
           image(keep_trying_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
           if (Date.now() - hit_success < 3019) {
             song_keep_trying.play();
@@ -1097,14 +1092,12 @@ function draw() {
         }
       }
       if (Date.now() - right_dodge < LEVEL * 10 && right_dodge - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
-        //punch_animation_type = 8;
         punch_animation_type = 1;
         punch_animation = 0;
         punch_animation_delay = 0;
         left_poses = Date.now() - LEVEL * 10;
       }
       if (Date.now() - left_dodge < LEVEL * 10 && left_dodge - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
-        //punch_animation_type = 9;
         punch_animation_type = 2;
         punch_animation = 0;
         punch_animation_delay = 0;
@@ -1113,42 +1106,42 @@ function draw() {
         punch_animation_type = 5;
         punch_animation = 0;
         punch_animation_delay = 0;
-        if (curMoves.length > 0 && 'type' in curMoves[curMoves.length - 1] && curMoves[curMoves.length - 1].type === 5) my_opponent.stamina--;
+        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 5) my_opponent.stamina--;
         left_poses = Date.now() - LEVEL * 10;
       }
       if (Date.now() - left_jab < LEVEL * 10 && left_jab - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
         punch_animation_type = 1;
         punch_animation = 0;
         punch_animation_delay = 0;
-        if (curMoves.length > 0 && 'type' in curMoves[curMoves.length - 1] && curMoves[curMoves.length - 1].type === 1) my_opponent.stamina--;
+        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 1) my_opponent.stamina--;
         left_poses = Date.now() - LEVEL * 10;
       }
       if (Date.now() - left_hook < LEVEL * 10 && left_hook - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
         punch_animation_type = 3;
         punch_animation = 0;
         punch_animation_delay = 0;
-        if (curMoves.length > 0 && 'type' in curMoves[curMoves.length - 1] && curMoves[curMoves.length - 1].type === 3) my_opponent.stamina--;
+        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 3) my_opponent.stamina--;
         left_poses = Date.now() - LEVEL * 10;
       }
       if (Date.now() - right_uppercut < LEVEL * 10 && right_uppercut - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
         punch_animation_type = 6;
         punch_animation = 0;
         punch_animation_delay = 0;
-        if (curMoves.length > 0 && 'type' in curMoves[curMoves.length - 1] && curMoves[curMoves.length - 1].type === 6) my_opponent.stamina--;
+        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 6) my_opponent.stamina--;
         right_poses = Date.now() - LEVEL * 10;
       }
       if (Date.now() - right_jab < LEVEL * 10 && right_jab - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
         punch_animation_type = 2;
         punch_animation = 0;
         punch_animation_delay = 0;
-        if (curMoves.length > 0 && 'type' in curMoves[curMoves.length - 1] && curMoves[curMoves.length - 1].type === 2) my_opponent.stamina--;
+        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 2) my_opponent.stamina--;
         right_poses = Date.now() - LEVEL * 10;
       }
       if (Date.now() - right_hook < LEVEL * 10 && right_hook - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
         punch_animation_type = 4;
         punch_animation = 0;
         punch_animation_delay = 0;
-        if (curMoves.length > 0 && 'type' in curMoves[curMoves.length - 1] && curMoves[curMoves.length - 1].type === 4) my_opponent.stamina--;
+        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 4) my_opponent.stamina--;
         right_poses = Date.now() - LEVEL * 10;
       }
       if (gameStarted) {
@@ -1156,7 +1149,7 @@ function draw() {
           if (moves.length >= Math.ceil(gameTimer / (FRAME_RATE + LEVEL / 2)) && moves[Math.ceil(gameTimer / (FRAME_RATE + LEVEL / 2))] >= 0) {
             curMoves.push({
               "hit": false,
-              "type": curMoves.length < 4 ? 0 : parseInt(moves[Math.ceil(gameTimer / (FRAME_RATE + LEVEL / 2))]),
+              "type": curMoves.length < 4 ? 0 : Number.parseInt(moves[Math.ceil(gameTimer / (FRAME_RATE + LEVEL / 2))]),
               "x": 0,
               "y": 0
             })
@@ -1366,18 +1359,18 @@ function draw() {
     if (gameResultBool() && curMoves.length > 0) {
       image(background_images[0],0, 0, myWindowWidth,myWindowHeight)
       score = 0;
-      for (let i = 0; i < arrayScore.length; i++) {
-        score += arrayScore[i];
+      for (const element of arrayScore) {
+        score += element;
       }
       textSize(20 * coef);
-      text('Score: ' + score + " / " + score_max_prev, parseInt(myWindowWidth / 2.5) + 20 * coef, parseInt(myWindowHeight / 5));
+      text('Score: ' + score + " / " + score_max_prev, Number.parseInt(myWindowWidth / 2.5) + 20 * coef, Number.parseInt(myWindowHeight / 5));
       textSize(10 * coef);
       song_result = {};
       for (let r in curMoves) {
         if (curMoves[r].type === 0 || curMoves[r].type === 10) continue;
         if (!(curMoves[r].type.toString() in song_result)) {
           song_result[curMoves[r].type.toString()] = {
-            "type": parseInt(curMoves[r].type),
+            "type": Number.parseInt(curMoves[r].type),
             "text": curMoves[r].text,
             "success": 0,
             "total": 0
@@ -1393,7 +1386,7 @@ function draw() {
         if (["score","length"].includes(mt)) continue;
         fill(255);
         textSize(10 * coef);
-        text(song_result[mt.toString()].success + " / " + song_result[mt.toString()].total, parseInt((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2), parseInt(myWindowHeight / 5 + 30 + 30 * Math.ceil((num + 1) / 2) * coef));
+        text(song_result[mt.toString()].success + " / " + song_result[mt.toString()].total, Number.parseInt((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2), Number.parseInt(myWindowHeight / 5 + 30 + 30 * Math.ceil((num + 1) / 2) * coef));
         let h = "R_";
         if ([1, 3, 5, 7].includes(song_result[mt.toString()].type)) h = "L_"
         if (song_result[mt.toString()].type === 1 || song_result[mt.toString()].type === 2) {
@@ -1407,10 +1400,10 @@ function draw() {
         } else if (song_result[mt.toString()].type === 9) {
           fill(0, 0, 200, 255);
         }
-        circle(parseInt((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2) + 100, parseInt(myWindowHeight / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * coef), OBJECT_POSE_SIZE / 2);
+        circle(Number.parseInt((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2) + 100, Number.parseInt(myWindowHeight / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * coef), OBJECT_POSE_SIZE / 2);
         fill(255);
         textSize(5 * coef);
-        text(h + song_result[mt.toString()].text, parseInt((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2) + 84, parseInt(myWindowHeight / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * coef));
+        text(h + song_result[mt.toString()].text, Number.parseInt((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2) + 84, Number.parseInt(myWindowHeight / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * coef));
         num++;
       }
       return;
@@ -1419,11 +1412,11 @@ function draw() {
     if (gameStarted) {
       if (gameTimerNext < Math.ceil(gameTimer / FRAME_RATE)) {
         if (moves.length >= Math.ceil(gameTimer / FRAME_RATE) && moves[Math.ceil(gameTimer / FRAME_RATE)] >= 0) {
-          let xt = parseInt(moves[Math.ceil(gameTimer / FRAME_RATE)]) % 2 ? left_init_pose_x : right_init_pose_x;
+          let xt = Number.parseInt(moves[Math.ceil(gameTimer / FRAME_RATE)]) % 2 ? left_init_pose_x : right_init_pose_x;
           if (moves[Math.ceil(gameTimer / FRAME_RATE)] === 10) xt = left_init_pose_x;
           curMoves.push({
-            "hit": moves[Math.ceil(gameTimer / FRAME_RATE)] === 0 ? true : false,
-            "type": parseInt(moves[Math.ceil(gameTimer / FRAME_RATE)]),
+            "hit": moves[Math.ceil(gameTimer / FRAME_RATE)] === 0,
+            "type": Number.parseInt(moves[Math.ceil(gameTimer / FRAME_RATE)]),
             "x": xt,
             "y": myWindowHeight
           })
