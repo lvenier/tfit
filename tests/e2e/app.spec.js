@@ -3,7 +3,9 @@ const { expect, test } = require('@playwright/test');
 test('loads the game shell and creates a p5 canvas', async ({ page }) => {
   const consoleErrors = [];
   page.on('console', message => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
+    if (message.type() === 'error') {
+      consoleErrors.push(message.text());
+    }
   });
   page.on('pageerror', error => consoleErrors.push(error.message));
 

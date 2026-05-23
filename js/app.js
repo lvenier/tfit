@@ -4,9 +4,9 @@ const MENUTYPE = {
   "2": "shadow",
   "3": "pad",
   "4": "fight"
-}
+};
 
-const MODELS = ["MoveNet", "BlazePose"]
+const MODELS = ["MoveNet", "BlazePose"];
 
 const MOVE_TYPE = {
   "0": "None",
@@ -20,13 +20,13 @@ const MOVE_TYPE = {
   "8": "RIGHT_DODGE",
   "9": "DOWN_DODGE",
   "10": "SWITCH_GUARD"
-}
+};
 
 const GAME_LEVEL = {
   "0": "easy",
   "1": "medium",
   "2": "hard"
-}
+};
 
 const GAME_LENGTH = {
   "1": "30",
@@ -34,7 +34,7 @@ const GAME_LENGTH = {
   "3": "120",
   "4": "180",
   "5": "300"
-}
+};
 
 const SHADOW_SPECIFIC = {
   "0": "ALL",
@@ -43,7 +43,7 @@ const SHADOW_SPECIFIC = {
   "3": "UCUT",
   "4": "DODGE",
   "5": "PUNCHES"
-}
+};
 
 const OPPONENTS = {
   "0": {
@@ -58,7 +58,7 @@ const OPPONENTS = {
     "name": "Vehbo",
     "stamina": 10
   }
-}
+};
 
 const { cloneFromMap, randomInteger, storageJson, storageNumber } = globalThis.TfitUtils;
 
@@ -84,7 +84,7 @@ let OBJECT_POSE_SIZE = 48 * coef;
 let FRAME_RATE = storageNumber("frame_rate", 20, { allowed: [20, 40, 60, 80, 100, 120] });
 let LEVEL = 50;
 
-let poseModelIndex = 0;
+const poseModelIndex = 0;
 let leftHand;
 let rightHand;
 let nose;
@@ -94,8 +94,7 @@ let score_max_prev = 0;
 let level = storageNumber("level", 0, { min: 0, max: Object.keys(GAME_LEVEL).length - 1 });
 let shadow_focus = storageNumber("shadow_focus", 0, { min: 0, max: Object.keys(SHADOW_SPECIFIC).length - 1 });
 let arrayScore = [];
-let background_image;
-let background_images = [];
+const background_images = [];
 let logo_image;
 let menu_image;
 let rfeet_image;
@@ -105,10 +104,10 @@ let your_guard_image;
 let fight_button_image;
 let fight_menu_button_image;
 let config_menu_button_image;
-let framerate_button_image = [];
-let level_button_image = [];
-let duration_button_image = [];
-let series_button_image = [];
+const framerate_button_image = [];
+const level_button_image = [];
+const duration_button_image = [];
+const series_button_image = [];
 let calibrate_button_image;
 let reset_button_image;
 let back_button_image;
@@ -119,27 +118,24 @@ let pad_button_image;
 let keep_trying_image;
 
 let me_image;
-let me_images = [];
+const me_images = [];
 let punch_animation = -1;
 let punch_animation_type = 0;
 let punch_animation_delay = 0;
-let opponent = 0;
+const opponent = 0;
 let my_opponent = cloneOpponent(opponent);
 
-let opponent_image = [];
-let opponents_images = [];
+const opponent_image = [];
+const opponents_images = [];
 let puncho_animation = -1;
 let puncho_animation_type = 0;
 let puncho_animation_delay = 0;
 
-let backgroundId = storageNumber("background_id", 1, { min: 0, max: Object.keys(MENUTYPE).length - 1 });
 let hide_sensor = 0;
 let video;
 let punch_sound;
 let click_sound;
 let song_letsfight;
-let song_bg_not_found;
-let song_song_over;
 let song_your_guard;
 let song_keep_trying;
 let song_well_done;
@@ -167,7 +163,6 @@ let gameStarted = false;
 let gameReady = false;
 let gameCalibration = false;
 let song = {};
-let songId = storageNumber("song_id", 1, { min: 1 });
 let song_result = {};
 let feet_position = 0;
 
@@ -212,13 +207,12 @@ let down_dodge_switch = false;
 let switch_guard = Date.now() - 10000;
 let punch_sound_time = Date.now() - 1000;
 let hit_success = Date.now() - 1000;
-let gameOverTime = Date.now() - 1000;
 let gameResult = Date.now() - 5000;
 let guard_warning = Date.now();
 
 let speechString = null;
-let selected_player = localStorage.getItem("selected_player") || "player";
-let player = storageJson(selected_player, {
+const selectedPlayer = localStorage.getItem("selected_player") || "player";
+storageJson(selectedPlayer, {
   "name": (Math.random() + 1).toString(36).substring(2),
   "score": 0,
   "scores": {}
@@ -226,18 +220,15 @@ let player = storageJson(selected_player, {
 
 p5.disableFriendlyErrors = true;
 
-document.oncontextmenu = function() {
-  return false;
-}
+document.addEventListener("contextmenu", event => event.preventDefault());
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js')
-    .then(() => console.log('Service Worker registered'))
-    .catch(err => console.error('Service Worker error:', err));
+    .catch(() => {});
 }
 
 function positionCanvas() {
-  if (!cnv) return;
+  if (!cnv) {return;}
   cnv.position(Math.max((window.innerWidth - myWindowWidth) / 2, 0), 0);
 }
 
@@ -285,7 +276,7 @@ function drawMessagePanel(title, details) {
 }
 
 function gameResultBool() { 
-  return (Date.now() - gameResult < 5000)
+  return Date.now() - gameResult < 5000;
 }
 
 function loadSongmoves() {
@@ -297,36 +288,36 @@ function loadSongmoves() {
       song.moves[0] = 0
       song.moves[1] = 0
       let rand = 0;
-      if (menu === 4) shadow_focus = storageNumber("shadow_focus", shadow_focus, { min: 0, max: Object.keys(SHADOW_SPECIFIC).length - 1 });
+      if (menu === 4) {shadow_focus = storageNumber("shadow_focus", shadow_focus, { min: 0, max: Object.keys(SHADOW_SPECIFIC).length - 1 });}
       for (let i = 2; i < gameLength - 5; i++) {
-        if (shadow_focus === 0) rand = randomInteger(1, 9);
-        if (shadow_focus === 1) rand = randomInteger(1, 2);
-        if (shadow_focus === 2) rand = randomInteger(3, 4);
-        if (shadow_focus === 3) rand = randomInteger(5, 6);
-        if (shadow_focus === 4) rand = randomInteger(7, 9);
-        if (shadow_focus === 5) rand = randomInteger(1, 6);
+        if (shadow_focus === 0) {rand = randomInteger(1, 9);}
+        if (shadow_focus === 1) {rand = randomInteger(1, 2);}
+        if (shadow_focus === 2) {rand = randomInteger(3, 4);}
+        if (shadow_focus === 3) {rand = randomInteger(5, 6);}
+        if (shadow_focus === 4) {rand = randomInteger(7, 9);}
+        if (shadow_focus === 5) {rand = randomInteger(1, 6);}
         if (level === 1) {
-          if (i % 5 === 0) rand = 0;
+          if (i % 5 === 0) {rand = 0;}
         }
         if (level === 0) {
-          if (i % 2 === 0) rand = 0;
+          if (i % 2 === 0) {rand = 0;}
         }
         song.moves.push(rand);
       }
       for (let s = gameLength - 5; s < gameLength; s++) {
         song.moves[s] = 0;
       }
-      if (menu === 2) song.moves[Math.floor(gameLength / 2)] = 10;
+      if (menu === 2) {song.moves[Math.floor(gameLength / 2)] = 10;}
     }
     moves = song.moves;
     score_max = 0;
     for (const element of moves) {
-      if (element != 0 && element != 10) score_max++;
+      if (element !== 0 && element !== 10) {score_max++;}
     }
   }
 }
 
-function fetchSong(id = 1) {
+function fetchSong(_id = 1) {
   song = {};
   song.name = "";
   song.url = "";
@@ -345,8 +336,14 @@ function punchSound() {
 
 function letsfight() {
   click_sound.play();
-  if (gameCalibration) return speechString = "Calibrating !";
-  if (gameStarted) return speechString = "Already fighting !"
+  if (gameCalibration) {
+    speechString = "Calibrating !";
+    return;
+  }
+  if (gameStarted) {
+    speechString = "Already fighting !";
+    return;
+  }
   feet_position = 0;
   left_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
   right_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
@@ -366,34 +363,34 @@ function letsfight() {
 }
 
 function handleChange() {
-  if (gameResultBool()) return;
+  if (gameResultBool()) {return;}
   if (menu === 0) {
-    if (mouseX < Number.parseInt(myWindowWidth / 6) + 100 * coef && mouseX > Number.parseInt(myWindowWidth / 6)) {
-      if (mouseY < Number.parseInt(myWindowHeight / 6 + 350 * coef) && mouseY > Number.parseInt(myWindowHeight / 6 + 300 * coef)) {
+    if (mouseX < Math.trunc(myWindowWidth / 6) + 100 * coef && mouseX > Math.trunc(myWindowWidth / 6)) {
+      if (mouseY < Math.trunc(myWindowHeight / 6 + 350 * coef) && mouseY > Math.trunc(myWindowHeight / 6 + 300 * coef)) {
           click_sound.play();
           menu = 1;
           return;
       }
-      if (mouseY < Number.parseInt(myWindowHeight / 6 + 50 * coef) && mouseY > Number.parseInt(myWindowHeight / 6)) {
+      if (mouseY < Math.trunc(myWindowHeight / 6 + 50 * coef) && mouseY > Math.trunc(myWindowHeight / 6)) {
         click_sound.play();
         menu = 2;
         curMoves = [];
         loadSongmoves();
         return;
       }
-      if (mouseY < Number.parseInt(myWindowHeight / 6 + 150 * coef) && mouseY > Number.parseInt(myWindowHeight / 6 + 100 * coef)) {
+      if (mouseY < Math.trunc(myWindowHeight / 6 + 150 * coef) && mouseY > Math.trunc(myWindowHeight / 6 + 100 * coef)) {
         click_sound.play();
         menu = 3;
         curMoves = [];
         loadSongmoves();
         return;
       }
-      if (mouseY < Number.parseInt(myWindowHeight / 6 + 250 * coef) && mouseY > Number.parseInt(myWindowHeight / 6 + 200 * coef)) {
+      if (mouseY < Math.trunc(myWindowHeight / 6 + 250 * coef) && mouseY > Math.trunc(myWindowHeight / 6 + 200 * coef)) {
         click_sound.play();
-        menu = 4
+        menu = 4;
         curMoves = [];
         loadSongmoves();
-        my_opponent = structuredClone(OPPONENTS[opponent]);
+        my_opponent = cloneOpponent(opponent);
         return;
       }
     }
@@ -401,7 +398,7 @@ function handleChange() {
   if ([2, 3, 4].includes(menu)) {
     if (mouseX > myWindowWidth / 2 - 40 * coef && mouseX < myWindowWidth / 2 + 60 * coef) {
       if (mouseY > myWindowHeight - 148 * coef && mouseY < myWindowHeight - 108 * coef) {
-        letsfight()
+        letsfight();
         return;
       }
     }
@@ -410,27 +407,30 @@ function handleChange() {
     if (mouseX > myWindowWidth / 2 - 40 * coef && mouseX < myWindowWidth / 2 + 60 * coef) {
       if (mouseY > myWindowHeight - 148 * coef && mouseY < myWindowHeight - 108 * coef) {
         click_sound.play();
-        if (FRAME_RATE === 120) FRAME_RATE = 20
-        else FRAME_RATE = FRAME_RATE + 20;
+        if (FRAME_RATE === 120) {
+          FRAME_RATE = 20;
+        } else {
+          FRAME_RATE = FRAME_RATE + 20;
+        }
         localStorage.setItem("frame_rate", FRAME_RATE);
       }
       if (mouseY > myWindowHeight - 198 * coef && mouseY < myWindowHeight - 158 * coef) {
         click_sound.play();
-        if (level < Object.keys(GAME_LEVEL).length - 1) level++;
-        else level = 0;
+        if (level < Object.keys(GAME_LEVEL).length - 1) {level++;}
+        else {level = 0;}
         localStorage.setItem("level", level);
       }
       if (mouseY > myWindowHeight - 248 * coef && mouseY < myWindowHeight - 208 * coef) {
         click_sound.play();
-        if (gameLengthIndex < Object.keys(GAME_LENGTH).length) gameLengthIndex++;
-        else gameLengthIndex = 1;
+        if (gameLengthIndex < Object.keys(GAME_LENGTH).length) {gameLengthIndex++;}
+        else {gameLengthIndex = 1;}
         localStorage.setItem("length", gameLengthIndex);
         gameLength = GAME_LENGTH[gameLengthIndex.toString()];
       }
       if (mouseY > myWindowHeight - 298 * coef && mouseY < myWindowHeight - 258 * coef) {
         click_sound.play();
-        if (gameSeries < 5) gameSeries++;
-        else gameSeries = 1;
+        if (gameSeries < 5) {gameSeries++;}
+        else {gameSeries = 1;}
         localStorage.setItem("series", gameSeries);
       }
     }
@@ -441,11 +441,9 @@ function handleChange() {
         click_sound.play();
         globalThis.dispatchEvent(new KeyboardEvent('keydown', {
             key: 'r',
-            keyCode: 82,
             code: 'KeyR',
-            which: 82,
             bubbles: true
-          }))
+          }));
       } else {
         click_sound.play();
         gameCalibration = true;
@@ -456,12 +454,15 @@ function handleChange() {
     }
   }
   if (menu > 0) {
-    if (mouseX > myWindowWidth - 100 * coef && mouseX < myWindowWidth && mouseY < Number.parseInt(myWindowHeight - 10 * coef) && mouseY > Number.parseInt(myWindowHeight - 60 * coef)) {
+    if (mouseX > myWindowWidth - 100 * coef && mouseX < myWindowWidth && mouseY < Math.trunc(myWindowHeight - 10 * coef) && mouseY > Math.trunc(myWindowHeight - 60 * coef)) {
       click_sound.play();
-      if (menu > 0 && !gameStarted && !gameCalibration) menu = 0;
-      else if (menu > 0 && (gameStarted || gameCalibration)) {
+      if (menu > 0 && !gameStarted && !gameCalibration) {
+        menu = 0;
+      } else if (menu > 0 && (gameStarted || gameCalibration)) {
         gameOver = true;
-      } else menu = 0;
+      } else {
+        menu = 0;
+      }
       return;
     }
   }
@@ -518,10 +519,9 @@ function mouseReleased() {
 }
 
 async function loadAssets() {
-  for (let m in MENUTYPE) {
+  for (const m of Object.keys(MENUTYPE)) {
     background_images[m] = await loadImage('assets/backgrounds/' + m + '.jpg');
   }
-  background_image = await loadImage('assets/backgrounds/' + backgroundId + '.jpg');
   logo_image = await loadImage('assets/logos/logo.512.rounded.png');
   menu_image = await loadImage('assets/images/menu_image.png');
   rfeet_image = await loadImage('assets/images/RFoot.png');
@@ -538,10 +538,10 @@ async function loadAssets() {
   stop_button_image = await loadImage('assets/images/stop.png');
   keep_trying_image = await loadImage('assets/images/keep_trying.png');
   good_hit_image = await loadImage('assets/images/good_hit.png');
-  for (let i = 0; i < 7; i++ ) framerate_button_image[i] = await loadImage('assets/images/fr' + (i * 20) + '.png');
-  for (let i = 0; i < Object.keys(GAME_LEVEL).length; i++ ) level_button_image[i] = await loadImage('assets/images/' + GAME_LEVEL[i.toString()] + '.png');
-  for (let i = 1; i <= Object.keys(GAME_LENGTH).length; i++ ) duration_button_image[i] = await loadImage('assets/images/' + GAME_LENGTH[i.toString()] + '.png');
-  for (let i = 1; i <= 5; i++ ) series_button_image[i]  = await loadImage('assets/images/s' + i + '.png');
+  for (let i = 0; i < 7; i++ ) {framerate_button_image[i] = await loadImage('assets/images/fr' + (i * 20) + '.png');}
+  for (let i = 0; i < Object.keys(GAME_LEVEL).length; i++ ) {level_button_image[i] = await loadImage('assets/images/' + GAME_LEVEL[i.toString()] + '.png');}
+  for (let i = 1; i <= Object.keys(GAME_LENGTH).length; i++ ) {duration_button_image[i] = await loadImage('assets/images/' + GAME_LENGTH[i.toString()] + '.png');}
+  for (let i = 1; i <= 5; i++ ) {series_button_image[i]  = await loadImage('assets/images/s' + i + '.png');}
 
   me_image = await loadImage('assets/images/boxers/0-me.png');
   me_images[0] = [];
@@ -566,8 +566,6 @@ async function loadAssets() {
   click_sound = await loadSound('assets/sounds/click.mp3');
   punch_sound = await loadSound('assets/sounds/punch.mp3');
   song_letsfight = await loadSound('assets/sounds/letsfight.mp3');
-  song_bg_not_found = await loadSound('assets/sounds/bg_not_found.mp3');
-  song_song_over = await loadSound('assets/sounds/song_over.mp3');
   song_your_guard = await loadSound('assets/sounds/your_guard.mp3');
   song_keep_trying = await loadSound('assets/sounds/keep_trying.mp3');
   song_well_done = await loadSound('assets/sounds/well_done.mp3');
@@ -581,40 +579,52 @@ async function loadAssets() {
 }
 
 function keyPressed() {
-  if (gameResultBool()) return;
+  if (gameResultBool()) {return;}
   if (['b', 'B'].includes(key) && [1, 2, 3, 4].includes(menu)) {
     if (!gameStarted) {
       menu = 0;
     }
   }
   if (['s', 'S'].includes(key) && [1].includes(menu)) {
-      if (gameCalibration) {
-        gameCalibration = false;
-        menu = 1;
+    if (gameCalibration) {
+      gameCalibration = false;
+      menu = 1;
+    } else {
+      if (gameSeries < 5) {
+        gameSeries++;
       } else {
-        if (gameSeries < 5) gameSeries++;
-        else gameSeries = 1;
-        localStorage.setItem("series", gameSeries);
+        gameSeries = 1;
       }
+      localStorage.setItem("series", gameSeries);
+    }
   }
   if (['t', 'T'].includes(key) && [2].includes(menu)) {
     if (!gameStarted) {
-      if (shadow_focus < Object.keys(SHADOW_SPECIFIC).length - 1) shadow_focus++;
-      else shadow_focus = 0;
+      if (shadow_focus < Object.keys(SHADOW_SPECIFIC).length - 1) {
+        shadow_focus++;
+      } else {
+        shadow_focus = 0;
+      }
       localStorage.setItem("shadow_focus", shadow_focus);
       loadSongmoves();
     }
   }
   if (['l', 'L'].includes(key) && [1].includes(menu)) {
-    if (level < Object.keys(GAME_LEVEL).length - 1) level++;
-    else level = 0;
+    if (level < Object.keys(GAME_LEVEL).length - 1) {
+      level++;
+    } else {
+      level = 0;
+    }
     localStorage.setItem("level", level);
   }
   if (['d', 'D'].includes(key) && [1].includes(menu)) {
-      if (gameLengthIndex < Object.keys(GAME_LENGTH).length) gameLengthIndex++;
-      else gameLengthIndex = 1;
-      localStorage.setItem("length", gameLengthIndex);
-      gameLength = GAME_LENGTH[gameLengthIndex.toString()];
+    if (gameLengthIndex < Object.keys(GAME_LENGTH).length) {
+      gameLengthIndex++;
+    } else {
+      gameLengthIndex = 1;
+    }
+    localStorage.setItem("length", gameLengthIndex);
+    gameLength = GAME_LENGTH[gameLengthIndex.toString()];
   }
   if (['c', 'C'].includes(key) && menu === 1) {
       gameCalibration = true;
@@ -642,8 +652,11 @@ function keyPressed() {
     resetCalibrationDefaults();
   }
   if (['f', 'F'].includes(key) && [1].includes(menu)) {
-    if (FRAME_RATE === 120) FRAME_RATE = 20
-    else FRAME_RATE = FRAME_RATE + 20;
+    if (FRAME_RATE === 120) {
+      FRAME_RATE = 20;
+    } else {
+      FRAME_RATE = FRAME_RATE + 20;
+    }
     localStorage.setItem("frame_rate", FRAME_RATE);
   }
   if (['f', 'F'].includes(key) && [2, 3, 4].includes(menu)) {
@@ -662,20 +675,20 @@ function hitSuccess(c) {
     if (c >= 3) {
       let s = 0;
       for (let k = 1; k < c - 2; k++) {
-        if (s > 1) break;
-        if (curMoves[c - k].type === 0) continue;
-        if (curMoves[c - k].hit === false) break;
+        if (s > 1) {break;}
+        if (curMoves[c - k].type === 0) {continue;}
+        if (curMoves[c - k].hit === false) {break;}
         s++;
       }
       if (s > 1) {
-        let r = Math.floor(Math.random() * 20);
-        if (r === 0 || r === 1) song_great.play();
-        if (r === 2 || r === 3) song_awesome.play();
-        if (r === 4 || r === 5) song_good.play();
-        if (r === 6 || r === 7) song_perfect.play();
-        if (r === 8 || r === 9) song_continue.play();
-        if (r === 10 || r === 11) song_thats_it.play();
-        if (r === 12 || r === 13) song_well_done.play();
+        const r = Math.floor(Math.random() * 20);
+        if (r === 0 || r === 1) {song_great.play();}
+        if (r === 2 || r === 3) {song_awesome.play();}
+        if (r === 4 || r === 5) {song_good.play();}
+        if (r === 6 || r === 7) {song_perfect.play();}
+        if (r === 8 || r === 9) {song_continue.play();}
+        if (r === 10 || r === 11) {song_thats_it.play();}
+        if (r === 12 || r === 13) {song_well_done.play();}
       }
     }
     hit_success = Date.now();
@@ -689,19 +702,15 @@ function handleRightClick(e) {
   if (gameStarted) {
     return globalThis.dispatchEvent(new KeyboardEvent('keydown', {
       key: 's',
-      keyCode: 83,
       code: 'KeyS',
-      which: 83,
       bubbles: true
-    }))
+    }));
   }
   return globalThis.dispatchEvent(new KeyboardEvent('keydown', {
       key: 'b',
-      keyCode: 66,
       code: 'KeyB',
-      which: 66,
       bubbles: true
-  }))
+  }));
 }
 
 async function setup() {
@@ -714,14 +723,12 @@ async function setup() {
   positionCanvas();
   fetchSong(1);
 
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+  try {
+    video = createCapture(VIDEO, { flipped: true });
+  } catch {
     error = "Camera access is not available in this browser.";
     return;
   }
-
-  video = createCapture(VIDEO, {
-    flipped: true
-  });
 
   video.hide();
 
@@ -735,7 +742,7 @@ async function setup() {
 }
 
 function draw() {
-  if (innerWidth < innerHeight) return;
+  if (innerWidth < innerHeight) {return;}
   background(0);
   if (error.length > 0) {
     drawMessagePanel("Camera unavailable", error);
@@ -751,8 +758,8 @@ function draw() {
     if (loading_k < 360) {
       loading_k += 4;
       if (90 < loading_k) {
-        if (loading_m < 360) loading_m += 8;
-        else loading_m = 0;
+        if (loading_m < 360) {loading_m += 8;}
+        else {loading_m = 0;}
       }
     } else {
       loading_k = 0;
@@ -776,13 +783,13 @@ function draw() {
     fill(0, 0, 0);
     image(logo_image, myWindowWidth - 60 * coef, myWindowHeight - 55 * coef, 50 * coef, 50 * coef);
     image(menu_image, myWindowWidth / 2.5, myWindowHeight / 8, myWindowWidth / 2, myWindowWidth / 2);
-    image(shadow_button_image, myWindowWidth / 6, Number.parseInt(myWindowHeight / 6), 100 * coef, 50 * coef);
-    image(pad_button_image, myWindowWidth / 6, Number.parseInt(myWindowHeight / 6 + 100 * coef), 100 * coef, 50 * coef);
-    image(fight_menu_button_image, myWindowWidth / 6, Number.parseInt(myWindowHeight / 6 + 200 * coef), 100 * coef, 50 * coef);
-    image(config_menu_button_image, myWindowWidth / 6, Number.parseInt(myWindowHeight / 6 + 300 * coef), 100 * coef, 50 * coef);
+    image(shadow_button_image, myWindowWidth / 6, Math.trunc(myWindowHeight / 6), 100 * coef, 50 * coef);
+    image(pad_button_image, myWindowWidth / 6, Math.trunc(myWindowHeight / 6 + 100 * coef), 100 * coef, 50 * coef);
+    image(fight_menu_button_image, myWindowWidth / 6, Math.trunc(myWindowHeight / 6 + 200 * coef), 100 * coef, 50 * coef);
+    image(config_menu_button_image, myWindowWidth / 6, Math.trunc(myWindowHeight / 6 + 300 * coef), 100 * coef, 50 * coef);
   } else {
     if ((menu === 2 || menu === 3 || menu === 4 || menu === 1) && !gameStarted && !gameResultBool()) {
-      image(back_button_image,myWindowWidth - 100 * coef - 10, Number.parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
+      image(back_button_image,myWindowWidth - 100 * coef - 10, Math.trunc(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
     }
   }
 
@@ -818,7 +825,7 @@ function draw() {
         }
       }
 
-      image(stop_button_image, myWindowWidth - 100 * coef - 10, Number.parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
+      image(stop_button_image, myWindowWidth - 100 * coef - 10, Math.trunc(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
       image(reset_button_image, myWindowWidth / 2 - 50 * coef, myWindowHeight - 100 * coef, 120 * coef, 60 * coef);
       if (right_init_pose_dragging) {
         right_init_pose_x = mouseX;
@@ -874,7 +881,6 @@ function draw() {
     fill(255, 255, 255, 192);
     if (gameDuration - gameTimer <= 0) {
       gameOver = true;
-      gameOverTime = Date.now();
     }
     if (gameOver) {
       if (isDetecting === true) {
@@ -887,13 +893,13 @@ function draw() {
       hide_sensor = 0;
       gameTimer = -1;
       gameOver = false;
-      if (curMoves.length > 0 && score > 0) gameResult = Date.now();
+      if (curMoves.length > 0 && score > 0) {gameResult = Date.now();}
       if (gameCurrentSeries < gameSeries) {
-        setTimeout(function() {
+        setTimeout(() => {
           letsfight();
         }, 5100);
         gameCurrentSeries++;
-      } else gameCurrentSeries = 1;
+      } else {gameCurrentSeries = 1;}
       feet_position = 0;
       left_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
       right_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
@@ -927,7 +933,7 @@ function draw() {
     }
     textStyle(BOLD);
     textSize(12 * coef);
-    let myCurrentTime = Math.ceil((gameDuration - gameTimer - 1) / FRAME_RATE);
+    const myCurrentTime = Math.ceil((gameDuration - gameTimer - 1) / FRAME_RATE);
     strokeWeight(8 * coef);
     stroke(80);
     noFill();
@@ -972,12 +978,11 @@ function draw() {
     if (gameTimer === 0) {
       curMoves = [];
       gameTimerNext = 0;
-      arrayScore = [];
-      for (const element of moves) arrayScore.push(0);
+      arrayScore = Array(moves.length).fill(0);
     }
 
     if (gameStarted) {
-      image(stop_button_image, myWindowWidth - 100 * coef - 10, Number.parseInt(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
+      image(stop_button_image, myWindowWidth - 100 * coef - 10, Math.trunc(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
       fill(255, 0, 0, hide_sensor);
       if (Date.now() - hit_success < 1000) {
         image(good_hit_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
@@ -1021,7 +1026,7 @@ function draw() {
     rect(myWindowWidth / 2 - 75 * coef + 2, 17, 148 * coef, 16);
     rect(myWindowWidth / 2 - 75 * coef + 2, 45, 148 * coef, 16);
     fill(255);
-    if (my_opponent.stamina > 0) rect(myWindowWidth / 2 - 75 * coef + 2, 17, 148 * coef - (OPPONENTS[opponent].stamina - my_opponent.stamina) * coef * 24, 16);
+    if (my_opponent.stamina > 0) {rect(myWindowWidth / 2 - 75 * coef + 2, 17, 148 * coef - (OPPONENTS[opponent].stamina - my_opponent.stamina) * coef * 24, 16);}
     rect(myWindowWidth / 2 - 75 * coef + 2, 45, 148 * coef, 16);
     if (poses.length > 0) {
       pose = poses[0];
@@ -1106,42 +1111,42 @@ function draw() {
         punch_animation_type = 5;
         punch_animation = 0;
         punch_animation_delay = 0;
-        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 5) my_opponent.stamina--;
+        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 5) {my_opponent.stamina--;}
         left_poses = Date.now() - LEVEL * 10;
       }
       if (Date.now() - left_jab < LEVEL * 10 && left_jab - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
         punch_animation_type = 1;
         punch_animation = 0;
         punch_animation_delay = 0;
-        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 1) my_opponent.stamina--;
+        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 1) {my_opponent.stamina--;}
         left_poses = Date.now() - LEVEL * 10;
       }
       if (Date.now() - left_hook < LEVEL * 10 && left_hook - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
         punch_animation_type = 3;
         punch_animation = 0;
         punch_animation_delay = 0;
-        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 3) my_opponent.stamina--;
+        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 3) {my_opponent.stamina--;}
         left_poses = Date.now() - LEVEL * 10;
       }
       if (Date.now() - right_uppercut < LEVEL * 10 && right_uppercut - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
         punch_animation_type = 6;
         punch_animation = 0;
         punch_animation_delay = 0;
-        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 6) my_opponent.stamina--;
+        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 6) {my_opponent.stamina--;}
         right_poses = Date.now() - LEVEL * 10;
       }
       if (Date.now() - right_jab < LEVEL * 10 && right_jab - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
         punch_animation_type = 2;
         punch_animation = 0;
         punch_animation_delay = 0;
-        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 2) my_opponent.stamina--;
+        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 2) {my_opponent.stamina--;}
         right_poses = Date.now() - LEVEL * 10;
       }
       if (Date.now() - right_hook < LEVEL * 10 && right_hook - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
         punch_animation_type = 4;
         punch_animation = 0;
         punch_animation_delay = 0;
-        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 4) my_opponent.stamina--;
+        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 4) {my_opponent.stamina--;}
         right_poses = Date.now() - LEVEL * 10;
       }
       if (gameStarted) {
@@ -1149,14 +1154,14 @@ function draw() {
           if (moves.length >= Math.ceil(gameTimer / (FRAME_RATE + LEVEL / 2)) && moves[Math.ceil(gameTimer / (FRAME_RATE + LEVEL / 2))] >= 0) {
             curMoves.push({
               "hit": false,
-              "type": curMoves.length < 4 ? 0 : Number.parseInt(moves[Math.ceil(gameTimer / (FRAME_RATE + LEVEL / 2))]),
+              "type": curMoves.length < 4 ? 0 : Math.trunc(moves[Math.ceil(gameTimer / (FRAME_RATE + LEVEL / 2))]),
               "x": 0,
               "y": 0
             })
           }
           gameTimerNext++;
         }
-        let c = curMoves.length - 1;
+        const c = curMoves.length - 1;
         if (curMoves.length > 0 && 'type' in curMoves[c] && curMoves[c].type !== 0) {
           if (curMoves[c].type === 1 || curMoves[c].type === 2) {
             fill(100, 100, 0);
@@ -1169,22 +1174,22 @@ function draw() {
           } else if (curMoves[c].type === 9) {
             fill(0, 0, 200);
           }
-          if ([1,2].includes(curMoves[c].type)) circle(myWindowWidth / 2, myWindowHeight / 5, OBJECT_POSE_SIZE);
-          else if (curMoves[c].type === 3) quad(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 6, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 6)
-          else if (curMoves[c].type === 4) quad(myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 6, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 6)
-          else if (curMoves[c].type === 5) quad(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 6, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 6, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2)
-          else if (curMoves[c].type === 6) quad(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 6, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 6, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2)
-          else if (curMoves[c].type === 7) quad(myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 6, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 6)
-          else if (curMoves[c].type === 8) quad(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 6, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 6)
-          else if (curMoves[c].type === 9) quad(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 6, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 6, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2)
+          if ([1,2].includes(curMoves[c].type)) {circle(myWindowWidth / 2, myWindowHeight / 5, OBJECT_POSE_SIZE);}
+          else if (curMoves[c].type === 3) {quad(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 6, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 6)}
+          else if (curMoves[c].type === 4) {quad(myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 6, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 6)}
+          else if (curMoves[c].type === 5) {quad(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 6, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 6, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2)}
+          else if (curMoves[c].type === 6) {quad(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 6, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 6, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2)}
+          else if (curMoves[c].type === 7) {quad(myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 6, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 6)}
+          else if (curMoves[c].type === 8) {quad(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 6, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 6)}
+          else if (curMoves[c].type === 9) {quad(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 6, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 6, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2)}
           textSize(10 * coef);
           fill(255, 255, 255, 255);
           text(MOVE_TYPE[curMoves[c].type], myWindowWidth / 2 - coef * MOVE_TYPE[curMoves[c].type].length * 3, myWindowHeight / 5);
           tint(255, 224);
           if (curMoves[c].hit === false) {
             if (gameStarted && puncho_animation === -1 && curMoves[c].hit === false) {
-              if (curMoves[c].type >= 7) puncho_animation_type = randomInteger(1,2);
-              else puncho_animation_type = curMoves[c].type;
+              if (curMoves[c].type >= 7) {puncho_animation_type = randomInteger(1,2);}
+              else {puncho_animation_type = curMoves[c].type;}
               puncho_animation = 0;
               puncho_animation_delay = 0;
             }
@@ -1195,11 +1200,15 @@ function draw() {
                   puncho_animation = -1;
                   puncho_animation_delay = 0;
                   curMoves[c].hit = true;
-                } else puncho_animation++;
+                } else {
+                  puncho_animation++;
+                }
               }
               puncho_animation_delay++;
             }
-          } else image(opponent_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);         
+          } else {
+            image(opponent_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
+          }
           tint(255, 192);
         } else {
           tint(255, 224);
@@ -1212,10 +1221,10 @@ function draw() {
             if (punch_animation >= 6) {
               punch_animation = -1;
               punch_animation_delay = 0;
-            } else punch_animation++;
+            } else {punch_animation++;}
           }
           punch_animation_delay++;
-        } else image(me_image, myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);
+        } else {image(me_image, myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);}
         tint(255, 255);
         gameTimer++;
       }
@@ -1263,7 +1272,7 @@ function draw() {
           pad_type = 1;
           curMoves = [];
           if ((pad_x < right_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > right_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < right_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > right_init_pose_y - 2 * OBJECT_POSE_SIZE) || (pad_x < left_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > left_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < left_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > left_init_pose_y - 2 * OBJECT_POSE_SIZE))
-            pad_type = 2;
+            {pad_type = 2;}
           curMoves.push({
             "hit": false,
             "type": pad_type,
@@ -1272,9 +1281,9 @@ function draw() {
           })
         }
         fill(100, 100, 0, 255);
-        if (pad_type === 1) circle(pad_x, pad_y, OBJECT_POSE_SIZE);
+        if (pad_type === 1) {circle(pad_x, pad_y, OBJECT_POSE_SIZE);}
         fill(0, 0, 100, 255);
-        if (pad_type === 2) rect(OBJECT_POSE_SIZE, init_uppercut_y - OBJECT_POSE_SIZE / 2, myWindowWidth - 2 * OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, 20);
+        if (pad_type === 2) {rect(OBJECT_POSE_SIZE, init_uppercut_y - OBJECT_POSE_SIZE / 2, myWindowWidth - 2 * OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, 20);}
         fill(255, 255, 255, 192);
         if (pad_type === 1) {
           if (pad_x < myWindowWidth / 2) {
@@ -1284,7 +1293,7 @@ function draw() {
               pad_y = randomInteger(2 * OBJECT_POSE_SIZE, myWindowHeight - 2 * OBJECT_POSE_SIZE);
               pad_type = 1;
               if ((pad_x < right_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > right_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < right_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > right_init_pose_y - 2 * OBJECT_POSE_SIZE) || (pad_x < left_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > left_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < left_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > left_init_pose_y - 2 * OBJECT_POSE_SIZE))
-                pad_type = 2;
+                {pad_type = 2;}
               left_poses = Date.now() - LEVEL * 10;
               hitSuccess(curMoves.length - 1);
               curMoves.push({
@@ -1301,7 +1310,7 @@ function draw() {
               pad_y = randomInteger(2 * OBJECT_POSE_SIZE, myWindowHeight - 2 * OBJECT_POSE_SIZE);
               pad_type = 1;
               if ((pad_x < right_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > right_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < right_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > right_init_pose_y - 2 * OBJECT_POSE_SIZE) || (pad_x < left_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > left_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < left_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > left_init_pose_y - 2 * OBJECT_POSE_SIZE))
-                pad_type = 2;
+                {pad_type = 2;}
               right_poses = Date.now() - LEVEL * 10;
               hitSuccess(curMoves.length - 1);
               curMoves.push({
@@ -1333,7 +1342,7 @@ function draw() {
             pad_y = randomInteger(2 * OBJECT_POSE_SIZE, myWindowHeight - 2 * OBJECT_POSE_SIZE);
             pad_type = 1;
             if ((pad_x < right_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > right_init_pose_x - 2 * OBJECT_POSE_SIZE) && (pad_y < right_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > right_init_pose_y - 2 * OBJECT_POSE_SIZE) && (pad_x < left_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > left_init_pose_x - 2 * OBJECT_POSE_SIZE) && (pad_y < left_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > left_init_pose_y - 2 * OBJECT_POSE_SIZE))
-              pad_type = 2;
+              {pad_type = 2;}
             hitSuccess(curMoves.length - 1);
             curMoves.push({
               "hit": false,
@@ -1354,8 +1363,8 @@ function draw() {
   if (menu === 2) {
     fill(255, 255, 255, 192);
     circle(myWindowWidth / 2, 50 + OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE + 10)
-    if (feet_position === 0) image(lfeet_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
-    if (feet_position === 1) image(rfeet_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
+    if (feet_position === 0) {image(lfeet_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);}
+    if (feet_position === 1) {image(rfeet_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);}
     if (gameResultBool() && curMoves.length > 0) {
       image(background_images[0],0, 0, myWindowWidth,myWindowHeight)
       score = 0;
@@ -1363,32 +1372,36 @@ function draw() {
         score += element;
       }
       textSize(20 * coef);
-      text('Score: ' + score + " / " + score_max_prev, Number.parseInt(myWindowWidth / 2.5) + 20 * coef, Number.parseInt(myWindowHeight / 5));
+      text('Score: ' + score + " / " + score_max_prev, Math.trunc(myWindowWidth / 2.5) + 20 * coef, Math.trunc(myWindowHeight / 5));
       textSize(10 * coef);
       song_result = {};
-      for (let r in curMoves) {
-        if (curMoves[r].type === 0 || curMoves[r].type === 10) continue;
-        if (!(curMoves[r].type.toString() in song_result)) {
-          song_result[curMoves[r].type.toString()] = {
-            "type": Number.parseInt(curMoves[r].type),
-            "text": curMoves[r].text,
+      for (const move of curMoves) {
+        if (move.type === 0 || move.type === 10) {
+          continue;
+        }
+        if (!(move.type.toString() in song_result)) {
+          song_result[move.type.toString()] = {
+            "type": Math.trunc(move.type),
+            "text": move.text,
             "success": 0,
             "total": 0
-          }
+          };
         }
-        song_result[curMoves[r].type.toString()]["total"]++;
-        if (curMoves[r].hit === true) song_result[curMoves[r].type.toString()]["success"]++;
+        song_result[move.type.toString()]["total"]++;
+        if (move.hit === true) {
+          song_result[move.type.toString()]["success"]++;
+        }
       }
       song_result.score = score;
       song_result.length = curMoves.length;
       let num = 0;
-      for (let mt of Object.keys(song_result)) {
-        if (["score","length"].includes(mt)) continue;
+      for (const mt of Object.keys(song_result)) {
+        if (["score","length"].includes(mt)) {continue;}
         fill(255);
         textSize(10 * coef);
-        text(song_result[mt.toString()].success + " / " + song_result[mt.toString()].total, Number.parseInt((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2), Number.parseInt(myWindowHeight / 5 + 30 + 30 * Math.ceil((num + 1) / 2) * coef));
+        text(song_result[mt.toString()].success + " / " + song_result[mt.toString()].total, Math.trunc((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2), Math.trunc(myWindowHeight / 5 + 30 + 30 * Math.ceil((num + 1) / 2) * coef));
         let h = "R_";
-        if ([1, 3, 5, 7].includes(song_result[mt.toString()].type)) h = "L_"
+        if ([1, 3, 5, 7].includes(song_result[mt.toString()].type)) {h = "L_"}
         if (song_result[mt.toString()].type === 1 || song_result[mt.toString()].type === 2) {
           fill(100, 100, 0, 255);
         } else if (song_result[mt.toString()].type === 3 || song_result[mt.toString()].type === 4) {
@@ -1400,10 +1413,10 @@ function draw() {
         } else if (song_result[mt.toString()].type === 9) {
           fill(0, 0, 200, 255);
         }
-        circle(Number.parseInt((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2) + 100, Number.parseInt(myWindowHeight / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * coef), OBJECT_POSE_SIZE / 2);
+        circle(Math.trunc((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2) + 100, Math.trunc(myWindowHeight / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * coef), OBJECT_POSE_SIZE / 2);
         fill(255);
         textSize(5 * coef);
-        text(h + song_result[mt.toString()].text, Number.parseInt((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2) + 84, Number.parseInt(myWindowHeight / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * coef));
+        text(h + song_result[mt.toString()].text, Math.trunc((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2) + 84, Math.trunc(myWindowHeight / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * coef));
         num++;
       }
       return;
@@ -1412,11 +1425,11 @@ function draw() {
     if (gameStarted) {
       if (gameTimerNext < Math.ceil(gameTimer / FRAME_RATE)) {
         if (moves.length >= Math.ceil(gameTimer / FRAME_RATE) && moves[Math.ceil(gameTimer / FRAME_RATE)] >= 0) {
-          let xt = Number.parseInt(moves[Math.ceil(gameTimer / FRAME_RATE)]) % 2 ? left_init_pose_x : right_init_pose_x;
-          if (moves[Math.ceil(gameTimer / FRAME_RATE)] === 10) xt = left_init_pose_x;
+          let xt = Math.trunc(moves[Math.ceil(gameTimer / FRAME_RATE)]) % 2 ? left_init_pose_x : right_init_pose_x;
+          if (moves[Math.ceil(gameTimer / FRAME_RATE)] === 10) {xt = left_init_pose_x;}
           curMoves.push({
             "hit": moves[Math.ceil(gameTimer / FRAME_RATE)] === 0,
-            "type": Number.parseInt(moves[Math.ceil(gameTimer / FRAME_RATE)]),
+            "type": Math.trunc(moves[Math.ceil(gameTimer / FRAME_RATE)]),
             "x": xt,
             "y": myWindowHeight
           })
@@ -1468,10 +1481,10 @@ function draw() {
         }
         if (curMoves[c].type === 1 || curMoves[c].type === 2) {
           fill(100, 100, 0, alpha);
-          if (feet_position === 1 && curMoves[c].type === 1) curMoves[c].text = "S";
-          if (feet_position === 1 && curMoves[c].type === 2) curMoves[c].text = "J";
-          if (feet_position === 0 && curMoves[c].type === 1) curMoves[c].text = "J";
-          if (feet_position === 0 && curMoves[c].type === 2) curMoves[c].text = "S";
+          if (feet_position === 1 && curMoves[c].type === 1) {curMoves[c].text = "S";}
+          if (feet_position === 1 && curMoves[c].type === 2) {curMoves[c].text = "J";}
+          if (feet_position === 0 && curMoves[c].type === 1) {curMoves[c].text = "J";}
+          if (feet_position === 0 && curMoves[c].type === 2) {curMoves[c].text = "S";}
         } else if (curMoves[c].type === 3 || curMoves[c].type === 4) {
           fill(100, 0, 100, alpha);
           curMoves[c].text = "H";
@@ -1488,26 +1501,26 @@ function draw() {
           fill(224, 224, 224, alpha);
           curMoves[c].text = "S";
         }
-        if (curMoves[c].hit === true) fill(0, 255, 0, 127);
+        if (curMoves[c].hit === true) {fill(0, 255, 0, 127);}
         if (curMoves[c].type > 0) {
-          if (curMoves[c].type === 3) quad(curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 6, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 6)
-          else if (curMoves[c].type === 4) quad(curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 6, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 6)
-          else if (curMoves[c].type === 5) quad(curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 6, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 6, curMoves[c].y - OBJECT_POSE_SIZE / 2)
-          else if (curMoves[c].type === 6) quad(curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 6, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 6, curMoves[c].y - OBJECT_POSE_SIZE / 2)
-          else if (curMoves[c].type === 7) quad(curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 6, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 6)
-          else if (curMoves[c].type === 8) quad(curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 6, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 6)
+          if (curMoves[c].type === 3) {quad(curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 6, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 6)}
+          else if (curMoves[c].type === 4) {quad(curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 6, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 6)}
+          else if (curMoves[c].type === 5) {quad(curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 6, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 6, curMoves[c].y - OBJECT_POSE_SIZE / 2)}
+          else if (curMoves[c].type === 6) {quad(curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 6, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 6, curMoves[c].y - OBJECT_POSE_SIZE / 2)}
+          else if (curMoves[c].type === 7) {quad(curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 6, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 6)}
+          else if (curMoves[c].type === 8) {quad(curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 6, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 6)}
           else if (curMoves[c].type === 9) {
             quad(curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 6, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 6, curMoves[c].y + OBJECT_POSE_SIZE / 2)
             quad(right_init_pose_x - OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, right_init_pose_x + OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, right_init_pose_x + OBJECT_POSE_SIZE / 6, curMoves[c].y + OBJECT_POSE_SIZE / 2, right_init_pose_x - OBJECT_POSE_SIZE / 6, curMoves[c].y + OBJECT_POSE_SIZE / 2)
-          } else circle(curMoves[c].x, curMoves[c].y, OBJECT_POSE_SIZE);
+          } else {circle(curMoves[c].x, curMoves[c].y, OBJECT_POSE_SIZE);}
         }
-        if ([10].includes(curMoves[c].type)) circle(right_init_pose_x, curMoves[c].y, OBJECT_POSE_SIZE);
+        if ([10].includes(curMoves[c].type)) {circle(right_init_pose_x, curMoves[c].y, OBJECT_POSE_SIZE);}
         fill(255, 255, 255, 255);
         textSize(20 * coef);
         textStyle(BOLD);
         textAlign(CENTER,CENTER);
-        if (curMoves[c].type > 0) text(curMoves[c].text, curMoves[c].x, curMoves[c].y);
-        if ([9, 10].includes(curMoves[c].type)) text(curMoves[c].text, right_init_pose_x, curMoves[c].y);
+        if (curMoves[c].type > 0) {text(curMoves[c].text, curMoves[c].x, curMoves[c].y);}
+        if ([9, 10].includes(curMoves[c].type)) {text(curMoves[c].text, right_init_pose_x, curMoves[c].y);}
         textAlign(LEFT,CENTER);
         textStyle(NORMAL);
       }
@@ -1554,7 +1567,7 @@ function draw() {
           rect(0, 0, myWindowWidth, init_jab_y);
           if (Date.now() - left_poses < LEVEL * 10 && Date.now() - right_poses < LEVEL * 10) {
             left_jab = Date.now();
-            if (gameStarted) punchSound();
+            if (gameStarted) {punchSound();}
           }
         }
         if (Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
@@ -1584,7 +1597,7 @@ function draw() {
           }
         }
         fill(255, 0, 0, 128);
-        if (isDetecting) circle(rightHand.x * coef, rightHand.y * coef, OBJECT_POSE_SIZE / 2);
+        if (isDetecting) {circle(rightHand.x * coef, rightHand.y * coef, OBJECT_POSE_SIZE / 2);}
         fill(255, 255, 255, hide_sensor);
         if (rightHand.x * coef > right_init_hook_x) {
           right_hook = Date.now();
@@ -1598,7 +1611,7 @@ function draw() {
           rect(0, 0, myWindowWidth, init_jab_y);
           if (Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
             right_jab = Date.now();
-            if (gameStarted) punchSound();
+            if (gameStarted) {punchSound();}
           }
         }
       }
@@ -1645,3 +1658,14 @@ function checkStartCondition() {
 function gotPoses(results) {
   poses = results;
 }
+
+Object.assign(globalThis, {
+  draw,
+  keyPressed,
+  mousePressed,
+  mouseReleased,
+  setup,
+  touchEnded,
+  touchMoved,
+  windowResized
+});
