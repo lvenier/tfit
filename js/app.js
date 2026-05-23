@@ -5,9 +5,17 @@ const {
 } = globalThis.TfitAssets;
 
 const {
+  renderFightMode
+} = globalThis.TfitFightMode;
+
+const {
   calibrationDragFlagsFromPointer,
   clearCalibrationDragFlags
 } = globalThis.TfitInput;
+
+const {
+  renderPadMode
+} = globalThis.TfitPadMode;
 
 const {
   calibrationDefaults,
@@ -17,7 +25,6 @@ const {
   detectStartCondition,
   isRecent,
   levelDelay,
-  moveDisplay,
   nextFrameRate,
   nextOneBasedIndex,
   nextZeroBasedIndex
@@ -33,13 +40,15 @@ const {
   renderGuardTargets,
   renderLoadingScreen,
   renderMainMenu,
-  renderMoveShape,
   renderRoundHud,
   renderSceneBackground,
   renderSettingsControls,
-  renderShadowResult,
   renderSpeech
 } = globalThis.TfitRender;
+
+const {
+  renderShadowMode
+} = globalThis.TfitShadowMode;
 
 const {
   markHit
@@ -652,502 +661,15 @@ function draw() {
   }
 
   if (menu === 4) {
-    shadow_focus = 0;
-    renderFightMeters();
-    if (poses.length > 0) {
-      pose = poses[0];
-      leftHand = pose["left_wrist"];
-      rightHand = pose["right_wrist"];
-      nose = pose["nose"];
-      if (nose && nose.confidence > 0.1) {
-        fill(0, 255, 0, 128);
-        circle(nose.x * coef, nose.y * coef, OBJECT_POSE_SIZE / 8);
-        fill(255, 255, 255, hide_sensor);
-        if (nose.x * coef > right_init_pose_x + OBJECT_POSE_SIZE / 2) {
-          right_dodge = Date.now();
-        }
-        if (nose.x * coef < left_init_pose_x - OBJECT_POSE_SIZE / 2) {
-          left_dodge = Date.now();
-        }
-      }
-      if (leftHand && leftHand.confidence > 0.1) {
-        if (leftHand.x * coef < left_init_pose_x + OBJECT_POSE_SIZE && leftHand.x * coef > left_init_pose_x - OBJECT_POSE_SIZE && leftHand.y * coef - OBJECT_POSE_SIZE < left_init_pose_y && leftHand.y * coef + OBJECT_POSE_SIZE > left_init_pose_y) {
-          left_poses = Date.now();
-          left_hook = Date.now() - LEVEL * 10;
-          fill(255, 255, 255, 128);
-          circle(left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE);
-        }
-        fill(255, 0, 0, 128);
-        circle(leftHand.x * coef, leftHand.y * coef, OBJECT_POSE_SIZE / 2);
-        fill(255, 255, 255, hide_sensor);
-        if (leftHand.y * coef > init_uppercut_y) {
-          if (Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
-            left_uppercut = Date.now();
-          }
-        }
-        if (leftHand.y * coef < init_jab_y) {
-          if (Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
-            left_jab = Date.now();
-          }
-        }
-        if (leftHand.x * coef < left_init_hook_x) {
-          if (Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
-            left_hook = Date.now();
-          }
-        }
-      }
-      if (rightHand && rightHand.confidence > 0.1) {
-        if (rightHand.x * coef < right_init_pose_x + OBJECT_POSE_SIZE && rightHand.x * coef > right_init_pose_x - OBJECT_POSE_SIZE && rightHand.y * coef < right_init_pose_y + OBJECT_POSE_SIZE && rightHand.y * coef > right_init_pose_y - OBJECT_POSE_SIZE) {
-          right_poses = Date.now();
-          right_hook = Date.now() - LEVEL * 10;
-          fill(255, 255, 255, 128);
-          circle(right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE);
-        }
-        fill(255, 0, 0, 128);
-        circle(rightHand.x * coef, rightHand.y * coef, OBJECT_POSE_SIZE / 2);
-        fill(255, 255, 255, hide_sensor);
-        if (rightHand.y * coef > init_uppercut_y) {
-          if (Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
-            right_uppercut = Date.now();
-          }
-        }
-        if (rightHand.y * coef < init_jab_y) {
-          if (Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
-            right_jab = Date.now();
-          }
-        }
-        if (rightHand.x * coef > right_init_hook_x) {
-          if (Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
-            right_hook = Date.now();
-          }
-        }
-      }
-      if (Date.now() - right_dodge < LEVEL * 10 && right_dodge - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
-        punch_animation_type = 1;
-        punch_animation = 0;
-        punch_animation_delay = 0;
-        left_poses = Date.now() - LEVEL * 10;
-      }
-      if (Date.now() - left_dodge < LEVEL * 10 && left_dodge - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
-        punch_animation_type = 2;
-        punch_animation = 0;
-        punch_animation_delay = 0;
-      }
-      if (Date.now() - left_uppercut < LEVEL * 10 && left_uppercut - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
-        punch_animation_type = 5;
-        punch_animation = 0;
-        punch_animation_delay = 0;
-        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 5) {my_opponent.stamina--;}
-        left_poses = Date.now() - LEVEL * 10;
-      }
-      if (Date.now() - left_jab < LEVEL * 10 && left_jab - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
-        punch_animation_type = 1;
-        punch_animation = 0;
-        punch_animation_delay = 0;
-        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 1) {my_opponent.stamina--;}
-        left_poses = Date.now() - LEVEL * 10;
-      }
-      if (Date.now() - left_hook < LEVEL * 10 && left_hook - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
-        punch_animation_type = 3;
-        punch_animation = 0;
-        punch_animation_delay = 0;
-        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 3) {my_opponent.stamina--;}
-        left_poses = Date.now() - LEVEL * 10;
-      }
-      if (Date.now() - right_uppercut < LEVEL * 10 && right_uppercut - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
-        punch_animation_type = 6;
-        punch_animation = 0;
-        punch_animation_delay = 0;
-        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 6) {my_opponent.stamina--;}
-        right_poses = Date.now() - LEVEL * 10;
-      }
-      if (Date.now() - right_jab < LEVEL * 10 && right_jab - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
-        punch_animation_type = 2;
-        punch_animation = 0;
-        punch_animation_delay = 0;
-        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 2) {my_opponent.stamina--;}
-        right_poses = Date.now() - LEVEL * 10;
-      }
-      if (Date.now() - right_hook < LEVEL * 10 && right_hook - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
-        punch_animation_type = 4;
-        punch_animation = 0;
-        punch_animation_delay = 0;
-        if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === 4) {my_opponent.stamina--;}
-        right_poses = Date.now() - LEVEL * 10;
-      }
-      if (gameStarted) {
-        if (gameTimerNext < Math.ceil(gameTimer / (FRAME_RATE + LEVEL / 2))) {
-          if (moves.length >= Math.ceil(gameTimer / (FRAME_RATE + LEVEL / 2)) && moves[Math.ceil(gameTimer / (FRAME_RATE + LEVEL / 2))] >= 0) {
-            curMoves.push({
-              "hit": false,
-              "type": curMoves.length < 4 ? 0 : Math.trunc(moves[Math.ceil(gameTimer / (FRAME_RATE + LEVEL / 2))]),
-              "x": 0,
-              "y": 0
-            })
-          }
-          gameTimerNext++;
-        }
-        const c = curMoves.length - 1;
-        if (curMoves.length > 0 && 'type' in curMoves[c] && curMoves[c].type !== 0) {
-          fill(...moveDisplay(curMoves[c].type, feet_position, 255).color);
-          renderMoveShape({
-            type: curMoves[c].type,
-            x: myWindowWidth / 2,
-            y: myWindowHeight / 5
-          }, OBJECT_POSE_SIZE);
-          textSize(10 * coef);
-          fill(255, 255, 255, 255);
-          text(MOVE_TYPE[curMoves[c].type], myWindowWidth / 2 - coef * MOVE_TYPE[curMoves[c].type].length * 3, myWindowHeight / 5);
-          tint(255, 224);
-          if (curMoves[c].hit === false) {
-            if (gameStarted && puncho_animation === -1 && curMoves[c].hit === false) {
-              if (curMoves[c].type >= 7) {puncho_animation_type = randomInteger(1,2);}
-              else {puncho_animation_type = curMoves[c].type;}
-              puncho_animation = 0;
-              puncho_animation_delay = 0;
-            }
-            if (puncho_animation >= 0 && curMoves[c].hit === false) {
-              image(opponents_images[puncho_animation_type][puncho_animation], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
-              if (puncho_animation_delay % 3 === 0) {
-                if (puncho_animation >= 6) {
-                  puncho_animation = -1;
-                  puncho_animation_delay = 0;
-                  curMoves[c].hit = true;
-                } else {
-                  puncho_animation++;
-                }
-              }
-              puncho_animation_delay++;
-            }
-          } else {
-            image(opponent_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
-          }
-          tint(255, 192);
-        } else {
-          tint(255, 224);
-          image(opponent_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
-          tint(255, 192);
-        }
-        if (punch_animation >= 0) {
-          image(me_images[punch_animation_type][punch_animation], myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);
-          if (punch_animation_delay % 3 === 0) {
-            if (punch_animation >= 6) {
-              punch_animation = -1;
-              punch_animation_delay = 0;
-            } else {punch_animation++;}
-          }
-          punch_animation_delay++;
-        } else {image(me_image, myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);}
-        tint(255, 255);
-        gameTimer++;
-      }
-    }
+    renderFightMode();
   }
 
   if (menu === 3) {
-    if (poses.length > 0) {
-      pose = poses[0];
-      leftHand = pose["left_wrist"];
-      rightHand = pose["right_wrist"];
-      nose = pose["nose"];
-      if (nose && nose.confidence > 0.1 && isDetecting) {
-        fill(0, 255, 0, 128);
-        circle(nose.x * coef, nose.y * coef, OBJECT_POSE_SIZE / 8);
-        fill(255, 255, 255, hide_sensor);
-      }
-      if (leftHand && leftHand.confidence > 0.1) {
-        if (leftHand.x * coef < left_init_pose_x + OBJECT_POSE_SIZE && leftHand.x * coef > left_init_pose_x - OBJECT_POSE_SIZE && leftHand.y * coef - OBJECT_POSE_SIZE < left_init_pose_y && leftHand.y * coef + OBJECT_POSE_SIZE > left_init_pose_y) {
-          left_poses = Date.now();
-          fill(255, 255, 255, 128);
-          circle(left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE);
-        }
-        fill(255, 0, 0, 128);
-        circle(leftHand.x * coef, leftHand.y * coef, OBJECT_POSE_SIZE / 2);
-        fill(255, 255, 255, hide_sensor);
-      }
-      if (rightHand && rightHand.confidence > 0.1) {
-        if (rightHand.x * coef < right_init_pose_x + OBJECT_POSE_SIZE && rightHand.x * coef > right_init_pose_x - OBJECT_POSE_SIZE && rightHand.y * coef < right_init_pose_y + OBJECT_POSE_SIZE && rightHand.y * coef > right_init_pose_y - OBJECT_POSE_SIZE) {
-          right_poses = Date.now();
-          fill(255, 255, 255, 128);
-          circle(right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE);
-        }
-        fill(255, 0, 0, 128);
-        circle(rightHand.x * coef, rightHand.y * coef, OBJECT_POSE_SIZE / 2);
-        fill(255, 255, 255, hide_sensor);
-      }
-      if (gameStarted) {
-        textSize(20 * coef);
-        textAlign(CENTER,CENTER);
-        textStyle(BOLD);
-        if (gameTimer === 0) {
-          pad_x = randomInteger(2 * OBJECT_POSE_SIZE, myWindowWidth - 2 * OBJECT_POSE_SIZE);
-          pad_y = randomInteger(2 * OBJECT_POSE_SIZE, myWindowHeight - 2 * OBJECT_POSE_SIZE);
-          pad_type = 1;
-          curMoves = [];
-          if ((pad_x < right_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > right_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < right_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > right_init_pose_y - 2 * OBJECT_POSE_SIZE) || (pad_x < left_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > left_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < left_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > left_init_pose_y - 2 * OBJECT_POSE_SIZE))
-            {pad_type = 2;}
-          curMoves.push({
-            "hit": false,
-            "type": pad_type,
-            "x": pad_x,
-            "y": pad_y
-          })
-        }
-        fill(100, 100, 0, 255);
-        if (pad_type === 1) {circle(pad_x, pad_y, OBJECT_POSE_SIZE);}
-        fill(0, 0, 100, 255);
-        if (pad_type === 2) {rect(OBJECT_POSE_SIZE, init_uppercut_y - OBJECT_POSE_SIZE / 2, myWindowWidth - 2 * OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, 20);}
-        fill(255, 255, 255, 192);
-        if (pad_type === 1) {
-          if (pad_x < myWindowWidth / 2) {
-            text("L", pad_x, pad_y);
-            if (leftHand && leftHand.confidence > 0.1 && leftHand.x * coef < pad_x + OBJECT_POSE_SIZE && leftHand.x * coef > pad_x - OBJECT_POSE_SIZE && leftHand.y * coef - OBJECT_POSE_SIZE < pad_y && leftHand.y * coef + OBJECT_POSE_SIZE > pad_y && Date.now() - left_poses < LEVEL * 10) {
-              pad_x = randomInteger(2 * OBJECT_POSE_SIZE, myWindowWidth - 2 * OBJECT_POSE_SIZE);
-              pad_y = randomInteger(2 * OBJECT_POSE_SIZE, myWindowHeight - 2 * OBJECT_POSE_SIZE);
-              pad_type = 1;
-              if ((pad_x < right_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > right_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < right_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > right_init_pose_y - 2 * OBJECT_POSE_SIZE) || (pad_x < left_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > left_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < left_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > left_init_pose_y - 2 * OBJECT_POSE_SIZE))
-                {pad_type = 2;}
-              left_poses = Date.now() - LEVEL * 10;
-              hitSuccess(curMoves.length - 1);
-              curMoves.push({
-                "hit": false,
-                "type": pad_type,
-                "x": pad_x,
-                "y": pad_y
-              })
-            }
-          } else {
-            text("R", pad_x, pad_y);
-            if (rightHand && rightHand.confidence > 0.1 && rightHand.x * coef < pad_x + OBJECT_POSE_SIZE && rightHand.x * coef > pad_x - OBJECT_POSE_SIZE && rightHand.y * coef - OBJECT_POSE_SIZE < pad_y && rightHand.y * coef + OBJECT_POSE_SIZE > pad_y && Date.now() - right_poses < LEVEL * 10) {
-              pad_x = randomInteger(2 * OBJECT_POSE_SIZE, myWindowWidth - 2 * OBJECT_POSE_SIZE);
-              pad_y = randomInteger(2 * OBJECT_POSE_SIZE, myWindowHeight - 2 * OBJECT_POSE_SIZE);
-              pad_type = 1;
-              if ((pad_x < right_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > right_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < right_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > right_init_pose_y - 2 * OBJECT_POSE_SIZE) || (pad_x < left_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > left_init_pose_x - 2 * OBJECT_POSE_SIZE) || (pad_y < left_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > left_init_pose_y - 2 * OBJECT_POSE_SIZE))
-                {pad_type = 2;}
-              right_poses = Date.now() - LEVEL * 10;
-              hitSuccess(curMoves.length - 1);
-              curMoves.push({
-                "hit": false,
-                "type": pad_type,
-                "x": pad_x,
-                "y": pad_y
-              })
-            }
-          }
-        } else if (pad_type === 2) {
-          text("D", myWindowWidth / 2, init_uppercut_y);
-          if (nose && nose.confidence > 0.1 && nose.y * coef > init_uppercut_y) {
-            down_dodge = Date.now();
-            down_dodge_done = true;
-            down_dodge_switch = false;
-          }
-          if (nose && nose.confidence > 0.1 && nose.y * coef < init_uppercut_y) {
-            if (down_dodge_done === true) {
-              down_dodge_done = false;
-              down_dodge_switch = true;
-            }
-          }
-          if (Date.now() - down_dodge < LEVEL * 10 && down_dodge_switch === true) {
-            down_dodge = Date.now() - LEVEL * 10;
-            down_dodge_switch = false;
-            down_dodge_done = false;
-            pad_x = randomInteger(2 * OBJECT_POSE_SIZE, myWindowWidth - 2 * OBJECT_POSE_SIZE);
-            pad_y = randomInteger(2 * OBJECT_POSE_SIZE, myWindowHeight - 2 * OBJECT_POSE_SIZE);
-            pad_type = 1;
-            if ((pad_x < right_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > right_init_pose_x - 2 * OBJECT_POSE_SIZE) && (pad_y < right_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > right_init_pose_y - 2 * OBJECT_POSE_SIZE) && (pad_x < left_init_pose_x + 2 * OBJECT_POSE_SIZE && pad_x > left_init_pose_x - 2 * OBJECT_POSE_SIZE) && (pad_y < left_init_pose_y + 2 * OBJECT_POSE_SIZE && pad_y > left_init_pose_y - 2 * OBJECT_POSE_SIZE))
-              {pad_type = 2;}
-            hitSuccess(curMoves.length - 1);
-            curMoves.push({
-              "hit": false,
-              "type": pad_type,
-              "x": pad_x,
-              "y": pad_y
-            })
-          }
-        }
-        textSize(10 * coef);
-        textAlign(LEFT,CENTER);
-        textStyle(NORMAL);
-        gameTimer++;
-      }
-    }
+    renderPadMode();
   }
 
   if (menu === 2) {
-    renderFeetIndicator();
-    if (gameResultBool() && curMoves.length > 0) {
-      renderShadowResult();
-      return;
-    }
-
-    if (gameStarted) {
-      if (gameTimerNext < Math.ceil(gameTimer / FRAME_RATE)) {
-        if (moves.length >= Math.ceil(gameTimer / FRAME_RATE) && moves[Math.ceil(gameTimer / FRAME_RATE)] >= 0) {
-          let xt = Math.trunc(moves[Math.ceil(gameTimer / FRAME_RATE)]) % 2 ? left_init_pose_x : right_init_pose_x;
-          if (moves[Math.ceil(gameTimer / FRAME_RATE)] === 10) {xt = left_init_pose_x;}
-          curMoves.push({
-            "hit": moves[Math.ceil(gameTimer / FRAME_RATE)] === 0,
-            "type": Math.trunc(moves[Math.ceil(gameTimer / FRAME_RATE)]),
-            "x": xt,
-            "y": myWindowHeight
-          })
-        }
-        gameTimerNext++;
-      }
-      for (let c = 0; c < curMoves.length; c++) {
-        curMoves[c].y = curMoves[c].y - Math.ceil(240 / FRAME_RATE);
-        let alpha = 128;
-        if ([10].includes(curMoves[c].type) && curMoves[c].y + OBJECT_POSE_SIZE > left_init_pose_y && curMoves[c].y - OBJECT_POSE_SIZE < left_init_pose_y) {
-          alpha = 255;
-          if (Date.now() - switch_guard > 10000 && curMoves[c].type === 10) {
-            switch_guard = Date.now();
-            switch_feet();
-          }
-        }
-        if ([1, 3, 5, 7].includes(curMoves[c].type) && curMoves[c].y + OBJECT_POSE_SIZE > left_init_pose_y && curMoves[c].y - OBJECT_POSE_SIZE < left_init_pose_y) {
-          alpha = 255;
-          if (Date.now() - left_jab < LEVEL * 10 && left_jab - left_poses < LEVEL * 10 && curMoves[c].type === 1) {
-            hitSuccess(c);
-          }
-          if (Date.now() - left_hook < LEVEL * 10 && left_hook - left_poses < LEVEL * 10 && curMoves[c].type === 3) {
-            hitSuccess(c);
-          }
-          if (Date.now() - left_uppercut < LEVEL * 10 && left_uppercut - left_poses < LEVEL * 10 && curMoves[c].type === 5) {
-            hitSuccess(c);
-          }
-          if (Date.now() - left_dodge < LEVEL * 10 && left_dodge - left_poses < LEVEL * 10 && curMoves[c].type === 7) {
-            hitSuccess(c);
-          }
-        }
-        if ([2, 4, 6, 8, 9].includes(curMoves[c].type) && curMoves[c].y + OBJECT_POSE_SIZE > right_init_pose_y && curMoves[c].y - OBJECT_POSE_SIZE < right_init_pose_y) {
-          alpha = 255;
-          if (Date.now() - right_jab < LEVEL * 10 && right_jab - right_poses < LEVEL * 10 && curMoves[c].type === 2) {
-            hitSuccess(c);
-          }
-          if (Date.now() - right_hook < LEVEL * 10 && right_hook - right_poses < LEVEL * 10 && curMoves[c].type === 4) {
-            hitSuccess(c);
-          }
-          if (Date.now() - right_uppercut < LEVEL * 10 && right_uppercut - right_poses < LEVEL * 10 && curMoves[c].type === 6) {
-            hitSuccess(c);
-          }
-          if (Date.now() - right_dodge < LEVEL * 10 && right_dodge - right_poses < LEVEL * 10 && curMoves[c].type === 8) {
-            hitSuccess(c);
-          }
-          if (Date.now() - down_dodge < LEVEL * 10 && curMoves[c].type === 9) {
-            hitSuccess(c);
-          }
-        }
-        const display = moveDisplay(curMoves[c].type, feet_position, alpha);
-        if (display) {
-          fill(...display.color);
-          curMoves[c].text = display.text;
-        }
-        if (curMoves[c].hit === true) {fill(0, 255, 0, 127);}
-        if (curMoves[c].type > 0) {
-          renderMoveShape(curMoves[c], OBJECT_POSE_SIZE, right_init_pose_x);
-        }
-        if ([10].includes(curMoves[c].type)) {circle(right_init_pose_x, curMoves[c].y, OBJECT_POSE_SIZE);}
-        fill(255, 255, 255, 255);
-        textSize(20 * coef);
-        textStyle(BOLD);
-        textAlign(CENTER,CENTER);
-        if (curMoves[c].type > 0) {text(curMoves[c].text, curMoves[c].x, curMoves[c].y);}
-        if ([9, 10].includes(curMoves[c].type)) {text(curMoves[c].text, right_init_pose_x, curMoves[c].y);}
-        textAlign(LEFT,CENTER);
-        textStyle(NORMAL);
-      }
-      gameTimer++;
-    }
-
-    if (poses.length > 0) {
-      pose = poses[0];
-      leftHand = pose["left_wrist"];
-      rightHand = pose["right_wrist"];
-      nose = pose["nose"];
-      if (nose && nose.confidence > 0.1 && isDetecting) {
-        fill(0, 255, 0, 128);
-        circle(nose.x * coef, nose.y * coef, OBJECT_POSE_SIZE / 8);
-        fill(255, 255, 255, hide_sensor);
-      }
-      if (leftHand && leftHand.confidence > 0.1) {
-        if (leftHand.x * coef < left_init_pose_x + OBJECT_POSE_SIZE && leftHand.x * coef > left_init_pose_x - OBJECT_POSE_SIZE && leftHand.y * coef - OBJECT_POSE_SIZE < left_init_pose_y && leftHand.y * coef + OBJECT_POSE_SIZE > left_init_pose_y) {
-          left_poses = Date.now();
-          fill(255, 255, 255, 128);
-          circle(left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE);
-          if (gameStarted ) {
-            if (Date.now() - left_hook < LEVEL * 10) {
-              punchSound();
-            }
-            if (Date.now() - left_uppercut < LEVEL * 10) {
-              punchSound();
-            }
-          }
-        }
-        fill(255, 0, 0, 128);
-        circle(leftHand.x * coef, leftHand.y * coef, OBJECT_POSE_SIZE / 2);
-        fill(255, 255, 255, hide_sensor);
-        if (leftHand.x * coef < left_init_hook_x) {
-          left_hook = Date.now();
-          rect(0, 0, left_init_hook_x, myWindowHeight);
-        }
-        if (leftHand.y * coef > init_uppercut_y) {
-          left_uppercut = Date.now();
-          rect(0, init_uppercut_y, myWindowWidth, myWindowHeight - init_uppercut_y);
-        }
-        if (leftHand.y * coef < init_jab_y) {
-          fill(255, 255, 255, hide_sensor);
-          rect(0, 0, myWindowWidth, init_jab_y);
-          if (Date.now() - left_poses < LEVEL * 10 && Date.now() - right_poses < LEVEL * 10) {
-            left_jab = Date.now();
-            if (gameStarted) {punchSound();}
-          }
-        }
-        if (Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
-          if (nose.x * coef < left_init_pose_x - OBJECT_POSE_SIZE / 2) {
-            left_dodge = Date.now();
-          }
-          if (nose.x * coef > right_init_pose_x + OBJECT_POSE_SIZE / 2) {
-            right_dodge = Date.now();
-          }
-          if (nose.y * coef > init_uppercut_y) {
-            down_dodge = Date.now();
-          }
-        }
-      }
-      if (rightHand && rightHand.confidence > 0.1) {
-        if (rightHand.x * coef < right_init_pose_x + OBJECT_POSE_SIZE && rightHand.x * coef > right_init_pose_x - OBJECT_POSE_SIZE && rightHand.y * coef < right_init_pose_y + OBJECT_POSE_SIZE && rightHand.y * coef > right_init_pose_y - OBJECT_POSE_SIZE) {
-          right_poses = Date.now();
-          fill(255, 255, 255, 128);
-          circle(right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE);
-          if (gameStarted || gameCalibration) {
-            if (Date.now() - right_hook < LEVEL * 10) {
-              punchSound();
-            }
-            if (Date.now() - right_uppercut < LEVEL * 10) {
-              punchSound();
-            }
-          }
-        }
-        fill(255, 0, 0, 128);
-        if (isDetecting) {circle(rightHand.x * coef, rightHand.y * coef, OBJECT_POSE_SIZE / 2);}
-        fill(255, 255, 255, hide_sensor);
-        if (rightHand.x * coef > right_init_hook_x) {
-          right_hook = Date.now();
-          rect(right_init_hook_x, 0, right_init_hook_x, myWindowHeight);
-        }
-        if (rightHand.y * coef > init_uppercut_y) {
-          right_uppercut = Date.now();
-          rect(0, init_uppercut_y, myWindowWidth, myWindowHeight - init_uppercut_y);
-        }
-        if (rightHand.y * coef < init_jab_y) {
-          rect(0, 0, myWindowWidth, init_jab_y);
-          if (Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
-            right_jab = Date.now();
-            if (gameStarted) {punchSound();}
-          }
-        }
-      }
-    }
+    renderShadowMode();
   }
 }
 
