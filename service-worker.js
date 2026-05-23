@@ -5,6 +5,7 @@ const CORE_ASSETS = [
   './style.css',
   './js/game-utils.js',
   './js/vars.js',
+  './js/game-logic.js',
   './js/app.js',
   './js/p5js/p5.js',
   './js/p5js/p5.sound.js',
