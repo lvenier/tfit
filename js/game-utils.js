@@ -39,7 +39,7 @@
   }
 
   function cloneFromMap(map, id, fallbackId) {
-    return JSON.parse(JSON.stringify(map[id] || map[fallbackId]));
+    return structuredClone(map[id] || map[fallbackId]);
   }
 
   function randomInteger(min, max, random = Math.random) {
@@ -58,4 +58,4 @@
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;
   }
-})(typeof globalThis !== 'undefined' ? globalThis : window);
+})(typeof globalThis === 'undefined' ? globalThis : globalThis);
