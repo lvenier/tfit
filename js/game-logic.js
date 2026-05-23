@@ -132,6 +132,32 @@
     };
   }
 
+  function moveDisplay(type, feetPosition = 0, alpha = 128) {
+    if (type === 1 || type === 2) {
+      let text = type === 1 ? "J" : "S";
+      if (feetPosition === 1) {
+        text = type === 1 ? "S" : "J";
+      }
+      return { color: [100, 100, 0, alpha], text };
+    }
+    if (type === 3 || type === 4) {
+      return { color: [100, 0, 100, alpha], text: "H" };
+    }
+    if (type === 5 || type === 6) {
+      return { color: [0, 100, 100, alpha], text: "U" };
+    }
+    if (type === 7 || type === 8) {
+      return { color: [0, 0, 100, alpha], text: "D" };
+    }
+    if (type === 9) {
+      return { color: [0, 0, 200, alpha], text: "D" };
+    }
+    if (type === 10) {
+      return { color: [224, 224, 224, alpha], text: "S" };
+    }
+    return null;
+  }
+
   const api = {
     calibrationDefaults,
     countScoringMoves,
@@ -140,6 +166,7 @@
     detectStartCondition,
     isRecent,
     levelDelay,
+    moveDisplay,
     moveRangeForFocus,
     nextFrameRate,
     nextOneBasedIndex,

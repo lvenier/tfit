@@ -1,6 +1,15 @@
 p5.disableFriendlyErrors = true;
 
 const {
+  loadGameAssets
+} = globalThis.TfitAssets;
+
+const {
+  calibrationDragFlagsFromPointer,
+  clearCalibrationDragFlags
+} = globalThis.TfitInput;
+
+const {
   calibrationDefaults,
   countScoringMoves,
   createEmptySong,
@@ -8,6 +17,7 @@ const {
   detectStartCondition,
   isRecent,
   levelDelay,
+  moveDisplay,
   nextFrameRate,
   nextOneBasedIndex,
   nextZeroBasedIndex
@@ -23,12 +33,17 @@ const {
   renderGuardTargets,
   renderLoadingScreen,
   renderMainMenu,
+  renderMoveShape,
   renderRoundHud,
   renderSceneBackground,
   renderSettingsControls,
   renderShadowResult,
   renderSpeech
 } = globalThis.TfitRender;
+
+const {
+  markHit
+} = globalThis.TfitScore;
 
 document.addEventListener("contextmenu", event => event.preventDefault());
 
@@ -85,6 +100,15 @@ function punchSound() {
     punch_sound.play();
     punch_sound_time = Date.now();
   }
+}
+
+function applyCalibrationDragFlags(flags) {
+  init_uppercut_dragging = flags.init_uppercut_dragging;
+  init_jab_dragging = flags.init_jab_dragging;
+  left_init_hook_dragging = flags.left_init_hook_dragging;
+  right_init_hook_dragging = flags.right_init_hook_dragging;
+  right_init_pose_dragging = flags.right_init_pose_dragging;
+  left_init_pose_dragging = flags.left_init_pose_dragging;
 }
 
 function letsfight() {
@@ -213,24 +237,19 @@ function handleChange() {
     }
   }
   if (gameCalibration) {
-    if (mouseY < init_jab_y + 8) {
-      init_jab_dragging = true;
-    }
-    if (mouseY > init_uppercut_y - 8) {
-      init_uppercut_dragging = true;
-    }
-    if (mouseX < left_init_hook_x + 8) {
-      left_init_hook_dragging = true;
-    }
-    if (mouseX > right_init_hook_x - 8) {
-      right_init_hook_dragging = true;
-    }
-    if (mouseX > left_init_pose_x - OBJECT_POSE_SIZE / 2 && mouseX < left_init_pose_x + OBJECT_POSE_SIZE / 2 && mouseY > left_init_pose_y - 24 && mouseY < left_init_pose_y + 24) {
-      left_init_pose_dragging = true;
-    }
-    if (mouseX > right_init_pose_x - OBJECT_POSE_SIZE / 2 && mouseX < right_init_pose_x + OBJECT_POSE_SIZE / 2 && mouseY > right_init_pose_y - 24 && mouseY < right_init_pose_y + 24) {
-      right_init_pose_dragging = true;
-    }
+    applyCalibrationDragFlags(calibrationDragFlagsFromPointer({
+      init_jab_y,
+      init_uppercut_y,
+      left_init_hook_x,
+      left_init_pose_x,
+      left_init_pose_y,
+      mouseX,
+      mouseY,
+      objectPoseSize: OBJECT_POSE_SIZE,
+      right_init_hook_x,
+      right_init_pose_x,
+      right_init_pose_y
+    }));
   }
 }
 
@@ -244,84 +263,62 @@ function mousePressed() {
 
 function touchEnded() {
   if (gameCalibration) {
-    init_uppercut_dragging = false;
-    init_jab_dragging = false;
-    left_init_hook_dragging = false;
-    right_init_hook_dragging = false;
-    right_init_pose_dragging = false;
-    left_init_pose_dragging = false;
+    applyCalibrationDragFlags(clearCalibrationDragFlags());
   }
 }
 
 function mouseReleased() {
   if (gameCalibration) {
-    init_uppercut_dragging = false;
-    init_jab_dragging = false;
-    left_init_hook_dragging = false;
-    right_init_hook_dragging = false;
-    right_init_pose_dragging = false;
-    left_init_pose_dragging = false;
+    applyCalibrationDragFlags(clearCalibrationDragFlags());
   }
 }
 
 async function loadAssets() {
-  for (const m of Object.keys(MENUTYPE)) {
-    background_images[m] = await loadImage('assets/backgrounds/' + m + '.jpg');
-  }
-  logo_image = await loadImage('assets/logos/logo.512.rounded.png');
-  menu_image = await loadImage('assets/images/menu_image.png');
-  rfeet_image = await loadImage('assets/images/RFoot.png');
-  lfeet_image = await loadImage('assets/images/LFoot.png');
-  your_guard_image = await loadImage('assets/images/your_guard.png');
-  fight_button_image = await loadImage('assets/images/fight.png');
-  fight_menu_button_image = await loadImage('assets/images/fightmenu.png');
-  config_menu_button_image = await loadImage('assets/images/config.png');
-  shadow_button_image = await loadImage('assets/images/shadow.png');
-  pad_button_image = await loadImage('assets/images/pad.png');
-  calibrate_button_image = await loadImage('assets/images/calibrate.png');
-  reset_button_image = await loadImage('assets/images/reset.png');
-  back_button_image = await loadImage('assets/images/back.png');
-  stop_button_image = await loadImage('assets/images/stop.png');
-  keep_trying_image = await loadImage('assets/images/keep_trying.png');
-  good_hit_image = await loadImage('assets/images/good_hit.png');
-  for (let i = 0; i < 7; i++ ) {framerate_button_image[i] = await loadImage('assets/images/fr' + (i * 20) + '.png');}
-  for (let i = 0; i < Object.keys(GAME_LEVEL).length; i++ ) {level_button_image[i] = await loadImage('assets/images/' + GAME_LEVEL[i.toString()] + '.png');}
-  for (let i = 1; i <= Object.keys(GAME_LENGTH).length; i++ ) {duration_button_image[i] = await loadImage('assets/images/' + GAME_LENGTH[i.toString()] + '.png');}
-  for (let i = 1; i <= 5; i++ ) {series_button_image[i]  = await loadImage('assets/images/s' + i + '.png');}
-
-  me_image = await loadImage('assets/images/boxers/0-me.png');
-  me_images[0] = [];
-  me_images[1] = [];
-  for (let j = 1; j < 7; j++) {
-    me_images[j] = [];
-    for (let i = 0; i < 7; i++) {
-      me_images[j][i] = await loadImage('assets/images/boxers/' + j + '-me-' + i + '.png');
-    }
-  }
-
-  opponent_image[0] = await loadImage('assets/images/opponents/0/0-1.png');
-  opponents_images[0] = [];
-  opponents_images[1] = [];
-  for (let j = 1; j <= 6; j++) {
-    opponents_images[j] = [];
-    for (let i = 0; i < 7; i++) {
-      opponents_images[j][i] = await loadImage('assets/images/opponents/0/' + j + '-' + i + '.png');
-    }
-  }
-
-  click_sound = await loadSound('assets/sounds/click.mp3');
-  punch_sound = await loadSound('assets/sounds/punch.mp3');
-  song_letsfight = await loadSound('assets/sounds/letsfight.mp3');
-  song_your_guard = await loadSound('assets/sounds/your_guard.mp3');
-  song_keep_trying = await loadSound('assets/sounds/keep_trying.mp3');
-  song_well_done = await loadSound('assets/sounds/well_done.mp3');
-  song_great = await loadSound('assets/sounds/great.mp3');
-  song_awesome = await loadSound('assets/sounds/awesome.mp3');
-  song_good = await loadSound('assets/sounds/good.mp3');
-  song_perfect = await loadSound('assets/sounds/perfect.mp3');
-  song_continue = await loadSound('assets/sounds/continue.mp3');
-  song_thats_it = await loadSound('assets/sounds/thats_it.mp3');
-
+  ({
+    background_images,
+    back_button_image,
+    calibrate_button_image,
+    click_sound,
+    config_menu_button_image,
+    duration_button_image,
+    fight_button_image,
+    fight_menu_button_image,
+    framerate_button_image,
+    good_hit_image,
+    keep_trying_image,
+    level_button_image,
+    lfeet_image,
+    logo_image,
+    me_image,
+    me_images,
+    menu_image,
+    opponent_image,
+    opponents_images,
+    pad_button_image,
+    punch_sound,
+    reset_button_image,
+    rfeet_image,
+    series_button_image,
+    shadow_button_image,
+    song_awesome,
+    song_continue,
+    song_good,
+    song_great,
+    song_keep_trying,
+    song_letsfight,
+    song_perfect,
+    song_thats_it,
+    song_well_done,
+    song_your_guard,
+    stop_button_image,
+    your_guard_image
+  } = await loadGameAssets({
+    gameLength: GAME_LENGTH,
+    gameLevel: GAME_LEVEL,
+    loadImage,
+    loadSound,
+    menuTypes: MENUTYPE
+  }));
 }
 
 function keyPressed() {
@@ -397,30 +394,26 @@ function switch_feet() {
 }
 
 function hitSuccess(c) {
-  if (arrayScore[c] === 0) {
-    if (c >= 3) {
-      let s = 0;
-      for (let k = 1; k < c - 2; k++) {
-        if (s > 1) {break;}
-        if (curMoves[c - k].type === 0) {continue;}
-        if (curMoves[c - k].hit === false) {break;}
-        s++;
-      }
-      if (s > 1) {
-        const r = Math.floor(Math.random() * 20);
-        if (r === 0 || r === 1) {song_great.play();}
-        if (r === 2 || r === 3) {song_awesome.play();}
-        if (r === 4 || r === 5) {song_good.play();}
-        if (r === 6 || r === 7) {song_perfect.play();}
-        if (r === 8 || r === 9) {song_continue.play();}
-        if (r === 10 || r === 11) {song_thats_it.play();}
-        if (r === 12 || r === 13) {song_well_done.play();}
-      }
+  const result = markHit({
+    arrayScore,
+    curMoves,
+    index: c,
+    playComboFeedback: key => {
+      const sounds = {
+        awesome: song_awesome,
+        continue: song_continue,
+        good: song_good,
+        great: song_great,
+        perfect: song_perfect,
+        thats_it: song_thats_it,
+        well_done: song_well_done
+      };
+      sounds[key].play();
     }
-    hit_success = Date.now();
+  });
+  if (result.hitSuccess !== null) {
+    hit_success = result.hitSuccess;
   }
-  arrayScore[c] = 1;
-  curMoves[c].hit = true;
 }
 
 function handleRightClick(e) {
@@ -796,25 +789,12 @@ function draw() {
         }
         const c = curMoves.length - 1;
         if (curMoves.length > 0 && 'type' in curMoves[c] && curMoves[c].type !== 0) {
-          if (curMoves[c].type === 1 || curMoves[c].type === 2) {
-            fill(100, 100, 0);
-          } else if (curMoves[c].type === 3 || curMoves[c].type === 4) {
-            fill(100, 0, 100);
-          } else if (curMoves[c].type === 5 || curMoves[c].type === 6) {
-            fill(0, 100, 100);
-          } else if (curMoves[c].type === 7 || curMoves[c].type === 8) {
-            fill(0, 0, 100);
-          } else if (curMoves[c].type === 9) {
-            fill(0, 0, 200);
-          }
-          if ([1,2].includes(curMoves[c].type)) {circle(myWindowWidth / 2, myWindowHeight / 5, OBJECT_POSE_SIZE);}
-          else if (curMoves[c].type === 3) {quad(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 6, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 6)}
-          else if (curMoves[c].type === 4) {quad(myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 6, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 6)}
-          else if (curMoves[c].type === 5) {quad(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 6, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 6, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2)}
-          else if (curMoves[c].type === 6) {quad(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 6, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 6, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2)}
-          else if (curMoves[c].type === 7) {quad(myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 6, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 6)}
-          else if (curMoves[c].type === 8) {quad(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 + OBJECT_POSE_SIZE / 6, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 6)}
-          else if (curMoves[c].type === 9) {quad(myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 2, myWindowHeight / 5 - OBJECT_POSE_SIZE / 2, myWindowWidth / 2 + OBJECT_POSE_SIZE / 6, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2, myWindowWidth / 2 - OBJECT_POSE_SIZE / 6, myWindowHeight / 5 + OBJECT_POSE_SIZE / 2)}
+          fill(...moveDisplay(curMoves[c].type, feet_position, 255).color);
+          renderMoveShape({
+            type: curMoves[c].type,
+            x: myWindowWidth / 2,
+            y: myWindowHeight / 5
+          }, OBJECT_POSE_SIZE);
           textSize(10 * coef);
           fill(255, 255, 255, 255);
           text(MOVE_TYPE[curMoves[c].type], myWindowWidth / 2 - coef * MOVE_TYPE[curMoves[c].type].length * 3, myWindowHeight / 5);
@@ -1057,40 +1037,14 @@ function draw() {
             hitSuccess(c);
           }
         }
-        if (curMoves[c].type === 1 || curMoves[c].type === 2) {
-          fill(100, 100, 0, alpha);
-          if (feet_position === 1 && curMoves[c].type === 1) {curMoves[c].text = "S";}
-          if (feet_position === 1 && curMoves[c].type === 2) {curMoves[c].text = "J";}
-          if (feet_position === 0 && curMoves[c].type === 1) {curMoves[c].text = "J";}
-          if (feet_position === 0 && curMoves[c].type === 2) {curMoves[c].text = "S";}
-        } else if (curMoves[c].type === 3 || curMoves[c].type === 4) {
-          fill(100, 0, 100, alpha);
-          curMoves[c].text = "H";
-        } else if (curMoves[c].type === 5 || curMoves[c].type === 6) {
-          fill(0, 100, 100, alpha);
-          curMoves[c].text = "U";
-        } else if (curMoves[c].type === 7 || curMoves[c].type === 8) {
-          fill(0, 0, 100, alpha);
-          curMoves[c].text = "D";
-        } else if (curMoves[c].type === 9) {
-          fill(0, 0, 200, alpha);
-          curMoves[c].text = "D";
-        } else if (curMoves[c].type === 10) {
-          fill(224, 224, 224, alpha);
-          curMoves[c].text = "S";
+        const display = moveDisplay(curMoves[c].type, feet_position, alpha);
+        if (display) {
+          fill(...display.color);
+          curMoves[c].text = display.text;
         }
         if (curMoves[c].hit === true) {fill(0, 255, 0, 127);}
         if (curMoves[c].type > 0) {
-          if (curMoves[c].type === 3) {quad(curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 6, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 6)}
-          else if (curMoves[c].type === 4) {quad(curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 6, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 6)}
-          else if (curMoves[c].type === 5) {quad(curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 6, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 6, curMoves[c].y - OBJECT_POSE_SIZE / 2)}
-          else if (curMoves[c].type === 6) {quad(curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 6, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 6, curMoves[c].y - OBJECT_POSE_SIZE / 2)}
-          else if (curMoves[c].type === 7) {quad(curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 6, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 6)}
-          else if (curMoves[c].type === 8) {quad(curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y + OBJECT_POSE_SIZE / 6, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 6)}
-          else if (curMoves[c].type === 9) {
-            quad(curMoves[c].x - OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, curMoves[c].x + OBJECT_POSE_SIZE / 6, curMoves[c].y + OBJECT_POSE_SIZE / 2, curMoves[c].x - OBJECT_POSE_SIZE / 6, curMoves[c].y + OBJECT_POSE_SIZE / 2)
-            quad(right_init_pose_x - OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, right_init_pose_x + OBJECT_POSE_SIZE / 2, curMoves[c].y - OBJECT_POSE_SIZE / 2, right_init_pose_x + OBJECT_POSE_SIZE / 6, curMoves[c].y + OBJECT_POSE_SIZE / 2, right_init_pose_x - OBJECT_POSE_SIZE / 6, curMoves[c].y + OBJECT_POSE_SIZE / 2)
-          } else {circle(curMoves[c].x, curMoves[c].y, OBJECT_POSE_SIZE);}
+          renderMoveShape(curMoves[c], OBJECT_POSE_SIZE, right_init_pose_x);
         }
         if ([10].includes(curMoves[c].type)) {circle(right_init_pose_x, curMoves[c].y, OBJECT_POSE_SIZE);}
         fill(255, 255, 255, 255);

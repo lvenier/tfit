@@ -13,6 +13,7 @@ const {
   detectStartCondition,
   isRecent,
   levelDelay,
+  moveDisplay,
   moveRangeForFocus,
   nextFrameRate,
   nextOneBasedIndex,
@@ -26,6 +27,7 @@ describe('TfitGameLogic browser export', () => {
       calibrationDefaults,
       createSongMoves,
       detectStartCondition,
+      moveDisplay,
       nextFrameRate
     });
   });
@@ -124,6 +126,28 @@ describe('option and timing helpers', () => {
     expect(nextOneBasedIndex(5, 5)).toBe(1);
     expect(nextZeroBasedIndex(0, 3)).toBe(1);
     expect(nextZeroBasedIndex(2, 3)).toBe(0);
+  });
+});
+
+describe('moveDisplay', () => {
+  it('maps punch and dodge move types to display colors and labels', () => {
+    expect(moveDisplay(1, 0, 192)).toEqual({ color: [100, 100, 0, 192], text: "J" });
+    expect(moveDisplay(2, 0, 192)).toEqual({ color: [100, 100, 0, 192], text: "S" });
+    expect(moveDisplay(3, 0, 192)).toEqual({ color: [100, 0, 100, 192], text: "H" });
+    expect(moveDisplay(5, 0, 192)).toEqual({ color: [0, 100, 100, 192], text: "U" });
+    expect(moveDisplay(7, 0, 192)).toEqual({ color: [0, 0, 100, 192], text: "D" });
+    expect(moveDisplay(9, 0, 192)).toEqual({ color: [0, 0, 200, 192], text: "D" });
+    expect(moveDisplay(10, 0, 192)).toEqual({ color: [224, 224, 224, 192], text: "S" });
+  });
+
+  it('swaps jab and straight labels when feet are switched', () => {
+    expect(moveDisplay(1, 1, 128).text).toBe("S");
+    expect(moveDisplay(2, 1, 128).text).toBe("J");
+  });
+
+  it('returns null for rest or unknown move types', () => {
+    expect(moveDisplay(0)).toBeNull();
+    expect(moveDisplay(99)).toBeNull();
   });
 });
 
