@@ -2,6 +2,8 @@
   const {
     hasPoseConfidence,
     isInsideGuard,
+    isPadPunchHit,
+    nextDownDodgeState,
     posePartsFromPoses
   } = root.TfitPoseDetection;
 
@@ -62,6 +64,8 @@
         fill(255, 255, 255, hide_sensor);
       }
       if (gameStarted) {
+        const now = Date.now();
+        const levelWindow = LEVEL * 10;
         textSize(20 * coef);
         textAlign(CENTER,CENTER);
         textStyle(BOLD);
@@ -78,36 +82,55 @@
         if (pad_type === 1) {
           if (pad_x < myWindowWidth / 2) {
             text("L", pad_x, pad_y);
-            if (hasPoseConfidence(leftHand) && leftHand.x * coef < pad_x + OBJECT_POSE_SIZE && leftHand.x * coef > pad_x - OBJECT_POSE_SIZE && leftHand.y * coef - OBJECT_POSE_SIZE < pad_y && leftHand.y * coef + OBJECT_POSE_SIZE > pad_y && Date.now() - left_poses < LEVEL * 10) {
+            if (isPadPunchHit({
+              coef,
+              guardTime: left_poses,
+              hand: leftHand,
+              levelWindow,
+              now,
+              objectPoseSize: OBJECT_POSE_SIZE,
+              padX: pad_x,
+              padY: pad_y
+            })) {
               applyPadTarget(nextPadTarget());
-              left_poses = Date.now() - LEVEL * 10;
+              left_poses = now - levelWindow;
               hitSuccess(curMoves.length - 1);
               pushPadMove();
             }
           } else {
             text("R", pad_x, pad_y);
-            if (hasPoseConfidence(rightHand) && rightHand.x * coef < pad_x + OBJECT_POSE_SIZE && rightHand.x * coef > pad_x - OBJECT_POSE_SIZE && rightHand.y * coef - OBJECT_POSE_SIZE < pad_y && rightHand.y * coef + OBJECT_POSE_SIZE > pad_y && Date.now() - right_poses < LEVEL * 10) {
+            if (isPadPunchHit({
+              coef,
+              guardTime: right_poses,
+              hand: rightHand,
+              levelWindow,
+              now,
+              objectPoseSize: OBJECT_POSE_SIZE,
+              padX: pad_x,
+              padY: pad_y
+            })) {
               applyPadTarget(nextPadTarget());
-              right_poses = Date.now() - LEVEL * 10;
+              right_poses = now - levelWindow;
               hitSuccess(curMoves.length - 1);
               pushPadMove();
             }
           }
         } else if (pad_type === 2) {
           text("D", myWindowWidth / 2, init_uppercut_y);
-          if (hasPoseConfidence(nose) && nose.y * coef > init_uppercut_y) {
-            down_dodge = Date.now();
-            down_dodge_done = true;
-            down_dodge_switch = false;
+          const downDodgeState = nextDownDodgeState({
+            coef,
+            done: down_dodge_done,
+            initUppercutY: init_uppercut_y,
+            nose,
+            switched: down_dodge_switch
+          });
+          down_dodge_done = downDodgeState.done;
+          down_dodge_switch = downDodgeState.switched;
+          if (downDodgeState.touchedDown) {
+            down_dodge = now;
           }
-          if (hasPoseConfidence(nose) && nose.y * coef < init_uppercut_y) {
-            if (down_dodge_done === true) {
-              down_dodge_done = false;
-              down_dodge_switch = true;
-            }
-          }
-          if (Date.now() - down_dodge < LEVEL * 10 && down_dodge_switch === true) {
-            down_dodge = Date.now() - LEVEL * 10;
+          if (now - down_dodge < levelWindow && down_dodge_switch === true) {
+            down_dodge = now - levelWindow;
             down_dodge_switch = false;
             down_dodge_done = false;
             applyPadTarget(nextPadTarget(true));

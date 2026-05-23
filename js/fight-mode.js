@@ -1,5 +1,7 @@
 (function(root) {
   const {
+    detectDodgeGestures,
+    detectHandGestures,
     hasPoseConfidence,
     isInsideGuard,
     posePartsFromPoses
@@ -34,84 +36,106 @@
     renderFightMeters();
     if (poses.length > 0) {
       ({ pose, leftHand, rightHand, nose } = posePartsFromPoses(poses));
+      const now = Date.now();
+      const levelWindow = LEVEL * 10;
       if (hasPoseConfidence(nose)) {
         fill(0, 255, 0, 128);
         circle(nose.x * coef, nose.y * coef, OBJECT_POSE_SIZE / 8);
         fill(255, 255, 255, hide_sensor);
-        if (nose.x * coef > right_init_pose_x + OBJECT_POSE_SIZE / 2) {
-          right_dodge = Date.now();
-        }
-        if (nose.x * coef < left_init_pose_x - OBJECT_POSE_SIZE / 2) {
-          left_dodge = Date.now();
-        }
+        const dodges = detectDodgeGestures({
+          coef,
+          initUppercutY: init_uppercut_y,
+          leftGuardX: left_init_pose_x,
+          levelWindow,
+          nose,
+          objectPoseSize: OBJECT_POSE_SIZE,
+          ready: true,
+          rightGuardX: right_init_pose_x
+        });
+        if (dodges.right) {right_dodge = now;}
+        if (dodges.left) {left_dodge = now;}
       }
       if (hasPoseConfidence(leftHand)) {
         if (isInsideGuard(leftHand, left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE, coef)) {
-          left_poses = Date.now();
-          left_hook = Date.now() - LEVEL * 10;
+          left_poses = now;
+          left_hook = now - levelWindow;
           fill(255, 255, 255, 128);
           circle(left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE);
         }
         fill(255, 0, 0, 128);
         circle(leftHand.x * coef, leftHand.y * coef, OBJECT_POSE_SIZE / 2);
         fill(255, 255, 255, hide_sensor);
-        if (leftHand.y * coef > init_uppercut_y && Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
-          left_uppercut = Date.now();
-        }
-        if (leftHand.y * coef < init_jab_y && Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
-          left_jab = Date.now();
-        }
-        if (leftHand.x * coef < left_init_hook_x && Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
-          left_hook = Date.now();
-        }
+        const leftGestures = detectHandGestures({
+          coef,
+          hand: leftHand,
+          initJabY: init_jab_y,
+          initUppercutY: init_uppercut_y,
+          leftHookX: left_init_hook_x,
+          leftPoseTime: left_poses,
+          levelWindow,
+          now,
+          rightHookX: right_init_hook_x,
+          rightPoseTime: right_poses,
+          side: "left"
+        });
+        if (leftGestures.uppercut) {left_uppercut = now;}
+        if (leftGestures.jab) {left_jab = now;}
+        if (leftGestures.hook) {left_hook = now;}
       }
       if (hasPoseConfidence(rightHand)) {
         if (isInsideGuard(rightHand, right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE, coef)) {
-          right_poses = Date.now();
-          right_hook = Date.now() - LEVEL * 10;
+          right_poses = now;
+          right_hook = now - levelWindow;
           fill(255, 255, 255, 128);
           circle(right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE);
         }
         fill(255, 0, 0, 128);
         circle(rightHand.x * coef, rightHand.y * coef, OBJECT_POSE_SIZE / 2);
         fill(255, 255, 255, hide_sensor);
-        if (rightHand.y * coef > init_uppercut_y && Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
-          right_uppercut = Date.now();
-        }
-        if (rightHand.y * coef < init_jab_y && Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
-          right_jab = Date.now();
-        }
-        if (rightHand.x * coef > right_init_hook_x && Date.now() - right_poses < LEVEL * 10 && Date.now() - left_poses < LEVEL * 10) {
-          right_hook = Date.now();
-        }
+        const rightGestures = detectHandGestures({
+          coef,
+          hand: rightHand,
+          initJabY: init_jab_y,
+          initUppercutY: init_uppercut_y,
+          leftHookX: left_init_hook_x,
+          leftPoseTime: left_poses,
+          levelWindow,
+          now,
+          rightHookX: right_init_hook_x,
+          rightPoseTime: right_poses,
+          side: "right"
+        });
+        if (rightGestures.uppercut) {right_uppercut = now;}
+        if (rightGestures.jab) {right_jab = now;}
+        if (rightGestures.hook) {right_hook = now;}
       }
-      if (Date.now() - right_dodge < LEVEL * 10 && right_dodge - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
+      if (now - right_dodge < levelWindow && right_dodge - right_poses < levelWindow && gameStarted && punch_animation === -1) {
         punch_animation_type = 1;
         punch_animation = 0;
         punch_animation_delay = 0;
-        left_poses = Date.now() - LEVEL * 10;
+        left_poses = now - levelWindow;
       }
-      if (Date.now() - left_dodge < LEVEL * 10 && left_dodge - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
+      if (now - left_dodge < levelWindow && left_dodge - left_poses < levelWindow && gameStarted && punch_animation === -1) {
         punch_animation_type = 2;
         punch_animation = 0;
         punch_animation_delay = 0;
       }
-      if (Date.now() - left_uppercut < LEVEL * 10 && left_uppercut - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
+      if (now - left_uppercut < levelWindow && left_uppercut - left_poses < levelWindow && gameStarted && punch_animation === -1) {
         updateFightPunchAnimation(5, "left");
       }
-      if (Date.now() - left_jab < LEVEL * 10 && left_jab - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
+      if (now - left_jab < levelWindow && left_jab - left_poses < levelWindow && gameStarted && punch_animation === -1) {
         updateFightPunchAnimation(1, "left");
       }
-      if (Date.now() - left_hook < LEVEL * 10 && left_hook - left_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
+      if (now - left_hook < levelWindow && left_hook - left_poses < levelWindow && gameStarted && punch_animation === -1) {
         updateFightPunchAnimation(3, "left");
       }
-      if (Date.now() - right_uppercut < LEVEL * 10 && right_uppercut - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
+      if (now - right_uppercut < levelWindow && right_uppercut - right_poses < levelWindow && gameStarted && punch_animation === -1) {
         updateFightPunchAnimation(6, "right");
       }
-      if (Date.now() - right_jab < LEVEL * 10 && right_jab - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
+      if (now - right_jab < levelWindow && right_jab - right_poses < levelWindow && gameStarted && punch_animation === -1) {
         updateFightPunchAnimation(2, "right");
       }
-      if (Date.now() - right_hook < LEVEL * 10 && right_hook - right_poses < LEVEL * 10 && gameStarted && punch_animation === -1) {
+      if (now - right_hook < levelWindow && right_hook - right_poses < levelWindow && gameStarted && punch_animation === -1) {
         updateFightPunchAnimation(4, "right");
       }
       if (gameStarted) {
