@@ -5,6 +5,10 @@ const {
 } = globalThis.TfitAssets;
 
 const {
+  resizeLayoutState: resizeLayout
+} = globalThis.TfitLayoutState;
+
+const {
   checkStartCondition,
   initCameraRuntime,
   startPoseDetection,
@@ -14,8 +18,7 @@ const {
 const {
   applyCalibrationDragFlags,
   applyKeyInputAction,
-  applyPointerInputAction,
-  updateCalibrationFromPointer
+  applyPointerInputAction
 } = globalThis.TfitAppInputActions;
 
 const {
@@ -33,7 +36,6 @@ const {
 const {
   drawMessagePanel,
   renderBackButton,
-  renderCalibrationOverlay,
   renderFeetIndicator,
   renderFightButton,
   renderFightMeters,
@@ -42,7 +44,6 @@ const {
   renderMainMenu,
   renderRoundHud,
   renderSceneBackground,
-  renderSettingsControls,
   renderSpeech
 } = globalThis.TfitRender;
 
@@ -59,6 +60,10 @@ const {
 const {
   renderShadowMode
 } = globalThis.TfitShadowMode;
+
+const {
+  renderSettingsScreen
+} = globalThis.TfitSettingsScreen;
 
 const {
   fetchSong,
@@ -169,36 +174,7 @@ function draw() {
   }
 
   if (gameState.menu === 1) {
-    if (gameState.gameOver) {
-      stopPoseDetection();
-      gameState.gameCalibration = false;
-      gameState.gameOver = false;
-    }
-    if (gameState.gameCalibration) {
-      renderGuardTargets();
-      fill(255, 0, 0, hide_sensor);
-      timingState.gameResult = Date.now() - 5001;
-      startPoseDetection();
-
-      if (poses.length > 0) {
-        pose = poses[0];
-        leftHand = pose["left_wrist"];
-        rightHand = pose["right_wrist"];
-        nose = pose["nose"];
-        if (nose && nose.confidence > 0.1 && isDetecting) {
-          fill(0, 255, 0, 128);
-          circle(nose.x * coef, nose.y * coef, OBJECT_POSE_SIZE / 8);
-          fill(255, 255, 255, hide_sensor);
-        }
-      }
-
-      image(images.stopButton, myWindowWidth - 100 * coef - 10, Math.trunc(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
-      image(images.resetButton, myWindowWidth / 2 - 50 * coef, myWindowHeight - 100 * coef, 120 * coef, 60 * coef);
-      updateCalibrationFromPointer();
-      renderCalibrationOverlay();
-    } else {
-      renderSettingsControls();
-    }
+    renderSettingsScreen();
   }
 
   if (gameState.menu > 1) {
@@ -304,11 +280,8 @@ function draw() {
 }
 
 function windowResized() {
-  coef = Math.max(0.5, 0.05 * (Math.floor(Math.min(window.innerWidth / 32, window.innerHeight / 24))));
-  myWindowWidth = coef * 640;
-  myWindowHeight = coef * 480;
+  resizeLayout(window.innerWidth, window.innerHeight);
   resizeCanvas(myWindowWidth, myWindowHeight);
-  OBJECT_POSE_SIZE = 48 * coef;
   positionCanvas();
 }
 

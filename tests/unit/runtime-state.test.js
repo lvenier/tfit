@@ -91,6 +91,16 @@ describe('runtime state script split', () => {
     expect(context.TfitLayoutState.frameRate).toBe(20);
     expect(context.TfitLayoutState.levelWindowBase).toBe(50);
     expect(context.TfitLayoutState.objectPoseSize).toBeCloseTo(76.8);
+
+    const resized = context.TfitLayoutState.resizeLayoutState(390, 844);
+    expect(resized.coef).toBeCloseTo(0.6);
+    expect(resized.width).toBeCloseTo(384);
+    expect(resized.height).toBeCloseTo(288);
+    expect(resized.objectPoseSize).toBeCloseTo(28.8);
+    expect(context.TfitLayoutState.width).toBeCloseTo(384);
+    expect(context.TfitLayoutState.height).toBeCloseTo(288);
+    expect(context.TfitLayoutState.objectPoseSize).toBeCloseTo(28.8);
+
     expect(context.TfitUiState.error).toBe('');
     expect(context.TfitUiState.errorTimer).toBe(0);
     expect(context.TfitUiState.hideSensor).toBe(0);
