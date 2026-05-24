@@ -77,6 +77,30 @@ describe('hasComboBeforeHit', () => {
       { type: 5, hit: false }
     ], 5)).toBe(true);
   });
+
+  it('skips neutral moves while counting previous hits', () => {
+    expect(hasComboBeforeHit([
+      { type: 1, hit: true },
+      { type: 2, hit: true },
+      { type: 3, hit: true },
+      { type: 4, hit: true },
+      { type: 5, hit: true },
+      { type: 0, hit: true },
+      { type: 6, hit: false }
+    ], 6)).toBe(true);
+  });
+
+  it('stops scanning once enough previous hits were found', () => {
+    expect(hasComboBeforeHit([
+      { type: 1, hit: true },
+      { type: 2, hit: true },
+      { type: 3, hit: true },
+      { type: 4, hit: true },
+      { type: 5, hit: true },
+      { type: 6, hit: true },
+      { type: 7, hit: false }
+    ], 6)).toBe(true);
+  });
 });
 
 describe('markHit', () => {

@@ -249,6 +249,14 @@ describe('pointerAction', () => {
     })).toEqual({ type: 'none' });
   });
 
+  it('returns no action for pointer input outside interactive regions', () => {
+    expect(pointerAction({
+      ...basePointer,
+      mouseX: 5,
+      mouseY: 5
+    })).toEqual({ type: 'none' });
+  });
+
   it('returns calibration drag flags while calibrating outside button regions', () => {
     expect(pointerAction({
       ...basePointer,

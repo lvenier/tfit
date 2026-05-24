@@ -178,6 +178,21 @@ describe('guardFeedback', () => {
     });
   });
 
+  it('advances guard warning without showing the prompt before the warning delay', () => {
+    expect(guardFeedback({
+      gameTimer: 120,
+      guardWarningTime: 5800,
+      leftPoseTime: 2500,
+      now: 5000,
+      remainingSeconds: 10,
+      rightPoseTime: 4900
+    })).toEqual({
+      guardWarningTime: 5900,
+      playSound: false,
+      show: false
+    });
+  });
+
   it('resets guard warning while guard is recent or the round is nearly over', () => {
     expect(guardFeedback({
       gameTimer: 120,

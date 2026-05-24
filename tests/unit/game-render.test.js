@@ -270,6 +270,22 @@ describe('basic render helpers', () => {
     expect(globalThis.loading_m).toBe(0);
   });
 
+  it('advances and wraps the secondary loading animation counter', () => {
+    installRenderGlobals({ loading_k: 92, loading_m: 352 });
+
+    renderApi.renderLoadingScreen();
+
+    expect(globalThis.loading_k).toBe(96);
+    expect(globalThis.loading_m).toBe(360);
+
+    installRenderGlobals({ loading_k: 92, loading_m: 360 });
+
+    renderApi.renderLoadingScreen();
+
+    expect(globalThis.loading_k).toBe(96);
+    expect(globalThis.loading_m).toBe(0);
+  });
+
   it('renders the scene background and main menu assets', () => {
     renderApi.renderSceneBackground();
     renderApi.renderMainMenu();
