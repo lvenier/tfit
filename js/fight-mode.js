@@ -20,8 +20,8 @@
     animationState.player.type = type;
     animationState.player.frame = 0;
     animationState.player.delay = 0;
-    if (curMoves.length > 0 && 'type' in curMoves.at(-1) && curMoves.at(-1).type === type) {
-      my_opponent.stamina--;
+    if (gameState.curMoves.length > 0 && 'type' in gameState.curMoves.at(-1) && gameState.curMoves.at(-1).type === type) {
+      gameState.my_opponent.stamina--;
     }
     if (side === "left") {
       timingState.leftPoses = Date.now() - LEVEL * 10;
@@ -32,7 +32,7 @@
   }
 
   function renderFightMode() {
-    shadow_focus = 0;
+    gameState.shadow_focus = 0;
     renderFightMeters();
     if (poses.length > 0) {
       ({ pose, leftHand, rightHand, nose } = posePartsFromPoses(poses));
@@ -109,73 +109,73 @@
         if (rightGestures.jab) {timingState.rightJab = now;}
         if (rightGestures.hook) {timingState.rightHook = now;}
       }
-      if (now - timingState.rightDodge < levelWindow && timingState.rightDodge - timingState.rightPoses < levelWindow && gameStarted && animationState.player.frame === -1) {
+      if (now - timingState.rightDodge < levelWindow && timingState.rightDodge - timingState.rightPoses < levelWindow && gameState.gameStarted && animationState.player.frame === -1) {
         animationState.player.type = 1;
         animationState.player.frame = 0;
         animationState.player.delay = 0;
         timingState.leftPoses = now - levelWindow;
       }
-      if (now - timingState.leftDodge < levelWindow && timingState.leftDodge - timingState.leftPoses < levelWindow && gameStarted && animationState.player.frame === -1) {
+      if (now - timingState.leftDodge < levelWindow && timingState.leftDodge - timingState.leftPoses < levelWindow && gameState.gameStarted && animationState.player.frame === -1) {
         animationState.player.type = 2;
         animationState.player.frame = 0;
         animationState.player.delay = 0;
       }
-      if (now - timingState.leftUppercut < levelWindow && timingState.leftUppercut - timingState.leftPoses < levelWindow && gameStarted && animationState.player.frame === -1) {
+      if (now - timingState.leftUppercut < levelWindow && timingState.leftUppercut - timingState.leftPoses < levelWindow && gameState.gameStarted && animationState.player.frame === -1) {
         updateFightPunchAnimation(5, "left");
       }
-      if (now - timingState.leftJab < levelWindow && timingState.leftJab - timingState.leftPoses < levelWindow && gameStarted && animationState.player.frame === -1) {
+      if (now - timingState.leftJab < levelWindow && timingState.leftJab - timingState.leftPoses < levelWindow && gameState.gameStarted && animationState.player.frame === -1) {
         updateFightPunchAnimation(1, "left");
       }
-      if (now - timingState.leftHook < levelWindow && timingState.leftHook - timingState.leftPoses < levelWindow && gameStarted && animationState.player.frame === -1) {
+      if (now - timingState.leftHook < levelWindow && timingState.leftHook - timingState.leftPoses < levelWindow && gameState.gameStarted && animationState.player.frame === -1) {
         updateFightPunchAnimation(3, "left");
       }
-      if (now - timingState.rightUppercut < levelWindow && timingState.rightUppercut - timingState.rightPoses < levelWindow && gameStarted && animationState.player.frame === -1) {
+      if (now - timingState.rightUppercut < levelWindow && timingState.rightUppercut - timingState.rightPoses < levelWindow && gameState.gameStarted && animationState.player.frame === -1) {
         updateFightPunchAnimation(6, "right");
       }
-      if (now - timingState.rightJab < levelWindow && timingState.rightJab - timingState.rightPoses < levelWindow && gameStarted && animationState.player.frame === -1) {
+      if (now - timingState.rightJab < levelWindow && timingState.rightJab - timingState.rightPoses < levelWindow && gameState.gameStarted && animationState.player.frame === -1) {
         updateFightPunchAnimation(2, "right");
       }
-      if (now - timingState.rightHook < levelWindow && timingState.rightHook - timingState.rightPoses < levelWindow && gameStarted && animationState.player.frame === -1) {
+      if (now - timingState.rightHook < levelWindow && timingState.rightHook - timingState.rightPoses < levelWindow && gameState.gameStarted && animationState.player.frame === -1) {
         updateFightPunchAnimation(4, "right");
       }
-      if (gameStarted) {
-        if (gameTimerNext < Math.ceil(gameTimer / (FRAME_RATE + LEVEL / 2))) {
-          if (moves.length >= Math.ceil(gameTimer / (FRAME_RATE + LEVEL / 2)) && moves[Math.ceil(gameTimer / (FRAME_RATE + LEVEL / 2))] >= 0) {
-            curMoves.push({
+      if (gameState.gameStarted) {
+        if (gameState.gameTimerNext < Math.ceil(gameState.gameTimer / (FRAME_RATE + LEVEL / 2))) {
+          if (gameState.moves.length >= Math.ceil(gameState.gameTimer / (FRAME_RATE + LEVEL / 2)) && gameState.moves[Math.ceil(gameState.gameTimer / (FRAME_RATE + LEVEL / 2))] >= 0) {
+            gameState.curMoves.push({
               "hit": false,
-              "type": curMoves.length < 4 ? 0 : Math.trunc(moves[Math.ceil(gameTimer / (FRAME_RATE + LEVEL / 2))]),
+              "type": gameState.curMoves.length < 4 ? 0 : Math.trunc(gameState.moves[Math.ceil(gameState.gameTimer / (FRAME_RATE + LEVEL / 2))]),
               "x": 0,
               "y": 0
             })
           }
-          gameTimerNext++;
+          gameState.gameTimerNext++;
         }
-        const c = curMoves.length - 1;
-        if (curMoves.length > 0 && 'type' in curMoves[c] && curMoves[c].type !== 0) {
-          fill(...moveDisplay(curMoves[c].type, feet_position, 255).color);
+        const c = gameState.curMoves.length - 1;
+        if (gameState.curMoves.length > 0 && 'type' in gameState.curMoves[c] && gameState.curMoves[c].type !== 0) {
+          fill(...moveDisplay(gameState.curMoves[c].type, gameState.feet_position, 255).color);
           renderMoveShape({
-            type: curMoves[c].type,
+            type: gameState.curMoves[c].type,
             x: myWindowWidth / 2,
             y: myWindowHeight / 5
           }, OBJECT_POSE_SIZE);
           textSize(10 * coef);
           fill(255, 255, 255, 255);
-          text(MOVE_TYPE[curMoves[c].type], myWindowWidth / 2 - coef * MOVE_TYPE[curMoves[c].type].length * 3, myWindowHeight / 5);
+          text(MOVE_TYPE[gameState.curMoves[c].type], myWindowWidth / 2 - coef * MOVE_TYPE[gameState.curMoves[c].type].length * 3, myWindowHeight / 5);
           tint(255, 224);
-          if (curMoves[c].hit === false) {
-            if (gameStarted && animationState.opponent.frame === -1 && curMoves[c].hit === false) {
-              if (curMoves[c].type >= 7) {animationState.opponent.type = randomInteger(1,2);}
-              else {animationState.opponent.type = curMoves[c].type;}
+          if (gameState.curMoves[c].hit === false) {
+            if (gameState.gameStarted && animationState.opponent.frame === -1 && gameState.curMoves[c].hit === false) {
+              if (gameState.curMoves[c].type >= 7) {animationState.opponent.type = randomInteger(1,2);}
+              else {animationState.opponent.type = gameState.curMoves[c].type;}
               animationState.opponent.frame = 0;
               animationState.opponent.delay = 0;
             }
-            if (animationState.opponent.frame >= 0 && curMoves[c].hit === false) {
+            if (animationState.opponent.frame >= 0 && gameState.curMoves[c].hit === false) {
               image(images.opponentAnimations[animationState.opponent.type][animationState.opponent.frame], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
               if (animationState.opponent.delay % 3 === 0) {
                 if (animationState.opponent.frame >= 6) {
                   animationState.opponent.frame = -1;
                   animationState.opponent.delay = 0;
-                  curMoves[c].hit = true;
+                  gameState.curMoves[c].hit = true;
                 } else {
                   animationState.opponent.frame++;
                 }
@@ -183,12 +183,12 @@
               animationState.opponent.delay++;
             }
           } else {
-            image(images.opponents[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
+            image(images.opponents[gameState.opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
           }
           tint(255, 192);
         } else {
           tint(255, 224);
-          image(images.opponents[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
+          image(images.opponents[gameState.opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
           tint(255, 192);
         }
         if (animationState.player.frame >= 0) {
@@ -202,7 +202,7 @@
           animationState.player.delay++;
         } else {image(images.me, myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);}
         tint(255, 255);
-        gameTimer++;
+        gameState.gameTimer++;
       }
     }
   }

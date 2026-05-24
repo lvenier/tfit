@@ -21,17 +21,17 @@
   }
 
   function applyPadTarget(target) {
-    pad_x = target.x;
-    pad_y = target.y;
-    pad_type = target.type;
+    padState.x = target.x;
+    padState.y = target.y;
+    padState.type = target.type;
   }
 
   function pushPadMove() {
-    curMoves.push({
+    gameState.curMoves.push({
       "hit": false,
-      "type": pad_type,
-      "x": pad_x,
-      "y": pad_y
+      "type": padState.type,
+      "x": padState.x,
+      "y": padState.y
     })
   }
 
@@ -63,25 +63,25 @@
         circle(rightHand.x * coef, rightHand.y * coef, OBJECT_POSE_SIZE / 2);
         fill(255, 255, 255, hide_sensor);
       }
-      if (gameStarted) {
+      if (gameState.gameStarted) {
         const now = Date.now();
         const levelWindow = LEVEL * 10;
         textSize(20 * coef);
         textAlign(CENTER,CENTER);
         textStyle(BOLD);
-        if (gameTimer === 0) {
+        if (gameState.gameTimer === 0) {
           applyPadTarget(nextPadTarget());
-          curMoves = [];
+          gameState.curMoves = [];
           pushPadMove();
         }
         fill(100, 100, 0, 255);
-        if (pad_type === 1) {circle(pad_x, pad_y, OBJECT_POSE_SIZE);}
+        if (padState.type === 1) {circle(padState.x, padState.y, OBJECT_POSE_SIZE);}
         fill(0, 0, 100, 255);
-        if (pad_type === 2) {rect(OBJECT_POSE_SIZE, calibrationState.init_uppercut_y - OBJECT_POSE_SIZE / 2, myWindowWidth - 2 * OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, 20);}
+        if (padState.type === 2) {rect(OBJECT_POSE_SIZE, calibrationState.init_uppercut_y - OBJECT_POSE_SIZE / 2, myWindowWidth - 2 * OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, 20);}
         fill(255, 255, 255, 192);
-        if (pad_type === 1) {
-          if (pad_x < myWindowWidth / 2) {
-            text("L", pad_x, pad_y);
+        if (padState.type === 1) {
+          if (padState.x < myWindowWidth / 2) {
+            text("L", padState.x, padState.y);
             if (isPadPunchHit({
               coef,
               guardTime: timingState.leftPoses,
@@ -89,16 +89,16 @@
               levelWindow,
               now,
               objectPoseSize: OBJECT_POSE_SIZE,
-              padX: pad_x,
-              padY: pad_y
+              padX: padState.x,
+              padY: padState.y
             })) {
               applyPadTarget(nextPadTarget());
               timingState.leftPoses = now - levelWindow;
-              hitSuccess(curMoves.length - 1);
+              hitSuccess(gameState.curMoves.length - 1);
               pushPadMove();
             }
           } else {
-            text("R", pad_x, pad_y);
+            text("R", padState.x, padState.y);
             if (isPadPunchHit({
               coef,
               guardTime: timingState.rightPoses,
@@ -106,16 +106,16 @@
               levelWindow,
               now,
               objectPoseSize: OBJECT_POSE_SIZE,
-              padX: pad_x,
-              padY: pad_y
+              padX: padState.x,
+              padY: padState.y
             })) {
               applyPadTarget(nextPadTarget());
               timingState.rightPoses = now - levelWindow;
-              hitSuccess(curMoves.length - 1);
+              hitSuccess(gameState.curMoves.length - 1);
               pushPadMove();
             }
           }
-        } else if (pad_type === 2) {
+        } else if (padState.type === 2) {
           text("D", myWindowWidth / 2, calibrationState.init_uppercut_y);
           const downDodgeState = nextDownDodgeState({
             coef,
@@ -134,14 +134,14 @@
             timingState.downDodgeSwitch = false;
             timingState.downDodgeDone = false;
             applyPadTarget(nextPadTarget(true));
-            hitSuccess(curMoves.length - 1);
+            hitSuccess(gameState.curMoves.length - 1);
             pushPadMove();
           }
         }
         textSize(10 * coef);
         textAlign(LEFT,CENTER);
         textStyle(NORMAL);
-        gameTimer++;
+        gameState.gameTimer++;
       }
     }
   }

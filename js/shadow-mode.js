@@ -20,35 +20,35 @@
   } = root.TfitRender;
 
   function addShadowMoveAtTimer() {
-    const moveIndex = Math.ceil(gameTimer / FRAME_RATE);
-    if (gameTimerNext < moveIndex) {
-      if (moves.length >= moveIndex && moves[moveIndex] >= 0) {
-        let xt = Math.trunc(moves[moveIndex]) % 2 ? calibrationState.left_init_pose_x : calibrationState.right_init_pose_x;
-        if (moves[moveIndex] === 10) {xt = calibrationState.left_init_pose_x;}
-        curMoves.push({
-          "hit": moves[moveIndex] === 0,
-          "type": Math.trunc(moves[moveIndex]),
+    const moveIndex = Math.ceil(gameState.gameTimer / FRAME_RATE);
+    if (gameState.gameTimerNext < moveIndex) {
+      if (gameState.moves.length >= moveIndex && gameState.moves[moveIndex] >= 0) {
+        let xt = Math.trunc(gameState.moves[moveIndex]) % 2 ? calibrationState.left_init_pose_x : calibrationState.right_init_pose_x;
+        if (gameState.moves[moveIndex] === 10) {xt = calibrationState.left_init_pose_x;}
+        gameState.curMoves.push({
+          "hit": gameState.moves[moveIndex] === 0,
+          "type": Math.trunc(gameState.moves[moveIndex]),
           "x": xt,
           "y": myWindowHeight
         })
       }
-      gameTimerNext++;
+      gameState.gameTimerNext++;
     }
   }
 
   function renderShadowMove(c) {
-    curMoves[c].y = curMoves[c].y - Math.ceil(240 / FRAME_RATE);
+    gameState.curMoves[c].y = gameState.curMoves[c].y - Math.ceil(240 / FRAME_RATE);
     const now = Date.now();
     const levelWindow = LEVEL * 10;
     let alpha = 128;
-    if ([10].includes(curMoves[c].type) && curMoves[c].y + OBJECT_POSE_SIZE > calibrationState.left_init_pose_y && curMoves[c].y - OBJECT_POSE_SIZE < calibrationState.left_init_pose_y) {
+    if ([10].includes(gameState.curMoves[c].type) && gameState.curMoves[c].y + OBJECT_POSE_SIZE > calibrationState.left_init_pose_y && gameState.curMoves[c].y - OBJECT_POSE_SIZE < calibrationState.left_init_pose_y) {
       alpha = 255;
-      if (now - timingState.switchGuard > 10000 && curMoves[c].type === 10) {
+      if (now - timingState.switchGuard > 10000 && gameState.curMoves[c].type === 10) {
         timingState.switchGuard = now;
         switch_feet();
       }
     }
-    if ([1, 3, 5, 7].includes(curMoves[c].type) && curMoves[c].y + OBJECT_POSE_SIZE > calibrationState.left_init_pose_y && curMoves[c].y - OBJECT_POSE_SIZE < calibrationState.left_init_pose_y) {
+    if ([1, 3, 5, 7].includes(gameState.curMoves[c].type) && gameState.curMoves[c].y + OBJECT_POSE_SIZE > calibrationState.left_init_pose_y && gameState.curMoves[c].y - OBJECT_POSE_SIZE < calibrationState.left_init_pose_y) {
       alpha = 255;
       if (moveMatchesRecentGesture({
         leftDodge: timingState.leftDodge,
@@ -57,18 +57,18 @@
         leftPoses: timingState.leftPoses,
         leftUppercut: timingState.leftUppercut,
         levelWindow,
-        moveType: curMoves[c].type,
+        moveType: gameState.curMoves[c].type,
         now
       })) {
         hitSuccess(c);
       }
     }
-    if ([2, 4, 6, 8, 9].includes(curMoves[c].type) && curMoves[c].y + OBJECT_POSE_SIZE > calibrationState.right_init_pose_y && curMoves[c].y - OBJECT_POSE_SIZE < calibrationState.right_init_pose_y) {
+    if ([2, 4, 6, 8, 9].includes(gameState.curMoves[c].type) && gameState.curMoves[c].y + OBJECT_POSE_SIZE > calibrationState.right_init_pose_y && gameState.curMoves[c].y - OBJECT_POSE_SIZE < calibrationState.right_init_pose_y) {
       alpha = 255;
       if (moveMatchesRecentGesture({
         downDodge: timingState.downDodge,
         levelWindow,
-        moveType: curMoves[c].type,
+        moveType: gameState.curMoves[c].type,
         now,
         rightDodge: timingState.rightDodge,
         rightHook: timingState.rightHook,
@@ -79,22 +79,22 @@
         hitSuccess(c);
       }
     }
-    const display = moveDisplay(curMoves[c].type, feet_position, alpha);
+    const display = moveDisplay(gameState.curMoves[c].type, gameState.feet_position, alpha);
     if (display) {
       fill(...display.color);
-      curMoves[c].text = display.text;
+      gameState.curMoves[c].text = display.text;
     }
-    if (curMoves[c].hit === true) {fill(0, 255, 0, 127);}
-    if (curMoves[c].type > 0) {
-      renderMoveShape(curMoves[c], OBJECT_POSE_SIZE, calibrationState.right_init_pose_x);
+    if (gameState.curMoves[c].hit === true) {fill(0, 255, 0, 127);}
+    if (gameState.curMoves[c].type > 0) {
+      renderMoveShape(gameState.curMoves[c], OBJECT_POSE_SIZE, calibrationState.right_init_pose_x);
     }
-    if ([10].includes(curMoves[c].type)) {circle(calibrationState.right_init_pose_x, curMoves[c].y, OBJECT_POSE_SIZE);}
+    if ([10].includes(gameState.curMoves[c].type)) {circle(calibrationState.right_init_pose_x, gameState.curMoves[c].y, OBJECT_POSE_SIZE);}
     fill(255, 255, 255, 255);
     textSize(20 * coef);
     textStyle(BOLD);
     textAlign(CENTER,CENTER);
-    if (curMoves[c].type > 0) {text(curMoves[c].text, curMoves[c].x, curMoves[c].y);}
-    if ([9, 10].includes(curMoves[c].type)) {text(curMoves[c].text, calibrationState.right_init_pose_x, curMoves[c].y);}
+    if (gameState.curMoves[c].type > 0) {text(gameState.curMoves[c].text, gameState.curMoves[c].x, gameState.curMoves[c].y);}
+    if ([9, 10].includes(gameState.curMoves[c].type)) {text(gameState.curMoves[c].text, calibrationState.right_init_pose_x, gameState.curMoves[c].y);}
     textAlign(LEFT,CENTER);
     textStyle(NORMAL);
   }
@@ -114,7 +114,7 @@
           timingState.leftPoses = now;
           fill(255, 255, 255, 128);
           circle(calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, OBJECT_POSE_SIZE);
-          if (gameStarted ) {
+          if (gameState.gameStarted) {
             if (now - timingState.leftHook < levelWindow) {
               punchSound();
             }
@@ -152,7 +152,7 @@
           rect(0, 0, myWindowWidth, calibrationState.init_jab_y);
           if (leftGestures.jab) {
             timingState.leftJab = now;
-            if (gameStarted) {punchSound();}
+            if (gameState.gameStarted) {punchSound();}
           }
         }
         const dodges = detectDodgeGestures({
@@ -175,7 +175,7 @@
           timingState.rightPoses = now;
           fill(255, 255, 255, 128);
           circle(calibrationState.right_init_pose_x, calibrationState.right_init_pose_y, OBJECT_POSE_SIZE);
-          if (gameStarted || gameCalibration) {
+          if (gameState.gameStarted || gameState.gameCalibration) {
             if (now - timingState.rightHook < levelWindow) {
               punchSound();
             }
@@ -212,7 +212,7 @@
           rect(0, 0, myWindowWidth, calibrationState.init_jab_y);
           if (rightGestures.jab) {
             timingState.rightJab = now;
-            if (gameStarted) {punchSound();}
+            if (gameState.gameStarted) {punchSound();}
           }
         }
       }
@@ -221,17 +221,17 @@
 
   function renderShadowMode() {
     renderFeetIndicator();
-    if (gameResultBool() && curMoves.length > 0) {
+    if (gameResultBool() && gameState.curMoves.length > 0) {
       renderShadowResult();
       return;
     }
 
-    if (gameStarted) {
+    if (gameState.gameStarted) {
       addShadowMoveAtTimer();
-      for (let c = 0; c < curMoves.length; c++) {
+      for (let c = 0; c < gameState.curMoves.length; c++) {
         renderShadowMove(c);
       }
-      gameTimer++;
+      gameState.gameTimer++;
     }
 
     renderShadowPoseInput();

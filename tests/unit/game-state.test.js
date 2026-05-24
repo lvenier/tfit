@@ -6,7 +6,7 @@ import { Script } from 'node:vm';
 const require = createRequire(import.meta.url);
 
 describe('TfitState browser export', () => {
-  it('groups runtime state while preserving legacy global accessors', () => {
+  it('groups runtime state without legacy global state aliases', () => {
     const modulePath = require.resolve('../../js/game-state');
     const source = readFileSync(modulePath, 'utf8');
     const storageJson = vi.fn();
@@ -30,14 +30,14 @@ describe('TfitState browser export', () => {
     new Script(source, { filename: modulePath }).runInNewContext(sandbox);
 
     expect(sandbox.gameState.gameLength).toBe('60');
+    expect(sandbox.gameState.opponent).toBe(0);
     expect(sandbox.gameState.my_opponent).toEqual({ id: 0, stamina: 6 });
-    sandbox.menu = 3;
     sandbox.animationState.player.frame = 4;
-    sandbox.pad_x = 120;
+    sandbox.padState.x = 120;
 
-    expect(sandbox.gameState.menu).toBe(3);
-    expect(sandbox.opponent).toBe(0);
-    expect(sandbox.punch_animation).toBe(4);
+    expect(sandbox.menu).toBeUndefined();
+    expect(sandbox.opponent).toBeUndefined();
+    expect(sandbox.animationState.player.frame).toBe(4);
     expect(sandbox.padState.x).toBe(120);
     expect(sandbox.module.exports).toBe(sandbox.TfitState);
     expect(storageJson).toHaveBeenCalledWith('player', expect.objectContaining({ score: 0 }));

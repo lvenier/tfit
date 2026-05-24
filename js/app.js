@@ -198,7 +198,7 @@ function applyInputAction(action) {
     gameState.menu = 4;
     gameState.curMoves = [];
     loadSongmoves();
-    gameState.my_opponent = cloneOpponent(opponent);
+    gameState.my_opponent = cloneOpponent(gameState.opponent);
     return;
   }
   if (action.type === "cycle_frame_rate") {
@@ -289,7 +289,7 @@ function letsfight() {
   gameState.gameStarted = true;
   timingState.gameResult = Date.now() - 5001;
   timingState.guardWarning = Date.now();
-  gameState.my_opponent = cloneOpponent(opponent);
+  gameState.my_opponent = cloneOpponent(gameState.opponent);
   gameState.curMoves = [];
   gameState.gameCalibration = false;
   hide_sensor = 0;
@@ -523,7 +523,7 @@ function draw() {
         isDetecting = false;
       }
       gameState.gameCalibration = false;
-      gameState.my_opponent = cloneOpponent(opponent);
+      gameState.my_opponent = cloneOpponent(gameState.opponent);
       gameState.gameStarted = false;
       hide_sensor = 0;
       gameState.gameTimer = -1;

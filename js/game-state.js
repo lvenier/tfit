@@ -21,6 +21,7 @@
     menu: 0,
     moves: [],
     my_opponent: null,
+    opponent: 0,
     score: 0,
     score_max: 0,
     score_max_prev: 0,
@@ -45,69 +46,13 @@
     }
   };
 
-  const opponent = 0;
-  gameState.my_opponent = cloneOpponent(opponent);
+  gameState.my_opponent = cloneOpponent(gameState.opponent);
 
   const padState = {
     type: 1,
     x: undefined,
     y: undefined
   };
-
-  const stateBindings = {
-    arrayScore: [gameState, "arrayScore"],
-    curMoves: [gameState, "curMoves"],
-    feet_position: [gameState, "feet_position"],
-    gameCalibration: [gameState, "gameCalibration"],
-    gameCurrentSeries: [gameState, "gameCurrentSeries"],
-    gameDuration: [gameState, "gameDuration"],
-    gameLength: [gameState, "gameLength"],
-    gameLengthIndex: [gameState, "gameLengthIndex"],
-    gameOver: [gameState, "gameOver"],
-    gameReady: [gameState, "gameReady"],
-    gameSeries: [gameState, "gameSeries"],
-    gameStarted: [gameState, "gameStarted"],
-    gameTimer: [gameState, "gameTimer"],
-    gameTimerNext: [gameState, "gameTimerNext"],
-    level: [gameState, "level"],
-    menu: [gameState, "menu"],
-    moves: [gameState, "moves"],
-    my_opponent: [gameState, "my_opponent"],
-    pad_type: [padState, "type"],
-    pad_x: [padState, "x"],
-    pad_y: [padState, "y"],
-    punch_animation: [animationState.player, "frame"],
-    punch_animation_delay: [animationState.player, "delay"],
-    punch_animation_type: [animationState.player, "type"],
-    puncho_animation: [animationState.opponent, "frame"],
-    puncho_animation_delay: [animationState.opponent, "delay"],
-    puncho_animation_type: [animationState.opponent, "type"],
-    score: [gameState, "score"],
-    score_max: [gameState, "score_max"],
-    score_max_prev: [gameState, "score_max_prev"],
-    shadow_focus: [gameState, "shadow_focus"],
-    song: [gameState, "song"],
-    song_result: [gameState, "song_result"]
-  };
-
-  for (const [name, [target, key]] of Object.entries(stateBindings)) {
-    Object.defineProperty(root, name, {
-      configurable: true,
-      get() {
-        return target[key];
-      },
-      set(value) {
-        target[key] = value;
-      }
-    });
-  }
-
-  Object.defineProperty(root, "opponent", {
-    configurable: true,
-    get() {
-      return opponent;
-    }
-  });
 
   const selectedPlayer = localStorage.getItem("selected_player") || "player";
   storageJson(selectedPlayer, {

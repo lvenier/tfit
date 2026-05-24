@@ -155,7 +155,7 @@
     rect(myWindowWidth / 2 - 75 * coef + 2, 45, 148 * coef, 16);
     fill(255);
     if (gameState.my_opponent.stamina > 0) {
-      rect(myWindowWidth / 2 - 75 * coef + 2, 17, 148 * coef - (OPPONENTS[opponent].stamina - gameState.my_opponent.stamina) * coef * 24, 16);
+      rect(myWindowWidth / 2 - 75 * coef + 2, 17, 148 * coef - (OPPONENTS[gameState.opponent].stamina - gameState.my_opponent.stamina) * coef * 24, 16);
     }
     rect(myWindowWidth / 2 - 75 * coef + 2, 45, 148 * coef, 16);
   }
