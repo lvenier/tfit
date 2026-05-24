@@ -8,6 +8,7 @@ const CORE_ASSETS = [
   './js/game-calibration.js',
   './js/game-input.js',
   './js/game-logic.js',
+  './js/game-round.js',
   './js/game-render.js',
   './js/game-score.js',
   './js/pose-detection.js',

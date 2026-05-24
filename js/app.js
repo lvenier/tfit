@@ -53,6 +53,13 @@ const {
 } = globalThis.TfitRender;
 
 const {
+  guardFeedback,
+  keepTryingFeedback,
+  remainingRoundSeconds,
+  shouldShowHitFeedback
+} = globalThis.TfitRound;
+
+const {
   renderShadowMode
 } = globalThis.TfitShadowMode;
 
@@ -600,32 +607,45 @@ function draw() {
     if (gameStarted) {
       image(stop_button_image, myWindowWidth - 100 * coef - 10, Math.trunc(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
       fill(255, 0, 0, hide_sensor);
-      if (Date.now() - timingState.hitSuccess < 1000) {
+      const now = Date.now();
+      const remainingSeconds = remainingRoundSeconds({
+        frameRate: FRAME_RATE,
+        gameDuration,
+        gameTimer
+      });
+
+      if (shouldShowHitFeedback({ hitSuccessTime: timingState.hitSuccess, now })) {
         image(good_hit_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
       }
-      if (Date.now() - timingState.hitSuccess > 3000 && Date.now() - timingState.hitSuccess < 4000 && timingState.guardWarning - Date.now() < 2000 && Math.ceil((gameDuration - gameTimer) / FRAME_RATE) > 5) {
-        if (curMoves.length > 3 && curMoves.at(-1).hit === false && curMoves.at(-2).hit === false && curMoves.at(-3).hit === false) {
-          image(keep_trying_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
-          if (Date.now() - timingState.hitSuccess < 3019) {
-            song_keep_trying.play();
-          }
+
+      const keepTrying = keepTryingFeedback({
+        curMoves,
+        guardWarningTime: timingState.guardWarning,
+        hitSuccessTime: timingState.hitSuccess,
+        now,
+        remainingSeconds
+      });
+      if (keepTrying.show) {
+        image(keep_trying_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
+        if (keepTrying.playSound) {
+          song_keep_trying.play();
         }
       }
-      if ((Date.now() - timingState.leftPoses > 2000 || Date.now() - timingState.rightPoses > 2000) && Math.ceil((gameDuration - gameTimer) / FRAME_RATE) > 5 && gameTimer > 100) {
-        timingState.guardWarning += 100;
-        if (timingState.guardWarning - Date.now() > 1000) {
-          if (timingState.guardWarning - Date.now() < 1089) {
-            song_your_guard.play();
-          }
-          if (timingState.guardWarning - Date.now() < 3000) {
-            image(your_guard_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
-          }
-        }
-        if (timingState.guardWarning - Date.now() > 10000) {
-          timingState.guardWarning = Date.now();
-        }
-      } else {
-        timingState.guardWarning = Date.now();
+
+      const guard = guardFeedback({
+        gameTimer,
+        guardWarningTime: timingState.guardWarning,
+        leftPoseTime: timingState.leftPoses,
+        now,
+        remainingSeconds,
+        rightPoseTime: timingState.rightPoses
+      });
+      timingState.guardWarning = guard.guardWarningTime;
+      if (guard.playSound) {
+        song_your_guard.play();
+      }
+      if (guard.show) {
+        image(your_guard_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
       }
     }
   }
