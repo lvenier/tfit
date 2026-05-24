@@ -7,8 +7,12 @@ const require = createRequire(import.meta.url);
 
 const {
   guardFeedback,
+  initialRoundMoveState,
+  isRoundExpired,
   keepTryingFeedback,
   remainingRoundSeconds,
+  roundEndState,
+  scoreTotal,
   shouldShowHitFeedback
 } = require('../../js/game-round');
 
@@ -16,8 +20,12 @@ describe('TfitRound exports', () => {
   it('exposes round helpers for app.js', () => {
     expect(Object.keys(globalThis.TfitRound).sort()).toEqual([
       'guardFeedback',
+      'initialRoundMoveState',
+      'isRoundExpired',
       'keepTryingFeedback',
       'remainingRoundSeconds',
+      'roundEndState',
+      'scoreTotal',
       'shouldShowHitFeedback'
     ]);
   });
@@ -44,6 +52,53 @@ describe('remainingRoundSeconds', () => {
       gameDuration: 400,
       gameTimer: 181
     })).toBe(11);
+  });
+});
+
+describe('round bookkeeping', () => {
+  it('detects round expiry from duration and timer', () => {
+    expect(isRoundExpired({ gameDuration: 100, gameTimer: 99 })).toBe(false);
+    expect(isRoundExpired({ gameDuration: 100, gameTimer: 100 })).toBe(true);
+    expect(isRoundExpired({ gameDuration: 100, gameTimer: 101 })).toBe(true);
+  });
+
+  it('sums the score array', () => {
+    expect(scoreTotal([1, 0, 1, 1])).toBe(3);
+    expect(scoreTotal([])).toBe(0);
+  });
+
+  it('creates a fresh round move state from the moves list length', () => {
+    expect(initialRoundMoveState([1, 2, 3])).toEqual({
+      arrayScore: [0, 0, 0],
+      curMoves: [],
+      gameTimerNext: 0
+    });
+  });
+
+  it('advances series when more rounds remain and records scored results', () => {
+    expect(roundEndState({
+      currentSeries: 1,
+      curMoves: [{ hit: true }],
+      gameSeries: 3,
+      score: 1
+    })).toEqual({
+      gameResultNow: true,
+      gameSeries: 2,
+      shouldStartNextSeries: true
+    });
+  });
+
+  it('resets series after the final round and skips empty results', () => {
+    expect(roundEndState({
+      currentSeries: 3,
+      curMoves: [],
+      gameSeries: 3,
+      score: 0
+    })).toEqual({
+      gameResultNow: false,
+      gameSeries: 1,
+      shouldStartNextSeries: false
+    });
   });
 });
 

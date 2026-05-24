@@ -54,8 +54,12 @@ const {
 
 const {
   guardFeedback,
+  initialRoundMoveState,
+  isRoundExpired,
   keepTryingFeedback,
   remainingRoundSeconds,
+  roundEndState,
+  scoreTotal,
   shouldShowHitFeedback
 } = globalThis.TfitRound;
 
@@ -540,7 +544,7 @@ function draw() {
   if (menu > 1) {
     renderGuardTargets();
     fill(255, 255, 255, 192);
-    if (gameDuration - gameTimer <= 0) {
+    if (isRoundExpired({ gameDuration, gameTimer })) {
       gameOver = true;
     }
     if (gameOver) {
@@ -554,13 +558,19 @@ function draw() {
       hide_sensor = 0;
       gameTimer = -1;
       gameOver = false;
-      if (curMoves.length > 0 && score > 0) {timingState.gameResult = Date.now();}
-      if (gameCurrentSeries < gameSeries) {
+      const roundEnd = roundEndState({
+        currentSeries: gameCurrentSeries,
+        curMoves,
+        gameSeries,
+        score
+      });
+      if (roundEnd.gameResultNow) {timingState.gameResult = Date.now();}
+      if (roundEnd.shouldStartNextSeries) {
         setTimeout(() => {
           letsfight();
         }, 5100);
-        gameCurrentSeries++;
-      } else {gameCurrentSeries = 1;}
+      }
+      gameCurrentSeries = roundEnd.gameSeries;
       feet_position = 0;
       left_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
       right_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
@@ -585,9 +595,7 @@ function draw() {
         bodyPose.detectStart(video, gotPoses);
         isDetecting = true;
       } 
-      for (const element of arrayScore) {
-        score += element;
-      }
+      score = scoreTotal(arrayScore);
     }
     renderRoundHud(score);
 
@@ -599,9 +607,11 @@ function draw() {
     }
 
     if (gameTimer === 0) {
-      curMoves = [];
-      gameTimerNext = 0;
-      arrayScore = Array(moves.length).fill(0);
+      ({
+        arrayScore,
+        curMoves,
+        gameTimerNext
+      } = initialRoundMoveState(moves));
     }
 
     if (gameStarted) {

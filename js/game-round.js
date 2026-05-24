@@ -3,6 +3,32 @@
     return Math.ceil((gameDuration - gameTimer) / frameRate);
   }
 
+  function isRoundExpired({ gameDuration, gameTimer }) {
+    return gameDuration - gameTimer <= 0;
+  }
+
+  function scoreTotal(arrayScore) {
+    return arrayScore.reduce((total, value) => total + value, 0);
+  }
+
+  function initialRoundMoveState(moves) {
+    return {
+      arrayScore: Array(moves.length).fill(0),
+      curMoves: [],
+      gameTimerNext: 0
+    };
+  }
+
+  function roundEndState({ currentSeries, curMoves, gameSeries, score }) {
+    const shouldStartNextSeries = currentSeries < gameSeries;
+
+    return {
+      gameResultNow: curMoves.length > 0 && score > 0,
+      gameSeries: shouldStartNextSeries ? currentSeries + 1 : 1,
+      shouldStartNextSeries
+    };
+  }
+
   function shouldShowHitFeedback({ hitSuccessTime, now }) {
     return now - hitSuccessTime < 1000;
   }
@@ -71,8 +97,12 @@
 
   const api = {
     guardFeedback,
+    initialRoundMoveState,
+    isRoundExpired,
     keepTryingFeedback,
     remainingRoundSeconds,
+    roundEndState,
+    scoreTotal,
     shouldShowHitFeedback
   };
 
