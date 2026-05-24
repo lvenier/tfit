@@ -25,12 +25,7 @@ const {
 
 const {
   calibrationDefaults,
-  countScoringMoves,
-  createEmptySong,
-  createSongMoves,
   detectStartCondition,
-  isRecent,
-  levelDelay,
   nextFrameRate,
   nextOneBasedIndex,
   nextZeroBasedIndex
@@ -68,8 +63,11 @@ const {
 } = globalThis.TfitShadowMode;
 
 const {
-  markHit
-} = globalThis.TfitScore;
+  fetchSong,
+  gameResultBool,
+  letsfight,
+  loadSongmoves
+} = globalThis.TfitFlow;
 
 document.addEventListener("contextmenu", event => event.preventDefault());
 
@@ -97,42 +95,6 @@ function resetCalibrationDefaults() {
 
   for (const [key, value] of Object.entries(defaults)) {
     localStorage.setItem(key, value);
-  }
-}
-
-function gameResultBool() { 
-  return isRecent(timingState.gameResult);
-}
-
-function loadSongmoves() {
-  LEVEL = levelDelay(gameState.level);
-  if (gameState.song) {
-    gameState.gameDuration = gameState.gameLength * FRAME_RATE;
-    if (gameState.song.moveLength === 0) {
-      if (gameState.menu === 4) {
-        gameState.shadow_focus = storageNumber("shadow_focus", gameState.shadow_focus, { min: 0, max: Object.keys(SHADOW_SPECIFIC).length - 1 });
-      }
-      gameState.song.moves = createSongMoves({
-        gameLength: gameState.gameLength,
-        level: gameState.level,
-        menu: gameState.menu,
-        randomInteger,
-        shadowFocus: gameState.shadow_focus
-      });
-    }
-    gameState.moves = gameState.song.moves;
-    gameState.score_max = countScoringMoves(gameState.moves);
-  }
-}
-
-function fetchSong(_id = 1) {
-  gameState.song = createEmptySong();
-}
-
-function punchSound() {
-  if (timingState.punchSoundTime + 1000 < Date.now()) {
-    sounds.punch.play();
-    timingState.punchSoundTime = Date.now();
   }
 }
 
@@ -272,34 +234,6 @@ function applyInputAction(action) {
   }
 }
 
-function letsfight() {
-  sounds.click.play();
-  if (gameState.gameCalibration) {
-    speechString = "Calibrating !";
-    return;
-  }
-  if (gameState.gameStarted) {
-    speechString = "Already fighting !";
-    return;
-  }
-  gameState.feet_position = 0;
-  calibrationState.left_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
-  calibrationState.right_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
-  sounds.letsFight.play();
-  gameState.gameStarted = true;
-  timingState.gameResult = Date.now() - 5001;
-  timingState.guardWarning = Date.now();
-  gameState.my_opponent = cloneOpponent(gameState.opponent);
-  gameState.curMoves = [];
-  gameState.gameCalibration = false;
-  hide_sensor = 0;
-  gameState.gameTimer = 0;
-  gameState.score = 0;
-  gameState.arrayScore = [];
-  loadSongmoves();
-  gameState.score_max_prev = gameState.score_max;
-}
-
 function handleChange() {
   applyInputAction(pointerAction({
     coef,
@@ -361,35 +295,6 @@ function keyPressed() {
     key,
     menu: gameState.menu
   }));
-}
-
-function switch_feet() {
-  gameState.feet_position = 1;
-  calibrationState.left_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
-  calibrationState.right_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
-}
-
-function hitSuccess(c) {
-  const result = markHit({
-    arrayScore: gameState.arrayScore,
-    curMoves: gameState.curMoves,
-    index: c,
-    playComboFeedback: key => {
-      const comboSounds = {
-        awesome: sounds.awesome,
-        continue: sounds.continue,
-        good: sounds.good,
-        great: sounds.great,
-        perfect: sounds.perfect,
-        thats_it: sounds.thatsIt,
-        well_done: sounds.wellDone
-      };
-      comboSounds[key].play();
-    }
-  });
-  if (result.hitSuccess !== null) {
-    timingState.hitSuccess = result.hitSuccess;
-  }
 }
 
 function handleRightClick(e) {
