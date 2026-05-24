@@ -191,24 +191,26 @@ let init_uppercut_y = storageNumber("init_uppercut_y", myWindowHeight * 3 / 4);
 let init_jab_dragging = false;
 let init_jab_y = storageNumber("init_jab_y", myWindowHeight / 4);
 
-let left_poses = Date.now() - 1000;
-let right_poses = Date.now() - 1000;
-let left_hook = Date.now() - 1000;
-let right_hook = Date.now() - 1000;
-let left_jab = Date.now() - 1000;
-let right_jab = Date.now() - 1000;
-let left_uppercut = Date.now() - 1000;
-let right_uppercut = Date.now() - 1000;
-let left_dodge = Date.now() - 1000;
-let right_dodge = Date.now() - 1000;
-let down_dodge = Date.now() - 1000;
-let down_dodge_done = false;
-let down_dodge_switch = false;
-let switch_guard = Date.now() - 10000;
-let punch_sound_time = Date.now() - 1000;
-let hit_success = Date.now() - 1000;
-let gameResult = Date.now() - 5000;
-let guard_warning = Date.now();
+const timingState = {
+  downDodge: Date.now() - 1000,
+  downDodgeDone: false,
+  downDodgeSwitch: false,
+  gameResult: Date.now() - 5000,
+  guardWarning: Date.now(),
+  hitSuccess: Date.now() - 1000,
+  leftDodge: Date.now() - 1000,
+  leftHook: Date.now() - 1000,
+  leftJab: Date.now() - 1000,
+  leftPoses: Date.now() - 1000,
+  leftUppercut: Date.now() - 1000,
+  punchSoundTime: Date.now() - 1000,
+  rightDodge: Date.now() - 1000,
+  rightHook: Date.now() - 1000,
+  rightJab: Date.now() - 1000,
+  rightPoses: Date.now() - 1000,
+  rightUppercut: Date.now() - 1000,
+  switchGuard: Date.now() - 10000
+};
 
 let speechString = null;
 const selectedPlayer = localStorage.getItem("selected_player") || "player";

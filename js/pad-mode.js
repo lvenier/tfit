@@ -45,7 +45,7 @@
       }
       if (hasPoseConfidence(leftHand)) {
         if (isInsideGuard(leftHand, left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE, coef)) {
-          left_poses = Date.now();
+          timingState.leftPoses = Date.now();
           fill(255, 255, 255, 128);
           circle(left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE);
         }
@@ -55,7 +55,7 @@
       }
       if (hasPoseConfidence(rightHand)) {
         if (isInsideGuard(rightHand, right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE, coef)) {
-          right_poses = Date.now();
+          timingState.rightPoses = Date.now();
           fill(255, 255, 255, 128);
           circle(right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE);
         }
@@ -84,7 +84,7 @@
             text("L", pad_x, pad_y);
             if (isPadPunchHit({
               coef,
-              guardTime: left_poses,
+              guardTime: timingState.leftPoses,
               hand: leftHand,
               levelWindow,
               now,
@@ -93,7 +93,7 @@
               padY: pad_y
             })) {
               applyPadTarget(nextPadTarget());
-              left_poses = now - levelWindow;
+              timingState.leftPoses = now - levelWindow;
               hitSuccess(curMoves.length - 1);
               pushPadMove();
             }
@@ -101,7 +101,7 @@
             text("R", pad_x, pad_y);
             if (isPadPunchHit({
               coef,
-              guardTime: right_poses,
+              guardTime: timingState.rightPoses,
               hand: rightHand,
               levelWindow,
               now,
@@ -110,7 +110,7 @@
               padY: pad_y
             })) {
               applyPadTarget(nextPadTarget());
-              right_poses = now - levelWindow;
+              timingState.rightPoses = now - levelWindow;
               hitSuccess(curMoves.length - 1);
               pushPadMove();
             }
@@ -119,20 +119,20 @@
           text("D", myWindowWidth / 2, init_uppercut_y);
           const downDodgeState = nextDownDodgeState({
             coef,
-            done: down_dodge_done,
+            done: timingState.downDodgeDone,
             initUppercutY: init_uppercut_y,
             nose,
-            switched: down_dodge_switch
+            switched: timingState.downDodgeSwitch
           });
-          down_dodge_done = downDodgeState.done;
-          down_dodge_switch = downDodgeState.switched;
+          timingState.downDodgeDone = downDodgeState.done;
+          timingState.downDodgeSwitch = downDodgeState.switched;
           if (downDodgeState.touchedDown) {
-            down_dodge = now;
+            timingState.downDodge = now;
           }
-          if (now - down_dodge < levelWindow && down_dodge_switch === true) {
-            down_dodge = now - levelWindow;
-            down_dodge_switch = false;
-            down_dodge_done = false;
+          if (now - timingState.downDodge < levelWindow && timingState.downDodgeSwitch === true) {
+            timingState.downDodge = now - levelWindow;
+            timingState.downDodgeSwitch = false;
+            timingState.downDodgeDone = false;
             applyPadTarget(nextPadTarget(true));
             hitSuccess(curMoves.length - 1);
             pushPadMove();

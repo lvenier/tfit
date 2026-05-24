@@ -43,19 +43,19 @@
     let alpha = 128;
     if ([10].includes(curMoves[c].type) && curMoves[c].y + OBJECT_POSE_SIZE > left_init_pose_y && curMoves[c].y - OBJECT_POSE_SIZE < left_init_pose_y) {
       alpha = 255;
-      if (now - switch_guard > 10000 && curMoves[c].type === 10) {
-        switch_guard = now;
+      if (now - timingState.switchGuard > 10000 && curMoves[c].type === 10) {
+        timingState.switchGuard = now;
         switch_feet();
       }
     }
     if ([1, 3, 5, 7].includes(curMoves[c].type) && curMoves[c].y + OBJECT_POSE_SIZE > left_init_pose_y && curMoves[c].y - OBJECT_POSE_SIZE < left_init_pose_y) {
       alpha = 255;
       if (moveMatchesRecentGesture({
-        leftDodge: left_dodge,
-        leftHook: left_hook,
-        leftJab: left_jab,
-        leftPoses: left_poses,
-        leftUppercut: left_uppercut,
+        leftDodge: timingState.leftDodge,
+        leftHook: timingState.leftHook,
+        leftJab: timingState.leftJab,
+        leftPoses: timingState.leftPoses,
+        leftUppercut: timingState.leftUppercut,
         levelWindow,
         moveType: curMoves[c].type,
         now
@@ -66,15 +66,15 @@
     if ([2, 4, 6, 8, 9].includes(curMoves[c].type) && curMoves[c].y + OBJECT_POSE_SIZE > right_init_pose_y && curMoves[c].y - OBJECT_POSE_SIZE < right_init_pose_y) {
       alpha = 255;
       if (moveMatchesRecentGesture({
-        downDodge: down_dodge,
+        downDodge: timingState.downDodge,
         levelWindow,
         moveType: curMoves[c].type,
         now,
-        rightDodge: right_dodge,
-        rightHook: right_hook,
-        rightJab: right_jab,
-        rightPoses: right_poses,
-        rightUppercut: right_uppercut
+        rightDodge: timingState.rightDodge,
+        rightHook: timingState.rightHook,
+        rightJab: timingState.rightJab,
+        rightPoses: timingState.rightPoses,
+        rightUppercut: timingState.rightUppercut
       })) {
         hitSuccess(c);
       }
@@ -111,14 +111,14 @@
       }
       if (hasPoseConfidence(leftHand)) {
         if (isInsideGuard(leftHand, left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE, coef)) {
-          left_poses = now;
+          timingState.leftPoses = now;
           fill(255, 255, 255, 128);
           circle(left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE);
           if (gameStarted ) {
-            if (now - left_hook < levelWindow) {
+            if (now - timingState.leftHook < levelWindow) {
               punchSound();
             }
-            if (now - left_uppercut < levelWindow) {
+            if (now - timingState.leftUppercut < levelWindow) {
               punchSound();
             }
           }
@@ -132,26 +132,26 @@
           initJabY: init_jab_y,
           initUppercutY: init_uppercut_y,
           leftHookX: left_init_hook_x,
-          leftPoseTime: left_poses,
+          leftPoseTime: timingState.leftPoses,
           levelWindow,
           now,
           rightHookX: right_init_hook_x,
-          rightPoseTime: right_poses,
+          rightPoseTime: timingState.rightPoses,
           side: "left"
         });
         if (leftHand.x * coef < left_init_hook_x) {
-          left_hook = now;
+          timingState.leftHook = now;
           rect(0, 0, left_init_hook_x, myWindowHeight);
         }
         if (leftHand.y * coef > init_uppercut_y) {
-          left_uppercut = now;
+          timingState.leftUppercut = now;
           rect(0, init_uppercut_y, myWindowWidth, myWindowHeight - init_uppercut_y);
         }
         if (leftHand.y * coef < init_jab_y) {
           fill(255, 255, 255, hide_sensor);
           rect(0, 0, myWindowWidth, init_jab_y);
           if (leftGestures.jab) {
-            left_jab = now;
+            timingState.leftJab = now;
             if (gameStarted) {punchSound();}
           }
         }
@@ -161,25 +161,25 @@
           leftGuardX: left_init_pose_x,
           nose,
           objectPoseSize: OBJECT_POSE_SIZE,
-          ready: areBothHandsRecent(now, left_poses, right_poses, levelWindow),
+          ready: areBothHandsRecent(now, timingState.leftPoses, timingState.rightPoses, levelWindow),
           rightGuardX: right_init_pose_x
         });
-        if (dodges.left) {left_dodge = now;}
-        if (dodges.right) {right_dodge = now;}
+        if (dodges.left) {timingState.leftDodge = now;}
+        if (dodges.right) {timingState.rightDodge = now;}
         if (dodges.down) {
-          down_dodge = now;
+          timingState.downDodge = now;
         }
       }
       if (hasPoseConfidence(rightHand)) {
         if (isInsideGuard(rightHand, right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE, coef)) {
-          right_poses = now;
+          timingState.rightPoses = now;
           fill(255, 255, 255, 128);
           circle(right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE);
           if (gameStarted || gameCalibration) {
-            if (now - right_hook < levelWindow) {
+            if (now - timingState.rightHook < levelWindow) {
               punchSound();
             }
-            if (now - right_uppercut < levelWindow) {
+            if (now - timingState.rightUppercut < levelWindow) {
               punchSound();
             }
           }
@@ -193,25 +193,25 @@
           initJabY: init_jab_y,
           initUppercutY: init_uppercut_y,
           leftHookX: left_init_hook_x,
-          leftPoseTime: left_poses,
+          leftPoseTime: timingState.leftPoses,
           levelWindow,
           now,
           rightHookX: right_init_hook_x,
-          rightPoseTime: right_poses,
+          rightPoseTime: timingState.rightPoses,
           side: "right"
         });
         if (rightHand.x * coef > right_init_hook_x) {
-          right_hook = now;
+          timingState.rightHook = now;
           rect(right_init_hook_x, 0, right_init_hook_x, myWindowHeight);
         }
         if (rightHand.y * coef > init_uppercut_y) {
-          right_uppercut = now;
+          timingState.rightUppercut = now;
           rect(0, init_uppercut_y, myWindowWidth, myWindowHeight - init_uppercut_y);
         }
         if (rightHand.y * coef < init_jab_y) {
           rect(0, 0, myWindowWidth, init_jab_y);
           if (rightGestures.jab) {
-            right_jab = now;
+            timingState.rightJab = now;
             if (gameStarted) {punchSound();}
           }
         }

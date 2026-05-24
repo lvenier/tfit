@@ -9,8 +9,9 @@ const {
 } = globalThis.TfitFightMode;
 
 const {
-  calibrationDragFlagsFromPointer,
-  clearCalibrationDragFlags
+  clearCalibrationDragFlags,
+  keyAction,
+  pointerAction
 } = globalThis.TfitInput;
 
 const {
@@ -84,7 +85,7 @@ function resetCalibrationDefaults() {
 }
 
 function gameResultBool() { 
-  return isRecent(gameResult);
+  return isRecent(timingState.gameResult);
 }
 
 function loadSongmoves() {
@@ -105,9 +106,9 @@ function fetchSong(_id = 1) {
 }
 
 function punchSound() {
-  if (punch_sound_time + 1000 < Date.now()) {
+  if (timingState.punchSoundTime + 1000 < Date.now()) {
     punch_sound.play();
-    punch_sound_time = Date.now();
+    timingState.punchSoundTime = Date.now();
   }
 }
 
@@ -118,6 +119,115 @@ function applyCalibrationDragFlags(flags) {
   right_init_hook_dragging = flags.right_init_hook_dragging;
   right_init_pose_dragging = flags.right_init_pose_dragging;
   left_init_pose_dragging = flags.left_init_pose_dragging;
+}
+
+function applyInputAction(action) {
+  if (action.type === "none") {return;}
+  const playClick = () => {
+    if (action.click) {
+      click_sound.play();
+    }
+  };
+  if (action.type === "start_fight") {
+    letsfight();
+    return;
+  }
+  if (action.type === "open_settings") {
+    playClick();
+    menu = 1;
+    return;
+  }
+  if (action.type === "open_shadow") {
+    playClick();
+    menu = 2;
+    curMoves = [];
+    loadSongmoves();
+    return;
+  }
+  if (action.type === "open_pad") {
+    playClick();
+    menu = 3;
+    curMoves = [];
+    loadSongmoves();
+    return;
+  }
+  if (action.type === "open_fight") {
+    playClick();
+    menu = 4;
+    curMoves = [];
+    loadSongmoves();
+    my_opponent = cloneOpponent(opponent);
+    return;
+  }
+  if (action.type === "cycle_frame_rate") {
+    playClick();
+    FRAME_RATE = nextFrameRate(FRAME_RATE);
+    localStorage.setItem("frame_rate", FRAME_RATE);
+    return;
+  }
+  if (action.type === "cycle_level") {
+    playClick();
+    level = nextZeroBasedIndex(level, Object.keys(GAME_LEVEL).length);
+    localStorage.setItem("level", level);
+    return;
+  }
+  if (action.type === "cycle_length") {
+    playClick();
+    gameLengthIndex = nextOneBasedIndex(gameLengthIndex, Object.keys(GAME_LENGTH).length);
+    localStorage.setItem("length", gameLengthIndex);
+    gameLength = GAME_LENGTH[gameLengthIndex.toString()];
+    return;
+  }
+  if (action.type === "cycle_series") {
+    playClick();
+    gameSeries = nextOneBasedIndex(gameSeries, 5);
+    localStorage.setItem("series", gameSeries);
+    return;
+  }
+  if (action.type === "cycle_shadow_focus") {
+    shadow_focus = nextZeroBasedIndex(shadow_focus, Object.keys(SHADOW_SPECIFIC).length);
+    localStorage.setItem("shadow_focus", shadow_focus);
+    loadSongmoves();
+    return;
+  }
+  if (action.type === "start_calibration") {
+    playClick();
+    gameCalibration = true;
+    curMoves = [];
+    hide_sensor = 64;
+    return;
+  }
+  if (action.type === "stop_calibration") {
+    gameCalibration = false;
+    menu = 1;
+    return;
+  }
+  if (action.type === "reset_calibration") {
+    playClick();
+    globalThis.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'r',
+      code: 'KeyR',
+      bubbles: true
+    }));
+    return;
+  }
+  if (action.type === "reset_calibration_defaults") {
+    resetCalibrationDefaults();
+    return;
+  }
+  if (action.type === "back_to_menu") {
+    playClick();
+    menu = 0;
+    return;
+  }
+  if (action.type === "stop_current") {
+    playClick();
+    gameOver = true;
+    return;
+  }
+  if (action.type === "calibration_drag") {
+    applyCalibrationDragFlags(action.flags);
+  }
 }
 
 function letsfight() {
@@ -135,8 +245,8 @@ function letsfight() {
   right_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
   song_letsfight.play();
   gameStarted = true;
-  gameResult = Date.now() - 5001;
-  guard_warning = Date.now();
+  timingState.gameResult = Date.now() - 5001;
+  timingState.guardWarning = Date.now();
   my_opponent = cloneOpponent(opponent);
   curMoves = [];
   gameCalibration = false;
@@ -149,117 +259,26 @@ function letsfight() {
 }
 
 function handleChange() {
-  if (gameResultBool()) {return;}
-  if (menu === 0) {
-    if (mouseX < Math.trunc(myWindowWidth / 6) + 100 * coef && mouseX > Math.trunc(myWindowWidth / 6)) {
-      if (mouseY < Math.trunc(myWindowHeight / 6 + 350 * coef) && mouseY > Math.trunc(myWindowHeight / 6 + 300 * coef)) {
-          click_sound.play();
-          menu = 1;
-          return;
-      }
-      if (mouseY < Math.trunc(myWindowHeight / 6 + 50 * coef) && mouseY > Math.trunc(myWindowHeight / 6)) {
-        click_sound.play();
-        menu = 2;
-        curMoves = [];
-        loadSongmoves();
-        return;
-      }
-      if (mouseY < Math.trunc(myWindowHeight / 6 + 150 * coef) && mouseY > Math.trunc(myWindowHeight / 6 + 100 * coef)) {
-        click_sound.play();
-        menu = 3;
-        curMoves = [];
-        loadSongmoves();
-        return;
-      }
-      if (mouseY < Math.trunc(myWindowHeight / 6 + 250 * coef) && mouseY > Math.trunc(myWindowHeight / 6 + 200 * coef)) {
-        click_sound.play();
-        menu = 4;
-        curMoves = [];
-        loadSongmoves();
-        my_opponent = cloneOpponent(opponent);
-        return;
-      }
-    }
-  }
-  if ([2, 3, 4].includes(menu)) {
-    if (mouseX > myWindowWidth / 2 - 40 * coef && mouseX < myWindowWidth / 2 + 60 * coef) {
-      if (mouseY > myWindowHeight - 148 * coef && mouseY < myWindowHeight - 108 * coef) {
-        letsfight();
-        return;
-      }
-    }
-  }
-  if ([1].includes(menu) && !gameCalibration) {
-    if (mouseX > myWindowWidth / 2 - 40 * coef && mouseX < myWindowWidth / 2 + 60 * coef) {
-      if (mouseY > myWindowHeight - 148 * coef && mouseY < myWindowHeight - 108 * coef) {
-        click_sound.play();
-        FRAME_RATE = nextFrameRate(FRAME_RATE);
-        localStorage.setItem("frame_rate", FRAME_RATE);
-      }
-      if (mouseY > myWindowHeight - 198 * coef && mouseY < myWindowHeight - 158 * coef) {
-        click_sound.play();
-        level = nextZeroBasedIndex(level, Object.keys(GAME_LEVEL).length);
-        localStorage.setItem("level", level);
-      }
-      if (mouseY > myWindowHeight - 248 * coef && mouseY < myWindowHeight - 208 * coef) {
-        click_sound.play();
-        gameLengthIndex = nextOneBasedIndex(gameLengthIndex, Object.keys(GAME_LENGTH).length);
-        localStorage.setItem("length", gameLengthIndex);
-        gameLength = GAME_LENGTH[gameLengthIndex.toString()];
-      }
-      if (mouseY > myWindowHeight - 298 * coef && mouseY < myWindowHeight - 258 * coef) {
-        click_sound.play();
-        gameSeries = nextOneBasedIndex(gameSeries, 5);
-        localStorage.setItem("series", gameSeries);
-      }
-    }
-  }
-  if ([1].includes(menu) && mouseY > myWindowHeight - 98 * coef && mouseY < myWindowHeight - 58 * coef) {
-    if (mouseX > myWindowWidth / 2 - 40 * coef && mouseX < myWindowWidth / 2 + 60 * coef) {
-      if (gameCalibration) {
-        click_sound.play();
-        globalThis.dispatchEvent(new KeyboardEvent('keydown', {
-            key: 'r',
-            code: 'KeyR',
-            bubbles: true
-          }));
-      } else {
-        click_sound.play();
-        gameCalibration = true;
-        curMoves = [];
-        hide_sensor = 64;
-      }
-      return;
-    }
-  }
-  if (menu > 0) {
-    if (mouseX > myWindowWidth - 100 * coef && mouseX < myWindowWidth && mouseY < Math.trunc(myWindowHeight - 10 * coef) && mouseY > Math.trunc(myWindowHeight - 60 * coef)) {
-      click_sound.play();
-      if (menu > 0 && !gameStarted && !gameCalibration) {
-        menu = 0;
-      } else if (menu > 0 && (gameStarted || gameCalibration)) {
-        gameOver = true;
-      } else {
-        menu = 0;
-      }
-      return;
-    }
-  }
-  if (gameCalibration) {
-    applyCalibrationDragFlags(calibrationDragFlagsFromPointer({
-      init_jab_y,
-      init_uppercut_y,
-      left_init_hook_x,
-      left_init_pose_x,
-      left_init_pose_y,
-      mouseX,
-      mouseY,
-      objectPoseSize: OBJECT_POSE_SIZE,
-      right_init_hook_x,
-      right_init_pose_x,
-      right_init_pose_y
-    }));
-  }
+  applyInputAction(pointerAction({
+    coef,
+    gameCalibration,
+    gameStarted,
+    init_jab_y,
+    init_uppercut_y,
+    left_init_hook_x,
+    left_init_pose_x,
+    left_init_pose_y,
+    menu,
+    mouseX,
+    mouseY,
+    myWindowHeight,
+    myWindowWidth,
+    objectPoseSize: OBJECT_POSE_SIZE,
+    recentResult: gameResultBool(),
+    right_init_hook_x,
+    right_init_pose_x,
+    right_init_pose_y
+  }));
 }
 
 function touchMoved() {
@@ -332,68 +351,12 @@ async function loadAssets() {
 
 function keyPressed() {
   if (gameResultBool()) {return;}
-  if (['b', 'B'].includes(key) && [1, 2, 3, 4].includes(menu)) {
-    if (!gameStarted) {
-      menu = 0;
-    }
-  }
-  if (['s', 'S'].includes(key) && [1].includes(menu)) {
-    if (gameCalibration) {
-      gameCalibration = false;
-      menu = 1;
-    } else {
-      gameSeries = nextOneBasedIndex(gameSeries, 5);
-      localStorage.setItem("series", gameSeries);
-    }
-  }
-  if (['t', 'T'].includes(key) && [2].includes(menu)) {
-    if (!gameStarted) {
-      shadow_focus = nextZeroBasedIndex(shadow_focus, Object.keys(SHADOW_SPECIFIC).length);
-      localStorage.setItem("shadow_focus", shadow_focus);
-      loadSongmoves();
-    }
-  }
-  if (['l', 'L'].includes(key) && [1].includes(menu)) {
-    level = nextZeroBasedIndex(level, Object.keys(GAME_LEVEL).length);
-    localStorage.setItem("level", level);
-  }
-  if (['d', 'D'].includes(key) && [1].includes(menu)) {
-    gameLengthIndex = nextOneBasedIndex(gameLengthIndex, Object.keys(GAME_LENGTH).length);
-    localStorage.setItem("length", gameLengthIndex);
-    gameLength = GAME_LENGTH[gameLengthIndex.toString()];
-  }
-  if (['c', 'C'].includes(key) && menu === 1) {
-      gameCalibration = true;
-      hide_sensor = 64;
-  }
-  if (['c', 'C'].includes(key) && menu === 0) {
-    menu = 1;
-  }
-  if (['s', 'S'].includes(key) && menu === 0) {
-    loadSongmoves();
-    menu = 2;
-  }
-  if (['s', 'S'].includes(key) && menu > 1) {
-    gameOver = true;
-  }
-  if (['p', 'P'].includes(key) && menu === 0) {
-    loadSongmoves();
-    menu = 3;
-  }
-  if (['i', 'I'].includes(key) && menu === 0) {
-    loadSongmoves();
-    menu = 4;
-  }
-  if (['r', 'R'].includes(key) && [1].includes(menu) && gameCalibration) {
-    resetCalibrationDefaults();
-  }
-  if (['f', 'F'].includes(key) && [1].includes(menu)) {
-    FRAME_RATE = nextFrameRate(FRAME_RATE);
-    localStorage.setItem("frame_rate", FRAME_RATE);
-  }
-  if (['f', 'F'].includes(key) && [2, 3, 4].includes(menu)) {
-    letsfight();
-  }
+  applyInputAction(keyAction({
+    gameCalibration,
+    gameStarted,
+    key,
+    menu
+  }));
 }
 
 function switch_feet() {
@@ -421,7 +384,7 @@ function hitSuccess(c) {
     }
   });
   if (result.hitSuccess !== null) {
-    hit_success = result.hitSuccess;
+    timingState.hitSuccess = result.hitSuccess;
   }
 }
 
@@ -486,7 +449,7 @@ function draw() {
       bodyPose.detectStop();
       isDetecting = false;
     }
-    gameResult = Date.now() - 5001;
+    timingState.gameResult = Date.now() - 5001;
     renderMainMenu();
   } else {
     if ((menu === 2 || menu === 3 || menu === 4 || menu === 1) && !gameStarted && !gameResultBool()) {
@@ -506,7 +469,7 @@ function draw() {
     if (gameCalibration) {
       renderGuardTargets();
       fill(255, 0, 0, hide_sensor);
-      gameResult = Date.now() - 5001;
+      timingState.gameResult = Date.now() - 5001;
       if (isDetecting === false) {
         bodyPose.detectStart(video, gotPoses);
         isDetecting = true;
@@ -577,7 +540,7 @@ function draw() {
       hide_sensor = 0;
       gameTimer = -1;
       gameOver = false;
-      if (curMoves.length > 0 && score > 0) {gameResult = Date.now();}
+      if (curMoves.length > 0 && score > 0) {timingState.gameResult = Date.now();}
       if (gameCurrentSeries < gameSeries) {
         setTimeout(() => {
           letsfight();
@@ -630,32 +593,32 @@ function draw() {
     if (gameStarted) {
       image(stop_button_image, myWindowWidth - 100 * coef - 10, Math.trunc(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
       fill(255, 0, 0, hide_sensor);
-      if (Date.now() - hit_success < 1000) {
+      if (Date.now() - timingState.hitSuccess < 1000) {
         image(good_hit_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
       }
-      if (Date.now() - hit_success > 3000 && Date.now() - hit_success < 4000 && guard_warning - Date.now() < 2000 && Math.ceil((gameDuration - gameTimer) / FRAME_RATE) > 5) {
+      if (Date.now() - timingState.hitSuccess > 3000 && Date.now() - timingState.hitSuccess < 4000 && timingState.guardWarning - Date.now() < 2000 && Math.ceil((gameDuration - gameTimer) / FRAME_RATE) > 5) {
         if (curMoves.length > 3 && curMoves.at(-1).hit === false && curMoves.at(-2).hit === false && curMoves.at(-3).hit === false) {
           image(keep_trying_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
-          if (Date.now() - hit_success < 3019) {
+          if (Date.now() - timingState.hitSuccess < 3019) {
             song_keep_trying.play();
           }
         }
       }
-      if ((Date.now() - left_poses > 2000 || Date.now() - right_poses > 2000) && Math.ceil((gameDuration - gameTimer) / FRAME_RATE) > 5 && gameTimer > 100) {
-        guard_warning += 100;
-        if (guard_warning - Date.now() > 1000) {
-          if (guard_warning - Date.now() < 1089) {
+      if ((Date.now() - timingState.leftPoses > 2000 || Date.now() - timingState.rightPoses > 2000) && Math.ceil((gameDuration - gameTimer) / FRAME_RATE) > 5 && gameTimer > 100) {
+        timingState.guardWarning += 100;
+        if (timingState.guardWarning - Date.now() > 1000) {
+          if (timingState.guardWarning - Date.now() < 1089) {
             song_your_guard.play();
           }
-          if (guard_warning - Date.now() < 3000) {
+          if (timingState.guardWarning - Date.now() < 3000) {
             image(your_guard_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
           }
         }
-        if (guard_warning - Date.now() > 10000) {
-          guard_warning = Date.now();
+        if (timingState.guardWarning - Date.now() > 10000) {
+          timingState.guardWarning = Date.now();
         }
       } else {
-        guard_warning = Date.now();
+        timingState.guardWarning = Date.now();
       }
     }
   }
