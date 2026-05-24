@@ -55,7 +55,8 @@
   }) {
     const backgroundImages = [];
     for (const m of Object.keys(menuTypes)) {
-      backgroundImages[m] = await loadImage('assets/backgrounds/' + m + '.jpg');
+      const menuIndex = Number(m);
+      backgroundImages[menuIndex] = await loadImage('assets/backgrounds/' + menuIndex + '.jpg');
     }
 
     const framerateButtonImage = [];
