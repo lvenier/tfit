@@ -52,7 +52,6 @@ const {
   isRoundExpired,
   keepTryingFeedback,
   remainingRoundSeconds,
-  roundEndState,
   scoreTotal,
   shouldShowHitFeedback
 } = globalThis.TfitRound;
@@ -63,6 +62,7 @@ const {
 
 const {
   fetchSong,
+  finishRound,
   gameResultBool,
   letsfight
 } = globalThis.TfitFlow;
@@ -209,28 +209,7 @@ function draw() {
     }
     if (gameState.gameOver) {
       stopPoseDetection();
-      gameState.gameCalibration = false;
-      gameState.my_opponent = cloneOpponent(gameState.opponent);
-      gameState.gameStarted = false;
-      hide_sensor = 0;
-      gameState.gameTimer = -1;
-      gameState.gameOver = false;
-      const roundEnd = roundEndState({
-        currentSeries: gameState.gameCurrentSeries,
-        curMoves: gameState.curMoves,
-        gameSeries: gameState.gameSeries,
-        score: gameState.score
-      });
-      if (roundEnd.gameResultNow) {timingState.gameResult = Date.now();}
-      if (roundEnd.shouldStartNextSeries) {
-        setTimeout(() => {
-          letsfight();
-        }, 5100);
-      }
-      gameState.gameCurrentSeries = roundEnd.gameSeries;
-      gameState.feet_position = 0;
-      calibrationState.left_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
-      calibrationState.right_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
+      finishRound();
     }
 
     if (speechString) {

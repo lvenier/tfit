@@ -21,6 +21,7 @@ const STUBBED_GLOBALS = [
   'speechString',
   'storageNumber',
   'TfitGameLogic',
+  'TfitRound',
   'TfitScore',
   'timingState'
 ];
@@ -91,6 +92,13 @@ function installFlowGlobals(overrides = {}) {
       isRecent: vi.fn((time, now) => now - time < 5000),
       levelDelay: vi.fn(() => 40)
     },
+    TfitRound: {
+      roundEndState: vi.fn(() => ({
+        gameResultNow: true,
+        gameSeries: 1,
+        shouldStartNextSeries: false
+      }))
+    },
     TfitScore: {
       markHit: vi.fn(() => ({ hitSuccess: 1234 }))
     },
@@ -104,6 +112,7 @@ function installFlowGlobals(overrides = {}) {
 }
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
   for (const name of STUBBED_GLOBALS) {
     const original = originalGlobals.get(name);
@@ -120,6 +129,7 @@ describe('TfitFlow exports', () => {
   it('exposes flow helpers for app and mode files', () => {
     expect(Object.keys(flowApi).sort()).toEqual([
       'fetchSong',
+      'finishRound',
       'gameResultBool',
       'hitSuccess',
       'letsfight',
@@ -283,5 +293,116 @@ describe('round flow helpers', () => {
     flowApi.fetchSong();
 
     expect(globalThis.gameState.song).toEqual({ moveLength: 0, moves: [] });
+  });
+
+  it('finishes a round, resets runtime state, and records result timing', () => {
+    installFlowGlobals({
+      gameState: {
+        curMoves: [{ hit: true }],
+        feet_position: 1,
+        gameCalibration: true,
+        gameCurrentSeries: 1,
+        gameOver: true,
+        gameSeries: 1,
+        gameStarted: true,
+        gameTimer: 42,
+        my_opponent: { stamina: 1 },
+        opponent: 0,
+        score: 3
+      },
+      storageNumber: vi.fn((key, fallback) => key === 'left_init_pose_y' ? 123 : fallback)
+    });
+    const scheduleNextSeries = vi.fn();
+
+    const roundEnd = flowApi.finishRound({ now: 9000, scheduleNextSeries });
+
+    expect(roundEnd).toEqual({
+      gameResultNow: true,
+      gameSeries: 1,
+      shouldStartNextSeries: false
+    });
+    expect(globalThis.TfitRound.roundEndState).toHaveBeenCalledWith({
+      currentSeries: 1,
+      curMoves: [{ hit: true }],
+      gameSeries: 1,
+      score: 3
+    });
+    expect(globalThis.gameState).toMatchObject({
+      feet_position: 0,
+      gameCalibration: false,
+      gameCurrentSeries: 1,
+      gameOver: false,
+      gameStarted: false,
+      gameTimer: -1,
+      my_opponent: { id: 0, stamina: 6 }
+    });
+    expect(globalThis.hide_sensor).toBe(0);
+    expect(globalThis.timingState.gameResult).toBe(9000);
+    expect(globalThis.calibrationState.left_init_pose_y).toBe(123);
+    expect(globalThis.calibrationState.right_init_pose_y).toBe(480 / 3);
+    expect(scheduleNextSeries).not.toHaveBeenCalled();
+  });
+
+  it('schedules the next series when round end state asks for it', () => {
+    installFlowGlobals({
+      gameState: {
+        curMoves: [{ hit: true }],
+        gameCurrentSeries: 1,
+        gameSeries: 3,
+        opponent: 0,
+        score: 2
+      },
+      TfitRound: {
+        roundEndState: vi.fn(() => ({
+          gameResultNow: false,
+          gameSeries: 2,
+          shouldStartNextSeries: true
+        }))
+      }
+    });
+    const scheduleNextSeries = vi.fn();
+
+    const roundEnd = flowApi.finishRound({ now: 9000, scheduleNextSeries });
+
+    expect(roundEnd.shouldStartNextSeries).toBe(true);
+    expect(globalThis.timingState.gameResult).toBe(1000);
+    expect(globalThis.gameState.gameCurrentSeries).toBe(2);
+    expect(scheduleNextSeries).toHaveBeenCalledTimes(1);
+
+    scheduleNextSeries.mock.calls[0][0]();
+
+    expect(globalThis.sounds.click.play).toHaveBeenCalledTimes(1);
+    expect(globalThis.sounds.letsFight.play).toHaveBeenCalledTimes(1);
+    expect(globalThis.gameState.gameStarted).toBe(true);
+  });
+
+  it('uses a delayed restart when no scheduler override is provided', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(12_000);
+    installFlowGlobals({
+      gameState: {
+        curMoves: [{ hit: true }],
+        gameCurrentSeries: 1,
+        gameSeries: 2,
+        opponent: 0,
+        score: 2
+      },
+      TfitRound: {
+        roundEndState: vi.fn(() => ({
+          gameResultNow: false,
+          gameSeries: 2,
+          shouldStartNextSeries: true
+        }))
+      }
+    });
+
+    flowApi.finishRound({ now: 9000 });
+
+    expect(globalThis.gameState.gameStarted).toBe(false);
+
+    vi.advanceTimersByTime(5100);
+
+    expect(globalThis.gameState.gameStarted).toBe(true);
+    expect(globalThis.timingState.guardWarning).toBe(17_100);
   });
 });

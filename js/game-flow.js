@@ -92,8 +92,45 @@
     }
   }
 
+  function finishRound({
+    now = Date.now(),
+    scheduleNextSeries = callback => setTimeout(callback, 5100)
+  } = {}) {
+    gameState.gameCalibration = false;
+    gameState.my_opponent = cloneOpponent(gameState.opponent);
+    gameState.gameStarted = false;
+    hide_sensor = 0;
+    gameState.gameTimer = -1;
+    gameState.gameOver = false;
+
+    const roundEnd = root.TfitRound.roundEndState({
+      currentSeries: gameState.gameCurrentSeries,
+      curMoves: gameState.curMoves,
+      gameSeries: gameState.gameSeries,
+      score: gameState.score
+    });
+
+    if (roundEnd.gameResultNow) {
+      timingState.gameResult = now;
+    }
+
+    if (roundEnd.shouldStartNextSeries) {
+      scheduleNextSeries(() => {
+        letsfight();
+      });
+    }
+
+    gameState.gameCurrentSeries = roundEnd.gameSeries;
+    gameState.feet_position = 0;
+    calibrationState.left_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
+    calibrationState.right_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
+
+    return roundEnd;
+  }
+
   const api = {
     fetchSong,
+    finishRound,
     gameResultBool,
     hitSuccess,
     letsfight,
