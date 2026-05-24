@@ -9,7 +9,6 @@ const renderApi = require('../../js/game-render');
 
 const STUBBED_GLOBALS = [
   'arc',
-  'arrayScore',
   'images',
   'BOLD',
   'calibrationState',
@@ -17,25 +16,16 @@ const STUBBED_GLOBALS = [
   'circle',
   'coef',
   'cos',
-  'curMoves',
   'ellipse',
-  'feet_position',
   'fill',
   'FRAME_RATE',
-  'gameCurrentSeries',
-  'gameDuration',
-  'gameLengthIndex',
-  'gameSeries',
-  'gameTimer',
+  'gameState',
   'hide_sensor',
   'image',
   'LEFT',
-  'level',
   'loading_k',
   'loading_m',
   'map',
-  'menu',
-  'my_opponent',
   'myWindowHeight',
   'myWindowWidth',
   'noFill',
@@ -52,13 +42,8 @@ const STUBBED_GLOBALS = [
   'rect',
   'rectMode',
   'resetMatrix',
-  'score',
-  'score_max',
-  'score_max_prev',
-  'shadow_focus',
   'SHADOW_SPECIFIC',
   'sin',
-  'song_result',
   'speechString',
   'stroke',
   'strokeWeight',
@@ -82,6 +67,27 @@ function asset(name) {
 function record(name) {
   return (...args) => {
     calls[name].push(args);
+  };
+}
+
+function defaultGameState() {
+  return {
+    arrayScore: [],
+    curMoves: [],
+    feet_position: 0,
+    gameCurrentSeries: 1,
+    gameDuration: 600,
+    gameLengthIndex: 2,
+    gameSeries: 3,
+    gameTimer: 19,
+    level: 1,
+    menu: 2,
+    my_opponent: { stamina: 4 },
+    score: 0,
+    score_max: 10,
+    score_max_prev: 8,
+    shadow_focus: 1,
+    song_result: {}
   };
 }
 
@@ -119,8 +125,12 @@ function installRenderGlobals(overrides = {}) {
     globalThis[name] = record(name);
   }
 
+  const {
+    gameState: gameStateOverrides = {},
+    ...globalOverrides
+  } = overrides;
+
   Object.assign(globalThis, {
-    arrayScore: [],
     BOLD: 'bold',
     calibrationState: {
       init_jab_y: 100,
@@ -135,14 +145,11 @@ function installRenderGlobals(overrides = {}) {
     CENTER: 'center',
     coef: 1,
     cos: Math.cos,
-    curMoves: [],
-    feet_position: 0,
     FRAME_RATE: 20,
-    gameCurrentSeries: 1,
-    gameDuration: 600,
-    gameLengthIndex: 2,
-    gameSeries: 3,
-    gameTimer: 19,
+    gameState: {
+      ...defaultGameState(),
+      ...gameStateOverrides
+    },
     height: 480,
     hide_sensor: 128,
     images: {
@@ -164,12 +171,9 @@ function installRenderGlobals(overrides = {}) {
       shadowButton: asset('shadow')
     },
     LEFT: 'left',
-    level: 1,
     loading_k: 0,
     loading_m: 0,
     map: (value, start1, stop1, start2, stop2) => start2 + ((value - start1) / (stop1 - start1)) * (stop2 - start2),
-    menu: 2,
-    my_opponent: { stamina: 4 },
     myWindowHeight: 480,
     myWindowWidth: 640,
     NORMAL: 'normal',
@@ -178,16 +182,11 @@ function installRenderGlobals(overrides = {}) {
     opponent: 0,
     PI: Math.PI,
     radians: degrees => degrees * Math.PI / 180,
-    score: 0,
-    score_max: 10,
-    score_max_prev: 8,
-    shadow_focus: 1,
     SHADOW_SPECIFIC: { 1: 'JAB' },
     sin: Math.sin,
-    song_result: {},
     speechString: 'keep guard',
     width: 640
-  }, overrides);
+  }, globalOverrides);
 }
 
 beforeEach(() => {
@@ -347,7 +346,7 @@ describe('hud and meter rendering', () => {
   });
 
   it('skips the opponent stamina refill when stamina is depleted', () => {
-    installRenderGlobals({ my_opponent: { stamina: 0 } });
+    installRenderGlobals({ gameState: { my_opponent: { stamina: 0 } } });
 
     renderApi.renderFightMeters();
 
@@ -359,7 +358,7 @@ describe('hud and meter rendering', () => {
     renderApi.renderFeetIndicator();
     expect(calls.image).toContainEqual([asset('left-foot'), 296, 50, 48, 48]);
 
-    installRenderGlobals({ feet_position: 1 });
+    installRenderGlobals({ gameState: { feet_position: 1 } });
     renderApi.renderFeetIndicator();
     expect(calls.image).toContainEqual([asset('right-foot'), 296, 50, 48, 48]);
   });
@@ -368,27 +367,29 @@ describe('hud and meter rendering', () => {
 describe('renderShadowResult', () => {
   it('summarizes scoring moves by type and draws result markers', () => {
     installRenderGlobals({
-      arrayScore: [1, 0, 1, 1, 0, 1, 1],
-      curMoves: [
-        { type: 0, text: '', hit: true },
-        { type: 1, text: 'J', hit: true },
-        { type: 2, text: 'S', hit: false },
-        { type: 3, text: 'H', hit: true },
-        { type: 5, text: 'U', hit: true },
-        { type: 7, text: 'D', hit: false },
-        { type: 9, text: 'D', hit: true },
-        { type: 10, text: 'S', hit: true }
-      ]
+      gameState: {
+        arrayScore: [1, 0, 1, 1, 0, 1, 1],
+        curMoves: [
+          { type: 0, text: '', hit: true },
+          { type: 1, text: 'J', hit: true },
+          { type: 2, text: 'S', hit: false },
+          { type: 3, text: 'H', hit: true },
+          { type: 5, text: 'U', hit: true },
+          { type: 7, text: 'D', hit: false },
+          { type: 9, text: 'D', hit: true },
+          { type: 10, text: 'S', hit: true }
+        ]
+      }
     });
 
     renderApi.renderShadowResult();
 
-    expect(globalThis.score).toBe(5);
-    expect(globalThis.song_result.score).toBe(5);
-    expect(globalThis.song_result.length).toBe(8);
-    expect(globalThis.song_result['1']).toMatchObject({ success: 1, total: 1, text: 'J' });
-    expect(globalThis.song_result['2']).toMatchObject({ success: 0, total: 1, text: 'S' });
-    expect(globalThis.song_result['9']).toMatchObject({ success: 1, total: 1, text: 'D' });
+    expect(globalThis.gameState.score).toBe(5);
+    expect(globalThis.gameState.song_result.score).toBe(5);
+    expect(globalThis.gameState.song_result.length).toBe(8);
+    expect(globalThis.gameState.song_result['1']).toMatchObject({ success: 1, total: 1, text: 'J' });
+    expect(globalThis.gameState.song_result['2']).toMatchObject({ success: 0, total: 1, text: 'S' });
+    expect(globalThis.gameState.song_result['9']).toMatchObject({ success: 1, total: 1, text: 'D' });
     expect(calls.text).toContainEqual(['Score: 5 / 8', 276, 96]);
     expect(calls.text).toContainEqual(['L_J', 244, 151]);
     expect(calls.text).toContainEqual(['R_S', 504, 151]);

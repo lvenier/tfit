@@ -45,7 +45,7 @@
 
   function renderSceneBackground() {
     tint(255, 236);
-    image(images.backgrounds[menu], 0, 0, myWindowWidth, myWindowHeight);
+    image(images.backgrounds[gameState.menu], 0, 0, myWindowWidth, myWindowHeight);
     tint(255, 255);
     textSize(10 * coef);
     fill(0, 0, 0);
@@ -67,9 +67,9 @@
   }
 
   function renderSettingsControls() {
-    image(images.seriesButtons[gameSeries], myWindowWidth / 2 - 50 * coef, myWindowHeight - 300 * coef, 120 * coef, 60 * coef);
-    image(images.durationButtons[gameLengthIndex], myWindowWidth / 2 - 50 * coef, myWindowHeight - 250 * coef, 120 * coef, 60 * coef);
-    image(images.levelButtons[level], myWindowWidth / 2 - 50 * coef, myWindowHeight - 200 * coef, 120 * coef, 60 * coef);
+    image(images.seriesButtons[gameState.gameSeries], myWindowWidth / 2 - 50 * coef, myWindowHeight - 300 * coef, 120 * coef, 60 * coef);
+    image(images.durationButtons[gameState.gameLengthIndex], myWindowWidth / 2 - 50 * coef, myWindowHeight - 250 * coef, 120 * coef, 60 * coef);
+    image(images.levelButtons[gameState.level], myWindowWidth / 2 - 50 * coef, myWindowHeight - 200 * coef, 120 * coef, 60 * coef);
     image(images.framerateButtons[FRAME_RATE / 20], myWindowWidth / 2 - 50 * coef, myWindowHeight - 150 * coef, 120 * coef, 60 * coef);
     image(images.calibrateButton, myWindowWidth / 2 - 50 * coef, myWindowHeight - 100 * coef, 120 * coef, 60 * coef);
   }
@@ -107,13 +107,13 @@
   function renderRoundHud(currentScore) {
     textStyle(BOLD);
     textSize(12 * coef);
-    const myCurrentTime = Math.ceil((gameDuration - gameTimer - 1) / FRAME_RATE);
+    const myCurrentTime = Math.ceil((gameState.gameDuration - gameState.gameTimer - 1) / FRAME_RATE);
     strokeWeight(8 * coef);
     stroke(80);
     noFill();
     ellipse(myWindowWidth / 3, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
     stroke(0, 128, 128);
-    arc(myWindowWidth / 3, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, -90, -90 + map(Math.ceil(gameDuration / FRAME_RATE) - myCurrentTime, 0, Math.ceil(gameDuration / FRAME_RATE), 0, 360));
+    arc(myWindowWidth / 3, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, -90, -90 + map(Math.ceil(gameState.gameDuration / FRAME_RATE) - myCurrentTime, 0, Math.ceil(gameState.gameDuration / FRAME_RATE), 0, 360));
     noStroke();
     fill(255);
     textSize(20 * coef);
@@ -126,7 +126,7 @@
     noFill();
     ellipse(2 * myWindowWidth / 3, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);
     stroke(128, 0, 128);
-    arc(2 * myWindowWidth / 3, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, -90, -90 + map(currentScore, 0, score_max, 0, 360));
+    arc(2 * myWindowWidth / 3, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, -90, -90 + map(currentScore, 0, gameState.score_max, 0, 360));
     noStroke();
     fill(255);
     textSize(20 * coef);
@@ -135,9 +135,9 @@
     textAlign(LEFT, CENTER);
     textStyle(NORMAL);
     textSize(12 * coef);
-    if (menu === 2) {
-      text("(T)ype: " + SHADOW_SPECIFIC[shadow_focus].toLowerCase(), 15, 36 * coef);
-      text("(S)eries: " + gameCurrentSeries + " / " + gameSeries, 15, 56 * coef);
+    if (gameState.menu === 2) {
+      text("(T)ype: " + SHADOW_SPECIFIC[gameState.shadow_focus].toLowerCase(), 15, 36 * coef);
+      text("(S)eries: " + gameState.gameCurrentSeries + " / " + gameState.gameSeries, 15, 56 * coef);
     }
     textSize(10 * coef);
     fill(255, 0, 0, hide_sensor);
@@ -154,8 +154,8 @@
     rect(myWindowWidth / 2 - 75 * coef + 2, 17, 148 * coef, 16);
     rect(myWindowWidth / 2 - 75 * coef + 2, 45, 148 * coef, 16);
     fill(255);
-    if (my_opponent.stamina > 0) {
-      rect(myWindowWidth / 2 - 75 * coef + 2, 17, 148 * coef - (OPPONENTS[opponent].stamina - my_opponent.stamina) * coef * 24, 16);
+    if (gameState.my_opponent.stamina > 0) {
+      rect(myWindowWidth / 2 - 75 * coef + 2, 17, 148 * coef - (OPPONENTS[opponent].stamina - gameState.my_opponent.stamina) * coef * 24, 16);
     }
     rect(myWindowWidth / 2 - 75 * coef + 2, 45, 148 * coef, 16);
   }
@@ -163,62 +163,62 @@
   function renderFeetIndicator() {
     fill(255, 255, 255, 192);
     circle(myWindowWidth / 2, 50 + OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE + 10);
-    if (feet_position === 0) {image(images.leftFoot, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);}
-    if (feet_position === 1) {image(images.rightFoot, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);}
+    if (gameState.feet_position === 0) {image(images.leftFoot, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);}
+    if (gameState.feet_position === 1) {image(images.rightFoot, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);}
   }
 
   function renderShadowResult() {
     image(images.backgrounds[0], 0, 0, myWindowWidth, myWindowHeight);
-    score = 0;
-    for (const element of arrayScore) {
-      score += element;
+    gameState.score = 0;
+    for (const element of gameState.arrayScore) {
+      gameState.score += element;
     }
     textSize(20 * coef);
-    text('Score: ' + score + " / " + score_max_prev, Math.trunc(myWindowWidth / 2.5) + 20 * coef, Math.trunc(myWindowHeight / 5));
+    text('Score: ' + gameState.score + " / " + gameState.score_max_prev, Math.trunc(myWindowWidth / 2.5) + 20 * coef, Math.trunc(myWindowHeight / 5));
     textSize(10 * coef);
-    song_result = {};
-    for (const move of curMoves) {
+    gameState.song_result = {};
+    for (const move of gameState.curMoves) {
       if (move.type === 0 || move.type === 10) {
         continue;
       }
-      if (!(move.type.toString() in song_result)) {
-        song_result[move.type.toString()] = {
+      if (!(move.type.toString() in gameState.song_result)) {
+        gameState.song_result[move.type.toString()] = {
           "type": Math.trunc(move.type),
           "text": move.text,
           "success": 0,
           "total": 0
         };
       }
-      song_result[move.type.toString()]["total"]++;
+      gameState.song_result[move.type.toString()]["total"]++;
       if (move.hit === true) {
-        song_result[move.type.toString()]["success"]++;
+        gameState.song_result[move.type.toString()]["success"]++;
       }
     }
-    song_result.score = score;
-    song_result.length = curMoves.length;
+    gameState.song_result.score = gameState.score;
+    gameState.song_result.length = gameState.curMoves.length;
     let num = 0;
-    for (const mt of Object.keys(song_result)) {
+    for (const mt of Object.keys(gameState.song_result)) {
       if (["score", "length"].includes(mt)) {continue;}
       fill(255);
       textSize(10 * coef);
-      text(song_result[mt.toString()].success + " / " + song_result[mt.toString()].total, Math.trunc((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2), Math.trunc(myWindowHeight / 5 + 30 + 30 * Math.ceil((num + 1) / 2) * coef));
+      text(gameState.song_result[mt.toString()].success + " / " + gameState.song_result[mt.toString()].total, Math.trunc((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2), Math.trunc(myWindowHeight / 5 + 30 + 30 * Math.ceil((num + 1) / 2) * coef));
       let h = "R_";
-      if ([1, 3, 5, 7].includes(song_result[mt.toString()].type)) {h = "L_";}
-      if (song_result[mt.toString()].type === 1 || song_result[mt.toString()].type === 2) {
+      if ([1, 3, 5, 7].includes(gameState.song_result[mt.toString()].type)) {h = "L_";}
+      if (gameState.song_result[mt.toString()].type === 1 || gameState.song_result[mt.toString()].type === 2) {
         fill(100, 100, 0, 255);
-      } else if (song_result[mt.toString()].type === 3 || song_result[mt.toString()].type === 4) {
+      } else if (gameState.song_result[mt.toString()].type === 3 || gameState.song_result[mt.toString()].type === 4) {
         fill(100, 0, 100, 255);
-      } else if (song_result[mt.toString()].type === 5 || song_result[mt.toString()].type === 6) {
+      } else if (gameState.song_result[mt.toString()].type === 5 || gameState.song_result[mt.toString()].type === 6) {
         fill(0, 100, 100, 255);
-      } else if (song_result[mt.toString()].type === 7 || song_result[mt.toString()].type === 8) {
+      } else if (gameState.song_result[mt.toString()].type === 7 || gameState.song_result[mt.toString()].type === 8) {
         fill(0, 0, 100, 255);
-      } else if (song_result[mt.toString()].type === 9) {
+      } else if (gameState.song_result[mt.toString()].type === 9) {
         fill(0, 0, 200, 255);
       }
       circle(Math.trunc((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2) + 100, Math.trunc(myWindowHeight / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * coef), OBJECT_POSE_SIZE / 2);
       fill(255);
       textSize(5 * coef);
-      text(h + song_result[mt.toString()].text, Math.trunc((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2) + 84, Math.trunc(myWindowHeight / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * coef));
+      text(h + gameState.song_result[mt.toString()].text, Math.trunc((2 + 2 * (num % 2)) * myWindowWidth / 8) + 100 * coef * (num % 2) + 84, Math.trunc(myWindowHeight / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * coef));
       num++;
     }
   }
