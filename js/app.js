@@ -14,53 +14,26 @@ const {
 } = globalThis.TfitCameraRuntime;
 
 const {
-  applyCalibrationDragFlags,
-  applyKeyInputAction,
-  applyPointerInputAction
-} = globalThis.TfitAppInputActions;
-
-const {
-  clearCalibrationDragFlags
-} = globalThis.TfitInput;
+  handleCanvasContextMenu: appContextMenu,
+  handleKeyboardInput: appKeyPressed,
+  handlePointerChange: appPointerChange,
+  handlePointerRelease: appPointerRelease,
+  preventContextMenu: preventAppContextMenu
+} = globalThis.TfitAppEvents;
 
 const {
   renderAppFrame
 } = globalThis.TfitScreenRouter;
 
 const {
-  fetchSong,
-  letsfight
+  fetchSong
 } = globalThis.TfitFlow;
 
-document.addEventListener("contextmenu", event => event.preventDefault());
+document.addEventListener("contextmenu", preventAppContextMenu);
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js')
     .catch(() => {});
-}
-
-function handleChange() {
-  applyPointerInputAction();
-}
-
-function touchMoved() {
-  handleChange();
-}
-
-function mousePressed() {
-  handleChange();
-}
-
-function touchEnded() {
-  if (gameState.gameCalibration) {
-    applyCalibrationDragFlags(clearCalibrationDragFlags());
-  }
-}
-
-function mouseReleased() {
-  if (gameState.gameCalibration) {
-    applyCalibrationDragFlags(clearCalibrationDragFlags());
-  }
 }
 
 async function loadAssets() {
@@ -73,33 +46,13 @@ async function loadAssets() {
   });
 }
 
-function keyPressed() {
-  applyKeyInputAction();
-}
-
-function handleRightClick(e) {
-  e.preventDefault();
-  if (gameState.gameStarted) {
-    return globalThis.dispatchEvent(new KeyboardEvent('keydown', {
-      key: 's',
-      code: 'KeyS',
-      bubbles: true
-    }));
-  }
-  return globalThis.dispatchEvent(new KeyboardEvent('keydown', {
-      key: 'b',
-      code: 'KeyB',
-      bubbles: true
-  }));
-}
-
 async function setup() {
   await loadAssets();
   frameRate(60);
   angleMode(DEGREES);
 
   cnv = createCanvas(myWindowWidth, myWindowHeight);
-  cnv.elt.addEventListener("contextmenu", handleRightClick);
+  cnv.elt.addEventListener("contextmenu", appContextMenu);
   positionAppCanvas(cnv);
   fetchSong(1);
 
@@ -116,11 +69,11 @@ function windowResized() {
 
 Object.assign(globalThis, {
   draw,
-  keyPressed,
-  mousePressed,
-  mouseReleased,
+  keyPressed: appKeyPressed,
+  mousePressed: appPointerChange,
+  mouseReleased: appPointerRelease,
   setup,
-  touchEnded,
-  touchMoved,
+  touchEnded: appPointerRelease,
+  touchMoved: appPointerChange,
   windowResized
 });

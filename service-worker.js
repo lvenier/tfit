@@ -21,6 +21,7 @@ const CORE_ASSETS = [
   './js/game-score.js',
   './js/game-flow.js',
   './js/app-input-actions.js',
+  './js/app-events.js',
   './js/camera-runtime.js',
   './js/settings-screen.js',
   './js/pose-detection.js',
