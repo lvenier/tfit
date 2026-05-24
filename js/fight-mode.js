@@ -44,23 +44,23 @@
         fill(255, 255, 255, hide_sensor);
         const dodges = detectDodgeGestures({
           coef,
-          initUppercutY: init_uppercut_y,
-          leftGuardX: left_init_pose_x,
+          initUppercutY: calibrationState.init_uppercut_y,
+          leftGuardX: calibrationState.left_init_pose_x,
           levelWindow,
           nose,
           objectPoseSize: OBJECT_POSE_SIZE,
           ready: true,
-          rightGuardX: right_init_pose_x
+          rightGuardX: calibrationState.right_init_pose_x
         });
         if (dodges.right) {timingState.rightDodge = now;}
         if (dodges.left) {timingState.leftDodge = now;}
       }
       if (hasPoseConfidence(leftHand)) {
-        if (isInsideGuard(leftHand, left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE, coef)) {
+        if (isInsideGuard(leftHand, calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, OBJECT_POSE_SIZE, coef)) {
           timingState.leftPoses = now;
           timingState.leftHook = now - levelWindow;
           fill(255, 255, 255, 128);
-          circle(left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE);
+          circle(calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, OBJECT_POSE_SIZE);
         }
         fill(255, 0, 0, 128);
         circle(leftHand.x * coef, leftHand.y * coef, OBJECT_POSE_SIZE / 2);
@@ -68,13 +68,13 @@
         const leftGestures = detectHandGestures({
           coef,
           hand: leftHand,
-          initJabY: init_jab_y,
-          initUppercutY: init_uppercut_y,
-          leftHookX: left_init_hook_x,
+          initJabY: calibrationState.init_jab_y,
+          initUppercutY: calibrationState.init_uppercut_y,
+          leftHookX: calibrationState.left_init_hook_x,
           leftPoseTime: timingState.leftPoses,
           levelWindow,
           now,
-          rightHookX: right_init_hook_x,
+          rightHookX: calibrationState.right_init_hook_x,
           rightPoseTime: timingState.rightPoses,
           side: "left"
         });
@@ -83,11 +83,11 @@
         if (leftGestures.hook) {timingState.leftHook = now;}
       }
       if (hasPoseConfidence(rightHand)) {
-        if (isInsideGuard(rightHand, right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE, coef)) {
+        if (isInsideGuard(rightHand, calibrationState.right_init_pose_x, calibrationState.right_init_pose_y, OBJECT_POSE_SIZE, coef)) {
           timingState.rightPoses = now;
           timingState.rightHook = now - levelWindow;
           fill(255, 255, 255, 128);
-          circle(right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE);
+          circle(calibrationState.right_init_pose_x, calibrationState.right_init_pose_y, OBJECT_POSE_SIZE);
         }
         fill(255, 0, 0, 128);
         circle(rightHand.x * coef, rightHand.y * coef, OBJECT_POSE_SIZE / 2);
@@ -95,13 +95,13 @@
         const rightGestures = detectHandGestures({
           coef,
           hand: rightHand,
-          initJabY: init_jab_y,
-          initUppercutY: init_uppercut_y,
-          leftHookX: left_init_hook_x,
+          initJabY: calibrationState.init_jab_y,
+          initUppercutY: calibrationState.init_uppercut_y,
+          leftHookX: calibrationState.left_init_hook_x,
           leftPoseTime: timingState.leftPoses,
           levelWindow,
           now,
-          rightHookX: right_init_hook_x,
+          rightHookX: calibrationState.right_init_hook_x,
           rightPoseTime: timingState.rightPoses,
           side: "right"
         });
@@ -170,7 +170,7 @@
               puncho_animation_delay = 0;
             }
             if (puncho_animation >= 0 && curMoves[c].hit === false) {
-              image(opponents_images[puncho_animation_type][puncho_animation], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
+              image(images.opponentAnimations[puncho_animation_type][puncho_animation], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
               if (puncho_animation_delay % 3 === 0) {
                 if (puncho_animation >= 6) {
                   puncho_animation = -1;
@@ -183,16 +183,16 @@
               puncho_animation_delay++;
             }
           } else {
-            image(opponent_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
+            image(images.opponents[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
           }
           tint(255, 192);
         } else {
           tint(255, 224);
-          image(opponent_image[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
+          image(images.opponents[opponent], myWindowWidth / 3, myWindowHeight / 4, myWindowWidth / 3, myWindowHeight / 2);
           tint(255, 192);
         }
         if (punch_animation >= 0) {
-          image(me_images[punch_animation_type][punch_animation], myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);
+          image(images.meAnimations[punch_animation_type][punch_animation], myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);
           if (punch_animation_delay % 3 === 0) {
             if (punch_animation >= 6) {
               punch_animation = -1;
@@ -200,7 +200,7 @@
             } else {punch_animation++;}
           }
           punch_animation_delay++;
-        } else {image(me_image, myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);}
+        } else {image(images.me, myWindowWidth / 3.5, myWindowHeight / 2, myWindowWidth / 2.2, myWindowHeight / 2);}
         tint(255, 255);
         gameTimer++;
       }

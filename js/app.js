@@ -86,14 +86,14 @@ function positionCanvas() {
 function resetCalibrationDefaults() {
   const defaults = calibrationDefaults(myWindowWidth, myWindowHeight, OBJECT_POSE_SIZE, coef);
 
-  left_init_pose_x = defaults.left_init_pose_x;
-  left_init_pose_y = defaults.left_init_pose_y;
-  right_init_pose_x = defaults.right_init_pose_x;
-  right_init_pose_y = defaults.right_init_pose_y;
-  init_jab_y = defaults.init_jab_y;
-  init_uppercut_y = defaults.init_uppercut_y;
-  left_init_hook_x = defaults.left_init_hook_x;
-  right_init_hook_x = defaults.right_init_hook_x;
+  calibrationState.left_init_pose_x = defaults.left_init_pose_x;
+  calibrationState.left_init_pose_y = defaults.left_init_pose_y;
+  calibrationState.right_init_pose_x = defaults.right_init_pose_x;
+  calibrationState.right_init_pose_y = defaults.right_init_pose_y;
+  calibrationState.init_jab_y = defaults.init_jab_y;
+  calibrationState.init_uppercut_y = defaults.init_uppercut_y;
+  calibrationState.left_init_hook_x = defaults.left_init_hook_x;
+  calibrationState.right_init_hook_x = defaults.right_init_hook_x;
 
   for (const [key, value] of Object.entries(defaults)) {
     localStorage.setItem(key, value);
@@ -129,23 +129,23 @@ function punchSound() {
 }
 
 function applyCalibrationDragFlags(flags) {
-  init_uppercut_dragging = flags.init_uppercut_dragging;
-  init_jab_dragging = flags.init_jab_dragging;
-  left_init_hook_dragging = flags.left_init_hook_dragging;
-  right_init_hook_dragging = flags.right_init_hook_dragging;
-  right_init_pose_dragging = flags.right_init_pose_dragging;
-  left_init_pose_dragging = flags.left_init_pose_dragging;
+  calibrationState.init_uppercut_dragging = flags.init_uppercut_dragging;
+  calibrationState.init_jab_dragging = flags.init_jab_dragging;
+  calibrationState.left_init_hook_dragging = flags.left_init_hook_dragging;
+  calibrationState.right_init_hook_dragging = flags.right_init_hook_dragging;
+  calibrationState.right_init_pose_dragging = flags.right_init_pose_dragging;
+  calibrationState.left_init_pose_dragging = flags.left_init_pose_dragging;
 }
 
 const calibrationSetters = {
-  init_jab_y: value => { init_jab_y = value; },
-  init_uppercut_y: value => { init_uppercut_y = value; },
-  left_init_hook_x: value => { left_init_hook_x = value; },
-  left_init_pose_x: value => { left_init_pose_x = value; },
-  left_init_pose_y: value => { left_init_pose_y = value; },
-  right_init_hook_x: value => { right_init_hook_x = value; },
-  right_init_pose_x: value => { right_init_pose_x = value; },
-  right_init_pose_y: value => { right_init_pose_y = value; }
+  init_jab_y: value => { calibrationState.init_jab_y = value; },
+  init_uppercut_y: value => { calibrationState.init_uppercut_y = value; },
+  left_init_hook_x: value => { calibrationState.left_init_hook_x = value; },
+  left_init_pose_x: value => { calibrationState.left_init_pose_x = value; },
+  left_init_pose_y: value => { calibrationState.left_init_pose_y = value; },
+  right_init_hook_x: value => { calibrationState.right_init_hook_x = value; },
+  right_init_pose_x: value => { calibrationState.right_init_pose_x = value; },
+  right_init_pose_y: value => { calibrationState.right_init_pose_y = value; }
 };
 
 function applyCalibrationUpdates(updates) {
@@ -275,8 +275,8 @@ function letsfight() {
     return;
   }
   feet_position = 0;
-  left_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
-  right_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
+  calibrationState.left_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
+  calibrationState.right_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
   song_letsfight.play();
   gameStarted = true;
   timingState.gameResult = Date.now() - 5001;
@@ -297,11 +297,11 @@ function handleChange() {
     coef,
     gameCalibration,
     gameStarted,
-    init_jab_y,
-    init_uppercut_y,
-    left_init_hook_x,
-    left_init_pose_x,
-    left_init_pose_y,
+    init_jab_y: calibrationState.init_jab_y,
+    init_uppercut_y: calibrationState.init_uppercut_y,
+    left_init_hook_x: calibrationState.left_init_hook_x,
+    left_init_pose_x: calibrationState.left_init_pose_x,
+    left_init_pose_y: calibrationState.left_init_pose_y,
     menu,
     mouseX,
     mouseY,
@@ -309,9 +309,9 @@ function handleChange() {
     myWindowWidth,
     objectPoseSize: OBJECT_POSE_SIZE,
     recentResult: gameResultBool(),
-    right_init_hook_x,
-    right_init_pose_x,
-    right_init_pose_y
+    right_init_hook_x: calibrationState.right_init_hook_x,
+    right_init_pose_x: calibrationState.right_init_pose_x,
+    right_init_pose_y: calibrationState.right_init_pose_y
   }));
 }
 
@@ -336,32 +336,45 @@ function mouseReleased() {
 }
 
 async function loadAssets() {
+  const assets = await loadGameAssets({
+    gameLength: GAME_LENGTH,
+    gameLevel: GAME_LEVEL,
+    loadImage,
+    loadSound,
+    menuTypes: MENUTYPE
+  });
+
+  Object.assign(images, {
+    backButton: assets.back_button_image,
+    backgrounds: assets.background_images,
+    calibrateButton: assets.calibrate_button_image,
+    configMenuButton: assets.config_menu_button_image,
+    durationButtons: assets.duration_button_image,
+    fightButton: assets.fight_button_image,
+    fightMenuButton: assets.fight_menu_button_image,
+    framerateButtons: assets.framerate_button_image,
+    goodHit: assets.good_hit_image,
+    keepTrying: assets.keep_trying_image,
+    leftFoot: assets.lfeet_image,
+    levelButtons: assets.level_button_image,
+    logo: assets.logo_image,
+    me: assets.me_image,
+    meAnimations: assets.me_images,
+    menu: assets.menu_image,
+    opponentAnimations: assets.opponents_images,
+    opponents: assets.opponent_image,
+    padButton: assets.pad_button_image,
+    resetButton: assets.reset_button_image,
+    rightFoot: assets.rfeet_image,
+    seriesButtons: assets.series_button_image,
+    shadowButton: assets.shadow_button_image,
+    stopButton: assets.stop_button_image,
+    yourGuard: assets.your_guard_image
+  });
+
   ({
-    background_images,
-    back_button_image,
-    calibrate_button_image,
     click_sound,
-    config_menu_button_image,
-    duration_button_image,
-    fight_button_image,
-    fight_menu_button_image,
-    framerate_button_image,
-    good_hit_image,
-    keep_trying_image,
-    level_button_image,
-    lfeet_image,
-    logo_image,
-    me_image,
-    me_images,
-    menu_image,
-    opponent_image,
-    opponents_images,
-    pad_button_image,
     punch_sound,
-    reset_button_image,
-    rfeet_image,
-    series_button_image,
-    shadow_button_image,
     song_awesome,
     song_continue,
     song_good,
@@ -371,16 +384,8 @@ async function loadAssets() {
     song_perfect,
     song_thats_it,
     song_well_done,
-    song_your_guard,
-    stop_button_image,
-    your_guard_image
-  } = await loadGameAssets({
-    gameLength: GAME_LENGTH,
-    gameLevel: GAME_LEVEL,
-    loadImage,
-    loadSound,
-    menuTypes: MENUTYPE
-  }));
+    song_your_guard
+  } = assets);
 }
 
 function keyPressed() {
@@ -395,8 +400,8 @@ function keyPressed() {
 
 function switch_feet() {
   feet_position = 1;
-  left_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
-  right_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
+  calibrationState.left_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
+  calibrationState.right_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
 }
 
 function hitSuccess(c) {
@@ -521,16 +526,16 @@ function draw() {
         }
       }
 
-      image(stop_button_image, myWindowWidth - 100 * coef - 10, Math.trunc(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
-      image(reset_button_image, myWindowWidth / 2 - 50 * coef, myWindowHeight - 100 * coef, 120 * coef, 60 * coef);
+      image(images.stopButton, myWindowWidth - 100 * coef - 10, Math.trunc(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
+      image(images.resetButton, myWindowWidth / 2 - 50 * coef, myWindowHeight - 100 * coef, 120 * coef, 60 * coef);
       applyCalibrationUpdates(calibrationDragUpdates({
         flags: {
-          init_jab_dragging,
-          init_uppercut_dragging,
-          left_init_hook_dragging,
-          left_init_pose_dragging,
-          right_init_hook_dragging,
-          right_init_pose_dragging
+          init_jab_dragging: calibrationState.init_jab_dragging,
+          init_uppercut_dragging: calibrationState.init_uppercut_dragging,
+          left_init_hook_dragging: calibrationState.left_init_hook_dragging,
+          left_init_pose_dragging: calibrationState.left_init_pose_dragging,
+          right_init_hook_dragging: calibrationState.right_init_hook_dragging,
+          right_init_pose_dragging: calibrationState.right_init_pose_dragging
         },
         mouseX,
         mouseY
@@ -572,8 +577,8 @@ function draw() {
       }
       gameCurrentSeries = roundEnd.gameSeries;
       feet_position = 0;
-      left_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
-      right_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
+      calibrationState.left_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
+      calibrationState.right_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
     }
 
     if (speechString) {
@@ -615,7 +620,7 @@ function draw() {
     }
 
     if (gameStarted) {
-      image(stop_button_image, myWindowWidth - 100 * coef - 10, Math.trunc(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
+      image(images.stopButton, myWindowWidth - 100 * coef - 10, Math.trunc(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
       fill(255, 0, 0, hide_sensor);
       const now = Date.now();
       const remainingSeconds = remainingRoundSeconds({
@@ -625,7 +630,7 @@ function draw() {
       });
 
       if (shouldShowHitFeedback({ hitSuccessTime: timingState.hitSuccess, now })) {
-        image(good_hit_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
+        image(images.goodHit, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
       }
 
       const keepTrying = keepTryingFeedback({
@@ -636,7 +641,7 @@ function draw() {
         remainingSeconds
       });
       if (keepTrying.show) {
-        image(keep_trying_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
+        image(images.keepTrying, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
         if (keepTrying.playSound) {
           song_keep_trying.play();
         }
@@ -655,7 +660,7 @@ function draw() {
         song_your_guard.play();
       }
       if (guard.show) {
-        image(your_guard_image, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
+        image(images.yourGuard, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
       }
     }
   }

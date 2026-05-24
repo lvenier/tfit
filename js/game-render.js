@@ -25,7 +25,7 @@
 
   function renderLoadingScreen() {
     fill(255);
-    image(logo_image, myWindowWidth / 2 - 50 * coef, 50 * coef, 100 * coef, 100 * coef);
+    image(images.logo, myWindowWidth / 2 - 50 * coef, 50 * coef, 100 * coef, 100 * coef);
     translate(myWindowWidth / 2, myWindowHeight / 2);
     ellipse(100 * sin(radians(loading_k)), 0, 20 * cos(radians(loading_m)), 20 * cos(radians(loading_m)));
     ellipse(100 * sin(radians(loading_k) + PI / 3), 0, 20 * cos(radians(loading_m) + PI / 3), 20 * cos(radians(loading_m) + PI / 3));
@@ -45,7 +45,7 @@
 
   function renderSceneBackground() {
     tint(255, 236);
-    image(background_images[menu], 0, 0, myWindowWidth, myWindowHeight);
+    image(images.backgrounds[menu], 0, 0, myWindowWidth, myWindowHeight);
     tint(255, 255);
     textSize(10 * coef);
     fill(0, 0, 0);
@@ -54,43 +54,43 @@
 
   function renderMainMenu() {
     fill(0, 0, 0);
-    image(logo_image, myWindowWidth - 60 * coef, myWindowHeight - 55 * coef, 50 * coef, 50 * coef);
-    image(menu_image, myWindowWidth / 2.5, myWindowHeight / 8, myWindowWidth / 2, myWindowWidth / 2);
-    image(shadow_button_image, myWindowWidth / 6, Math.trunc(myWindowHeight / 6), 100 * coef, 50 * coef);
-    image(pad_button_image, myWindowWidth / 6, Math.trunc(myWindowHeight / 6 + 100 * coef), 100 * coef, 50 * coef);
-    image(fight_menu_button_image, myWindowWidth / 6, Math.trunc(myWindowHeight / 6 + 200 * coef), 100 * coef, 50 * coef);
-    image(config_menu_button_image, myWindowWidth / 6, Math.trunc(myWindowHeight / 6 + 300 * coef), 100 * coef, 50 * coef);
+    image(images.logo, myWindowWidth - 60 * coef, myWindowHeight - 55 * coef, 50 * coef, 50 * coef);
+    image(images.menu, myWindowWidth / 2.5, myWindowHeight / 8, myWindowWidth / 2, myWindowWidth / 2);
+    image(images.shadowButton, myWindowWidth / 6, Math.trunc(myWindowHeight / 6), 100 * coef, 50 * coef);
+    image(images.padButton, myWindowWidth / 6, Math.trunc(myWindowHeight / 6 + 100 * coef), 100 * coef, 50 * coef);
+    image(images.fightMenuButton, myWindowWidth / 6, Math.trunc(myWindowHeight / 6 + 200 * coef), 100 * coef, 50 * coef);
+    image(images.configMenuButton, myWindowWidth / 6, Math.trunc(myWindowHeight / 6 + 300 * coef), 100 * coef, 50 * coef);
   }
 
   function renderBackButton() {
-    image(back_button_image, myWindowWidth - 100 * coef - 10, Math.trunc(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
+    image(images.backButton, myWindowWidth - 100 * coef - 10, Math.trunc(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
   }
 
   function renderSettingsControls() {
-    image(series_button_image[gameSeries], myWindowWidth / 2 - 50 * coef, myWindowHeight - 300 * coef, 120 * coef, 60 * coef);
-    image(duration_button_image[gameLengthIndex], myWindowWidth / 2 - 50 * coef, myWindowHeight - 250 * coef, 120 * coef, 60 * coef);
-    image(level_button_image[level], myWindowWidth / 2 - 50 * coef, myWindowHeight - 200 * coef, 120 * coef, 60 * coef);
-    image(framerate_button_image[FRAME_RATE / 20], myWindowWidth / 2 - 50 * coef, myWindowHeight - 150 * coef, 120 * coef, 60 * coef);
-    image(calibrate_button_image, myWindowWidth / 2 - 50 * coef, myWindowHeight - 100 * coef, 120 * coef, 60 * coef);
+    image(images.seriesButtons[gameSeries], myWindowWidth / 2 - 50 * coef, myWindowHeight - 300 * coef, 120 * coef, 60 * coef);
+    image(images.durationButtons[gameLengthIndex], myWindowWidth / 2 - 50 * coef, myWindowHeight - 250 * coef, 120 * coef, 60 * coef);
+    image(images.levelButtons[level], myWindowWidth / 2 - 50 * coef, myWindowHeight - 200 * coef, 120 * coef, 60 * coef);
+    image(images.framerateButtons[FRAME_RATE / 20], myWindowWidth / 2 - 50 * coef, myWindowHeight - 150 * coef, 120 * coef, 60 * coef);
+    image(images.calibrateButton, myWindowWidth / 2 - 50 * coef, myWindowHeight - 100 * coef, 120 * coef, 60 * coef);
   }
 
   function renderGuardTargets() {
     fill(255, 255, 255, 128);
-    circle(left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE);
-    circle(right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE);
+    circle(calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, OBJECT_POSE_SIZE);
+    circle(calibrationState.right_init_pose_x, calibrationState.right_init_pose_y, OBJECT_POSE_SIZE);
   }
 
   function renderCalibrationOverlay() {
     stroke(0);
     strokeWeight(hide_sensor / 255);
     fill(255, 255, 255, 32);
-    rect(left_init_pose_x - OBJECT_POSE_SIZE / 2, 0, OBJECT_POSE_SIZE, myWindowHeight);
-    rect(right_init_pose_x - OBJECT_POSE_SIZE / 2, 0, OBJECT_POSE_SIZE, myWindowHeight);
+    rect(calibrationState.left_init_pose_x - OBJECT_POSE_SIZE / 2, 0, OBJECT_POSE_SIZE, myWindowHeight);
+    rect(calibrationState.right_init_pose_x - OBJECT_POSE_SIZE / 2, 0, OBJECT_POSE_SIZE, myWindowHeight);
     fill(255, 255, 255, hide_sensor);
-    rect(0, 0, myWindowWidth, init_jab_y);
-    rect(0, init_uppercut_y, myWindowWidth, myWindowHeight - init_uppercut_y);
-    rect(0, 0, left_init_hook_x, myWindowHeight);
-    rect(right_init_hook_x, 0, right_init_hook_x, myWindowHeight);
+    rect(0, 0, myWindowWidth, calibrationState.init_jab_y);
+    rect(0, calibrationState.init_uppercut_y, myWindowWidth, myWindowHeight - calibrationState.init_uppercut_y);
+    rect(0, 0, calibrationState.left_init_hook_x, myWindowHeight);
+    rect(calibrationState.right_init_hook_x, 0, calibrationState.right_init_hook_x, myWindowHeight);
   }
 
   function renderSpeech() {
@@ -101,7 +101,7 @@
   }
 
   function renderFightButton() {
-    image(fight_button_image, myWindowWidth / 2 - 50 * coef, myWindowHeight - 150 * coef, 120 * coef, 60 * coef);
+    image(images.fightButton, myWindowWidth / 2 - 50 * coef, myWindowHeight - 150 * coef, 120 * coef, 60 * coef);
   }
 
   function renderRoundHud(currentScore) {
@@ -163,12 +163,12 @@
   function renderFeetIndicator() {
     fill(255, 255, 255, 192);
     circle(myWindowWidth / 2, 50 + OBJECT_POSE_SIZE / 2, OBJECT_POSE_SIZE + 10);
-    if (feet_position === 0) {image(lfeet_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);}
-    if (feet_position === 1) {image(rfeet_image, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);}
+    if (feet_position === 0) {image(images.leftFoot, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);}
+    if (feet_position === 1) {image(images.rightFoot, myWindowWidth / 2 - OBJECT_POSE_SIZE / 2, 50, OBJECT_POSE_SIZE, OBJECT_POSE_SIZE);}
   }
 
   function renderShadowResult() {
-    image(background_images[0], 0, 0, myWindowWidth, myWindowHeight);
+    image(images.backgrounds[0], 0, 0, myWindowWidth, myWindowHeight);
     score = 0;
     for (const element of arrayScore) {
       score += element;

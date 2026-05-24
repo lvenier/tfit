@@ -94,39 +94,39 @@ let score_max_prev = 0;
 let level = storageNumber("level", 0, { min: 0, max: Object.keys(GAME_LEVEL).length - 1 });
 let shadow_focus = storageNumber("shadow_focus", 0, { min: 0, max: Object.keys(SHADOW_SPECIFIC).length - 1 });
 let arrayScore = [];
-let background_images = [];
-let logo_image;
-let menu_image;
-let rfeet_image;
-let lfeet_image;
-let good_hit_image;
-let your_guard_image;
-let fight_button_image;
-let fight_menu_button_image;
-let config_menu_button_image;
-let framerate_button_image = [];
-let level_button_image = [];
-let duration_button_image = [];
-let series_button_image = [];
-let calibrate_button_image;
-let reset_button_image;
-let back_button_image;
-let stop_button_image;
-let shadow_button_image;
-let pad_button_image;
-
-let keep_trying_image;
-
-let me_image;
-let me_images = [];
+const images = {
+  backButton: null,
+  backgrounds: [],
+  calibrateButton: null,
+  configMenuButton: null,
+  durationButtons: [],
+  fightButton: null,
+  fightMenuButton: null,
+  framerateButtons: [],
+  goodHit: null,
+  keepTrying: null,
+  leftFoot: null,
+  levelButtons: [],
+  logo: null,
+  me: null,
+  meAnimations: [],
+  menu: null,
+  opponentAnimations: [],
+  opponents: [],
+  padButton: null,
+  resetButton: null,
+  rightFoot: null,
+  seriesButtons: [],
+  shadowButton: null,
+  stopButton: null,
+  yourGuard: null
+};
 let punch_animation = -1;
 let punch_animation_type = 0;
 let punch_animation_delay = 0;
 const opponent = 0;
 let my_opponent = cloneOpponent(opponent);
 
-let opponent_image = [];
-let opponents_images = [];
 let puncho_animation = -1;
 let puncho_animation_type = 0;
 let puncho_animation_delay = 0;
@@ -173,23 +173,22 @@ let pad_x;
 let pad_y;
 let pad_type = 1;
 
-let left_init_pose_dragging = false;
-let left_init_pose_x = storageNumber("left_init_pose_x", myWindowWidth / 3);
-let left_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
-let right_init_pose_dragging = false;
-let right_init_pose_x = storageNumber("right_init_pose_x", 2 * myWindowWidth / 3);
-let right_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
-
-let left_init_hook_dragging = false;
-let left_init_hook_x = storageNumber("left_init_hook_x", 120);
-let right_init_hook_dragging = false;
-let right_init_hook_x = storageNumber("right_init_hook_x", myWindowWidth - 120);
-
-let init_uppercut_dragging = false;
-let init_uppercut_y = storageNumber("init_uppercut_y", myWindowHeight * 3 / 4);
-
-let init_jab_dragging = false;
-let init_jab_y = storageNumber("init_jab_y", myWindowHeight / 4);
+const calibrationState = {
+  init_jab_dragging: false,
+  init_jab_y: storageNumber("init_jab_y", myWindowHeight / 4),
+  init_uppercut_dragging: false,
+  init_uppercut_y: storageNumber("init_uppercut_y", myWindowHeight * 3 / 4),
+  left_init_hook_dragging: false,
+  left_init_hook_x: storageNumber("left_init_hook_x", 120),
+  left_init_pose_dragging: false,
+  left_init_pose_x: storageNumber("left_init_pose_x", myWindowWidth / 3),
+  left_init_pose_y: storageNumber("left_init_pose_y", myWindowHeight / 3),
+  right_init_hook_dragging: false,
+  right_init_hook_x: storageNumber("right_init_hook_x", myWindowWidth - 120),
+  right_init_pose_dragging: false,
+  right_init_pose_x: storageNumber("right_init_pose_x", 2 * myWindowWidth / 3),
+  right_init_pose_y: storageNumber("right_init_pose_y", myWindowHeight / 3)
+};
 
 const timingState = {
   downDodge: Date.now() - 1000,

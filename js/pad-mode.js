@@ -12,8 +12,8 @@
     const y = randomInteger(2 * OBJECT_POSE_SIZE, myWindowHeight - 2 * OBJECT_POSE_SIZE);
     let type = 1;
     const overlapsGuard = useAndCollision
-      ? (x < right_init_pose_x + 2 * OBJECT_POSE_SIZE && x > right_init_pose_x - 2 * OBJECT_POSE_SIZE) && (y < right_init_pose_y + 2 * OBJECT_POSE_SIZE && y > right_init_pose_y - 2 * OBJECT_POSE_SIZE) && (x < left_init_pose_x + 2 * OBJECT_POSE_SIZE && x > left_init_pose_x - 2 * OBJECT_POSE_SIZE) && (y < left_init_pose_y + 2 * OBJECT_POSE_SIZE && y > left_init_pose_y - 2 * OBJECT_POSE_SIZE)
-      : (x < right_init_pose_x + 2 * OBJECT_POSE_SIZE && x > right_init_pose_x - 2 * OBJECT_POSE_SIZE) || (y < right_init_pose_y + 2 * OBJECT_POSE_SIZE && y > right_init_pose_y - 2 * OBJECT_POSE_SIZE) || (x < left_init_pose_x + 2 * OBJECT_POSE_SIZE && x > left_init_pose_x - 2 * OBJECT_POSE_SIZE) || (y < left_init_pose_y + 2 * OBJECT_POSE_SIZE && y > left_init_pose_y - 2 * OBJECT_POSE_SIZE);
+      ? (x < calibrationState.right_init_pose_x + 2 * OBJECT_POSE_SIZE && x > calibrationState.right_init_pose_x - 2 * OBJECT_POSE_SIZE) && (y < calibrationState.right_init_pose_y + 2 * OBJECT_POSE_SIZE && y > calibrationState.right_init_pose_y - 2 * OBJECT_POSE_SIZE) && (x < calibrationState.left_init_pose_x + 2 * OBJECT_POSE_SIZE && x > calibrationState.left_init_pose_x - 2 * OBJECT_POSE_SIZE) && (y < calibrationState.left_init_pose_y + 2 * OBJECT_POSE_SIZE && y > calibrationState.left_init_pose_y - 2 * OBJECT_POSE_SIZE)
+      : (x < calibrationState.right_init_pose_x + 2 * OBJECT_POSE_SIZE && x > calibrationState.right_init_pose_x - 2 * OBJECT_POSE_SIZE) || (y < calibrationState.right_init_pose_y + 2 * OBJECT_POSE_SIZE && y > calibrationState.right_init_pose_y - 2 * OBJECT_POSE_SIZE) || (x < calibrationState.left_init_pose_x + 2 * OBJECT_POSE_SIZE && x > calibrationState.left_init_pose_x - 2 * OBJECT_POSE_SIZE) || (y < calibrationState.left_init_pose_y + 2 * OBJECT_POSE_SIZE && y > calibrationState.left_init_pose_y - 2 * OBJECT_POSE_SIZE);
     if (overlapsGuard) {
       type = 2;
     }
@@ -44,20 +44,20 @@
         fill(255, 255, 255, hide_sensor);
       }
       if (hasPoseConfidence(leftHand)) {
-        if (isInsideGuard(leftHand, left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE, coef)) {
+        if (isInsideGuard(leftHand, calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, OBJECT_POSE_SIZE, coef)) {
           timingState.leftPoses = Date.now();
           fill(255, 255, 255, 128);
-          circle(left_init_pose_x, left_init_pose_y, OBJECT_POSE_SIZE);
+          circle(calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, OBJECT_POSE_SIZE);
         }
         fill(255, 0, 0, 128);
         circle(leftHand.x * coef, leftHand.y * coef, OBJECT_POSE_SIZE / 2);
         fill(255, 255, 255, hide_sensor);
       }
       if (hasPoseConfidence(rightHand)) {
-        if (isInsideGuard(rightHand, right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE, coef)) {
+        if (isInsideGuard(rightHand, calibrationState.right_init_pose_x, calibrationState.right_init_pose_y, OBJECT_POSE_SIZE, coef)) {
           timingState.rightPoses = Date.now();
           fill(255, 255, 255, 128);
-          circle(right_init_pose_x, right_init_pose_y, OBJECT_POSE_SIZE);
+          circle(calibrationState.right_init_pose_x, calibrationState.right_init_pose_y, OBJECT_POSE_SIZE);
         }
         fill(255, 0, 0, 128);
         circle(rightHand.x * coef, rightHand.y * coef, OBJECT_POSE_SIZE / 2);
@@ -77,7 +77,7 @@
         fill(100, 100, 0, 255);
         if (pad_type === 1) {circle(pad_x, pad_y, OBJECT_POSE_SIZE);}
         fill(0, 0, 100, 255);
-        if (pad_type === 2) {rect(OBJECT_POSE_SIZE, init_uppercut_y - OBJECT_POSE_SIZE / 2, myWindowWidth - 2 * OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, 20);}
+        if (pad_type === 2) {rect(OBJECT_POSE_SIZE, calibrationState.init_uppercut_y - OBJECT_POSE_SIZE / 2, myWindowWidth - 2 * OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, 20);}
         fill(255, 255, 255, 192);
         if (pad_type === 1) {
           if (pad_x < myWindowWidth / 2) {
@@ -116,11 +116,11 @@
             }
           }
         } else if (pad_type === 2) {
-          text("D", myWindowWidth / 2, init_uppercut_y);
+          text("D", myWindowWidth / 2, calibrationState.init_uppercut_y);
           const downDodgeState = nextDownDodgeState({
             coef,
             done: timingState.downDodgeDone,
-            initUppercutY: init_uppercut_y,
+            initUppercutY: calibrationState.init_uppercut_y,
             nose,
             switched: timingState.downDodgeSwitch
           });
