@@ -156,4 +156,4 @@
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;
   }
-})(typeof globalThis !== 'undefined' ? globalThis : window);
+})(globalThis);
