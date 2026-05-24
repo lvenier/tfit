@@ -1,20 +1,6 @@
 p5.disableFriendlyErrors = true;
 
 const {
-  loadAssetsIntoState
-} = globalThis.TfitAssets;
-
-const {
-  positionCanvas: positionAppCanvas,
-  resizeCanvasLayout: resizeAppCanvas
-} = globalThis.TfitLayoutState;
-
-const {
-  initCameraRuntime
-} = globalThis.TfitCameraRuntime;
-
-const {
-  handleCanvasContextMenu: appContextMenu,
   handleKeyboardInput: appKeyPressed,
   handlePointerChange: appPointerChange,
   handlePointerRelease: appPointerRelease,
@@ -22,12 +8,10 @@ const {
 } = globalThis.TfitAppEvents;
 
 const {
-  renderAppFrame
-} = globalThis.TfitScreenRouter;
-
-const {
-  fetchSong
-} = globalThis.TfitFlow;
+  draw: appDraw,
+  setup: appSetup,
+  windowResized: appWindowResized
+} = globalThis.TfitAppLifecycle;
 
 document.addEventListener("contextmenu", preventAppContextMenu);
 
@@ -36,44 +20,13 @@ if ('serviceWorker' in navigator) {
     .catch(() => {});
 }
 
-async function loadAssets() {
-  await loadAssetsIntoState({
-    gameLength: GAME_LENGTH,
-    gameLevel: GAME_LEVEL,
-    loadImage,
-    loadSound,
-    menuTypes: MENUTYPE
-  });
-}
-
-async function setup() {
-  await loadAssets();
-  frameRate(60);
-  angleMode(DEGREES);
-
-  cnv = createCanvas(myWindowWidth, myWindowHeight);
-  cnv.elt.addEventListener("contextmenu", appContextMenu);
-  positionAppCanvas(cnv);
-  fetchSong(1);
-
-  await initCameraRuntime();
-}
-
-function draw() {
-  renderAppFrame();
-}
-
-function windowResized() {
-  resizeAppCanvas({ canvas: cnv, resizeCanvasFn: resizeCanvas });
-}
-
 Object.assign(globalThis, {
-  draw,
+  draw: appDraw,
   keyPressed: appKeyPressed,
   mousePressed: appPointerChange,
   mouseReleased: appPointerRelease,
-  setup,
+  setup: appSetup,
   touchEnded: appPointerRelease,
   touchMoved: appPointerChange,
-  windowResized
+  windowResized: appWindowResized
 });

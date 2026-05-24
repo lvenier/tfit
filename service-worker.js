@@ -29,6 +29,7 @@ const CORE_ASSETS = [
   './js/pad-mode.js',
   './js/shadow-mode.js',
   './js/screen-router.js',
+  './js/app-lifecycle.js',
   './js/app.js',
   './js/p5js/p5.js',
   './js/p5js/p5.sound.js',
