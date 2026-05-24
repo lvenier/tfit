@@ -9,6 +9,11 @@ const {
 } = globalThis.TfitFightMode;
 
 const {
+  calibrationDragUpdates,
+  persistCalibrationUpdates
+} = globalThis.TfitCalibration;
+
+const {
   clearCalibrationDragFlags,
   keyAction,
   pointerAction
@@ -119,6 +124,24 @@ function applyCalibrationDragFlags(flags) {
   right_init_hook_dragging = flags.right_init_hook_dragging;
   right_init_pose_dragging = flags.right_init_pose_dragging;
   left_init_pose_dragging = flags.left_init_pose_dragging;
+}
+
+const calibrationSetters = {
+  init_jab_y: value => { init_jab_y = value; },
+  init_uppercut_y: value => { init_uppercut_y = value; },
+  left_init_hook_x: value => { left_init_hook_x = value; },
+  left_init_pose_x: value => { left_init_pose_x = value; },
+  left_init_pose_y: value => { left_init_pose_y = value; },
+  right_init_hook_x: value => { right_init_hook_x = value; },
+  right_init_pose_x: value => { right_init_pose_x = value; },
+  right_init_pose_y: value => { right_init_pose_y = value; }
+};
+
+function applyCalibrationUpdates(updates) {
+  for (const [key, value] of Object.entries(updates)) {
+    calibrationSetters[key](value);
+  }
+  persistCalibrationUpdates(updates, localStorage);
 }
 
 function applyInputAction(action) {
@@ -489,34 +512,18 @@ function draw() {
 
       image(stop_button_image, myWindowWidth - 100 * coef - 10, Math.trunc(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
       image(reset_button_image, myWindowWidth / 2 - 50 * coef, myWindowHeight - 100 * coef, 120 * coef, 60 * coef);
-      if (right_init_pose_dragging) {
-        right_init_pose_x = mouseX;
-        right_init_pose_y = mouseY;
-        localStorage.setItem("right_init_pose_x", right_init_pose_x);
-        localStorage.setItem("right_init_pose_y", right_init_pose_y);
-      }
-      if (left_init_pose_dragging) {
-        left_init_pose_x = mouseX;
-        left_init_pose_y = mouseY;
-        localStorage.setItem("left_init_pose_x", left_init_pose_x);
-        localStorage.setItem("left_init_pose_y", left_init_pose_y);
-      }
-      if (init_jab_dragging) {
-        init_jab_y = mouseY;
-        localStorage.setItem("init_jab_y", init_jab_y);
-      }
-      if (init_uppercut_dragging) {
-        init_uppercut_y = mouseY;
-        localStorage.setItem("init_uppercut_y", init_uppercut_y);
-      }
-      if (left_init_hook_dragging) {
-        left_init_hook_x = mouseX;
-        localStorage.setItem("left_init_hook_x", left_init_hook_x);
-      }
-      if (right_init_hook_dragging) {
-        right_init_hook_x = mouseX;
-        localStorage.setItem("right_init_hook_x", right_init_hook_x);
-      }
+      applyCalibrationUpdates(calibrationDragUpdates({
+        flags: {
+          init_jab_dragging,
+          init_uppercut_dragging,
+          left_init_hook_dragging,
+          left_init_pose_dragging,
+          right_init_hook_dragging,
+          right_init_pose_dragging
+        },
+        mouseX,
+        mouseY
+      }));
       renderCalibrationOverlay();
     } else {
       renderSettingsControls();
