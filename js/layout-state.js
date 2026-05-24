@@ -24,12 +24,35 @@ function resizeLayoutState(width = window.innerWidth, height = window.innerHeigh
   };
 }
 
+function positionCanvas(canvas = globalThis.cnv, width = window.innerWidth) {
+  if (!canvas) {
+    return false;
+  }
+
+  canvas.position(Math.max((width - myWindowWidth) / 2, 0), 0);
+  return true;
+}
+
+function resizeCanvasLayout({
+  canvas = globalThis.cnv,
+  height = window.innerHeight,
+  resizeCanvasFn = globalThis.resizeCanvas,
+  width = window.innerWidth
+} = {}) {
+  const layout = resizeLayoutState(width, height);
+  resizeCanvasFn(myWindowWidth, myWindowHeight);
+  positionCanvas(canvas, width);
+  return layout;
+}
+
 globalThis.TfitLayoutState = {
   get coef() { return coef; },
   get frameRate() { return FRAME_RATE; },
   get height() { return myWindowHeight; },
   get levelWindowBase() { return LEVEL; },
   get objectPoseSize() { return OBJECT_POSE_SIZE; },
+  positionCanvas,
+  resizeCanvasLayout,
   resizeLayoutState,
   get width() { return myWindowWidth; }
 };

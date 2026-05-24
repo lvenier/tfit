@@ -101,6 +101,24 @@ describe('runtime state script split', () => {
     expect(context.TfitLayoutState.height).toBeCloseTo(288);
     expect(context.TfitLayoutState.objectPoseSize).toBeCloseTo(28.8);
 
+    const canvas = { position: vi.fn() };
+    expect(context.TfitLayoutState.positionCanvas(canvas, 500)).toBe(true);
+    expect(canvas.position.mock.calls[0][0]).toBeCloseTo(58);
+    expect(canvas.position.mock.calls[0][1]).toBe(0);
+    expect(context.TfitLayoutState.positionCanvas(null, 500)).toBe(false);
+
+    const resizeCanvasFn = vi.fn();
+    const resizedCanvas = { position: vi.fn() };
+    const canvasLayout = context.TfitLayoutState.resizeCanvasLayout({
+      canvas: resizedCanvas,
+      height: 768,
+      resizeCanvasFn,
+      width: 1024
+    });
+    expect(canvasLayout.coef).toBeCloseTo(1.6);
+    expect(resizeCanvasFn).toHaveBeenCalledWith(1024, 768);
+    expect(resizedCanvas.position).toHaveBeenCalledWith(0, 0);
+
     expect(context.TfitUiState.error).toBe('');
     expect(context.TfitUiState.errorTimer).toBe(0);
     expect(context.TfitUiState.hideSensor).toBe(0);
