@@ -5,6 +5,13 @@ const {
 } = globalThis.TfitAssets;
 
 const {
+  checkStartCondition,
+  initCameraRuntime,
+  startPoseDetection,
+  stopPoseDetection
+} = globalThis.TfitCameraRuntime;
+
+const {
   applyCalibrationDragFlags,
   applyKeyInputAction,
   applyPointerInputAction,
@@ -22,10 +29,6 @@ const {
 const {
   renderPadMode
 } = globalThis.TfitPadMode;
-
-const {
-  detectStartCondition
-} = globalThis.TfitGameLogic;
 
 const {
   drawMessagePanel,
@@ -140,22 +143,7 @@ async function setup() {
   positionCanvas();
   fetchSong(1);
 
-  try {
-    video = createCapture(VIDEO, { flipped: true });
-  } catch {
-    error = "Camera access is not available in this browser.";
-    return;
-  }
-
-  video.hide();
-
-  bodyPose = await ml5.bodyPose(MODELS[poseModelIndex], {
-    modelUrl: "js/ml5js/model.json",
-    flipped: true
-  });
-
-  bodyPose.detectStart(video, gotPoses);
-  isDetecting = true;
+  await initCameraRuntime();
 }
 
 function draw() {
@@ -171,10 +159,7 @@ function draw() {
   }
   renderSceneBackground();
   if (gameState.menu === 0) {
-    if (isDetecting === true) {
-      bodyPose.detectStop();
-      isDetecting = false;
-    }
+    stopPoseDetection();
     timingState.gameResult = Date.now() - 5001;
     renderMainMenu();
   } else {
@@ -185,10 +170,7 @@ function draw() {
 
   if (gameState.menu === 1) {
     if (gameState.gameOver) {
-      if (isDetecting === true) {
-        bodyPose.detectStop();
-        isDetecting = false;
-      }
+      stopPoseDetection();
       gameState.gameCalibration = false;
       gameState.gameOver = false;
     }
@@ -196,10 +178,7 @@ function draw() {
       renderGuardTargets();
       fill(255, 0, 0, hide_sensor);
       timingState.gameResult = Date.now() - 5001;
-      if (isDetecting === false) {
-        bodyPose.detectStart(video, gotPoses);
-        isDetecting = true;
-      }
+      startPoseDetection();
 
       if (poses.length > 0) {
         pose = poses[0];
@@ -229,10 +208,7 @@ function draw() {
       gameState.gameOver = true;
     }
     if (gameState.gameOver) {
-      if (isDetecting === true) {
-        bodyPose.detectStop();
-        isDetecting = false;
-      }
+      stopPoseDetection();
       gameState.gameCalibration = false;
       gameState.my_opponent = cloneOpponent(gameState.opponent);
       gameState.gameStarted = false;
@@ -272,19 +248,13 @@ function draw() {
     fill(255, 255, 255, 255);
     gameState.score = 0;
     if (gameState.gameStarted) {
-      if (isDetecting === false) {
-        bodyPose.detectStart(video, gotPoses);
-        isDetecting = true;
-      } 
+      startPoseDetection();
       gameState.score = scoreTotal(gameState.arrayScore);
     }
     renderRoundHud(gameState.score);
 
     if (!gameState.gameCalibration && !gameState.gameStarted) {
-      if (isDetecting === true) {
-        bodyPose.detectStop();
-        isDetecting = false;
-      }
+      stopPoseDetection();
     }
 
     if (gameState.gameTimer === 0) {
@@ -361,22 +331,6 @@ function windowResized() {
   resizeCanvas(myWindowWidth, myWindowHeight);
   OBJECT_POSE_SIZE = 48 * coef;
   positionCanvas();
-}
-
-function checkStartCondition() {
-  const result = detectStartCondition({ errorTimer, gameReady: gameState.gameReady, poses });
-  errorTimer = result.errorTimer;
-  gameState.gameReady = result.gameReady;
-  if (result.error) {error = result.error;}
-  if (result.pose) {pose = result.pose;}
-  if (result.leftHand) {leftHand = result.leftHand;}
-  if (result.rightHand) {rightHand = result.rightHand;}
-  if (result.nose) {nose = result.nose;}
-  return gameState.gameReady;
-}
-
-function gotPoses(results) {
-  poses = results;
 }
 
 Object.assign(globalThis, {
