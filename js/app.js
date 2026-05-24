@@ -1,7 +1,7 @@
 p5.disableFriendlyErrors = true;
 
 const {
-  loadGameAssets
+  loadAssetsIntoState
 } = globalThis.TfitAssets;
 
 const {
@@ -105,25 +105,33 @@ function gameResultBool() {
 }
 
 function loadSongmoves() {
-  LEVEL = levelDelay(level);
-  if (song) {
-    gameDuration = gameLength * FRAME_RATE;
-    if (song.moveLength === 0) {
-      if (menu === 4) {shadow_focus = storageNumber("shadow_focus", shadow_focus, { min: 0, max: Object.keys(SHADOW_SPECIFIC).length - 1 });}
-      song.moves = createSongMoves({ gameLength, level, menu, randomInteger, shadowFocus: shadow_focus });
+  LEVEL = levelDelay(gameState.level);
+  if (gameState.song) {
+    gameState.gameDuration = gameState.gameLength * FRAME_RATE;
+    if (gameState.song.moveLength === 0) {
+      if (gameState.menu === 4) {
+        gameState.shadow_focus = storageNumber("shadow_focus", gameState.shadow_focus, { min: 0, max: Object.keys(SHADOW_SPECIFIC).length - 1 });
+      }
+      gameState.song.moves = createSongMoves({
+        gameLength: gameState.gameLength,
+        level: gameState.level,
+        menu: gameState.menu,
+        randomInteger,
+        shadowFocus: gameState.shadow_focus
+      });
     }
-    moves = song.moves;
-    score_max = countScoringMoves(moves);
+    gameState.moves = gameState.song.moves;
+    gameState.score_max = countScoringMoves(gameState.moves);
   }
 }
 
 function fetchSong(_id = 1) {
-  song = createEmptySong();
+  gameState.song = createEmptySong();
 }
 
 function punchSound() {
   if (timingState.punchSoundTime + 1000 < Date.now()) {
-    punch_sound.play();
+    sounds.punch.play();
     timingState.punchSoundTime = Date.now();
   }
 }
@@ -159,7 +167,7 @@ function applyInputAction(action) {
   if (action.type === "none") {return;}
   const playClick = () => {
     if (action.click) {
-      click_sound.play();
+      sounds.click.play();
     }
   };
   if (action.type === "start_fight") {
@@ -168,29 +176,29 @@ function applyInputAction(action) {
   }
   if (action.type === "open_settings") {
     playClick();
-    menu = 1;
+    gameState.menu = 1;
     return;
   }
   if (action.type === "open_shadow") {
     playClick();
-    menu = 2;
-    curMoves = [];
+    gameState.menu = 2;
+    gameState.curMoves = [];
     loadSongmoves();
     return;
   }
   if (action.type === "open_pad") {
     playClick();
-    menu = 3;
-    curMoves = [];
+    gameState.menu = 3;
+    gameState.curMoves = [];
     loadSongmoves();
     return;
   }
   if (action.type === "open_fight") {
     playClick();
-    menu = 4;
-    curMoves = [];
+    gameState.menu = 4;
+    gameState.curMoves = [];
     loadSongmoves();
-    my_opponent = cloneOpponent(opponent);
+    gameState.my_opponent = cloneOpponent(opponent);
     return;
   }
   if (action.type === "cycle_frame_rate") {
@@ -201,39 +209,39 @@ function applyInputAction(action) {
   }
   if (action.type === "cycle_level") {
     playClick();
-    level = nextZeroBasedIndex(level, Object.keys(GAME_LEVEL).length);
-    localStorage.setItem("level", level);
+    gameState.level = nextZeroBasedIndex(gameState.level, Object.keys(GAME_LEVEL).length);
+    localStorage.setItem("level", gameState.level);
     return;
   }
   if (action.type === "cycle_length") {
     playClick();
-    gameLengthIndex = nextOneBasedIndex(gameLengthIndex, Object.keys(GAME_LENGTH).length);
-    localStorage.setItem("length", gameLengthIndex);
-    gameLength = GAME_LENGTH[gameLengthIndex.toString()];
+    gameState.gameLengthIndex = nextOneBasedIndex(gameState.gameLengthIndex, Object.keys(GAME_LENGTH).length);
+    localStorage.setItem("length", gameState.gameLengthIndex);
+    gameState.gameLength = GAME_LENGTH[gameState.gameLengthIndex.toString()];
     return;
   }
   if (action.type === "cycle_series") {
     playClick();
-    gameSeries = nextOneBasedIndex(gameSeries, 5);
-    localStorage.setItem("series", gameSeries);
+    gameState.gameSeries = nextOneBasedIndex(gameState.gameSeries, 5);
+    localStorage.setItem("series", gameState.gameSeries);
     return;
   }
   if (action.type === "cycle_shadow_focus") {
-    shadow_focus = nextZeroBasedIndex(shadow_focus, Object.keys(SHADOW_SPECIFIC).length);
-    localStorage.setItem("shadow_focus", shadow_focus);
+    gameState.shadow_focus = nextZeroBasedIndex(gameState.shadow_focus, Object.keys(SHADOW_SPECIFIC).length);
+    localStorage.setItem("shadow_focus", gameState.shadow_focus);
     loadSongmoves();
     return;
   }
   if (action.type === "start_calibration") {
     playClick();
-    gameCalibration = true;
-    curMoves = [];
+    gameState.gameCalibration = true;
+    gameState.curMoves = [];
     hide_sensor = 64;
     return;
   }
   if (action.type === "stop_calibration") {
-    gameCalibration = false;
-    menu = 1;
+    gameState.gameCalibration = false;
+    gameState.menu = 1;
     return;
   }
   if (action.type === "reset_calibration") {
@@ -251,12 +259,12 @@ function applyInputAction(action) {
   }
   if (action.type === "back_to_menu") {
     playClick();
-    menu = 0;
+    gameState.menu = 0;
     return;
   }
   if (action.type === "stop_current") {
     playClick();
-    gameOver = true;
+    gameState.gameOver = true;
     return;
   }
   if (action.type === "calibration_drag") {
@@ -265,44 +273,44 @@ function applyInputAction(action) {
 }
 
 function letsfight() {
-  click_sound.play();
-  if (gameCalibration) {
+  sounds.click.play();
+  if (gameState.gameCalibration) {
     speechString = "Calibrating !";
     return;
   }
-  if (gameStarted) {
+  if (gameState.gameStarted) {
     speechString = "Already fighting !";
     return;
   }
-  feet_position = 0;
+  gameState.feet_position = 0;
   calibrationState.left_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
   calibrationState.right_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
-  song_letsfight.play();
-  gameStarted = true;
+  sounds.letsFight.play();
+  gameState.gameStarted = true;
   timingState.gameResult = Date.now() - 5001;
   timingState.guardWarning = Date.now();
-  my_opponent = cloneOpponent(opponent);
-  curMoves = [];
-  gameCalibration = false;
+  gameState.my_opponent = cloneOpponent(opponent);
+  gameState.curMoves = [];
+  gameState.gameCalibration = false;
   hide_sensor = 0;
-  gameTimer = 0;
-  score = 0;
-  arrayScore = [];
+  gameState.gameTimer = 0;
+  gameState.score = 0;
+  gameState.arrayScore = [];
   loadSongmoves();
-  score_max_prev = score_max;
+  gameState.score_max_prev = gameState.score_max;
 }
 
 function handleChange() {
   applyInputAction(pointerAction({
     coef,
-    gameCalibration,
-    gameStarted,
+    gameCalibration: gameState.gameCalibration,
+    gameStarted: gameState.gameStarted,
     init_jab_y: calibrationState.init_jab_y,
     init_uppercut_y: calibrationState.init_uppercut_y,
     left_init_hook_x: calibrationState.left_init_hook_x,
     left_init_pose_x: calibrationState.left_init_pose_x,
     left_init_pose_y: calibrationState.left_init_pose_y,
-    menu,
+    menu: gameState.menu,
     mouseX,
     mouseY,
     myWindowHeight,
@@ -324,102 +332,59 @@ function mousePressed() {
 }
 
 function touchEnded() {
-  if (gameCalibration) {
+  if (gameState.gameCalibration) {
     applyCalibrationDragFlags(clearCalibrationDragFlags());
   }
 }
 
 function mouseReleased() {
-  if (gameCalibration) {
+  if (gameState.gameCalibration) {
     applyCalibrationDragFlags(clearCalibrationDragFlags());
   }
 }
 
 async function loadAssets() {
-  const assets = await loadGameAssets({
+  await loadAssetsIntoState({
     gameLength: GAME_LENGTH,
     gameLevel: GAME_LEVEL,
     loadImage,
     loadSound,
     menuTypes: MENUTYPE
   });
-
-  Object.assign(images, {
-    backButton: assets.back_button_image,
-    backgrounds: assets.background_images,
-    calibrateButton: assets.calibrate_button_image,
-    configMenuButton: assets.config_menu_button_image,
-    durationButtons: assets.duration_button_image,
-    fightButton: assets.fight_button_image,
-    fightMenuButton: assets.fight_menu_button_image,
-    framerateButtons: assets.framerate_button_image,
-    goodHit: assets.good_hit_image,
-    keepTrying: assets.keep_trying_image,
-    leftFoot: assets.lfeet_image,
-    levelButtons: assets.level_button_image,
-    logo: assets.logo_image,
-    me: assets.me_image,
-    meAnimations: assets.me_images,
-    menu: assets.menu_image,
-    opponentAnimations: assets.opponents_images,
-    opponents: assets.opponent_image,
-    padButton: assets.pad_button_image,
-    resetButton: assets.reset_button_image,
-    rightFoot: assets.rfeet_image,
-    seriesButtons: assets.series_button_image,
-    shadowButton: assets.shadow_button_image,
-    stopButton: assets.stop_button_image,
-    yourGuard: assets.your_guard_image
-  });
-
-  ({
-    click_sound,
-    punch_sound,
-    song_awesome,
-    song_continue,
-    song_good,
-    song_great,
-    song_keep_trying,
-    song_letsfight,
-    song_perfect,
-    song_thats_it,
-    song_well_done,
-    song_your_guard
-  } = assets);
 }
 
 function keyPressed() {
   if (gameResultBool()) {return;}
   applyInputAction(keyAction({
-    gameCalibration,
-    gameStarted,
+    gameCalibration: gameState.gameCalibration,
+    gameStarted: gameState.gameStarted,
     key,
-    menu
+    menu: gameState.menu
   }));
 }
 
 function switch_feet() {
-  feet_position = 1;
+  gameState.feet_position = 1;
   calibrationState.left_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
   calibrationState.right_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
 }
 
 function hitSuccess(c) {
   const result = markHit({
-    arrayScore,
-    curMoves,
+    arrayScore: gameState.arrayScore,
+    curMoves: gameState.curMoves,
     index: c,
     playComboFeedback: key => {
-      const sounds = {
-        awesome: song_awesome,
-        continue: song_continue,
-        good: song_good,
-        great: song_great,
-        perfect: song_perfect,
-        thats_it: song_thats_it,
-        well_done: song_well_done
+      const comboSounds = {
+        awesome: sounds.awesome,
+        continue: sounds.continue,
+        good: sounds.good,
+        great: sounds.great,
+        perfect: sounds.perfect,
+        thats_it: sounds.thatsIt,
+        well_done: sounds.wellDone
       };
-      sounds[key].play();
+      comboSounds[key].play();
     }
   });
   if (result.hitSuccess !== null) {
@@ -429,7 +394,7 @@ function hitSuccess(c) {
 
 function handleRightClick(e) {
   e.preventDefault();
-  if (gameStarted) {
+  if (gameState.gameStarted) {
     return globalThis.dispatchEvent(new KeyboardEvent('keydown', {
       key: 's',
       code: 'KeyS',
@@ -483,7 +448,7 @@ function draw() {
     return;
   }
   renderSceneBackground();
-  if (menu === 0) {
+  if (gameState.menu === 0) {
     if (isDetecting === true) {
       bodyPose.detectStop();
       isDetecting = false;
@@ -491,21 +456,21 @@ function draw() {
     timingState.gameResult = Date.now() - 5001;
     renderMainMenu();
   } else {
-    if ((menu === 2 || menu === 3 || menu === 4 || menu === 1) && !gameStarted && !gameResultBool()) {
+    if ((gameState.menu === 2 || gameState.menu === 3 || gameState.menu === 4 || gameState.menu === 1) && !gameState.gameStarted && !gameResultBool()) {
       renderBackButton();
     }
   }
 
-  if (menu === 1) {
-    if (gameOver) {
+  if (gameState.menu === 1) {
+    if (gameState.gameOver) {
       if (isDetecting === true) {
         bodyPose.detectStop();
         isDetecting = false;
       }
-      gameCalibration = false;
-      gameOver = false;
+      gameState.gameCalibration = false;
+      gameState.gameOver = false;
     }
-    if (gameCalibration) {
+    if (gameState.gameCalibration) {
       renderGuardTargets();
       fill(255, 0, 0, hide_sensor);
       timingState.gameResult = Date.now() - 5001;
@@ -546,28 +511,28 @@ function draw() {
     }
   }
 
-  if (menu > 1) {
+  if (gameState.menu > 1) {
     renderGuardTargets();
     fill(255, 255, 255, 192);
-    if (isRoundExpired({ gameDuration, gameTimer })) {
-      gameOver = true;
+    if (isRoundExpired({ gameDuration: gameState.gameDuration, gameTimer: gameState.gameTimer })) {
+      gameState.gameOver = true;
     }
-    if (gameOver) {
+    if (gameState.gameOver) {
       if (isDetecting === true) {
         bodyPose.detectStop();
         isDetecting = false;
       }
-      gameCalibration = false;
-      my_opponent = cloneOpponent(opponent);
-      gameStarted = false;
+      gameState.gameCalibration = false;
+      gameState.my_opponent = cloneOpponent(opponent);
+      gameState.gameStarted = false;
       hide_sensor = 0;
-      gameTimer = -1;
-      gameOver = false;
+      gameState.gameTimer = -1;
+      gameState.gameOver = false;
       const roundEnd = roundEndState({
-        currentSeries: gameCurrentSeries,
-        curMoves,
-        gameSeries,
-        score
+        currentSeries: gameState.gameCurrentSeries,
+        curMoves: gameState.curMoves,
+        gameSeries: gameState.gameSeries,
+        score: gameState.score
       });
       if (roundEnd.gameResultNow) {timingState.gameResult = Date.now();}
       if (roundEnd.shouldStartNextSeries) {
@@ -575,8 +540,8 @@ function draw() {
           letsfight();
         }, 5100);
       }
-      gameCurrentSeries = roundEnd.gameSeries;
-      feet_position = 0;
+      gameState.gameCurrentSeries = roundEnd.gameSeries;
+      gameState.feet_position = 0;
       calibrationState.left_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
       calibrationState.right_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
     }
@@ -586,7 +551,7 @@ function draw() {
       speechString = null;
     }
 
-    if (!gameStarted && !gameCalibration && !gameResultBool()) {
+    if (!gameState.gameStarted && !gameState.gameCalibration && !gameResultBool()) {
       renderFightButton();
     }
     textSize(7 * coef);
@@ -594,39 +559,39 @@ function draw() {
 
     textSize(15 * coef);
     fill(255, 255, 255, 255);
-    score = 0;
-    if (gameStarted) {
+    gameState.score = 0;
+    if (gameState.gameStarted) {
       if (isDetecting === false) {
         bodyPose.detectStart(video, gotPoses);
         isDetecting = true;
       } 
-      score = scoreTotal(arrayScore);
+      gameState.score = scoreTotal(gameState.arrayScore);
     }
-    renderRoundHud(score);
+    renderRoundHud(gameState.score);
 
-    if (!gameCalibration && !gameStarted) {
+    if (!gameState.gameCalibration && !gameState.gameStarted) {
       if (isDetecting === true) {
         bodyPose.detectStop();
         isDetecting = false;
       }
     }
 
-    if (gameTimer === 0) {
+    if (gameState.gameTimer === 0) {
       ({
-        arrayScore,
-        curMoves,
-        gameTimerNext
-      } = initialRoundMoveState(moves));
+        arrayScore: gameState.arrayScore,
+        curMoves: gameState.curMoves,
+        gameTimerNext: gameState.gameTimerNext
+      } = initialRoundMoveState(gameState.moves));
     }
 
-    if (gameStarted) {
+    if (gameState.gameStarted) {
       image(images.stopButton, myWindowWidth - 100 * coef - 10, Math.trunc(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
       fill(255, 0, 0, hide_sensor);
       const now = Date.now();
       const remainingSeconds = remainingRoundSeconds({
         frameRate: FRAME_RATE,
-        gameDuration,
-        gameTimer
+        gameDuration: gameState.gameDuration,
+        gameTimer: gameState.gameTimer
       });
 
       if (shouldShowHitFeedback({ hitSuccessTime: timingState.hitSuccess, now })) {
@@ -634,7 +599,7 @@ function draw() {
       }
 
       const keepTrying = keepTryingFeedback({
-        curMoves,
+        curMoves: gameState.curMoves,
         guardWarningTime: timingState.guardWarning,
         hitSuccessTime: timingState.hitSuccess,
         now,
@@ -643,12 +608,12 @@ function draw() {
       if (keepTrying.show) {
         image(images.keepTrying, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
         if (keepTrying.playSound) {
-          song_keep_trying.play();
+          sounds.keepTrying.play();
         }
       }
 
       const guard = guardFeedback({
-        gameTimer,
+        gameTimer: gameState.gameTimer,
         guardWarningTime: timingState.guardWarning,
         leftPoseTime: timingState.leftPoses,
         now,
@@ -657,7 +622,7 @@ function draw() {
       });
       timingState.guardWarning = guard.guardWarningTime;
       if (guard.playSound) {
-        song_your_guard.play();
+        sounds.yourGuard.play();
       }
       if (guard.show) {
         image(images.yourGuard, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
@@ -665,15 +630,15 @@ function draw() {
     }
   }
 
-  if (menu === 4) {
+  if (gameState.menu === 4) {
     renderFightMode();
   }
 
-  if (menu === 3) {
+  if (gameState.menu === 3) {
     renderPadMode();
   }
 
-  if (menu === 2) {
+  if (gameState.menu === 2) {
     renderShadowMode();
   }
 }
@@ -688,15 +653,15 @@ function windowResized() {
 }
 
 function checkStartCondition() {
-  const result = detectStartCondition({ errorTimer, gameReady, poses });
+  const result = detectStartCondition({ errorTimer, gameReady: gameState.gameReady, poses });
   errorTimer = result.errorTimer;
-  gameReady = result.gameReady;
+  gameState.gameReady = result.gameReady;
   if (result.error) {error = result.error;}
   if (result.pose) {pose = result.pose;}
   if (result.leftHand) {leftHand = result.leftHand;}
   if (result.rightHand) {rightHand = result.rightHand;}
   if (result.nose) {nose = result.nose;}
-  return gameReady;
+  return gameState.gameReady;
 }
 
 function gotPoses(results) {

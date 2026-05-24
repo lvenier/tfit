@@ -1,4 +1,51 @@
 (function(root) {
+  function createImageAssets() {
+    return {
+      backButton: null,
+      backgrounds: [],
+      calibrateButton: null,
+      configMenuButton: null,
+      durationButtons: [],
+      fightButton: null,
+      fightMenuButton: null,
+      framerateButtons: [],
+      goodHit: null,
+      keepTrying: null,
+      leftFoot: null,
+      levelButtons: [],
+      logo: null,
+      me: null,
+      meAnimations: [],
+      menu: null,
+      opponentAnimations: [],
+      opponents: [],
+      padButton: null,
+      resetButton: null,
+      rightFoot: null,
+      seriesButtons: [],
+      shadowButton: null,
+      stopButton: null,
+      yourGuard: null
+    };
+  }
+
+  function createSoundAssets() {
+    return {
+      awesome: null,
+      click: null,
+      continue: null,
+      good: null,
+      great: null,
+      keepTrying: null,
+      letsFight: null,
+      perfect: null,
+      punch: null,
+      thatsIt: null,
+      wellDone: null,
+      yourGuard: null
+    };
+  }
+
   async function loadGameAssets({
     gameLength,
     gameLevel,
@@ -54,47 +101,66 @@
     }
 
     return {
-      background_images: backgroundImages,
-      back_button_image: await loadImage('assets/images/back.png'),
-      calibrate_button_image: await loadImage('assets/images/calibrate.png'),
-      click_sound: await loadSound('assets/sounds/click.mp3'),
-      config_menu_button_image: await loadImage('assets/images/config.png'),
-      duration_button_image: durationButtonImage,
-      fight_button_image: await loadImage('assets/images/fight.png'),
-      fight_menu_button_image: await loadImage('assets/images/fightmenu.png'),
-      framerate_button_image: framerateButtonImage,
-      good_hit_image: await loadImage('assets/images/good_hit.png'),
-      keep_trying_image: await loadImage('assets/images/keep_trying.png'),
-      level_button_image: levelButtonImage,
-      lfeet_image: await loadImage('assets/images/LFoot.png'),
-      logo_image: await loadImage('assets/logos/logo.512.rounded.png'),
-      me_image: await loadImage('assets/images/boxers/0-me.png'),
-      me_images: meImages,
-      menu_image: await loadImage('assets/images/menu_image.png'),
-      opponent_image: opponentImage,
-      opponents_images: opponentsImages,
-      pad_button_image: await loadImage('assets/images/pad.png'),
-      punch_sound: await loadSound('assets/sounds/punch.mp3'),
-      reset_button_image: await loadImage('assets/images/reset.png'),
-      rfeet_image: await loadImage('assets/images/RFoot.png'),
-      series_button_image: seriesButtonImage,
-      shadow_button_image: await loadImage('assets/images/shadow.png'),
-      song_awesome: await loadSound('assets/sounds/awesome.mp3'),
-      song_continue: await loadSound('assets/sounds/continue.mp3'),
-      song_good: await loadSound('assets/sounds/good.mp3'),
-      song_great: await loadSound('assets/sounds/great.mp3'),
-      song_keep_trying: await loadSound('assets/sounds/keep_trying.mp3'),
-      song_letsfight: await loadSound('assets/sounds/letsfight.mp3'),
-      song_perfect: await loadSound('assets/sounds/perfect.mp3'),
-      song_thats_it: await loadSound('assets/sounds/thats_it.mp3'),
-      song_well_done: await loadSound('assets/sounds/well_done.mp3'),
-      song_your_guard: await loadSound('assets/sounds/your_guard.mp3'),
-      stop_button_image: await loadImage('assets/images/stop.png'),
-      your_guard_image: await loadImage('assets/images/your_guard.png')
+      images: {
+        backButton: await loadImage('assets/images/back.png'),
+        backgrounds: backgroundImages,
+        calibrateButton: await loadImage('assets/images/calibrate.png'),
+        configMenuButton: await loadImage('assets/images/config.png'),
+        durationButtons: durationButtonImage,
+        fightButton: await loadImage('assets/images/fight.png'),
+        fightMenuButton: await loadImage('assets/images/fightmenu.png'),
+        framerateButtons: framerateButtonImage,
+        goodHit: await loadImage('assets/images/good_hit.png'),
+        keepTrying: await loadImage('assets/images/keep_trying.png'),
+        leftFoot: await loadImage('assets/images/LFoot.png'),
+        levelButtons: levelButtonImage,
+        logo: await loadImage('assets/logos/logo.512.rounded.png'),
+        me: await loadImage('assets/images/boxers/0-me.png'),
+        meAnimations: meImages,
+        menu: await loadImage('assets/images/menu_image.png'),
+        opponentAnimations: opponentsImages,
+        opponents: opponentImage,
+        padButton: await loadImage('assets/images/pad.png'),
+        resetButton: await loadImage('assets/images/reset.png'),
+        rightFoot: await loadImage('assets/images/RFoot.png'),
+        seriesButtons: seriesButtonImage,
+        shadowButton: await loadImage('assets/images/shadow.png'),
+        stopButton: await loadImage('assets/images/stop.png'),
+        yourGuard: await loadImage('assets/images/your_guard.png')
+      },
+      sounds: {
+        awesome: await loadSound('assets/sounds/awesome.mp3'),
+        click: await loadSound('assets/sounds/click.mp3'),
+        continue: await loadSound('assets/sounds/continue.mp3'),
+        good: await loadSound('assets/sounds/good.mp3'),
+        great: await loadSound('assets/sounds/great.mp3'),
+        keepTrying: await loadSound('assets/sounds/keep_trying.mp3'),
+        letsFight: await loadSound('assets/sounds/letsfight.mp3'),
+        perfect: await loadSound('assets/sounds/perfect.mp3'),
+        punch: await loadSound('assets/sounds/punch.mp3'),
+        thatsIt: await loadSound('assets/sounds/thats_it.mp3'),
+        wellDone: await loadSound('assets/sounds/well_done.mp3'),
+        yourGuard: await loadSound('assets/sounds/your_guard.mp3')
+      }
     };
   }
 
-  const api = { loadGameAssets };
+  async function loadAssetsIntoState(options) {
+    const assets = await loadGameAssets(options);
+    Object.assign(root.images, assets.images);
+    Object.assign(root.sounds, assets.sounds);
+    return assets;
+  }
+
+  root.images = root.images || createImageAssets();
+  root.sounds = root.sounds || createSoundAssets();
+
+  const api = {
+    createImageAssets,
+    createSoundAssets,
+    loadAssetsIntoState,
+    loadGameAssets
+  };
 
   root.TfitAssets = api;
 
