@@ -11,7 +11,8 @@
     },
     "scripts": {
         "start": "electron .",
-        "serve": "http-server . -p 8000 -c-1",
+        "serve": "npm run generate-version && http-server . -p 8000 -c-1",
+        "generate-version": "node scripts/generate-version.js",
         "test": "npm run test:unit && npm run test:e2e",
         "test:unit": "vitest run --config vitest.unit.config.mjs",
         "test:e2e": "node ./node_modules/@playwright/test/cli.js test",

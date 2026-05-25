@@ -1,4 +1,5 @@
 (function(root) {
+
   function readStorage(storage, key) {
     if (!storage || typeof storage.getItem !== 'function') {
       return null;

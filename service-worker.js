@@ -1,7 +1,10 @@
-const CACHE_NAME = 'box4fit-v1.11.3';
+importScripts('/service-worker-version.js');
+const CACHE_NAME = `box4fit-v${self.APP_VERSION}`;
+
 const CORE_ASSETS = [
   './',
   './index.html',
+  './js/version.js',
   './style.css',
   './js/game-utils.js',
   './js/game-config.js',
