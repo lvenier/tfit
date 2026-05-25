@@ -9,6 +9,10 @@
   } = root.TfitAppInputActions;
 
   const {
+    snapshot: layoutSnapshot
+  } = root.TfitLayoutState;
+
+  const {
     renderCalibrationOverlay,
     renderGuardTargets,
     renderSettingsControls
@@ -24,13 +28,16 @@
     rightHand = pose["right_wrist"];
     nose = pose["nose"];
     if (nose && nose.confidence > 0.1 && isDetecting) {
+      const layout = layoutSnapshot();
       fill(0, 255, 0, 128);
-      circle(nose.x * coef, nose.y * coef, OBJECT_POSE_SIZE / 8);
+      circle(nose.x * layout.coef, nose.y * layout.coef, layout.objectPoseSize / 8);
       fill(255, 255, 255, hide_sensor);
     }
   }
 
   function renderCalibrationScreen() {
+    const layout = layoutSnapshot();
+
     renderGuardTargets();
     fill(255, 0, 0, hide_sensor);
     timingState.gameResult = Date.now() - 5001;
@@ -38,8 +45,8 @@
 
     renderCalibrationPoseMarker();
 
-    image(images.stopButton, myWindowWidth - 100 * coef - 10, Math.trunc(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
-    image(images.resetButton, myWindowWidth / 2 - 50 * coef, myWindowHeight - 100 * coef, 120 * coef, 60 * coef);
+    image(images.stopButton, layout.width - 100 * layout.coef - 10, Math.trunc(layout.height - 60 * layout.coef), 100 * layout.coef, 50 * layout.coef);
+    image(images.resetButton, layout.width / 2 - 50 * layout.coef, layout.height - 100 * layout.coef, 120 * layout.coef, 60 * layout.coef);
     updateCalibrationFromPointer();
     renderCalibrationOverlay();
   }

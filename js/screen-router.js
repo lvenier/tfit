@@ -43,6 +43,10 @@
   } = root.TfitSettingsScreen;
 
   const {
+    snapshot: layoutSnapshot
+  } = root.TfitLayoutState;
+
+  const {
     finishRound,
     gameResultBool
   } = root.TfitFlow;
@@ -61,14 +65,15 @@
 
   function renderRoundFeedback() {
     const now = Date.now();
+    const layout = layoutSnapshot();
     const remainingSeconds = remainingRoundSeconds({
-      frameRate: FRAME_RATE,
+      frameRate: layout.frameRate,
       gameDuration: gameState.gameDuration,
       gameTimer: gameState.gameTimer
     });
 
     if (shouldShowHitFeedback({ hitSuccessTime: timingState.hitSuccess, now })) {
-      image(images.goodHit, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
+      image(images.goodHit, layout.width / 2 - 2.5 * layout.objectPoseSize, layout.height / 5, 5 * layout.objectPoseSize);
     }
 
     const keepTrying = keepTryingFeedback({
@@ -79,7 +84,7 @@
       remainingSeconds
     });
     if (keepTrying.show) {
-      image(images.keepTrying, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
+      image(images.keepTrying, layout.width / 2 - 2.5 * layout.objectPoseSize, layout.height / 5, 5 * layout.objectPoseSize);
       if (keepTrying.playSound) {
         sounds.keepTrying.play();
       }
@@ -98,11 +103,13 @@
       sounds.yourGuard.play();
     }
     if (guard.show) {
-      image(images.yourGuard, myWindowWidth / 2 - 2.5 * OBJECT_POSE_SIZE, myWindowHeight / 5, 5 * OBJECT_POSE_SIZE);
+      image(images.yourGuard, layout.width / 2 - 2.5 * layout.objectPoseSize, layout.height / 5, 5 * layout.objectPoseSize);
     }
   }
 
   function renderRoundScreen() {
+    const layout = layoutSnapshot();
+
     renderGuardTargets();
     fill(255, 255, 255, 192);
     if (isRoundExpired({ gameDuration: gameState.gameDuration, gameTimer: gameState.gameTimer })) {
@@ -121,10 +128,10 @@
     if (!gameState.gameStarted && !gameState.gameCalibration && !gameResultBool()) {
       renderFightButton();
     }
-    textSize(7 * coef);
+    textSize(7 * layout.coef);
     fill(255, 0, 0, hide_sensor);
 
-    textSize(15 * coef);
+    textSize(15 * layout.coef);
     fill(255, 255, 255, 255);
     gameState.score = 0;
     if (gameState.gameStarted) {
@@ -146,7 +153,7 @@
     }
 
     if (gameState.gameStarted) {
-      image(images.stopButton, myWindowWidth - 100 * coef - 10, Math.trunc(myWindowHeight - 60 * coef), 100 * coef, 50 * coef);
+      image(images.stopButton, layout.width - 100 * layout.coef - 10, Math.trunc(layout.height - 60 * layout.coef), 100 * layout.coef, 50 * layout.coef);
       fill(255, 0, 0, hide_sensor);
       renderRoundFeedback();
     }

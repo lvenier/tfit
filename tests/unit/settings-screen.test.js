@@ -26,6 +26,7 @@ const STUBBED_GLOBALS = [
   'timingState',
   'TfitAppInputActions',
   'TfitCameraRuntime',
+  'TfitLayoutState',
   'TfitRender',
   'TfitSettingsScreen'
 ];
@@ -83,6 +84,14 @@ function installGlobals(overrides = {}) {
       startPoseDetection: vi.fn(),
       stopPoseDetection: vi.fn()
     },
+    TfitLayoutState: {
+      snapshot: () => ({
+        coef: globalThis.coef,
+        height: globalThis.myWindowHeight,
+        objectPoseSize: globalThis.OBJECT_POSE_SIZE,
+        width: globalThis.myWindowWidth
+      })
+    },
     TfitRender: {
       renderCalibrationOverlay: vi.fn(),
       renderGuardTargets: vi.fn(),
@@ -134,6 +143,14 @@ describe('TfitSettingsScreen exports', () => {
       TfitCameraRuntime: {
         startPoseDetection: () => {},
         stopPoseDetection: () => {}
+      },
+      TfitLayoutState: {
+        snapshot: () => ({
+          coef: 1,
+          height: 480,
+          objectPoseSize: 48,
+          width: 640
+        })
       },
       TfitRender: {
         renderCalibrationOverlay: () => {},

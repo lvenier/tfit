@@ -28,6 +28,7 @@ const STUBBED_GLOBALS = [
   'TfitCameraRuntime',
   'TfitFightMode',
   'TfitFlow',
+  'TfitLayoutState',
   'TfitPadMode',
   'TfitRender',
   'TfitRound',
@@ -114,6 +115,16 @@ function installGlobals(overrides = {}) {
     TfitFlow: {
       finishRound: vi.fn(),
       gameResultBool: vi.fn(() => false)
+    },
+    TfitLayoutState: {
+      snapshot: () => ({
+        coef: globalThis.coef,
+        frameRate: globalThis.FRAME_RATE,
+        height: globalThis.myWindowHeight,
+        levelWindowBase: globalThis.LEVEL,
+        objectPoseSize: globalThis.OBJECT_POSE_SIZE,
+        width: globalThis.myWindowWidth
+      })
     },
     TfitPadMode: {
       renderPadMode: vi.fn()
@@ -202,6 +213,16 @@ describe('TfitScreenRouter exports', () => {
       TfitCameraRuntime: { checkStartCondition: () => true, startPoseDetection: () => {}, stopPoseDetection: () => {} },
       TfitFightMode: { renderFightMode: () => {} },
       TfitFlow: { finishRound: () => {}, gameResultBool: () => false },
+      TfitLayoutState: {
+        snapshot: () => ({
+          coef: 1,
+          frameRate: 20,
+          height: 480,
+          levelWindowBase: 50,
+          objectPoseSize: 48,
+          width: 640
+        })
+      },
       TfitPadMode: { renderPadMode: () => {} },
       TfitRender: {
         drawMessagePanel: () => {},

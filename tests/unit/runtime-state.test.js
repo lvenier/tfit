@@ -91,6 +91,13 @@ describe('runtime state script split', () => {
     expect(context.TfitLayoutState.frameRate).toBe(20);
     expect(context.TfitLayoutState.levelWindowBase).toBe(50);
     expect(context.TfitLayoutState.objectPoseSize).toBeCloseTo(76.8);
+    expect(context.TfitLayoutState.snapshot()).toMatchObject({
+      coef: 1.6,
+      frameRate: 20,
+      height: 768,
+      levelWindowBase: 50,
+      width: 1024
+    });
 
     const resized = context.TfitLayoutState.resizeLayoutState(390, 844);
     expect(resized.coef).toBeCloseTo(0.6);
