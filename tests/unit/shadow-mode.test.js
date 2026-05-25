@@ -663,6 +663,83 @@ describe('shadow mode layout usage', () => {
     expect(globalThis.punchSound).toHaveBeenCalledTimes(1);
   });
 
+  it('draws right hand input without a detection marker and ignores unconfirmed jab gestures', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.05, x: 200, y: 200 },
+      nose: { confidence: 0.05, x: 10, y: 170 },
+      rightHand: { confidence: 0.9, x: 250, y: 40 }
+    };
+    const api = installGlobals({
+      isDetecting: false,
+      poses: [trackedPose],
+      TfitPoseDetection: {
+        areBothHandsRecent: vi.fn(() => false),
+        detectDodgeGestures: vi.fn(() => ({ down: false, left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderShadowMode();
+
+    expect(calls.circle).not.toContainEqual([500, 80, 48]);
+    expect(calls.rect).toContainEqual([0, 0, 640, 100]);
+    expect(globalThis.timingState.rightJab).toBe(0);
+    expect(globalThis.punchSound).not.toHaveBeenCalled();
+  });
+
+  it('keeps left guard feedback quiet when recent windows and gestures are absent', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 100, y: 40 },
+      nose: { confidence: 0.9, x: 10, y: 170 },
+      rightHand: { confidence: 0.05, x: 250, y: 40 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [],
+        gameStarted: true,
+        gameTimer: 0,
+        gameTimerNext: 0,
+        moves: []
+      },
+      poses: [trackedPose],
+      timingState: {
+        downDodge: 0,
+        leftDodge: 0,
+        leftHook: 9000,
+        leftJab: 0,
+        leftPoses: 0,
+        leftUppercut: 9000,
+        rightDodge: 0,
+        rightHook: 0,
+        rightJab: 0,
+        rightPoses: 0,
+        rightUppercut: 0,
+        switchGuard: 0
+      },
+      TfitPoseDetection: {
+        areBothHandsRecent: vi.fn(() => false),
+        detectDodgeGestures: vi.fn(() => ({ down: false, left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn((hand, x) => x === 200),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderShadowMode();
+
+    expect(globalThis.timingState.leftPoses).toBe(10_000);
+    expect(globalThis.timingState.leftJab).toBe(0);
+    expect(globalThis.timingState.leftDodge).toBe(0);
+    expect(globalThis.timingState.rightPoses).toBe(0);
+    expect(globalThis.punchSound).not.toHaveBeenCalled();
+  });
+
   it('renders pose input only when there are poses and keeps recent empty results in normal flow', () => {
     const api = installGlobals({
       gameResultBool: vi.fn(() => true),

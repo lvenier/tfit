@@ -231,23 +231,15 @@
       fill(255);
       textSize(10 * layout.coef);
       text(gameState.song_result[mt.toString()].success + " / " + gameState.song_result[mt.toString()].total, Math.trunc((2 + 2 * (num % 2)) * layout.width / 8) + 100 * layout.coef * (num % 2), Math.trunc(layout.height / 5 + 30 + 30 * Math.ceil((num + 1) / 2) * layout.coef));
+      const result = gameState.song_result[mt.toString()];
       let h = "R_";
-      if ([1, 3, 5, 7].includes(gameState.song_result[mt.toString()].type)) {h = "L_";}
-      if (gameState.song_result[mt.toString()].type === 1 || gameState.song_result[mt.toString()].type === 2) {
-        fill(100, 100, 0, 255);
-      } else if (gameState.song_result[mt.toString()].type === 3 || gameState.song_result[mt.toString()].type === 4) {
-        fill(100, 0, 100, 255);
-      } else if (gameState.song_result[mt.toString()].type === 5 || gameState.song_result[mt.toString()].type === 6) {
-        fill(0, 100, 100, 255);
-      } else if (gameState.song_result[mt.toString()].type === 7 || gameState.song_result[mt.toString()].type === 8) {
-        fill(0, 0, 100, 255);
-      } else if (gameState.song_result[mt.toString()].type === 9) {
-        fill(0, 0, 200, 255);
-      }
+      if ([1, 3, 5, 7].includes(result.type)) {h = "L_";}
+      const display = root.TfitGameLogic.moveDisplay(result.type, gameState.feet_position, 255);
+      if (display) {fill(...display.color);}
       circle(Math.trunc((2 + 2 * (num % 2)) * layout.width / 8) + 100 * layout.coef * (num % 2) + 100, Math.trunc(layout.height / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * layout.coef), layout.objectPoseSize / 2);
       fill(255);
       textSize(5 * layout.coef);
-      text(h + gameState.song_result[mt.toString()].text, Math.trunc((2 + 2 * (num % 2)) * layout.width / 8) + 100 * layout.coef * (num % 2) + 84, Math.trunc(layout.height / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * layout.coef));
+      text(h + result.text, Math.trunc((2 + 2 * (num % 2)) * layout.width / 8) + 100 * layout.coef * (num % 2) + 84, Math.trunc(layout.height / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * layout.coef));
       num++;
     }
   }

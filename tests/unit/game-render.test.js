@@ -6,6 +6,7 @@ import { Script } from 'node:vm';
 const require = createRequire(import.meta.url);
 
 const renderApi = require('../../js/game-render');
+const { moveDisplay } = require('../../js/game-logic');
 
 const STUBBED_GLOBALS = [
   'arc',
@@ -51,6 +52,7 @@ const STUBBED_GLOBALS = [
   'textSize',
   'textStyle',
   'tint',
+  'TfitGameLogic',
   'TfitLayoutState',
   'translate',
   'width',
@@ -185,6 +187,9 @@ function installRenderGlobals(overrides = {}) {
     SHADOW_SPECIFIC: { 1: 'JAB' },
     sin: Math.sin,
     speechString: 'keep guard',
+    TfitGameLogic: {
+      moveDisplay: vi.fn(moveDisplay)
+    },
     TfitLayoutState: {
       snapshot: () => ({
         coef: globalThis.coef,
@@ -454,6 +459,9 @@ describe('renderShadowResult', () => {
     expect(globalThis.gameState.song_result['4']).toMatchObject({ success: 0, total: 1, text: 'H' });
     expect(globalThis.gameState.song_result['6']).toMatchObject({ success: 0, total: 1, text: 'U' });
     expect(globalThis.gameState.song_result['8']).toMatchObject({ success: 0, total: 1, text: 'D' });
+    expect(globalThis.TfitGameLogic.moveDisplay).toHaveBeenCalledWith(4, 0, 255);
+    expect(globalThis.TfitGameLogic.moveDisplay).toHaveBeenCalledWith(6, 0, 255);
+    expect(globalThis.TfitGameLogic.moveDisplay).toHaveBeenCalledWith(8, 0, 255);
     expect(calls.fill).toContainEqual([100, 0, 100, 255]);
     expect(calls.fill).toContainEqual([0, 100, 100, 255]);
     expect(calls.fill).toContainEqual([0, 0, 100, 255]);

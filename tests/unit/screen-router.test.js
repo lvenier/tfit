@@ -436,4 +436,54 @@ describe('round routing', () => {
       [globalThis.images.yourGuard, 200, 96, 240]
     ]);
   });
+
+  it('keeps quiet when round feedback helpers do not request UI or sounds', () => {
+    const api = installGlobals({
+      gameState: defaultGameState({ gameStarted: true, gameTimer: 2, menu: 2 })
+    });
+
+    api.renderRoundFeedback();
+
+    expect(globalThis.TfitRound.shouldShowHitFeedback).toHaveBeenCalledWith({
+      hitSuccessTime: 0,
+      now: 10_000
+    });
+    expect(globalThis.TfitRound.keepTryingFeedback).toHaveBeenCalledWith(expect.objectContaining({
+      remainingSeconds: 12
+    }));
+    expect(globalThis.timingState.guardWarning).toBe(123);
+    expect(globalThis.sounds.keepTrying.play).not.toHaveBeenCalled();
+    expect(globalThis.sounds.yourGuard.play).not.toHaveBeenCalled();
+    expect(calls.image).toEqual([]);
+  });
+
+  it('can show keep-trying feedback without replaying the sound', () => {
+    const api = installGlobals({
+      TfitRound: {
+        guardFeedback: vi.fn(() => ({
+          guardWarningTime: 123,
+          playSound: false,
+          show: false
+        })),
+        initialRoundMoveState: vi.fn(() => ({
+          arrayScore: [{ score: 0 }],
+          curMoves: [{ name: 'jab', hit: false }],
+          gameTimerNext: 7
+        })),
+        isRoundExpired: vi.fn(() => false),
+        keepTryingFeedback: vi.fn(() => ({
+          playSound: false,
+          show: true
+        })),
+        remainingRoundSeconds: vi.fn(() => 12),
+        scoreTotal: vi.fn(() => 9),
+        shouldShowHitFeedback: vi.fn(() => false)
+      }
+    });
+
+    api.renderRoundFeedback();
+
+    expect(calls.image).toContainEqual([globalThis.images.keepTrying, 200, 96, 240]);
+    expect(globalThis.sounds.keepTrying.play).not.toHaveBeenCalled();
+  });
 });

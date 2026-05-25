@@ -6,7 +6,7 @@ import { Script } from 'node:vm';
 const require = createRequire(import.meta.url);
 
 describe('TfitState browser export', () => {
-  it('groups runtime state without legacy global state aliases', () => {
+  function runStateInSandbox(overrides = {}) {
     const modulePath = require.resolve('../../js/game-state');
     const source = readFileSync(modulePath, 'utf8');
     const storageJson = vi.fn();
@@ -24,10 +24,17 @@ describe('TfitState browser export', () => {
       TfitUtils: {
         storageJson,
         storageNumber: (_key, fallback) => fallback
-      }
+      },
+      ...overrides
     };
 
     new Script(source, { filename: modulePath }).runInNewContext(sandbox);
+
+    return { sandbox, storageJson };
+  }
+
+  it('groups runtime state without legacy global state aliases', () => {
+    const { sandbox, storageJson } = runStateInSandbox();
 
     expect(sandbox.gameState.gameLength).toBe('60');
     expect(sandbox.gameState.opponent).toBe(0);
@@ -41,5 +48,30 @@ describe('TfitState browser export', () => {
     expect(sandbox.padState.x).toBe(120);
     expect(sandbox.module.exports).toBe(sandbox.TfitState);
     expect(storageJson).toHaveBeenCalledWith('player', expect.objectContaining({ score: 0 }));
+  });
+
+  it('supports browser globals without CommonJS exports and selected player storage', () => {
+    const storageJson = vi.fn();
+    const { sandbox } = runStateInSandbox({
+      localStorage: {
+        getItem: () => 'southpaw'
+      },
+      module: undefined,
+      TfitUtils: {
+        storageJson,
+        storageNumber: (key, fallback) => key === 'length' ? 1 : fallback
+      }
+    });
+
+    expect(sandbox.gameState.gameLength).toBe('30');
+    expect(sandbox.module).toBeUndefined();
+    expect(storageJson).toHaveBeenCalledWith('southpaw', expect.objectContaining({ score: 0 }));
+  });
+
+  it('does not assign module exports when the exports object is missing', () => {
+    const { sandbox } = runStateInSandbox({ module: {} });
+
+    expect(sandbox.TfitState.gameState.menu).toBe(0);
+    expect(sandbox.module.exports).toBeUndefined();
   });
 });

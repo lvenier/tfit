@@ -158,4 +158,29 @@ describe('markHit', () => {
 
     expect(played).toEqual(['perfect']);
   });
+
+  it('marks combo hits without feedback when the random bucket is silent', () => {
+    const played = [];
+    const arrayScore = [1, 1, 1, 1, 1, 0];
+    const curMoves = [
+      { type: 1, hit: true },
+      { type: 2, hit: true },
+      { type: 3, hit: true },
+      { type: 4, hit: true },
+      { type: 5, hit: true },
+      { type: 6, hit: false }
+    ];
+
+    expect(markHit({
+      arrayScore,
+      curMoves,
+      index: 5,
+      now: 4321,
+      playComboFeedback: key => played.push(key),
+      random: () => 14 / 20
+    })).toEqual({ hitSuccess: 4321 });
+
+    expect(played).toEqual([]);
+    expect(curMoves[5].hit).toBe(true);
+  });
 });
