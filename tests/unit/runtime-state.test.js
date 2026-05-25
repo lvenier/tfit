@@ -98,6 +98,12 @@ describe('runtime state script split', () => {
       levelWindowBase: 50,
       width: 1024
     });
+    expect(context.TfitLayoutState.setFrameRate(40)).toBe(40);
+    expect(context.FRAME_RATE).toBe(40);
+    expect(context.TfitLayoutState.frameRate).toBe(40);
+    expect(context.TfitLayoutState.setLevelWindowBase(70)).toBe(70);
+    expect(context.LEVEL).toBe(70);
+    expect(context.TfitLayoutState.levelWindowBase).toBe(70);
 
     const resized = context.TfitLayoutState.resizeLayoutState(390, 844);
     expect(resized.coef).toBeCloseTo(0.6);

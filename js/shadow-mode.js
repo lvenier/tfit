@@ -19,8 +19,13 @@
     renderShadowResult
   } = root.TfitRender;
 
+  const {
+    snapshot: layoutSnapshot
+  } = root.TfitLayoutState;
+
   function addShadowMoveAtTimer() {
-    const moveIndex = Math.ceil(gameState.gameTimer / FRAME_RATE);
+    const layout = layoutSnapshot();
+    const moveIndex = Math.ceil(gameState.gameTimer / layout.frameRate);
     if (gameState.gameTimerNext < moveIndex) {
       if (gameState.moves.length >= moveIndex && gameState.moves[moveIndex] >= 0) {
         let xt = Math.trunc(gameState.moves[moveIndex]) % 2 ? calibrationState.left_init_pose_x : calibrationState.right_init_pose_x;
@@ -29,7 +34,7 @@
           "hit": gameState.moves[moveIndex] === 0,
           "type": Math.trunc(gameState.moves[moveIndex]),
           "x": xt,
-          "y": myWindowHeight
+          "y": layout.height
         })
       }
       gameState.gameTimerNext++;
@@ -37,18 +42,19 @@
   }
 
   function renderShadowMove(c) {
-    gameState.curMoves[c].y = gameState.curMoves[c].y - Math.ceil(240 / FRAME_RATE);
+    const layout = layoutSnapshot();
+    gameState.curMoves[c].y = gameState.curMoves[c].y - Math.ceil(240 / layout.frameRate);
     const now = Date.now();
-    const levelWindow = LEVEL * 10;
+    const levelWindow = layout.levelWindowBase * 10;
     let alpha = 128;
-    if ([10].includes(gameState.curMoves[c].type) && gameState.curMoves[c].y + OBJECT_POSE_SIZE > calibrationState.left_init_pose_y && gameState.curMoves[c].y - OBJECT_POSE_SIZE < calibrationState.left_init_pose_y) {
+    if ([10].includes(gameState.curMoves[c].type) && gameState.curMoves[c].y + layout.objectPoseSize > calibrationState.left_init_pose_y && gameState.curMoves[c].y - layout.objectPoseSize < calibrationState.left_init_pose_y) {
       alpha = 255;
       if (now - timingState.switchGuard > 10000 && gameState.curMoves[c].type === 10) {
         timingState.switchGuard = now;
         switch_feet();
       }
     }
-    if ([1, 3, 5, 7].includes(gameState.curMoves[c].type) && gameState.curMoves[c].y + OBJECT_POSE_SIZE > calibrationState.left_init_pose_y && gameState.curMoves[c].y - OBJECT_POSE_SIZE < calibrationState.left_init_pose_y) {
+    if ([1, 3, 5, 7].includes(gameState.curMoves[c].type) && gameState.curMoves[c].y + layout.objectPoseSize > calibrationState.left_init_pose_y && gameState.curMoves[c].y - layout.objectPoseSize < calibrationState.left_init_pose_y) {
       alpha = 255;
       if (moveMatchesRecentGesture({
         leftDodge: timingState.leftDodge,
@@ -63,7 +69,7 @@
         hitSuccess(c);
       }
     }
-    if ([2, 4, 6, 8, 9].includes(gameState.curMoves[c].type) && gameState.curMoves[c].y + OBJECT_POSE_SIZE > calibrationState.right_init_pose_y && gameState.curMoves[c].y - OBJECT_POSE_SIZE < calibrationState.right_init_pose_y) {
+    if ([2, 4, 6, 8, 9].includes(gameState.curMoves[c].type) && gameState.curMoves[c].y + layout.objectPoseSize > calibrationState.right_init_pose_y && gameState.curMoves[c].y - layout.objectPoseSize < calibrationState.right_init_pose_y) {
       alpha = 255;
       if (moveMatchesRecentGesture({
         downDodge: timingState.downDodge,
@@ -86,11 +92,11 @@
     }
     if (gameState.curMoves[c].hit === true) {fill(0, 255, 0, 127);}
     if (gameState.curMoves[c].type > 0) {
-      renderMoveShape(gameState.curMoves[c], OBJECT_POSE_SIZE, calibrationState.right_init_pose_x);
+      renderMoveShape(gameState.curMoves[c], layout.objectPoseSize, calibrationState.right_init_pose_x);
     }
-    if ([10].includes(gameState.curMoves[c].type)) {circle(calibrationState.right_init_pose_x, gameState.curMoves[c].y, OBJECT_POSE_SIZE);}
+    if ([10].includes(gameState.curMoves[c].type)) {circle(calibrationState.right_init_pose_x, gameState.curMoves[c].y, layout.objectPoseSize);}
     fill(255, 255, 255, 255);
-    textSize(20 * coef);
+    textSize(20 * layout.coef);
     textStyle(BOLD);
     textAlign(CENTER,CENTER);
     if (gameState.curMoves[c].type > 0) {text(gameState.curMoves[c].text, gameState.curMoves[c].x, gameState.curMoves[c].y);}
@@ -101,19 +107,20 @@
 
   function renderShadowPoseInput() {
     if (poses.length > 0) {
+      const layout = layoutSnapshot();
       ({ pose, leftHand, rightHand, nose } = posePartsFromPoses(poses));
       const now = Date.now();
-      const levelWindow = LEVEL * 10;
+      const levelWindow = layout.levelWindowBase * 10;
       if (hasPoseConfidence(nose) && isDetecting) {
         fill(0, 255, 0, 128);
-        circle(nose.x * coef, nose.y * coef, OBJECT_POSE_SIZE / 8);
+        circle(nose.x * layout.coef, nose.y * layout.coef, layout.objectPoseSize / 8);
         fill(255, 255, 255, hide_sensor);
       }
       if (hasPoseConfidence(leftHand)) {
-        if (isInsideGuard(leftHand, calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, OBJECT_POSE_SIZE, coef)) {
+        if (isInsideGuard(leftHand, calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, layout.objectPoseSize, layout.coef)) {
           timingState.leftPoses = now;
           fill(255, 255, 255, 128);
-          circle(calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, OBJECT_POSE_SIZE);
+          circle(calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, layout.objectPoseSize);
           if (gameState.gameStarted) {
             if (now - timingState.leftHook < levelWindow) {
               punchSound();
@@ -124,10 +131,10 @@
           }
         }
         fill(255, 0, 0, 128);
-        circle(leftHand.x * coef, leftHand.y * coef, OBJECT_POSE_SIZE / 2);
+        circle(leftHand.x * layout.coef, leftHand.y * layout.coef, layout.objectPoseSize / 2);
         fill(255, 255, 255, hide_sensor);
         const leftGestures = detectHandGestures({
-          coef,
+          coef: layout.coef,
           hand: leftHand,
           initJabY: calibrationState.init_jab_y,
           initUppercutY: calibrationState.init_uppercut_y,
@@ -139,28 +146,28 @@
           rightPoseTime: timingState.rightPoses,
           side: "left"
         });
-        if (leftHand.x * coef < calibrationState.left_init_hook_x) {
+        if (leftHand.x * layout.coef < calibrationState.left_init_hook_x) {
           timingState.leftHook = now;
-          rect(0, 0, calibrationState.left_init_hook_x, myWindowHeight);
+          rect(0, 0, calibrationState.left_init_hook_x, layout.height);
         }
-        if (leftHand.y * coef > calibrationState.init_uppercut_y) {
+        if (leftHand.y * layout.coef > calibrationState.init_uppercut_y) {
           timingState.leftUppercut = now;
-          rect(0, calibrationState.init_uppercut_y, myWindowWidth, myWindowHeight - calibrationState.init_uppercut_y);
+          rect(0, calibrationState.init_uppercut_y, layout.width, layout.height - calibrationState.init_uppercut_y);
         }
-        if (leftHand.y * coef < calibrationState.init_jab_y) {
+        if (leftHand.y * layout.coef < calibrationState.init_jab_y) {
           fill(255, 255, 255, hide_sensor);
-          rect(0, 0, myWindowWidth, calibrationState.init_jab_y);
+          rect(0, 0, layout.width, calibrationState.init_jab_y);
           if (leftGestures.jab) {
             timingState.leftJab = now;
             if (gameState.gameStarted) {punchSound();}
           }
         }
         const dodges = detectDodgeGestures({
-          coef,
+          coef: layout.coef,
           initUppercutY: calibrationState.init_uppercut_y,
           leftGuardX: calibrationState.left_init_pose_x,
           nose,
-          objectPoseSize: OBJECT_POSE_SIZE,
+          objectPoseSize: layout.objectPoseSize,
           ready: areBothHandsRecent(now, timingState.leftPoses, timingState.rightPoses, levelWindow),
           rightGuardX: calibrationState.right_init_pose_x
         });
@@ -171,10 +178,10 @@
         }
       }
       if (hasPoseConfidence(rightHand)) {
-        if (isInsideGuard(rightHand, calibrationState.right_init_pose_x, calibrationState.right_init_pose_y, OBJECT_POSE_SIZE, coef)) {
+        if (isInsideGuard(rightHand, calibrationState.right_init_pose_x, calibrationState.right_init_pose_y, layout.objectPoseSize, layout.coef)) {
           timingState.rightPoses = now;
           fill(255, 255, 255, 128);
-          circle(calibrationState.right_init_pose_x, calibrationState.right_init_pose_y, OBJECT_POSE_SIZE);
+          circle(calibrationState.right_init_pose_x, calibrationState.right_init_pose_y, layout.objectPoseSize);
           if (gameState.gameStarted || gameState.gameCalibration) {
             if (now - timingState.rightHook < levelWindow) {
               punchSound();
@@ -185,10 +192,10 @@
           }
         }
         fill(255, 0, 0, 128);
-        if (isDetecting) {circle(rightHand.x * coef, rightHand.y * coef, OBJECT_POSE_SIZE / 2);}
+        if (isDetecting) {circle(rightHand.x * layout.coef, rightHand.y * layout.coef, layout.objectPoseSize / 2);}
         fill(255, 255, 255, hide_sensor);
         const rightGestures = detectHandGestures({
-          coef,
+          coef: layout.coef,
           hand: rightHand,
           initJabY: calibrationState.init_jab_y,
           initUppercutY: calibrationState.init_uppercut_y,
@@ -200,16 +207,16 @@
           rightPoseTime: timingState.rightPoses,
           side: "right"
         });
-        if (rightHand.x * coef > calibrationState.right_init_hook_x) {
+        if (rightHand.x * layout.coef > calibrationState.right_init_hook_x) {
           timingState.rightHook = now;
-          rect(calibrationState.right_init_hook_x, 0, calibrationState.right_init_hook_x, myWindowHeight);
+          rect(calibrationState.right_init_hook_x, 0, calibrationState.right_init_hook_x, layout.height);
         }
-        if (rightHand.y * coef > calibrationState.init_uppercut_y) {
+        if (rightHand.y * layout.coef > calibrationState.init_uppercut_y) {
           timingState.rightUppercut = now;
-          rect(0, calibrationState.init_uppercut_y, myWindowWidth, myWindowHeight - calibrationState.init_uppercut_y);
+          rect(0, calibrationState.init_uppercut_y, layout.width, layout.height - calibrationState.init_uppercut_y);
         }
-        if (rightHand.y * coef < calibrationState.init_jab_y) {
-          rect(0, 0, myWindowWidth, calibrationState.init_jab_y);
+        if (rightHand.y * layout.coef < calibrationState.init_jab_y) {
+          rect(0, 0, layout.width, calibrationState.init_jab_y);
           if (rightGestures.jab) {
             timingState.rightJab = now;
             if (gameState.gameStarted) {punchSound();}

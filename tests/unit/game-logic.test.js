@@ -134,8 +134,11 @@ describe('moveDisplay', () => {
     expect(moveDisplay(1, 0, 192)).toEqual({ color: [100, 100, 0, 192], text: "J" });
     expect(moveDisplay(2, 0, 192)).toEqual({ color: [100, 100, 0, 192], text: "S" });
     expect(moveDisplay(3, 0, 192)).toEqual({ color: [100, 0, 100, 192], text: "H" });
+    expect(moveDisplay(4, 0, 192)).toEqual({ color: [100, 0, 100, 192], text: "H" });
     expect(moveDisplay(5, 0, 192)).toEqual({ color: [0, 100, 100, 192], text: "U" });
+    expect(moveDisplay(6, 0, 192)).toEqual({ color: [0, 100, 100, 192], text: "U" });
     expect(moveDisplay(7, 0, 192)).toEqual({ color: [0, 0, 100, 192], text: "D" });
+    expect(moveDisplay(8, 0, 192)).toEqual({ color: [0, 0, 100, 192], text: "D" });
     expect(moveDisplay(9, 0, 192)).toEqual({ color: [0, 0, 200, 192], text: "D" });
     expect(moveDisplay(10, 0, 192)).toEqual({ color: [224, 224, 224, 192], text: "S" });
   });
@@ -143,6 +146,12 @@ describe('moveDisplay', () => {
   it('swaps jab and straight labels when feet are switched', () => {
     expect(moveDisplay(1, 1, 128).text).toBe("S");
     expect(moveDisplay(2, 1, 128).text).toBe("J");
+  });
+
+  it('handles late move type branches with default display alpha', () => {
+    expect(moveDisplay(9)).toEqual({ color: [0, 0, 200, 128], text: "D" });
+    expect(moveDisplay(10)).toEqual({ color: [224, 224, 224, 128], text: "S" });
+    expect(moveDisplay(11)).toBeNull();
   });
 
   it('returns null for rest or unknown move types', () => {

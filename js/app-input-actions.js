@@ -22,8 +22,14 @@
     loadSongmoves
   } = root.TfitFlow;
 
+  const {
+    setFrameRate,
+    snapshot: layoutSnapshot
+  } = root.TfitLayoutState;
+
   function resetCalibrationDefaults() {
-    const defaults = calibrationDefaults(myWindowWidth, myWindowHeight, OBJECT_POSE_SIZE, coef);
+    const layout = layoutSnapshot();
+    const defaults = calibrationDefaults(layout.width, layout.height, layout.objectPoseSize, layout.coef);
 
     calibrationState.left_init_pose_x = defaults.left_init_pose_x;
     calibrationState.left_init_pose_y = defaults.left_init_pose_y;
@@ -106,8 +112,8 @@
     }
     if (action.type === "cycle_frame_rate") {
       playClick();
-      FRAME_RATE = nextFrameRate(FRAME_RATE);
-      localStorage.setItem("frame_rate", FRAME_RATE);
+      const frameRate = setFrameRate(nextFrameRate(layoutSnapshot().frameRate));
+      localStorage.setItem("frame_rate", frameRate);
       return;
     }
     if (action.type === "cycle_level") {
@@ -176,8 +182,10 @@
   }
 
   function applyPointerInputAction() {
+    const layout = layoutSnapshot();
+
     applyInputAction(pointerAction({
-      coef,
+      coef: layout.coef,
       gameCalibration: gameState.gameCalibration,
       gameStarted: gameState.gameStarted,
       init_jab_y: calibrationState.init_jab_y,
@@ -188,9 +196,9 @@
       menu: gameState.menu,
       mouseX,
       mouseY,
-      myWindowHeight,
-      myWindowWidth,
-      objectPoseSize: OBJECT_POSE_SIZE,
+      myWindowHeight: layout.height,
+      myWindowWidth: layout.width,
+      objectPoseSize: layout.objectPoseSize,
       recentResult: gameResultBool(),
       right_init_hook_x: calibrationState.right_init_hook_x,
       right_init_pose_x: calibrationState.right_init_pose_x,

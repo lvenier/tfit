@@ -3,7 +3,8 @@
   const { loadAssetsIntoState } = root.TfitAssets;
   const {
     positionCanvas: positionAppCanvas,
-    resizeCanvasLayout: resizeAppCanvas
+    resizeCanvasLayout: resizeAppCanvas,
+    snapshot: layoutSnapshot
   } = root.TfitLayoutState;
   const { initCameraRuntime } = root.TfitCameraRuntime;
   const { handleCanvasContextMenu: appContextMenu } = root.TfitAppEvents;
@@ -25,7 +26,8 @@
     root.frameRate(60);
     root.angleMode(root.DEGREES);
 
-    root.cnv = root.createCanvas(root.myWindowWidth, root.myWindowHeight);
+    const layout = layoutSnapshot();
+    root.cnv = root.createCanvas(layout.width, layout.height);
     root.cnv.elt.addEventListener("contextmenu", appContextMenu);
     positionAppCanvas(root.cnv);
     fetchSong(1);

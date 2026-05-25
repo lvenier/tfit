@@ -72,7 +72,11 @@ function installGlobals(overrides = {}) {
     },
     TfitLayoutState: {
       positionCanvas: vi.fn(),
-      resizeCanvasLayout: vi.fn()
+      resizeCanvasLayout: vi.fn(),
+      snapshot: vi.fn(() => ({
+        height: globalThis.myWindowHeight,
+        width: globalThis.myWindowWidth
+      }))
     },
     TfitScreenRouter: {
       renderAppFrame: vi.fn()
@@ -125,7 +129,8 @@ describe('TfitAppLifecycle exports', () => {
       TfitFlow: { fetchSong: () => {} },
       TfitLayoutState: {
         positionCanvas: () => {},
-        resizeCanvasLayout: () => {}
+        resizeCanvasLayout: () => {},
+        snapshot: () => ({ height: 480, width: 640 })
       },
       TfitScreenRouter: { renderAppFrame: () => {} }
     };
@@ -160,6 +165,7 @@ describe('app lifecycle handlers', () => {
     expect(globalThis.TfitAssets.loadAssetsIntoState).toHaveBeenCalledTimes(1);
     expect(globalThis.frameRate).toHaveBeenCalledWith(60);
     expect(globalThis.angleMode).toHaveBeenCalledWith('degrees');
+    expect(globalThis.TfitLayoutState.snapshot).toHaveBeenCalledTimes(1);
     expect(globalThis.createCanvas).toHaveBeenCalledWith(640, 480);
     expect(globalThis.cnv.elt.addEventListener).toHaveBeenCalledWith(
       'contextmenu',

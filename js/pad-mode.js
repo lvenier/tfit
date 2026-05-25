@@ -7,13 +7,18 @@
     posePartsFromPoses
   } = root.TfitPoseDetection;
 
+  const {
+    snapshot: layoutSnapshot
+  } = root.TfitLayoutState;
+
   function nextPadTarget(useAndCollision = false) {
-    const x = randomInteger(2 * OBJECT_POSE_SIZE, myWindowWidth - 2 * OBJECT_POSE_SIZE);
-    const y = randomInteger(2 * OBJECT_POSE_SIZE, myWindowHeight - 2 * OBJECT_POSE_SIZE);
+    const layout = layoutSnapshot();
+    const x = randomInteger(2 * layout.objectPoseSize, layout.width - 2 * layout.objectPoseSize);
+    const y = randomInteger(2 * layout.objectPoseSize, layout.height - 2 * layout.objectPoseSize);
     let type = 1;
     const overlapsGuard = useAndCollision
-      ? (x < calibrationState.right_init_pose_x + 2 * OBJECT_POSE_SIZE && x > calibrationState.right_init_pose_x - 2 * OBJECT_POSE_SIZE) && (y < calibrationState.right_init_pose_y + 2 * OBJECT_POSE_SIZE && y > calibrationState.right_init_pose_y - 2 * OBJECT_POSE_SIZE) && (x < calibrationState.left_init_pose_x + 2 * OBJECT_POSE_SIZE && x > calibrationState.left_init_pose_x - 2 * OBJECT_POSE_SIZE) && (y < calibrationState.left_init_pose_y + 2 * OBJECT_POSE_SIZE && y > calibrationState.left_init_pose_y - 2 * OBJECT_POSE_SIZE)
-      : (x < calibrationState.right_init_pose_x + 2 * OBJECT_POSE_SIZE && x > calibrationState.right_init_pose_x - 2 * OBJECT_POSE_SIZE) || (y < calibrationState.right_init_pose_y + 2 * OBJECT_POSE_SIZE && y > calibrationState.right_init_pose_y - 2 * OBJECT_POSE_SIZE) || (x < calibrationState.left_init_pose_x + 2 * OBJECT_POSE_SIZE && x > calibrationState.left_init_pose_x - 2 * OBJECT_POSE_SIZE) || (y < calibrationState.left_init_pose_y + 2 * OBJECT_POSE_SIZE && y > calibrationState.left_init_pose_y - 2 * OBJECT_POSE_SIZE);
+      ? (x < calibrationState.right_init_pose_x + 2 * layout.objectPoseSize && x > calibrationState.right_init_pose_x - 2 * layout.objectPoseSize) && (y < calibrationState.right_init_pose_y + 2 * layout.objectPoseSize && y > calibrationState.right_init_pose_y - 2 * layout.objectPoseSize) && (x < calibrationState.left_init_pose_x + 2 * layout.objectPoseSize && x > calibrationState.left_init_pose_x - 2 * layout.objectPoseSize) && (y < calibrationState.left_init_pose_y + 2 * layout.objectPoseSize && y > calibrationState.left_init_pose_y - 2 * layout.objectPoseSize)
+      : (x < calibrationState.right_init_pose_x + 2 * layout.objectPoseSize && x > calibrationState.right_init_pose_x - 2 * layout.objectPoseSize) || (y < calibrationState.right_init_pose_y + 2 * layout.objectPoseSize && y > calibrationState.right_init_pose_y - 2 * layout.objectPoseSize) || (x < calibrationState.left_init_pose_x + 2 * layout.objectPoseSize && x > calibrationState.left_init_pose_x - 2 * layout.objectPoseSize) || (y < calibrationState.left_init_pose_y + 2 * layout.objectPoseSize && y > calibrationState.left_init_pose_y - 2 * layout.objectPoseSize);
     if (overlapsGuard) {
       type = 2;
     }
@@ -37,36 +42,37 @@
 
   function renderPadMode() {
     if (poses.length > 0) {
+      const layout = layoutSnapshot();
       ({ pose, leftHand, rightHand, nose } = posePartsFromPoses(poses));
       if (hasPoseConfidence(nose) && isDetecting) {
         fill(0, 255, 0, 128);
-        circle(nose.x * coef, nose.y * coef, OBJECT_POSE_SIZE / 8);
+        circle(nose.x * layout.coef, nose.y * layout.coef, layout.objectPoseSize / 8);
         fill(255, 255, 255, hide_sensor);
       }
       if (hasPoseConfidence(leftHand)) {
-        if (isInsideGuard(leftHand, calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, OBJECT_POSE_SIZE, coef)) {
+        if (isInsideGuard(leftHand, calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, layout.objectPoseSize, layout.coef)) {
           timingState.leftPoses = Date.now();
           fill(255, 255, 255, 128);
-          circle(calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, OBJECT_POSE_SIZE);
+          circle(calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, layout.objectPoseSize);
         }
         fill(255, 0, 0, 128);
-        circle(leftHand.x * coef, leftHand.y * coef, OBJECT_POSE_SIZE / 2);
+        circle(leftHand.x * layout.coef, leftHand.y * layout.coef, layout.objectPoseSize / 2);
         fill(255, 255, 255, hide_sensor);
       }
       if (hasPoseConfidence(rightHand)) {
-        if (isInsideGuard(rightHand, calibrationState.right_init_pose_x, calibrationState.right_init_pose_y, OBJECT_POSE_SIZE, coef)) {
+        if (isInsideGuard(rightHand, calibrationState.right_init_pose_x, calibrationState.right_init_pose_y, layout.objectPoseSize, layout.coef)) {
           timingState.rightPoses = Date.now();
           fill(255, 255, 255, 128);
-          circle(calibrationState.right_init_pose_x, calibrationState.right_init_pose_y, OBJECT_POSE_SIZE);
+          circle(calibrationState.right_init_pose_x, calibrationState.right_init_pose_y, layout.objectPoseSize);
         }
         fill(255, 0, 0, 128);
-        circle(rightHand.x * coef, rightHand.y * coef, OBJECT_POSE_SIZE / 2);
+        circle(rightHand.x * layout.coef, rightHand.y * layout.coef, layout.objectPoseSize / 2);
         fill(255, 255, 255, hide_sensor);
       }
       if (gameState.gameStarted) {
         const now = Date.now();
-        const levelWindow = LEVEL * 10;
-        textSize(20 * coef);
+        const levelWindow = layout.levelWindowBase * 10;
+        textSize(20 * layout.coef);
         textAlign(CENTER,CENTER);
         textStyle(BOLD);
         if (gameState.gameTimer === 0) {
@@ -75,20 +81,20 @@
           pushPadMove();
         }
         fill(100, 100, 0, 255);
-        if (padState.type === 1) {circle(padState.x, padState.y, OBJECT_POSE_SIZE);}
+        if (padState.type === 1) {circle(padState.x, padState.y, layout.objectPoseSize);}
         fill(0, 0, 100, 255);
-        if (padState.type === 2) {rect(OBJECT_POSE_SIZE, calibrationState.init_uppercut_y - OBJECT_POSE_SIZE / 2, myWindowWidth - 2 * OBJECT_POSE_SIZE, OBJECT_POSE_SIZE, 20);}
+        if (padState.type === 2) {rect(layout.objectPoseSize, calibrationState.init_uppercut_y - layout.objectPoseSize / 2, layout.width - 2 * layout.objectPoseSize, layout.objectPoseSize, 20);}
         fill(255, 255, 255, 192);
         if (padState.type === 1) {
-          if (padState.x < myWindowWidth / 2) {
+          if (padState.x < layout.width / 2) {
             text("L", padState.x, padState.y);
             if (isPadPunchHit({
-              coef,
+              coef: layout.coef,
               guardTime: timingState.leftPoses,
               hand: leftHand,
               levelWindow,
               now,
-              objectPoseSize: OBJECT_POSE_SIZE,
+              objectPoseSize: layout.objectPoseSize,
               padX: padState.x,
               padY: padState.y
             })) {
@@ -100,12 +106,12 @@
           } else {
             text("R", padState.x, padState.y);
             if (isPadPunchHit({
-              coef,
+              coef: layout.coef,
               guardTime: timingState.rightPoses,
               hand: rightHand,
               levelWindow,
               now,
-              objectPoseSize: OBJECT_POSE_SIZE,
+              objectPoseSize: layout.objectPoseSize,
               padX: padState.x,
               padY: padState.y
             })) {
@@ -116,9 +122,9 @@
             }
           }
         } else if (padState.type === 2) {
-          text("D", myWindowWidth / 2, calibrationState.init_uppercut_y);
+          text("D", layout.width / 2, calibrationState.init_uppercut_y);
           const downDodgeState = nextDownDodgeState({
-            coef,
+            coef: layout.coef,
             done: timingState.downDodgeDone,
             initUppercutY: calibrationState.init_uppercut_y,
             nose,
@@ -138,7 +144,7 @@
             pushPadMove();
           }
         }
-        textSize(10 * coef);
+        textSize(10 * layout.coef);
         textAlign(LEFT,CENTER);
         textStyle(NORMAL);
         gameState.gameTimer++;

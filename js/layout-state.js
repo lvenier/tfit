@@ -67,6 +67,16 @@
     };
   }
 
+  function setFrameRate(frameRate) {
+    root.FRAME_RATE = frameRate;
+    return root.FRAME_RATE;
+  }
+
+  function setLevelWindowBase(levelWindowBase) {
+    root.LEVEL = levelWindowBase;
+    return root.LEVEL;
+  }
+
   resizeLayoutState();
 
   const api = {
@@ -79,6 +89,8 @@
     positionCanvas,
     resizeCanvasLayout,
     resizeLayoutState,
+    setFrameRate,
+    setLevelWindowBase,
     snapshot,
     get width() { return root.myWindowWidth; }
   };

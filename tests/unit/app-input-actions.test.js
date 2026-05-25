@@ -30,7 +30,8 @@ const STUBBED_GLOBALS = [
   'TfitCalibration',
   'TfitFlow',
   'TfitGameLogic',
-  'TfitInput'
+  'TfitInput',
+  'TfitLayoutState'
 ];
 
 const originalGlobals = new Map();
@@ -129,6 +130,20 @@ function installGlobals(overrides = {}) {
     TfitInput: {
       keyAction: vi.fn(() => ({ type: 'open_shadow' })),
       pointerAction: vi.fn(() => ({ click: true, type: 'open_pad' }))
+    },
+    TfitLayoutState: {
+      setFrameRate: vi.fn(value => {
+        globalThis.FRAME_RATE = value;
+        return value;
+      }),
+      snapshot: vi.fn(() => ({
+        coef: globalThis.coef,
+        frameRate: globalThis.FRAME_RATE,
+        height: globalThis.myWindowHeight,
+        levelWindowBase: globalThis.LEVEL,
+        objectPoseSize: globalThis.OBJECT_POSE_SIZE,
+        width: globalThis.myWindowWidth
+      }))
     }
   }, overrides);
 
@@ -187,6 +202,16 @@ describe('TfitAppInputActions exports', () => {
       TfitInput: {
         keyAction: () => ({ type: 'none' }),
         pointerAction: () => ({ type: 'none' })
+      },
+      TfitLayoutState: {
+        setFrameRate: value => value,
+        snapshot: () => ({
+          coef: 1,
+          frameRate: 20,
+          height: 480,
+          objectPoseSize: 48,
+          width: 640
+        })
       }
     };
 
@@ -221,6 +246,7 @@ describe('applyInputAction', () => {
     api.applyInputAction({ type: 'cycle_shadow_focus' });
 
     expect(globalThis.FRAME_RATE).toBe(40);
+    expect(globalThis.TfitLayoutState.setFrameRate).toHaveBeenCalledWith(40);
     expect(globalThis.gameState.level).toBe(1);
     expect(globalThis.gameState.gameLengthIndex).toBe(3);
     expect(globalThis.gameState.gameLength).toBe('120');

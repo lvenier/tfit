@@ -1,4 +1,15 @@
 (function(root) {
+  const MOVE_DISPLAY_BY_TYPE = {
+    3: { color: [100, 0, 100], text: "H" },
+    4: { color: [100, 0, 100], text: "H" },
+    5: { color: [0, 100, 100], text: "U" },
+    6: { color: [0, 100, 100], text: "U" },
+    7: { color: [0, 0, 100], text: "D" },
+    8: { color: [0, 0, 100], text: "D" },
+    9: { color: [0, 0, 200], text: "D" },
+    10: { color: [224, 224, 224], text: "S" }
+  };
+
   function createEmptySong() {
     return {
       name: "",
@@ -140,22 +151,8 @@
       }
       return { color: [100, 100, 0, alpha], text };
     }
-    if (type === 3 || type === 4) {
-      return { color: [100, 0, 100, alpha], text: "H" };
-    }
-    if (type === 5 || type === 6) {
-      return { color: [0, 100, 100, alpha], text: "U" };
-    }
-    if (type === 7 || type === 8) {
-      return { color: [0, 0, 100, alpha], text: "D" };
-    }
-    if (type === 9) {
-      return { color: [0, 0, 200, alpha], text: "D" };
-    }
-    if (type === 10) {
-      return { color: [224, 224, 224, alpha], text: "S" };
-    }
-    return null;
+    const display = MOVE_DISPLAY_BY_TYPE[type];
+    return display ? { color: [...display.color, alpha], text: display.text } : null;
   }
 
   const api = {

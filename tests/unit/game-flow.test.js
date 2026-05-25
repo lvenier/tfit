@@ -21,6 +21,7 @@ const STUBBED_GLOBALS = [
   'speechString',
   'storageNumber',
   'TfitGameLogic',
+  'TfitLayoutState',
   'TfitRound',
   'TfitScore',
   'timingState'
@@ -92,6 +93,17 @@ function installFlowGlobals(overrides = {}) {
       isRecent: vi.fn((time, now) => now - time < 5000),
       levelDelay: vi.fn(() => 40)
     },
+    TfitLayoutState: {
+      setLevelWindowBase: vi.fn(value => {
+        globalThis.LEVEL = value;
+        return value;
+      }),
+      snapshot: vi.fn(() => ({
+        frameRate: globalThis.FRAME_RATE,
+        height: globalThis.myWindowHeight,
+        levelWindowBase: globalThis.LEVEL
+      }))
+    },
     TfitRound: {
       roundEndState: vi.fn(() => ({
         gameResultNow: true,
@@ -159,6 +171,7 @@ describe('round flow helpers', () => {
     flowApi.loadSongmoves();
 
     expect(globalThis.LEVEL).toBe(40);
+    expect(globalThis.TfitLayoutState.setLevelWindowBase).toHaveBeenCalledWith(40);
     expect(globalThis.gameState.gameDuration).toBe(600);
     expect(globalThis.gameState.moves).toEqual([0, 1, 2, 10]);
     expect(globalThis.gameState.score_max).toBe(2);
@@ -189,6 +202,31 @@ describe('round flow helpers', () => {
       menu: 4,
       shadowFocus: 1
     }));
+  });
+
+  it('loads prebuilt song moves without generating a new sequence', () => {
+    installFlowGlobals({
+      gameState: {
+        arrayScore: [],
+        curMoves: [],
+        gameDuration: 0,
+        gameLength: 30,
+        level: 2,
+        menu: 2,
+        moves: [],
+        score_max: 0,
+        shadow_focus: 0,
+        song: { moveLength: 4, moves: [0, 1, 9, 10] }
+      }
+    });
+
+    flowApi.loadSongmoves();
+
+    expect(globalThis.gameState.gameDuration).toBe(600);
+    expect(globalThis.gameState.moves).toEqual([0, 1, 9, 10]);
+    expect(globalThis.gameState.score_max).toBe(2);
+    expect(globalThis.TfitGameLogic.createSongMoves).not.toHaveBeenCalled();
+    expect(globalThis.storageNumber).not.toHaveBeenCalledWith('shadow_focus', expect.any(Number));
   });
 
   it('starts a round from idle state', () => {

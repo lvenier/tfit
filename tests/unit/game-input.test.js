@@ -163,6 +163,11 @@ describe('pointerAction', () => {
       ...basePointer,
       mouseY: 410
     })).toEqual({ click: true, type: 'open_settings' });
+
+    expect(pointerAction({
+      ...basePointer,
+      mouseY: 360
+    })).toEqual({ type: 'none' });
   });
 
   it('maps settings controls to cycle actions with click feedback', () => {

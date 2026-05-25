@@ -4,9 +4,9 @@
   }
 
   function loadSongmoves() {
-    LEVEL = root.TfitGameLogic.levelDelay(gameState.level);
+    root.TfitLayoutState.setLevelWindowBase(root.TfitGameLogic.levelDelay(gameState.level));
     if (gameState.song) {
-      gameState.gameDuration = gameState.gameLength * FRAME_RATE;
+      gameState.gameDuration = gameState.gameLength * root.TfitLayoutState.snapshot().frameRate;
       if (gameState.song.moveLength === 0) {
         if (gameState.menu === 4) {
           gameState.shadow_focus = storageNumber("shadow_focus", gameState.shadow_focus, { min: 0, max: Object.keys(SHADOW_SPECIFIC).length - 1 });
@@ -46,8 +46,8 @@
       return;
     }
     gameState.feet_position = 0;
-    calibrationState.left_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
-    calibrationState.right_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
+    calibrationState.left_init_pose_y = storageNumber("left_init_pose_y", root.TfitLayoutState.snapshot().height / 3);
+    calibrationState.right_init_pose_y = storageNumber("right_init_pose_y", root.TfitLayoutState.snapshot().height / 3);
     sounds.letsFight.play();
     gameState.gameStarted = true;
     timingState.gameResult = now - 5001;
@@ -65,8 +65,8 @@
 
   function switch_feet() {
     gameState.feet_position = 1;
-    calibrationState.left_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
-    calibrationState.right_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
+    calibrationState.left_init_pose_y = storageNumber("right_init_pose_y", root.TfitLayoutState.snapshot().height / 3);
+    calibrationState.right_init_pose_y = storageNumber("left_init_pose_y", root.TfitLayoutState.snapshot().height / 3);
   }
 
   function hitSuccess(c) {
@@ -122,8 +122,8 @@
 
     gameState.gameCurrentSeries = roundEnd.gameSeries;
     gameState.feet_position = 0;
-    calibrationState.left_init_pose_y = storageNumber("left_init_pose_y", myWindowHeight / 3);
-    calibrationState.right_init_pose_y = storageNumber("right_init_pose_y", myWindowHeight / 3);
+    calibrationState.left_init_pose_y = storageNumber("left_init_pose_y", root.TfitLayoutState.snapshot().height / 3);
+    calibrationState.right_init_pose_y = storageNumber("right_init_pose_y", root.TfitLayoutState.snapshot().height / 3);
 
     return roundEnd;
   }

@@ -51,6 +51,7 @@ const STUBBED_GLOBALS = [
   'textSize',
   'textStyle',
   'tint',
+  'TfitLayoutState',
   'translate',
   'width',
   'height'
@@ -184,6 +185,16 @@ function installRenderGlobals(overrides = {}) {
     SHADOW_SPECIFIC: { 1: 'JAB' },
     sin: Math.sin,
     speechString: 'keep guard',
+    TfitLayoutState: {
+      snapshot: () => ({
+        coef: globalThis.coef,
+        frameRate: globalThis.FRAME_RATE,
+        height: globalThis.myWindowHeight,
+        levelWindowBase: globalThis.LEVEL,
+        objectPoseSize: globalThis.OBJECT_POSE_SIZE,
+        width: globalThis.myWindowWidth
+      })
+    },
     width: 640
   }, globalOverrides);
 }
@@ -336,6 +347,15 @@ describe('hud and meter rendering', () => {
     expect(calls.arc[1][5]).toBeCloseTo(54);
   });
 
+  it('omits shadow labels outside shadow mode', () => {
+    installRenderGlobals({ gameState: { menu: 3 } });
+
+    renderApi.renderRoundHud(4);
+
+    expect(calls.text).not.toContainEqual(['(T)ype: jab', 15, 36]);
+    expect(calls.text).not.toContainEqual(['(S)eries: 1 / 3', 15, 56]);
+  });
+
   it('renders fight meters with reduced opponent stamina', () => {
     renderApi.renderFightMeters();
 
@@ -393,6 +413,67 @@ describe('renderShadowResult', () => {
     expect(calls.text).toContainEqual(['L_J', 244, 151]);
     expect(calls.text).toContainEqual(['R_S', 504, 151]);
     expect(calls.circle).toHaveLength(6);
+  });
+
+  it('aggregates repeated scoring move types into one result bucket', () => {
+    installRenderGlobals({
+      gameState: {
+        arrayScore: [1, 0, 1],
+        curMoves: [
+          { type: 1, text: 'J', hit: true },
+          { type: 1, text: 'J', hit: false },
+          { type: 1, text: 'J', hit: true }
+        ]
+      }
+    });
+
+    renderApi.renderShadowResult();
+
+    expect(globalThis.gameState.song_result['1']).toMatchObject({
+      success: 2,
+      total: 3,
+      text: 'J'
+    });
+    expect(globalThis.gameState.score).toBe(2);
+  });
+
+  it('renders alternate hook, uppercut, and dodge result colors', () => {
+    installRenderGlobals({
+      gameState: {
+        arrayScore: [0, 0, 0],
+        curMoves: [
+          { type: 4, text: 'H', hit: false },
+          { type: 6, text: 'U', hit: false },
+          { type: 8, text: 'D', hit: false }
+        ]
+      }
+    });
+
+    renderApi.renderShadowResult();
+
+    expect(globalThis.gameState.song_result['4']).toMatchObject({ success: 0, total: 1, text: 'H' });
+    expect(globalThis.gameState.song_result['6']).toMatchObject({ success: 0, total: 1, text: 'U' });
+    expect(globalThis.gameState.song_result['8']).toMatchObject({ success: 0, total: 1, text: 'D' });
+    expect(calls.fill).toContainEqual([100, 0, 100, 255]);
+    expect(calls.fill).toContainEqual([0, 100, 100, 255]);
+    expect(calls.fill).toContainEqual([0, 0, 100, 255]);
+  });
+
+  it('renders unknown result move types without a type-specific fill color', () => {
+    installRenderGlobals({
+      gameState: {
+        arrayScore: [0],
+        curMoves: [
+          { type: 11, text: '?', hit: false }
+        ]
+      }
+    });
+
+    renderApi.renderShadowResult();
+
+    expect(globalThis.gameState.song_result['11']).toMatchObject({ success: 0, total: 1, text: '?' });
+    expect(calls.circle).toHaveLength(1);
+    expect(calls.fill).not.toContainEqual([0, 0, 200, 255]);
   });
 });
 

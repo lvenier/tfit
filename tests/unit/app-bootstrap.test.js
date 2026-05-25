@@ -125,4 +125,21 @@ describe('registerAppHandlers', () => {
 
     expect(dependencies.root.setup).toBe(dependencies.lifecycle.setup);
   });
+
+  it('absorbs service worker registration failures', async () => {
+    const api = installGlobals();
+    const dependencies = createDependencies({
+      navigator: {
+        serviceWorker: {
+          register: vi.fn(() => Promise.reject(new Error('offline')))
+        }
+      }
+    });
+
+    api.registerAppHandlers(dependencies);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(dependencies.navigator.serviceWorker.register).toHaveBeenCalledWith('service-worker.js');
+  });
 });
