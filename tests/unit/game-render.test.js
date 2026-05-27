@@ -18,6 +18,7 @@ const STUBBED_GLOBALS = [
   'coef',
   'cos',
   'ellipse',
+  'errorTimer',
   'fill',
   'FRAME_RATE',
   'gameState',
@@ -148,6 +149,7 @@ function installRenderGlobals(overrides = {}) {
     CENTER: 'center',
     coef: 1,
     cos: Math.cos,
+    errorTimer: 0,
     FRAME_RATE: 20,
     gameState: {
       ...defaultGameState(),
@@ -188,6 +190,7 @@ function installRenderGlobals(overrides = {}) {
     sin: Math.sin,
     speechString: 'keep guard',
     TfitGameLogic: {
+      detectStartCountdown: vi.fn(globalThis.TfitGameLogic.detectStartCountdown),
       moveDisplay: vi.fn(moveDisplay)
     },
     TfitLayoutState: {
@@ -224,6 +227,7 @@ afterEach(() => {
 describe('TfitRender exports', () => {
   it('exposes render helpers for app.js', () => {
     expect(Object.keys(renderApi).sort()).toEqual([
+      'drawDetectionProgress',
       'drawMessagePanel',
       'renderBackButton',
       'renderCalibrationOverlay',
@@ -273,6 +277,19 @@ describe('basic render helpers', () => {
     expect(globalThis.loading_k).toBe(4);
     expect(globalThis.loading_m).toBe(0);
     expect(calls.text).toContainEqual(['Detecting your guard', 320, 222]);
+    expect(calls.text).toContainEqual(['Stand in frame with both hands visible - 8s left', 320, 258]);
+    expect(calls.text).toContainEqual(['8s left', 320, 316]);
+    expect(calls.rect).toContainEqual([320, 298, 260, 8, 8]);
+  });
+
+  it('renders the hand detection countdown with elapsed progress', () => {
+    installRenderGlobals({ errorTimer: 250 });
+
+    renderApi.renderLoadingScreen();
+
+    expect(calls.text).toContainEqual(['Stand in frame with both hands visible - 4s left', 320, 258]);
+    expect(calls.text).toContainEqual(['4s left', 320, 316]);
+    expect(calls.rect).toContainEqual([255, 298, 130, 8, 8]);
   });
 
   it('wraps the loading animation counters when they exceed their bounds', () => {

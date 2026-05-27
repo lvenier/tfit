@@ -29,6 +29,35 @@
     pop();
   }
 
+  function drawDetectionProgress() {
+    const layout = layoutSnapshot();
+    const countdown = root.TfitGameLogic.detectStartCountdown({ errorTimer });
+    const x = width / 2;
+    const y = height / 2 + 58 * layout.coef;
+    const progressWidth = 260 * layout.coef;
+    const progressHeight = 8 * layout.coef;
+
+    push();
+    resetMatrix();
+    rectMode(CENTER);
+    noStroke();
+    fill(255, 255, 255, 42);
+    rect(x, y, progressWidth, progressHeight, progressHeight);
+    fill(47, 183, 179, 230);
+    rect(
+      x - progressWidth / 2 + (progressWidth * countdown.progress) / 2,
+      y,
+      progressWidth * countdown.progress,
+      progressHeight,
+      progressHeight
+    );
+    fill(255, 255, 255, 210);
+    textAlign(CENTER, CENTER);
+    textSize(8 * layout.coef);
+    text(`${countdown.remainingSeconds}s left`, x, y + 18 * layout.coef);
+    pop();
+  }
+
   function renderLoadingScreen() {
     const layout = layoutSnapshot();
 
@@ -48,7 +77,9 @@
       loading_k = 0;
       loading_m = 0;
     }
-    drawMessagePanel("Detecting your guard", "Stand in frame with both hands visible");
+    const countdown = root.TfitGameLogic.detectStartCountdown({ errorTimer });
+    drawMessagePanel("Detecting your guard", `Stand in frame with both hands visible - ${countdown.remainingSeconds}s left`);
+    drawDetectionProgress();
   }
 
   function renderSceneBackground() {
@@ -267,6 +298,7 @@
 
   const api = {
     drawMessagePanel,
+    drawDetectionProgress,
     renderMoveShape,
     renderBackButton,
     renderCalibrationOverlay,

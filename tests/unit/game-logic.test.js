@@ -10,6 +10,7 @@ const {
   countScoringMoves,
   createEmptySong,
   createSongMoves,
+  detectStartCountdown,
   detectStartCondition,
   isRecent,
   levelDelay,
@@ -26,6 +27,7 @@ describe('TfitGameLogic browser export', () => {
     expect(globalThis.TfitGameLogic).toMatchObject({
       calibrationDefaults,
       createSongMoves,
+      detectStartCountdown,
       detectStartCondition,
       moveDisplay,
       nextFrameRate
@@ -232,6 +234,35 @@ describe('detectStartCondition', () => {
     })).toMatchObject({
       errorTimer: 0,
       gameReady: true
+    });
+  });
+});
+
+describe('detectStartCountdown', () => {
+  it('reports remaining time and progress for hand detection', () => {
+    expect(detectStartCountdown({
+      errorThreshold: 500,
+      errorTimer: 125,
+      framesPerSecond: 50
+    })).toEqual({
+      elapsedFrames: 125,
+      progress: 0.25,
+      remainingFrames: 375,
+      remainingSeconds: 8,
+      totalFrames: 500
+    });
+  });
+
+  it('clamps elapsed frames to the detection timeout', () => {
+    expect(detectStartCountdown({
+      errorThreshold: 500,
+      errorTimer: 999,
+      framesPerSecond: 60
+    })).toMatchObject({
+      elapsedFrames: 500,
+      progress: 1,
+      remainingFrames: 0,
+      remainingSeconds: 0
     });
   });
 });

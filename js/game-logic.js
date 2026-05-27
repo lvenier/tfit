@@ -143,6 +143,24 @@
     };
   }
 
+  function detectStartCountdown({
+    errorThreshold = 500,
+    errorTimer,
+    framesPerSecond = 60
+  }) {
+    const totalFrames = Math.max(errorThreshold, 1);
+    const elapsedFrames = Math.max(0, Math.min(errorTimer, totalFrames));
+    const remainingFrames = Math.max(totalFrames - elapsedFrames, 0);
+
+    return {
+      elapsedFrames,
+      progress: elapsedFrames / totalFrames,
+      remainingFrames,
+      remainingSeconds: Math.max(0, Math.round(remainingFrames / framesPerSecond)),
+      totalFrames
+    };
+  }
+
   function moveDisplay(type, feetPosition = 0, alpha = 128) {
     if (type === 1 || type === 2) {
       let text = type === 1 ? "J" : "S";
@@ -160,6 +178,7 @@
     countScoringMoves,
     createEmptySong,
     createSongMoves,
+    detectStartCountdown,
     detectStartCondition,
     isRecent,
     levelDelay,
