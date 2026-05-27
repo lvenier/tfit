@@ -21,6 +21,36 @@ canvas {
   background: transparent;
 }
 
+.pwa-install-button {
+  position: fixed;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  z-index: 1000;
+  min-width: 132px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 8px;
+  background: rgba(5, 5, 5, 0.82);
+  color: #ffffff;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.38);
+  cursor: pointer;
+  font: 700 14px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.pwa-install-button[hidden] {
+  display: none;
+}
+
+.pwa-install-button:hover {
+  background: rgba(143, 29, 90, 0.92);
+}
+
+.pwa-install-button:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
+}
+
 .logo {
   width: clamp(72px, 8vw, 132px);
   height: clamp(72px, 8vw, 132px);

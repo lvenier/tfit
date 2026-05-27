@@ -22,7 +22,7 @@ describe('service worker asset manifest', () => {
   it('loads the generated core asset list from the worker', () => {
     const serviceWorker = readFileSync(resolve('service-worker.js'), 'utf8');
 
-    expect(serviceWorker).toContain("importScripts('/service-worker-version.js', '/service-worker-assets.js')");
+    expect(serviceWorker).toContain("importScripts('./service-worker-version.js', './service-worker-assets.js')");
     expect(serviceWorker).toContain('cache.addAll(self.CORE_ASSETS)');
   });
 
@@ -41,6 +41,8 @@ describe('service worker asset manifest', () => {
       './index.html',
       './manifest.json',
       './style.css',
+      './assets/logos/logo.192.png',
+      './assets/logos/logo.512.png',
       './js/ml5js/model.json',
       './js/ml5js/group1-shard1of3.bin',
       './js/ml5js/group1-shard2of3.bin',

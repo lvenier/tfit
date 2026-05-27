@@ -48,7 +48,12 @@ const coreAssets = unique([
   "./js/ml5js/group1-shard1of3.bin",
   "./js/ml5js/group1-shard2of3.bin",
   "./js/ml5js/group1-shard3of3.bin",
+  "./assets/logos/logo.48.png",
+  "./assets/logos/logo.96.png",
+  "./assets/logos/logo.128.png",
+  "./assets/logos/logo.192.png",
   "./assets/logos/logo.256.png",
+  "./assets/logos/logo.512.png",
   "./assets/logos/logo.512.rounded.png"
 ]);
 

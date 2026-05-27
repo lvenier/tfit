@@ -1,4 +1,4 @@
-importScripts('/service-worker-version.js', '/service-worker-assets.js');
+importScripts('./service-worker-version.js', './service-worker-assets.js');
 const CACHE_NAME = `box4fit-v${self.APP_VERSION}`;
 
 self.addEventListener('install', event => {

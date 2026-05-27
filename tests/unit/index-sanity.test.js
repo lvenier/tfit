@@ -6,6 +6,10 @@ function readIndex() {
   return readFileSync(resolve('index.html'), 'utf8');
 }
 
+function readManifest() {
+  return JSON.parse(readFileSync(resolve('manifest.json'), 'utf8'));
+}
+
 function scriptSources(html) {
   return [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map(match => match[1]);
 }
@@ -35,8 +39,32 @@ describe('index.html app surface', () => {
 
     expect(html).toContain('<title>Box4Fit</title>');
     expect(html).toContain('<link rel="manifest" href="manifest.json" />');
+    expect(html).toContain('<link rel="apple-touch-icon" href="assets/logos/logo.192.png">');
     expect(html).toContain('<div id="p5_loading">');
+    expect(html).toContain('<button class="pwa-install-button" id="pwa-install-button" type="button" hidden>Install Box4Fit</button>');
     expect(html).toContain('<progress class="loading-progress" id="loading-progress"');
     expect(html).toContain('<noscript>Box4Fit needs JavaScript enabled to run the webcam boxing game.</noscript>');
+  });
+
+  it('keeps the manifest installable across root and subpath hosting', () => {
+    const manifest = readManifest();
+
+    expect(manifest.id).toBe('./');
+    expect(manifest.start_url).toBe('./');
+    expect(manifest.scope).toBe('./');
+    expect(manifest.display).toBe('standalone');
+    expect(manifest.display_override).toEqual(['window-controls-overlay', 'standalone', 'minimal-ui']);
+    expect(manifest.icons).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        src: 'assets/logos/logo.192.png',
+        sizes: '192x192',
+        purpose: expect.stringContaining('any')
+      }),
+      expect.objectContaining({
+        src: 'assets/logos/logo.512.png',
+        sizes: '512x512',
+        purpose: expect.stringContaining('any')
+      })
+    ]));
   });
 });

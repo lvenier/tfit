@@ -10,9 +10,13 @@
     p5Runtime.disableFriendlyErrors = true;
 
     appDocument.addEventListener("contextmenu", events.preventContextMenu);
+    registerInstallPrompt({
+      document: appDocument,
+      root: appRoot
+    });
 
     if ('serviceWorker' in appNavigator) {
-      appNavigator.serviceWorker.register('service-worker.js')
+      appNavigator.serviceWorker.register('./service-worker.js')
         .catch(() => {});
     }
 
@@ -28,7 +32,50 @@
     });
   }
 
+  function registerInstallPrompt({
+    document: appDocument = root.document,
+    root: appRoot = root
+  } = {}) {
+    const installButton = appDocument.getElementById?.("pwa-install-button");
+
+    if (!installButton || typeof appRoot.addEventListener !== "function") {
+      return;
+    }
+
+    let deferredPrompt = null;
+
+    appRoot.addEventListener("beforeinstallprompt", event => {
+      event.preventDefault();
+      deferredPrompt = event;
+      installButton.hidden = false;
+    });
+
+    installButton.addEventListener("click", async () => {
+      if (!deferredPrompt) {
+        installButton.hidden = true;
+        return;
+      }
+
+      const promptEvent = deferredPrompt;
+      deferredPrompt = null;
+      installButton.hidden = true;
+
+      try {
+        await promptEvent.prompt();
+        await promptEvent.userChoice;
+      } catch {
+        installButton.hidden = false;
+      }
+    });
+
+    appRoot.addEventListener("appinstalled", () => {
+      deferredPrompt = null;
+      installButton.hidden = true;
+    });
+  }
+
   const api = {
+    registerInstallPrompt,
     registerAppHandlers
   };
 

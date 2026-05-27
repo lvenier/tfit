@@ -72,7 +72,8 @@ describe('TfitAppBootstrap exports', () => {
     const api = installGlobals();
 
     expect(Object.keys(api).sort()).toEqual([
-      'registerAppHandlers'
+      'registerAppHandlers',
+      'registerInstallPrompt'
     ]);
     expect(globalThis.TfitAppBootstrap).toBe(api);
   });
@@ -102,7 +103,7 @@ describe('registerAppHandlers', () => {
       'contextmenu',
       dependencies.events.preventContextMenu
     );
-    expect(dependencies.navigator.serviceWorker.register).toHaveBeenCalledWith('service-worker.js');
+    expect(dependencies.navigator.serviceWorker.register).toHaveBeenCalledWith('./service-worker.js');
     expect(dependencies.root).toMatchObject({
       draw: dependencies.lifecycle.draw,
       keyPressed: dependencies.events.handleKeyboardInput,
@@ -140,6 +141,66 @@ describe('registerAppHandlers', () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(dependencies.navigator.serviceWorker.register).toHaveBeenCalledWith('service-worker.js');
+    expect(dependencies.navigator.serviceWorker.register).toHaveBeenCalledWith('./service-worker.js');
+  });
+
+  it('shows and uses the install button when the browser offers PWA installation', async () => {
+    const api = installGlobals();
+    const handlers = {};
+    const installButton = {
+      addEventListener: vi.fn((type, handler) => {
+        handlers[`button:${type}`] = handler;
+      }),
+      hidden: true
+    };
+    const promptEvent = {
+      preventDefault: vi.fn(),
+      prompt: vi.fn(() => Promise.resolve()),
+      userChoice: Promise.resolve({ outcome: 'accepted' })
+    };
+    const dependencies = {
+      document: {
+        getElementById: vi.fn(() => installButton)
+      },
+      root: {
+        addEventListener: vi.fn((type, handler) => {
+          handlers[type] = handler;
+        })
+      }
+    };
+
+    api.registerInstallPrompt(dependencies);
+    handlers.beforeinstallprompt(promptEvent);
+
+    expect(promptEvent.preventDefault).toHaveBeenCalled();
+    expect(installButton.hidden).toBe(false);
+
+    await handlers['button:click']();
+
+    expect(promptEvent.prompt).toHaveBeenCalled();
+    expect(installButton.hidden).toBe(true);
+  });
+
+  it('hides the install button after installation completes', () => {
+    const api = installGlobals();
+    const handlers = {};
+    const installButton = {
+      addEventListener: vi.fn(),
+      hidden: false
+    };
+
+    api.registerInstallPrompt({
+      document: {
+        getElementById: vi.fn(() => installButton)
+      },
+      root: {
+        addEventListener: vi.fn((type, handler) => {
+          handlers[type] = handler;
+        })
+      }
+    });
+    handlers.appinstalled();
+
+    expect(installButton.hidden).toBe(true);
   });
 });
