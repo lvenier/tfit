@@ -17,6 +17,7 @@ const STUBBED_GLOBALS = [
   'circle',
   'coef',
   'cos',
+  'document',
   'ellipse',
   'errorTimer',
   'fill',
@@ -149,6 +150,13 @@ function installRenderGlobals(overrides = {}) {
     CENTER: 'center',
     coef: 1,
     cos: Math.cos,
+    document: {
+      body: {
+        style: {
+          setProperty: vi.fn()
+        }
+      }
+    },
     errorTimer: 0,
     FRAME_RATE: 20,
     gameState: {
@@ -242,7 +250,8 @@ describe('TfitRender exports', () => {
       'renderSceneBackground',
       'renderSettingsControls',
       'renderShadowResult',
-      'renderSpeech'
+      'renderSpeech',
+      'syncPageBackground'
     ]);
   });
 
@@ -321,10 +330,20 @@ describe('basic render helpers', () => {
     renderApi.renderSceneBackground();
     renderApi.renderMainMenu();
 
-    expect(calls.tint[0]).toEqual([255, 236]);
-    expect(calls.image).toContainEqual([asset('bg2'), 0, 0, 640, 480]);
+    expect(calls.tint).toEqual([]);
+    expect(calls.image).not.toContainEqual([asset('bg2'), 0, 0, 640, 480]);
+    expect(globalThis.document.body.style.setProperty).toHaveBeenCalledWith(
+      '--app-background-image',
+      'url("assets/backgrounds/2.jpg")'
+    );
     expect(calls.image).toContainEqual([asset('shadow'), 640 / 6, 80, 100, 50]);
     expect(calls.image).toContainEqual([asset('config'), 640 / 6, 380, 100, 50]);
+  });
+
+  it('skips page background sync outside a document context', () => {
+    installRenderGlobals({ document: undefined });
+
+    expect(renderApi.syncPageBackground()).toBe(false);
   });
 
   it('renders menu and settings buttons at their app coordinates', () => {

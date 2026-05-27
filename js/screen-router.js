@@ -197,14 +197,20 @@
       return;
     }
 
-    background(0);
     if (error.length > 0) {
+      background(0);
       drawMessagePanel("Camera unavailable", error);
       return;
     }
     if (!root.TfitCameraRuntime.checkStartCondition()) {
+      background(0);
       renderLoadingScreen();
       return;
+    }
+    if (typeof root.clear === "function") {
+      root.clear();
+    } else {
+      background(0);
     }
     renderGameScreen();
   }

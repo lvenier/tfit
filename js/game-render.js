@@ -58,6 +58,18 @@
     pop();
   }
 
+  function syncPageBackground(menu = gameState.menu) {
+    if (!root.document || !root.document.body) {
+      return false;
+    }
+
+    root.document.body.style.setProperty(
+      "--app-background-image",
+      `url("assets/backgrounds/${menu}.jpg")`
+    );
+    return true;
+  }
+
   function renderLoadingScreen() {
     const layout = layoutSnapshot();
 
@@ -85,9 +97,7 @@
   function renderSceneBackground() {
     const layout = layoutSnapshot();
 
-    tint(255, 236);
-    image(images.backgrounds[gameState.menu], 0, 0, layout.width, layout.height);
-    tint(255, 255);
+    syncPageBackground();
     textSize(10 * layout.coef);
     fill(0, 0, 0);
     strokeWeight(0);
@@ -312,7 +322,8 @@
     renderSceneBackground,
     renderSettingsControls,
     renderShadowResult,
-    renderSpeech
+    renderSpeech,
+    syncPageBackground
   };
 
   root.TfitRender = api;

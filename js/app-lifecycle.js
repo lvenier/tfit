@@ -23,6 +23,17 @@
     });
   }
 
+  function hideInitialLoader(document = root.document) {
+    const loader = document && document.getElementById("p5_loading");
+    if (!loader) {
+      return false;
+    }
+
+    loader.hidden = true;
+    loader.style.display = "none";
+    return true;
+  }
+
   async function setup() {
     updateLoadingProgress({ label: "Loading assets", loaded: 0, total: 1 });
     await loadAssets();
@@ -39,6 +50,7 @@
     updateLoadingProgress({ label: "Starting camera", loaded: 1, total: 1 });
     await initCameraRuntime();
     updateLoadingProgress({ label: "Ready", loaded: 1, total: 1 });
+    hideInitialLoader();
   }
 
   function draw() {
@@ -51,6 +63,7 @@
 
   const api = {
     draw,
+    hideInitialLoader,
     loadAssets,
     setup,
     windowResized

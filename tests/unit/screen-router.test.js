@@ -8,6 +8,7 @@ const modulePath = require.resolve('../../js/screen-router');
 
 const STUBBED_GLOBALS = [
   'background',
+  'clear',
   'coef',
   'error',
   'fill',
@@ -70,13 +71,14 @@ function installGlobals(overrides = {}) {
     }
   }
 
-  for (const name of ['background', 'fill', 'image', 'textSize']) {
+  for (const name of ['background', 'clear', 'fill', 'image', 'textSize']) {
     calls[name] = [];
     globalThis[name] = record(name);
   }
 
   Object.assign(globalThis, {
     coef: 1,
+    clear: record('clear'),
     error: '',
     FRAME_RATE: 20,
     gameState: defaultGameState(),
@@ -295,9 +297,19 @@ describe('app frame routing', () => {
 
     api.renderAppFrame();
 
-    expect(calls.background).toEqual([[0]]);
+    expect(calls.background).toEqual([]);
+    expect(calls.clear).toEqual([[]]);
     expect(globalThis.TfitRender.renderSceneBackground).toHaveBeenCalledTimes(1);
     expect(globalThis.TfitRender.renderMainMenu).toHaveBeenCalledTimes(1);
+  });
+
+  it('falls back to black canvas clearing when transparent clear is unavailable', () => {
+    const api = installGlobals({ clear: undefined });
+
+    api.renderAppFrame();
+
+    expect(calls.background).toEqual([[0]]);
+    expect(globalThis.TfitRender.renderSceneBackground).toHaveBeenCalledTimes(1);
   });
 });
 

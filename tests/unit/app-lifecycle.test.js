@@ -11,6 +11,7 @@ const STUBBED_GLOBALS = [
   'cnv',
   'createCanvas',
   'DEGREES',
+  'document',
   'frameRate',
   'loadImage',
   'loadSound',
@@ -42,12 +43,21 @@ function installGlobals(overrides = {}) {
       addEventListener: vi.fn()
     }
   };
+  const loader = {
+    hidden: false,
+    style: {
+      display: ''
+    }
+  };
 
   Object.assign(globalThis, {
     angleMode: vi.fn(),
     cnv: null,
     createCanvas: vi.fn(() => canvas),
     DEGREES: 'degrees',
+    document: {
+      getElementById: vi.fn(id => id === 'p5_loading' ? loader : null)
+    },
     frameRate: vi.fn(),
     loadImage: vi.fn(),
     loadSound: vi.fn(),
@@ -111,6 +121,7 @@ describe('TfitAppLifecycle exports', () => {
 
     expect(Object.keys(api).sort()).toEqual([
       'draw',
+      'hideInitialLoader',
       'loadAssets',
       'setup',
       'windowResized'
@@ -180,6 +191,7 @@ describe('app lifecycle handlers', () => {
     expect(globalThis.TfitLayoutState.positionCanvas).toHaveBeenCalledWith(globalThis.cnv);
     expect(globalThis.TfitFlow.fetchSong).toHaveBeenCalledWith(1);
     expect(globalThis.TfitCameraRuntime.initCameraRuntime).toHaveBeenCalledTimes(1);
+    expect(globalThis.document.getElementById).toHaveBeenCalledWith('p5_loading');
     expect(globalThis.TfitLoadingProgress.updateLoadingProgress).toHaveBeenCalledWith({
       label: 'Starting camera',
       loaded: 1,
@@ -190,6 +202,31 @@ describe('app lifecycle handlers', () => {
       loaded: 1,
       total: 1
     });
+  });
+
+  it('hides the initial DOM loader once the canvas owns the screen', () => {
+    const api = installGlobals();
+    const loader = {
+      hidden: false,
+      style: {
+        display: ''
+      }
+    };
+
+    expect(api.hideInitialLoader({
+      getElementById: () => loader
+    })).toBe(true);
+
+    expect(loader.hidden).toBe(true);
+    expect(loader.style.display).toBe('none');
+  });
+
+  it('skips hiding the initial loader when it is unavailable', () => {
+    const api = installGlobals();
+
+    expect(api.hideInitialLoader({
+      getElementById: () => null
+    })).toBe(false);
   });
 
   it('delegates draw to the screen router', () => {
