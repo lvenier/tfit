@@ -120,7 +120,9 @@ The app is static, so it can be hosted by any static file server as long as the 
 Existing Docker example:
 
 ```bash
-sudo docker run -d -p 8000:8000 --label traefik.http.routers.box4fit.rule=Host\(\`tfit.lvbh.xyz\`\) --name tfit tfit
+sudo docker run -d -p 8000:8000 \
+--label traefik.http.routers.box4fit.rule=Host\(\`app.box4.fit\`\) \
+--name tfit tfit
 ```
 
 For webcam access in production, serve the app over HTTPS.
