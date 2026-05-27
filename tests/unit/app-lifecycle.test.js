@@ -24,6 +24,7 @@ const STUBBED_GLOBALS = [
   'TfitConfig',
   'TfitFlow',
   'TfitLayoutState',
+  'TfitLoadingProgress',
   'TfitScreenRouter'
 ];
 
@@ -77,6 +78,9 @@ function installGlobals(overrides = {}) {
         height: globalThis.myWindowHeight,
         width: globalThis.myWindowWidth
       }))
+    },
+    TfitLoadingProgress: {
+      updateLoadingProgress: vi.fn()
     },
     TfitScreenRouter: {
       renderAppFrame: vi.fn()
@@ -132,6 +136,7 @@ describe('TfitAppLifecycle exports', () => {
         resizeCanvasLayout: () => {},
         snapshot: () => ({ height: 480, width: 640 })
       },
+      TfitLoadingProgress: { updateLoadingProgress: () => {} },
       TfitScreenRouter: { renderAppFrame: () => {} }
     };
     sandbox.globalThis = sandbox;
@@ -153,7 +158,8 @@ describe('app lifecycle handlers', () => {
       gameLevel: globalThis.TfitConfig.GAME_LEVEL,
       loadImage: globalThis.loadImage,
       loadSound: globalThis.loadSound,
-      menuTypes: globalThis.TfitConfig.MENUTYPE
+      menuTypes: globalThis.TfitConfig.MENUTYPE,
+      onProgress: globalThis.TfitLoadingProgress.updateLoadingProgress
     });
   });
 
@@ -174,6 +180,16 @@ describe('app lifecycle handlers', () => {
     expect(globalThis.TfitLayoutState.positionCanvas).toHaveBeenCalledWith(globalThis.cnv);
     expect(globalThis.TfitFlow.fetchSong).toHaveBeenCalledWith(1);
     expect(globalThis.TfitCameraRuntime.initCameraRuntime).toHaveBeenCalledTimes(1);
+    expect(globalThis.TfitLoadingProgress.updateLoadingProgress).toHaveBeenCalledWith({
+      label: 'Starting camera',
+      loaded: 1,
+      total: 1
+    });
+    expect(globalThis.TfitLoadingProgress.updateLoadingProgress).toHaveBeenLastCalledWith({
+      label: 'Ready',
+      loaded: 1,
+      total: 1
+    });
   });
 
   it('delegates draw to the screen router', () => {

@@ -1,6 +1,7 @@
 (function(root) {
   const { GAME_LENGTH, GAME_LEVEL, MENUTYPE } = root.TfitConfig;
   const { loadAssetsIntoState } = root.TfitAssets;
+  const { updateLoadingProgress } = root.TfitLoadingProgress;
   const {
     positionCanvas: positionAppCanvas,
     resizeCanvasLayout: resizeAppCanvas,
@@ -17,12 +18,15 @@
       gameLevel: GAME_LEVEL,
       loadImage: root.loadImage,
       loadSound: root.loadSound,
-      menuTypes: MENUTYPE
+      menuTypes: MENUTYPE,
+      onProgress: updateLoadingProgress
     });
   }
 
   async function setup() {
+    updateLoadingProgress({ label: "Loading assets", loaded: 0, total: 1 });
     await loadAssets();
+    updateLoadingProgress({ label: "Preparing ring", loaded: 1, total: 1 });
     root.frameRate(60);
     root.angleMode(root.DEGREES);
 
@@ -32,7 +36,9 @@
     positionAppCanvas(root.cnv);
     fetchSong(1);
 
+    updateLoadingProgress({ label: "Starting camera", loaded: 1, total: 1 });
     await initCameraRuntime();
+    updateLoadingProgress({ label: "Ready", loaded: 1, total: 1 });
   }
 
   function draw() {

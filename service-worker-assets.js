@@ -12,6 +12,7 @@ self.CORE_ASSETS=[
   "./js/runtime-utils.js",
   "./js/layout-state.js",
   "./js/ui-state.js",
+  "./js/loading-progress.js",
   "./js/pose-state.js",
   "./js/calibration-state.js",
   "./js/timing-state.js",

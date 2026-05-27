@@ -62,6 +62,7 @@ describe('loadGameAssets', () => {
   it('loads menu, settings, boxer, opponent, and sound assets into the app shape', async () => {
     const imagePaths = [];
     const soundPaths = [];
+    const progressEvents = [];
 
     const assets = await loadGameAssets({
       gameLength: {
@@ -83,7 +84,8 @@ describe('loadGameAssets', () => {
       menuTypes: {
         "0": "main",
         "1": "settings"
-      }
+      },
+      onProgress: event => progressEvents.push(event)
     });
 
     expect(assets.images.backgrounds[0]).toEqual({ image: 'assets/backgrounds/0.jpg' });
@@ -112,6 +114,16 @@ describe('loadGameAssets', () => {
       'assets/sounds/well_done.mp3',
       'assets/sounds/your_guard.mp3'
     ]);
+    expect(progressEvents[0]).toEqual({
+      label: 'Loading assets',
+      loaded: 0,
+      total: 132
+    });
+    expect(progressEvents.at(-1)).toEqual({
+      label: 'Loading assets',
+      loaded: 132,
+      total: 132
+    });
   });
 
   it('loads assets directly into the runtime containers', async () => {

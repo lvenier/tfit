@@ -117,15 +117,54 @@
     });
   }
 
+  function createTrackedLoader(loadAsset, progress) {
+    return async path => {
+      const asset = await loadAsset(path);
+      progress.loaded += 1;
+      progress.onProgress({
+        label: progress.label,
+        loaded: progress.loaded,
+        total: progress.total
+      });
+      return asset;
+    };
+  }
+
+  function countGameAssets({ gameLength, gameLevel, menuTypes }) {
+    return Object.keys(menuTypes).length +
+      7 +
+      Object.keys(gameLevel).length +
+      Object.keys(gameLength).length +
+      5 +
+      42 +
+      1 +
+      42 +
+      17 +
+      12;
+  }
+
   async function loadGameAssets({
     gameLength,
     gameLevel,
     loadImage,
     loadSound,
-    menuTypes
+    menuTypes,
+    onProgress = () => {}
   }) {
-    const loadImageLimited = createConcurrentLoader(loadImage, 8);
-    const loadSoundLimited = createConcurrentLoader(loadSound, 4);
+    const progress = {
+      label: "Loading assets",
+      loaded: 0,
+      onProgress,
+      total: countGameAssets({ gameLength, gameLevel, menuTypes })
+    };
+    progress.onProgress({
+      label: progress.label,
+      loaded: progress.loaded,
+      total: progress.total
+    });
+
+    const loadImageLimited = createTrackedLoader(createConcurrentLoader(loadImage, 8), progress);
+    const loadSoundLimited = createTrackedLoader(createConcurrentLoader(loadSound, 4), progress);
     const [
       backgroundImages,
       framerateButtonImage,
