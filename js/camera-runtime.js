@@ -25,25 +25,60 @@
     return true;
   }
 
+  function isSecureCameraOrigin(location = root.location) {
+    if (!location) {
+      return true;
+    }
+    return location.protocol === "https:" ||
+      location.hostname === "localhost" ||
+      location.hostname === "127.0.0.1";
+  }
+
+  function cameraAccessErrorMessage(reason, location = root.location) {
+    if (!isSecureCameraOrigin(location)) {
+      return "Camera access requires HTTPS unless you are running on localhost.";
+    }
+
+    if (reason && reason.name === "NotAllowedError") {
+      return "Camera permission was blocked. Allow camera access in your browser settings, then reload Box4Fit.";
+    }
+
+    if (reason && reason.name === "NotFoundError") {
+      return "No camera was found. Connect a webcam, then reload Box4Fit.";
+    }
+
+    if (reason && reason.name === "NotReadableError") {
+      return "The camera is already in use by another app. Close the other app, then reload Box4Fit.";
+    }
+
+    return "Camera access is not available in this browser.";
+  }
+
   async function initCameraRuntime({
     captureFactory = root.createCapture,
+    location = root.location,
     modelFactory = root.ml5.bodyPose,
     modelUrl = "js/ml5js/model.json",
     videoMode = root.VIDEO
   } = {}) {
     try {
       video = captureFactory(videoMode, { flipped: true });
-    } catch {
-      error = "Camera access is not available in this browser.";
+    } catch (reason) {
+      error = cameraAccessErrorMessage(reason, location);
       return false;
     }
 
     video.hide();
 
-    bodyPose = await modelFactory(MODELS[poseModelIndex], {
-      modelUrl,
-      flipped: true
-    });
+    try {
+      bodyPose = await modelFactory(MODELS[poseModelIndex], {
+        modelUrl,
+        flipped: true
+      });
+    } catch {
+      error = "Pose detection could not load. Check your connection or refresh Box4Fit.";
+      return false;
+    }
 
     return startPoseDetection();
   }
@@ -61,9 +96,11 @@
   }
 
   const api = {
+    cameraAccessErrorMessage,
     checkStartCondition,
     gotPoses,
     initCameraRuntime,
+    isSecureCameraOrigin,
     startPoseDetection,
     stopPoseDetection
   };

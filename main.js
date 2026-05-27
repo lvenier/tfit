@@ -6,7 +6,12 @@ app.commandLine.appendSwitch('gtk-version', '3');
 function createWindow() {
   const win = new BrowserWindow({
     fullscreen: true,
-    autoHideMenuBar: true
+    autoHideMenuBar: true,
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true
+    }
   });
   win.loadFile(path.join(__dirname, 'index.html'));
 }

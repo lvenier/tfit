@@ -53,3 +53,21 @@ test('shows a readable portrait orientation overlay on narrow screens', async ({
   const overlayText = await page.evaluate(() => getComputedStyle(document.body, '::before').content);
   expect(overlayText).toContain('Rotate your device to landscape');
 });
+
+test('reloads the app shell from the service worker while offline', async ({ page }) => {
+  await waitForGameCanvas(page);
+
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.ready;
+  });
+
+  try {
+    await page.context().setOffline(true);
+    await page.reload();
+
+    await expect(page).toHaveTitle('Box4Fit');
+    await expect(page.locator('canvas')).toBeVisible({ timeout: 20_000 });
+  } finally {
+    await page.context().setOffline(false);
+  }
+});

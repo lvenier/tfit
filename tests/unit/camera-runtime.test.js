@@ -92,9 +92,11 @@ describe('TfitCameraRuntime exports', () => {
     const api = installGlobals();
 
     expect(Object.keys(api).sort()).toEqual([
+      'cameraAccessErrorMessage',
       'checkStartCondition',
       'gotPoses',
       'initCameraRuntime',
+      'isSecureCameraOrigin',
       'startPoseDetection',
       'stopPoseDetection'
     ]);
@@ -177,6 +179,73 @@ describe('pose detection lifecycle', () => {
     })).resolves.toBe(false);
 
     expect(globalThis.error).toBe('Camera access is not available in this browser.');
+  });
+
+  it('records specific camera permission and origin errors', async () => {
+    const api = installGlobals();
+
+    await expect(api.initCameraRuntime({
+      captureFactory: () => {
+        throw Object.assign(new Error('blocked'), { name: 'NotAllowedError' });
+      },
+      location: {
+        hostname: 'example.com',
+        protocol: 'https:'
+      },
+      modelFactory: vi.fn()
+    })).resolves.toBe(false);
+
+    expect(globalThis.error).toBe(
+      'Camera permission was blocked. Allow camera access in your browser settings, then reload Box4Fit.'
+    );
+  });
+
+  it('prefers the HTTPS camera guidance on insecure origins', async () => {
+    const api = installGlobals();
+
+    await expect(api.initCameraRuntime({
+      captureFactory: () => {
+        throw Object.assign(new Error('blocked'), { name: 'NotAllowedError' });
+      },
+      location: {
+        hostname: 'example.com',
+        protocol: 'http:'
+      },
+      modelFactory: vi.fn()
+    })).resolves.toBe(false);
+
+    expect(globalThis.error).toBe(
+      'Camera access requires HTTPS unless you are running on localhost.'
+    );
+  });
+
+  it('describes missing and busy camera errors', () => {
+    const api = installGlobals();
+    const secureOrigin = {
+      hostname: 'localhost',
+      protocol: 'http:'
+    };
+
+    expect(api.cameraAccessErrorMessage({ name: 'NotFoundError' }, secureOrigin)).toBe(
+      'No camera was found. Connect a webcam, then reload Box4Fit.'
+    );
+    expect(api.cameraAccessErrorMessage({ name: 'NotReadableError' }, secureOrigin)).toBe(
+      'The camera is already in use by another app. Close the other app, then reload Box4Fit.'
+    );
+  });
+
+  it('records a readable error when the pose model fails to load', async () => {
+    const createdVideo = { hide: vi.fn() };
+    const api = installGlobals({ bodyPose: null, video: null });
+
+    await expect(api.initCameraRuntime({
+      captureFactory: vi.fn(() => createdVideo),
+      modelFactory: vi.fn(() => Promise.reject(new Error('missing model')))
+    })).resolves.toBe(false);
+
+    expect(createdVideo.hide).toHaveBeenCalledTimes(1);
+    expect(globalThis.error).toBe('Pose detection could not load. Check your connection or refresh Box4Fit.');
+    expect(globalThis.isDetecting).toBe(false);
   });
 });
 

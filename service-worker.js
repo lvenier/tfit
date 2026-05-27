@@ -1,55 +1,10 @@
-importScripts('/service-worker-version.js');
+importScripts('/service-worker-version.js', '/service-worker-assets.js');
 const CACHE_NAME = `box4fit-v${self.APP_VERSION}`;
-
-const CORE_ASSETS = [
-  './',
-  './index.html',
-  './js/version.js',
-  './style.css',
-  './js/game-utils.js',
-  './js/game-config.js',
-  './js/game-state.js',
-  './js/runtime-utils.js',
-  './js/layout-state.js',
-  './js/ui-state.js',
-  './js/pose-state.js',
-  './js/calibration-state.js',
-  './js/timing-state.js',
-  './js/game-assets.js',
-  './js/game-calibration.js',
-  './js/game-input.js',
-  './js/game-logic.js',
-  './js/game-round.js',
-  './js/game-render.js',
-  './js/game-score.js',
-  './js/game-flow.js',
-  './js/app-input-actions.js',
-  './js/app-events.js',
-  './js/camera-runtime.js',
-  './js/settings-screen.js',
-  './js/pose-detection.js',
-  './js/fight-mode.js',
-  './js/pad-mode.js',
-  './js/shadow-mode.js',
-  './js/screen-router.js',
-  './js/app-lifecycle.js',
-  './js/app-bootstrap.js',
-  './js/app.js',
-  './js/p5js/p5.js',
-  './js/p5js/p5.sound.js',
-  './js/ml5js/ml5.min.js',
-  './js/ml5js/model.json',
-  './js/ml5js/group1-shard1of3.bin',
-  './js/ml5js/group1-shard2of3.bin',
-  './js/ml5js/group1-shard3of3.bin',
-  './assets/logos/logo.256.png',
-  './assets/logos/logo.512.rounded.png'
-];
 
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(CORE_ASSETS))
+      .then(cache => cache.addAll(self.CORE_ASSETS))
       .then(() => self.skipWaiting())
   );
 });
