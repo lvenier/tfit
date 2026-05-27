@@ -87,11 +87,11 @@ canvas {
 }
 
 .loading-progress::-webkit-progress-value {
-  background: #2fb7b3;
+  background: #A020F0;
 }
 
 .loading-progress::-moz-progress-bar {
-  background: #2fb7b3;
+  background: #A020F0;
 }
 
 @keyframes rotation {

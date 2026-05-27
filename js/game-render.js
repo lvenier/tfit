@@ -43,7 +43,7 @@
     noStroke();
     fill(255, 255, 255, 42);
     rect(x, y, progressWidth, progressHeight, progressHeight);
-    fill(47, 183, 179, 230);
+    fill(160, 32, 240, 230);
     rect(
       x - progressWidth / 2 + (progressWidth * countdown.progress) / 2,
       y,
