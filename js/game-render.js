@@ -235,17 +235,12 @@
     if (gameState.feet_position === 1) {image(images.rightFoot, layout.width / 2 - layout.objectPoseSize / 2, 50, layout.objectPoseSize, layout.objectPoseSize);}
   }
 
-  function renderShadowResult() {
-    const layout = layoutSnapshot();
-
-    image(images.backgrounds[0], 0, 0, layout.width, layout.height);
+  function buildShadowResult() {
     gameState.score = 0;
     for (const element of gameState.arrayScore) {
       gameState.score += element;
     }
-    textSize(20 * layout.coef);
-    text('Score: ' + gameState.score + " / " + gameState.score_max_prev, Math.trunc(layout.width / 2.5) + 20 * layout.coef, Math.trunc(layout.height / 5));
-    textSize(10 * layout.coef);
+
     gameState.song_result = {};
     for (const move of gameState.curMoves) {
       if (move.type === 0 || move.type === 10) {
@@ -266,23 +261,111 @@
     }
     gameState.song_result.score = gameState.score;
     gameState.song_result.length = gameState.curMoves.length;
-    let num = 0;
-    for (const mt of Object.keys(gameState.song_result)) {
-      if (["score", "length"].includes(mt)) {continue;}
-      fill(255);
-      textSize(10 * layout.coef);
-      text(gameState.song_result[mt.toString()].success + " / " + gameState.song_result[mt.toString()].total, Math.trunc((2 + 2 * (num % 2)) * layout.width / 8) + 100 * layout.coef * (num % 2), Math.trunc(layout.height / 5 + 30 + 30 * Math.ceil((num + 1) / 2) * layout.coef));
-      const result = gameState.song_result[mt.toString()];
-      let h = "R_";
-      if ([1, 3, 5, 7].includes(result.type)) {h = "L_";}
-      const display = root.TfitGameLogic.moveDisplay(result.type, gameState.feet_position, 255);
-      if (display) {fill(...display.color);}
-      circle(Math.trunc((2 + 2 * (num % 2)) * layout.width / 8) + 100 * layout.coef * (num % 2) + 100, Math.trunc(layout.height / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * layout.coef), layout.objectPoseSize / 2);
-      fill(255);
-      textSize(5 * layout.coef);
-      text(h + result.text, Math.trunc((2 + 2 * (num % 2)) * layout.width / 8) + 100 * layout.coef * (num % 2) + 84, Math.trunc(layout.height / 5 + 25 + 30 * Math.ceil((num + 1) / 2) * layout.coef));
-      num++;
+
+    return Object.keys(gameState.song_result)
+      .filter(key => !["score", "length"].includes(key))
+      .map(key => gameState.song_result[key]);
+  }
+
+  function moveSideLabel(type) {
+    return [1, 3, 5, 7].includes(type) ? "L" : "R";
+  }
+
+  function renderShadowResultRow(result, index, layout, panel) {
+    const column = index % panel.columns;
+    const row = Math.floor(index / panel.columns);
+    const columnX = panel.x + 16 * layout.coef + column * panel.columnWidth;
+    const rowWidth = panel.columnWidth - 10 * layout.coef;
+    const y = panel.rowsTop + row * panel.rowHeight;
+    const labelX = columnX + 18 * layout.coef;
+    const textX = columnX + 42 * layout.coef;
+    const barX = columnX + 98 * layout.coef;
+    const barY = y + 9 * layout.coef;
+    const barWidth = Math.max(28 * layout.coef, rowWidth - 110 * layout.coef);
+    const ratio = result.total > 0 ? result.success / result.total : 0;
+
+    fill(255, 255, 255, 24);
+    rect(columnX, y - 11 * layout.coef, rowWidth, 25 * layout.coef, 6 * layout.coef);
+
+    const display = root.TfitGameLogic.moveDisplay(result.type, gameState.feet_position, 255);
+    if (display) {
+      fill(...display.color);
+    } else {
+      fill(255, 255, 255, 160);
     }
+    circle(labelX, y + 2 * layout.coef, 16 * layout.coef);
+    fill(255);
+    textSize(6 * layout.coef);
+    textAlign(CENTER, CENTER);
+    text(moveSideLabel(result.type) + " " + result.text, labelX, y + 2 * layout.coef);
+
+    fill(255, 255, 255, 230);
+    textSize(8 * layout.coef);
+    textAlign(LEFT, CENTER);
+    text(result.success + " / " + result.total, textX, y + 2 * layout.coef);
+
+    fill(255, 255, 255, 42);
+    rect(barX, barY, barWidth, 5 * layout.coef, 4 * layout.coef);
+    fill(160, 32, 240, 225);
+    rect(barX, barY, barWidth * ratio, 5 * layout.coef, 4 * layout.coef);
+  }
+
+  function renderShadowResult() {
+    const layout = layoutSnapshot();
+    const results = buildShadowResult();
+    const scoreMax = Math.max(gameState.score_max_prev, 1);
+    const scoreRatio = Math.max(0, Math.min(gameState.score / scoreMax, 1));
+    const panel = {
+      height: Math.min(layout.height - 32 * layout.coef, 320 * layout.coef),
+      width: Math.min(layout.width - 44 * layout.coef, 500 * layout.coef)
+    };
+    panel.x = (layout.width - panel.width) / 2;
+    panel.y = (layout.height - panel.height) / 2;
+    panel.columns = results.length > 4 ? 2 : 1;
+    panel.columnWidth = (panel.width - 32 * layout.coef) / panel.columns;
+    panel.rowsTop = panel.y + 150 * layout.coef;
+    panel.rowHeight = Math.min(
+      30 * layout.coef,
+      Math.max(22 * layout.coef, (panel.y + panel.height - 22 * layout.coef - panel.rowsTop) / Math.max(Math.ceil(results.length / panel.columns), 1))
+    );
+
+    fill(0, 0, 0, 184);
+    rect(panel.x, panel.y, panel.width, panel.height, 12 * layout.coef);
+    fill(255, 255, 255, 30);
+    rect(panel.x + 10 * layout.coef, panel.y + 10 * layout.coef, panel.width - 20 * layout.coef, panel.height - 20 * layout.coef, 8 * layout.coef);
+
+    fill(255);
+    textAlign(CENTER, CENTER);
+    textStyle(BOLD);
+    textSize(18 * layout.coef);
+    text("Shadow Results", layout.width / 2, panel.y + 30 * layout.coef);
+
+    noFill();
+    stroke(255, 255, 255, 54);
+    strokeWeight(7 * layout.coef);
+    ellipse(layout.width / 2, panel.y + 82 * layout.coef, 60 * layout.coef, 60 * layout.coef);
+    stroke(160, 32, 240, 230);
+    arc(layout.width / 2, panel.y + 82 * layout.coef, 60 * layout.coef, 60 * layout.coef, -90, -90 + 360 * scoreRatio);
+    noStroke();
+    fill(255);
+    textSize(20 * layout.coef);
+    text(gameState.score, layout.width / 2, panel.y + 77 * layout.coef);
+    textStyle(NORMAL);
+    textSize(8 * layout.coef);
+    text("/ " + gameState.score_max_prev, layout.width / 2, panel.y + 96 * layout.coef);
+
+    fill(255, 255, 255, 210);
+    textSize(9 * layout.coef);
+    text("Move accuracy", layout.width / 2, panel.y + 126 * layout.coef);
+
+    textAlign(LEFT, CENTER);
+    for (let index = 0; index < results.length; index++) {
+      renderShadowResultRow(results[index], index, layout, panel);
+    }
+
+    textAlign(LEFT, CENTER);
+    textStyle(NORMAL);
+    noStroke();
   }
 
   function renderMoveShape(move, objectPoseSize, pairedX) {
