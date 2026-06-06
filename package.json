@@ -38,7 +38,7 @@
     },
     "devDependencies": {
         "@playwright/test": "^1.60.0",
-        "@vitest/coverage-v8": "^4.1.7",
+        "@vitest/coverage-v8": "^4.1.8",
         "electron": "*",
         "electron-builder": "*",
         "electron-packager": "*",
