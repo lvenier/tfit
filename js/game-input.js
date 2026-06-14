@@ -71,7 +71,9 @@
 
     const centerXHit = isWithin(mouseX, myWindowWidth / 2 - 40 * coef, myWindowWidth / 2 + 60 * coef);
 
-    if (menu === 0 && isWithin(mouseX, Math.trunc(myWindowWidth / 6), Math.trunc(myWindowWidth / 6) + 100 * coef)) {
+    const menuButtonsOffset = 20 * coef;
+
+    if (menu === 0 && isWithin(mouseX, Math.trunc(myWindowWidth / 6 + menuButtonsOffset), Math.trunc(myWindowWidth / 6 + menuButtonsOffset + 100 * coef))) {
       if (isWithin(mouseY, Math.trunc(myWindowHeight / 6 + 300 * coef), Math.trunc(myWindowHeight / 6 + 350 * coef))) {
         return { click: true, type: "open_settings" };
       }
@@ -136,6 +138,9 @@
   }
 
   function keyAction({ gameCalibration, gameStarted, key, menu }) {
+    if (gameCalibration && ['s', 'S'].includes(key) && menu !== 1) {
+      return { type: "stop_calibration" };
+    }
     if (['b', 'B'].includes(key) && [1, 2, 3, 4].includes(menu) && !gameStarted) {
       return { type: "back_to_menu" };
     }

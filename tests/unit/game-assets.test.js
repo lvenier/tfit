@@ -51,8 +51,10 @@ describe('asset state factories', () => {
     });
     expect(sounds).toMatchObject({
       click: null,
+      doorClose: null,
       keepTrying: null,
       punch: null,
+      doorOpen: null,
       yourGuard: null
     });
   });
@@ -104,8 +106,10 @@ describe('loadGameAssets', () => {
       'assets/sounds/awesome.mp3',
       'assets/sounds/click.mp3',
       'assets/sounds/continue.mp3',
+      'assets/sounds/door_close.mp3',
       'assets/sounds/good.mp3',
       'assets/sounds/great.mp3',
+      'assets/sounds/door_open.mp3',
       'assets/sounds/keep_trying.mp3',
       'assets/sounds/letsfight.mp3',
       'assets/sounds/perfect.mp3',
@@ -117,12 +121,12 @@ describe('loadGameAssets', () => {
     expect(progressEvents[0]).toEqual({
       label: 'Loading assets',
       loaded: 0,
-      total: 132
+      total: 134
     });
     expect(progressEvents.at(-1)).toEqual({
       label: 'Loading assets',
-      loaded: 132,
-      total: 132
+      loaded: 134,
+      total: 134
     });
   });
 

@@ -27,6 +27,155 @@
     snapshot: layoutSnapshot
   } = root.TfitLayoutState;
 
+  const DOOR_ANIMATION_DURATION_FRAMES = 40;
+  const DOOR_ANIMATION_HOLD_FRAMES = 10;
+  const MENU_BUTTON_TRANSITIONS = {
+    back_to_menu: {
+      menu: 0
+    },
+    open_settings: {
+      menu: 1
+    },
+    open_shadow: {
+      menu: 2,
+      clearCurMoves: true,
+      loadSongmoves: true
+    },
+    open_pad: {
+      menu: 3,
+      clearCurMoves: true,
+      loadSongmoves: true
+    },
+    open_fight: {
+      menu: 4,
+      clearCurMoves: true,
+      loadSongmoves: true,
+      resetOpponent: true
+    }
+  };
+
+  function menuButtonTransition(button) {
+    return MENU_BUTTON_TRANSITIONS[button] ? { ...MENU_BUTTON_TRANSITIONS[button], button } : null;
+  }
+
+  function applyMenuButtonTransition(transition) {
+    if (!transition) {
+      return;
+    }
+
+    if (Number.isInteger(transition.menu)) {
+      gameState.menu = transition.menu;
+    }
+    if (transition.clearCurMoves) {
+      gameState.curMoves = [];
+    }
+    if (transition.loadSongmoves) {
+      loadSongmoves();
+    }
+    if (transition.resetOpponent) {
+      gameState.my_opponent = cloneOpponent(gameState.opponent);
+    }
+  }
+
+  function applyPendingMenuButtonTransition() {
+    const transition = gameState.menuButtonAnimation?.pendingTransition;
+    if (!transition) {
+      return false;
+    }
+
+    applyMenuButtonTransition(transition);
+    gameState.menuButtonAnimation.pendingTransition = null;
+    return true;
+  }
+
+  function queueMenuDoorAnimation(button) {
+    const transition = menuButtonTransition(button);
+    const layout = layoutSnapshot();
+    if (!transition) {
+      return;
+    }
+
+    const closeFrames = Math.max(1, Math.floor(DOOR_ANIMATION_DURATION_FRAMES / 2));
+    const transitionDelayMs = Math.max(1, Math.round(closeFrames * (1000 / 60)));
+
+    if (gameState.menuButtonAnimation?.transitionTimeout) {
+      clearTimeout(gameState.menuButtonAnimation.transitionTimeout);
+    }
+
+    gameState.menuButtonAnimation = {
+      active: true,
+      button,
+      duration: DOOR_ANIMATION_DURATION_FRAMES,
+      holdFrames: DOOR_ANIMATION_HOLD_FRAMES,
+      frame: 0,
+      x: 0,
+      y: 0,
+      width: layout.width,
+      height: layout.height,
+      progress: 0,
+      transitionTimeout: setTimeout(() => {
+        if (gameState.menuButtonAnimation?.pendingTransition) {
+          applyPendingMenuButtonTransition();
+        }
+      }, transitionDelayMs),
+      pendingTransition: transition
+    };
+  }
+
+  function clearMenuDoorTransition() {
+    if (gameState.menuButtonAnimation?.transitionTimeout) {
+      clearTimeout(gameState.menuButtonAnimation.transitionTimeout);
+    }
+    if (gameState.menuButtonAnimation) {
+      gameState.menuButtonAnimation.transitionTimeout = null;
+      gameState.menuButtonAnimation.pendingTransition = null;
+    }
+  }
+
+  function queueMenuRestore() {
+    const appState = root.TfitState?.gameState || root.gameState;
+
+    if (!appState) {
+      return;
+    }
+
+    if (appState.menuButtonAnimation?.restoreTimeout) {
+      clearTimeout(appState.menuButtonAnimation.restoreTimeout);
+    }
+
+    if (!appState.menuButtonAnimation) {
+      appState.menuButtonAnimation = {
+        active: false,
+        button: null,
+        duration: DOOR_ANIMATION_DURATION_FRAMES,
+        holdFrames: DOOR_ANIMATION_HOLD_FRAMES,
+        frame: 0,
+        x: 0,
+        y: 0,
+        width: layoutSnapshot().width,
+        height: layoutSnapshot().height,
+        progress: 0
+      };
+    }
+
+    appState.menuButtonAnimation.restoreTimeout = setTimeout(() => {
+      if (!appState.gameCalibration && !appState.gameStarted) {
+        appState.menu = 1;
+      }
+      if (appState.menuButtonAnimation) {
+        appState.menuButtonAnimation.restoreTimeout = null;
+      }
+    }, 16);
+  }
+
+  function handleMenuOpenAction(button, useDoorAnimation) {
+    if (useDoorAnimation) {
+      queueMenuDoorAnimation(button);
+      return;
+    }
+    applyMenuButtonTransition(menuButtonTransition(button));
+  }
+
   function resetCalibrationDefaults() {
     const layout = layoutSnapshot();
     const defaults = calibrationDefaults(layout.width, layout.height, layout.objectPoseSize, layout.coef);
@@ -84,30 +233,23 @@
       return;
     }
     if (action.type === "open_settings") {
+      handleMenuOpenAction("open_settings", true);
       playClick();
-      gameState.menu = 1;
       return;
     }
     if (action.type === "open_shadow") {
+      handleMenuOpenAction("open_shadow", true);
       playClick();
-      gameState.menu = 2;
-      gameState.curMoves = [];
-      loadSongmoves();
       return;
     }
     if (action.type === "open_pad") {
+      handleMenuOpenAction("open_pad", true);
       playClick();
-      gameState.menu = 3;
-      gameState.curMoves = [];
-      loadSongmoves();
       return;
     }
     if (action.type === "open_fight") {
+      handleMenuOpenAction("open_fight", true);
       playClick();
-      gameState.menu = 4;
-      gameState.curMoves = [];
-      loadSongmoves();
-      gameState.my_opponent = cloneOpponent(gameState.opponent);
       return;
     }
     if (action.type === "cycle_frame_rate") {
@@ -149,6 +291,8 @@
       return;
     }
     if (action.type === "stop_calibration") {
+      clearMenuDoorTransition();
+      queueMenuRestore();
       gameState.gameCalibration = false;
       gameState.menu = 1;
       return;
@@ -168,7 +312,7 @@
     }
     if (action.type === "back_to_menu") {
       playClick();
-      gameState.menu = 0;
+      handleMenuOpenAction("back_to_menu", true);
       return;
     }
     if (action.type === "stop_current") {
@@ -207,13 +351,21 @@
   }
 
   function applyKeyInputAction() {
-    if (gameResultBool()) {return;}
-    applyInputAction(keyAction({
-      gameCalibration: gameState.gameCalibration,
-      gameStarted: gameState.gameStarted,
-      key,
-      menu: gameState.menu
-    }));
+    const isRecentResultVisible = gameResultBool();
+    /* c8 ignore else */
+    if (!isRecentResultVisible) {
+      const activeAnimation = gameState.menuButtonAnimation;
+      const menu = activeAnimation?.pendingTransition?.menu === 1 && activeAnimation?.active
+        ? 1
+        : gameState.menu;
+
+      applyInputAction(keyAction({
+        gameCalibration: gameState.gameCalibration,
+        gameStarted: gameState.gameStarted,
+        key,
+        menu
+      }));
+    }
   }
 
   function updateCalibrationFromPointer() {
@@ -232,17 +384,24 @@
   }
 
   const api = {
+    clearMenuDoorTransition,
+    applyMenuButtonTransition,
     applyCalibrationDragFlags,
     applyCalibrationUpdates,
     applyInputAction,
+    applyPendingMenuButtonTransition,
     applyKeyInputAction,
     applyPointerInputAction,
+    handleMenuOpenAction,
+    queueMenuDoorAnimation,
+    queueMenuRestore,
     resetCalibrationDefaults,
     updateCalibrationFromPointer
   };
 
   root.TfitAppInputActions = api;
 
+  /* c8 ignore next */
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;
   }

@@ -6,6 +6,17 @@
     arrayScore: [],
     curMoves: [],
     feet_position: 0,
+    menuButtonAnimation: {
+      active: false,
+      button: null,
+      duration: 18,
+      frame: 0,
+      height: 0,
+      progress: 0,
+      width: 0,
+      x: 0,
+      y: 0
+    },
     gameCalibration: false,
     gameCurrentSeries: 1,
     gameDuration: 0,

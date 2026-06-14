@@ -174,11 +174,33 @@ describe('TfitAppInputActions exports', () => {
       'applyCalibrationUpdates',
       'applyInputAction',
       'applyKeyInputAction',
+      'applyMenuButtonTransition',
+      'applyPendingMenuButtonTransition',
       'applyPointerInputAction',
+      'clearMenuDoorTransition',
+      'handleMenuOpenAction',
+      'queueMenuDoorAnimation',
+      'queueMenuRestore',
       'resetCalibrationDefaults',
       'updateCalibrationFromPointer'
     ]);
     expect(globalThis.TfitAppInputActions).toBe(api);
+  });
+
+  it('clears active menu door transitions when requested', () => {
+    const api = installGlobals();
+    vi.spyOn(globalThis, 'clearTimeout');
+
+    globalThis.gameState.menuButtonAnimation = {
+      transitionTimeout: 123,
+      pendingTransition: { menu: 1 }
+    };
+
+    api.clearMenuDoorTransition();
+
+    expect(clearTimeout).toHaveBeenCalledWith(123);
+    expect(globalThis.gameState.menuButtonAnimation.transitionTimeout).toBeNull();
+    expect(globalThis.gameState.menuButtonAnimation.pendingTransition).toBeNull();
   });
 
   it('supports the browser global path without CommonJS globals', () => {
@@ -226,14 +248,57 @@ describe('applyInputAction', () => {
     const api = installGlobals();
 
     api.applyInputAction({ click: true, type: 'open_shadow' });
+    expect(globalThis.gameState.menu).toBe(0);
+    expect(globalThis.TfitFlow.loadSongmoves).not.toHaveBeenCalled();
+    expect(globalThis.gameState.menuButtonAnimation).toMatchObject({
+      active: true,
+      button: 'open_shadow',
+      pendingTransition: { menu: 2, clearCurMoves: true, loadSongmoves: true }
+    });
+    expect(globalThis.sounds.click.play).toHaveBeenCalledTimes(1);
+    expect(api.applyPendingMenuButtonTransition()).toBe(true);
     expect(globalThis.gameState.menu).toBe(2);
     expect(globalThis.gameState.curMoves).toEqual([]);
-    expect(globalThis.sounds.click.play).toHaveBeenCalledTimes(1);
     expect(globalThis.TfitFlow.loadSongmoves).toHaveBeenCalledTimes(1);
 
     api.applyInputAction({ click: true, type: 'open_fight' });
+    expect(globalThis.gameState.menu).toBe(2);
+    expect(globalThis.gameState.menuButtonAnimation).toMatchObject({
+      active: true,
+      button: 'open_fight',
+      pendingTransition: { menu: 4, clearCurMoves: true, loadSongmoves: true, resetOpponent: true }
+    });
+    expect(globalThis.sounds.click.play).toHaveBeenCalledTimes(2);
+    expect(globalThis.gameState.my_opponent).toBeNull();
+    expect(api.applyPendingMenuButtonTransition()).toBe(true);
     expect(globalThis.gameState.menu).toBe(4);
+    expect(globalThis.gameState.curMoves).toEqual([]);
+    expect(globalThis.TfitFlow.loadSongmoves).toHaveBeenCalledTimes(2);
     expect(globalThis.gameState.my_opponent).toEqual({ id: 0, stamina: 6 });
+  });
+
+  it('covers menu transition fallback and no-op states', () => {
+    const api = installGlobals();
+
+    expect(api.applyPendingMenuButtonTransition()).toBe(false);
+    api.applyMenuButtonTransition(null);
+    expect(globalThis.gameState.menu).toBe(0);
+
+    api.queueMenuDoorAnimation('invalid_button');
+    expect(globalThis.gameState.menuButtonAnimation).toBeUndefined();
+
+    api.handleMenuOpenAction('open_shadow', false);
+    expect(globalThis.gameState.menu).toBe(2);
+    expect(globalThis.gameState.menuButtonAnimation).toBeUndefined();
+  });
+
+  it('handles non-integer menu transition values without changing current menu', () => {
+    const api = installGlobals();
+    api.applyMenuButtonTransition({ button: 'legacy', menu: '2', clearCurMoves: true });
+
+    expect(globalThis.gameState.menu).toBe(0);
+    expect(globalThis.gameState.curMoves).toEqual([]);
+    expect(globalThis.TfitFlow.loadSongmoves).not.toHaveBeenCalled();
   });
 
   it('cycles settings and persists the new values', () => {
@@ -275,6 +340,91 @@ describe('applyInputAction', () => {
     expect(dispatched[0]).toMatchObject({ key: 'r', code: 'KeyR' });
   });
 
+  it('leaves menu restore callback with active game states untouched', () => {
+    const api = installGlobals({
+      gameState: {
+        curMoves: [{ hit: false }],
+        gameCalibration: false,
+        gameLength: '60',
+        gameLengthIndex: 2,
+        gameOver: false,
+        gameSeries: 1,
+        gameStarted: true,
+        level: 0,
+        menu: 0,
+        my_opponent: null,
+        opponent: 0,
+        shadow_focus: 0
+      }
+    });
+
+    vi.useFakeTimers();
+    try {
+      api.queueMenuRestore();
+      expect(globalThis.gameState.menu).toBe(0);
+
+      vi.advanceTimersByTime(20);
+
+      expect(globalThis.gameState.menu).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('gracefully handles missing restore timeout on existing animation state', () => {
+    const api = installGlobals();
+    vi.spyOn(globalThis, 'clearTimeout');
+
+    api.queueMenuRestore();
+    expect(clearTimeout).not.toHaveBeenCalled();
+  });
+
+  it('applies menu restore timeout flow and clears existing restore timers', () => {
+    const api = installGlobals();
+    const restoreId = 99;
+
+    vi.useFakeTimers();
+    try {
+      vi.spyOn(globalThis, 'clearTimeout');
+
+      api.applyInputAction({ click: true, type: 'open_shadow' });
+      vi.advanceTimersByTime(340);
+      expect(globalThis.gameState.menu).toBe(2);
+      expect(globalThis.gameState.menuButtonAnimation.pendingTransition).toBeNull();
+
+      globalThis.gameState.menu = 0;
+      globalThis.gameState.menuButtonAnimation = {
+        active: false,
+        restoreTimeout: restoreId,
+        pendingTransition: null
+      };
+      api.queueMenuRestore();
+      expect(clearTimeout).toHaveBeenCalledWith(restoreId);
+      vi.advanceTimersByTime(20);
+      expect(globalThis.gameState.menu).toBe(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('no-ops menu restore when no app state is resolved', () => {
+    const api = installGlobals();
+    const originalGameState = globalThis.gameState;
+    const originalTfitState = globalThis.TfitState;
+
+    vi.useFakeTimers();
+    try {
+      delete globalThis.gameState;
+      delete globalThis.TfitState;
+      api.queueMenuRestore();
+      vi.advanceTimersByTime(20);
+    } finally {
+      globalThis.TfitState = originalTfitState;
+      globalThis.gameState = originalGameState;
+      vi.useRealTimers();
+    }
+  });
+
   it('handles simple navigation and no-op actions', () => {
     const api = installGlobals();
 
@@ -282,9 +432,23 @@ describe('applyInputAction', () => {
     expect(globalThis.gameState.menu).toBe(0);
 
     api.applyInputAction({ click: true, type: 'open_settings' });
+    expect(globalThis.gameState.menu).toBe(0);
+    expect(globalThis.gameState.menuButtonAnimation).toMatchObject({
+      active: true,
+      button: 'open_settings',
+      pendingTransition: { menu: 1 }
+    });
+    expect(api.applyPendingMenuButtonTransition()).toBe(true);
     expect(globalThis.gameState.menu).toBe(1);
 
     api.applyInputAction({ click: true, type: 'back_to_menu' });
+    expect(globalThis.gameState.menu).toBe(1);
+    expect(globalThis.gameState.menuButtonAnimation).toMatchObject({
+      active: true,
+      button: 'back_to_menu',
+      pendingTransition: { menu: 0 }
+    });
+    expect(api.applyPendingMenuButtonTransition()).toBe(true);
     expect(globalThis.gameState.menu).toBe(0);
 
     api.applyInputAction({ click: true, type: 'stop_current' });
@@ -292,6 +456,53 @@ describe('applyInputAction', () => {
 
     api.applyInputAction({ type: 'start_fight' });
     expect(globalThis.TfitFlow.letsfight).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not apply a pending menu transition when the timer resolves without one', () => {
+    const api = installGlobals({
+      TfitInput: {
+        keyAction: vi.fn(() => ({ type: 'none' })),
+        pointerAction: vi.fn(() => ({ type: 'none' }))
+      }
+    });
+
+    vi.useFakeTimers();
+    vi.spyOn(api, 'applyPendingMenuButtonTransition');
+
+    try {
+      api.queueMenuDoorAnimation('open_pad');
+      globalThis.gameState.menuButtonAnimation.pendingTransition = null;
+      vi.advanceTimersByTime(350);
+
+      expect(api.applyPendingMenuButtonTransition).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('skips restore-timeout menu-button cleanup if animation state is removed before callback', () => {
+    const api = installGlobals();
+
+    vi.useFakeTimers();
+    try {
+      api.queueMenuRestore();
+      globalThis.gameState.menu = 2;
+      globalThis.gameState.gameCalibration = true;
+      globalThis.gameState.menuButtonAnimation = undefined;
+
+      vi.advanceTimersByTime(20);
+      expect(globalThis.gameState.menu).toBe(2);
+    } finally {
+      vi.useRealTimers();
+    }
+
+  });
+
+  it('does not execute unknown action branch for non-calibration drag events', () => {
+    const api = installGlobals();
+    api.applyInputAction({ type: 'bogus' });
+    expect(globalThis.gameState.menu).toBe(0);
+    expect(globalThis.gameState.curMoves).toEqual([{ hit: false }]);
   });
 
   it('applies drag actions from the dispatcher', () => {
@@ -391,24 +602,71 @@ describe('calibration helpers and input adapters', () => {
       mouseX: 300,
       recentResult: false
     }));
-    expect(globalThis.gameState.menu).toBe(3);
+    expect(globalThis.gameState.menu).toBe(0);
+    expect(globalThis.gameState.menuButtonAnimation).toMatchObject({
+      button: 'open_pad',
+      pendingTransition: { menu: 3, clearCurMoves: true, loadSongmoves: true }
+    });
 
     api.applyKeyInputAction();
     expect(globalThis.TfitInput.keyAction).toHaveBeenCalledWith(expect.objectContaining({
       key: 's',
-      menu: 3
+      menu: 0
+    }));
+    expect(globalThis.gameState.menu).toBe(0);
+    expect(globalThis.gameState.menuButtonAnimation).toMatchObject({
+      active: true,
+      button: 'open_shadow',
+      pendingTransition: { menu: 2, clearCurMoves: true, loadSongmoves: true }
+    });
+    expect(api.applyPendingMenuButtonTransition()).toBe(true);
+    expect(globalThis.gameState.menu).toBe(2);
+  });
+
+  it('uses pending menu transition when menu button animation is active', () => {
+    const api = installGlobals({
+      TfitInput: {
+        keyAction: vi.fn(() => ({ type: 'none' })),
+        pointerAction: vi.fn(() => ({ type: 'none' }))
+      }
+    });
+    globalThis.gameState.menu = 4;
+    globalThis.gameState.menuButtonAnimation = {
+      active: true,
+      pendingTransition: { menu: 1 }
+    };
+
+    api.applyKeyInputAction();
+
+    expect(globalThis.TfitInput.keyAction).toHaveBeenCalledWith(expect.objectContaining({
+      menu: 1
+    }));
+  });
+
+  it('ignores pending transition override when override state is inactive', () => {
+    const api = installGlobals({
+      TfitInput: {
+        keyAction: vi.fn(() => ({ type: 'none' })),
+        pointerAction: vi.fn(() => ({ type: 'none' }))
+      }
+    });
+    globalThis.gameState.menu = 4;
+    globalThis.gameState.menuButtonAnimation = {
+      active: false,
+      pendingTransition: { menu: 1 }
+    };
+
+    api.applyKeyInputAction();
+
+    expect(globalThis.TfitInput.keyAction).toHaveBeenCalledWith(expect.objectContaining({
+      menu: 4
     }));
   });
 
   it('skips key actions while recent results are visible and updates calibration from pointer', () => {
-    const api = installGlobals({
-      TfitFlow: {
-        gameResultBool: vi.fn(() => true),
-        letsfight: vi.fn(),
-        loadSongmoves: vi.fn()
-      }
-    });
+    const api = installGlobals();
 
+    globalThis.TfitFlow.gameResultBool.mockReturnValue(true);
     api.applyKeyInputAction();
     expect(globalThis.TfitInput.keyAction).not.toHaveBeenCalled();
 
@@ -420,4 +678,23 @@ describe('calibration helpers and input adapters', () => {
     expect(globalThis.calibrationState.init_jab_y).toBe(111);
     expect(globalThis.calibrationState.right_init_pose_y).toBe(222);
   });
-});
+
+  it('does not handle key actions when game result is already visible', () => {
+    const keyAction = vi.fn(() => ({ type: 'open_shadow' }));
+    const api = installGlobals({
+      TfitInput: {
+        keyAction,
+        pointerAction: vi.fn(() => ({ type: 'none' }))
+      },
+      TfitFlow: {
+        gameResultBool: vi.fn(() => true),
+        letsfight: vi.fn(),
+        loadSongmoves: vi.fn()
+      }
+    });
+
+    api.applyKeyInputAction();
+
+    expect(keyAction).not.toHaveBeenCalled();
+  });
+}); 

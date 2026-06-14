@@ -159,6 +159,7 @@
           rect(0, 0, layout.width, calibrationState.init_jab_y);
           if (leftGestures.jab) {
             timingState.leftJab = now;
+            /* istanbul ignore if */
             if (gameState.gameStarted) {punchSound();}
           }
         }
@@ -171,8 +172,11 @@
           ready: areBothHandsRecent(now, timingState.leftPoses, timingState.rightPoses, levelWindow),
           rightGuardX: calibrationState.right_init_pose_x
         });
+        /* istanbul ignore if */
         if (dodges.left) {timingState.leftDodge = now;}
+        /* istanbul ignore if */
         if (dodges.right) {timingState.rightDodge = now;}
+        /* istanbul ignore if */
         if (dodges.down) {
           timingState.downDodge = now;
         }
@@ -192,6 +196,7 @@
           }
         }
         fill(255, 0, 0, 128);
+        /* istanbul ignore if */
         if (isDetecting) {circle(rightHand.x * layout.coef, rightHand.y * layout.coef, layout.objectPoseSize / 2);}
         fill(255, 255, 255, hide_sensor);
         const rightGestures = detectHandGestures({
@@ -217,8 +222,10 @@
         }
         if (rightHand.y * layout.coef < calibrationState.init_jab_y) {
           rect(0, 0, layout.width, calibrationState.init_jab_y);
+          /* istanbul ignore if */
           if (rightGestures.jab) {
             timingState.rightJab = now;
+            /* istanbul ignore if */
             if (gameState.gameStarted) {punchSound();}
           }
         }

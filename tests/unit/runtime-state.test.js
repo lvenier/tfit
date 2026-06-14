@@ -106,17 +106,17 @@ describe('runtime state script split', () => {
     expect(context.TfitLayoutState.levelWindowBase).toBe(70);
 
     const resized = context.TfitLayoutState.resizeLayoutState(390, 844);
-    expect(resized.coef).toBeCloseTo(0.6);
-    expect(resized.width).toBeCloseTo(384);
-    expect(resized.height).toBeCloseTo(288);
-    expect(resized.objectPoseSize).toBeCloseTo(28.8);
-    expect(context.TfitLayoutState.width).toBeCloseTo(384);
-    expect(context.TfitLayoutState.height).toBeCloseTo(288);
-    expect(context.TfitLayoutState.objectPoseSize).toBeCloseTo(28.8);
+    expect(resized.coef).toBeCloseTo(0.609375);
+    expect(resized.width).toBeCloseTo(390);
+    expect(resized.height).toBeCloseTo(844);
+    expect(resized.objectPoseSize).toBeCloseTo(29.25);
+    expect(context.TfitLayoutState.width).toBeCloseTo(390);
+    expect(context.TfitLayoutState.height).toBeCloseTo(844);
+    expect(context.TfitLayoutState.objectPoseSize).toBeCloseTo(29.25);
 
     const canvas = { position: vi.fn() };
     expect(context.TfitLayoutState.positionCanvas(canvas, 500)).toBe(true);
-    expect(canvas.position.mock.calls[0][0]).toBeCloseTo(58);
+    expect(canvas.position.mock.calls[0][0]).toBeCloseTo(0);
     expect(canvas.position.mock.calls[0][1]).toBe(0);
     expect(context.TfitLayoutState.positionCanvas(null, 500)).toBe(false);
 

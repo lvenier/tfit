@@ -32,8 +32,9 @@
   function drawDetectionProgress() {
     const layout = layoutSnapshot();
     const countdown = root.TfitGameLogic.detectStartCountdown({ errorTimer });
+    const panelHeight = 108 * layout.coef;
     const x = width / 2;
-    const y = height / 2 + 58 * layout.coef;
+    const y = height / 2 + panelHeight / 2 - 8 * layout.coef;
     const progressWidth = 260 * layout.coef;
     const progressHeight = 8 * layout.coef;
 
@@ -105,14 +106,18 @@
 
   function renderMainMenu() {
     const layout = layoutSnapshot();
+    const menuButtonOffset = 20 * layout.coef;
+    const menuImageSize = Math.min(layout.width * 0.58, layout.height * 0.65, 720);
+    const menuImageX = layout.width / 2 - menuImageSize / 2 + 40 * layout.coef;
+    const menuImageY = layout.height / 8 + 10 * layout.coef;
 
     fill(0, 0, 0);
     image(images.logo, layout.width - 60 * layout.coef, layout.height - 55 * layout.coef, 50 * layout.coef, 50 * layout.coef);
-    image(images.menu, layout.width / 2.5, layout.height / 8, layout.width / 2, layout.width / 2);
-    image(images.shadowButton, layout.width / 6, Math.trunc(layout.height / 6), 100 * layout.coef, 50 * layout.coef);
-    image(images.padButton, layout.width / 6, Math.trunc(layout.height / 6 + 100 * layout.coef), 100 * layout.coef, 50 * layout.coef);
-    image(images.fightMenuButton, layout.width / 6, Math.trunc(layout.height / 6 + 200 * layout.coef), 100 * layout.coef, 50 * layout.coef);
-    image(images.configMenuButton, layout.width / 6, Math.trunc(layout.height / 6 + 300 * layout.coef), 100 * layout.coef, 50 * layout.coef);
+    image(images.menu, menuImageX, menuImageY, menuImageSize, menuImageSize);
+    image(images.shadowButton, layout.width / 6 + menuButtonOffset, Math.trunc(layout.height / 6), 100 * layout.coef, 50 * layout.coef);
+    image(images.padButton, layout.width / 6 + menuButtonOffset, Math.trunc(layout.height / 6 + 100 * layout.coef), 100 * layout.coef, 50 * layout.coef);
+    image(images.fightMenuButton, layout.width / 6 + menuButtonOffset, Math.trunc(layout.height / 6 + 200 * layout.coef), 100 * layout.coef, 50 * layout.coef);
+    image(images.configMenuButton, layout.width / 6 + menuButtonOffset, Math.trunc(layout.height / 6 + 300 * layout.coef), 100 * layout.coef, 50 * layout.coef);
   }
 
   function renderBackButton() {
