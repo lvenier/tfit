@@ -27,8 +27,8 @@
     snapshot: layoutSnapshot
   } = root.TfitLayoutState;
 
-  const MENU_BUTTON_ANIMATION_DURATION = 40;
-  const MENU_BUTTON_ANIMATION_HOLD_FRAMES = 10;
+  const DOOR_ANIMATION_DURATION_FRAMES = 40;
+  const DOOR_ANIMATION_HOLD_FRAMES = 10;
   const MENU_BUTTON_TRANSITIONS = {
     back_to_menu: {
       menu: 0
@@ -95,7 +95,7 @@
       return;
     }
 
-    const closeFrames = Math.max(1, Math.floor(MENU_BUTTON_ANIMATION_DURATION / 2));
+    const closeFrames = Math.max(1, Math.floor(DOOR_ANIMATION_DURATION_FRAMES / 2));
     const transitionDelayMs = Math.max(1, Math.round(closeFrames * (1000 / 60)));
 
     if (gameState.menuButtonAnimation?.transitionTimeout) {
@@ -105,8 +105,8 @@
     gameState.menuButtonAnimation = {
       active: true,
       button,
-      duration: MENU_BUTTON_ANIMATION_DURATION,
-      holdFrames: MENU_BUTTON_ANIMATION_HOLD_FRAMES,
+      duration: DOOR_ANIMATION_DURATION_FRAMES,
+      holdFrames: DOOR_ANIMATION_HOLD_FRAMES,
       frame: 0,
       x: 0,
       y: 0,
@@ -147,8 +147,8 @@
       appState.menuButtonAnimation = {
         active: false,
         button: null,
-        duration: MENU_BUTTON_ANIMATION_DURATION,
-        holdFrames: MENU_BUTTON_ANIMATION_HOLD_FRAMES,
+        duration: DOOR_ANIMATION_DURATION_FRAMES,
+        holdFrames: DOOR_ANIMATION_HOLD_FRAMES,
         frame: 0,
         x: 0,
         y: 0,

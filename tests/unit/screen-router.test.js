@@ -488,8 +488,8 @@ describe('menu routing', () => {
     expect(globalThis.TfitAppInputActions.applyPendingMenuButtonTransition).toHaveBeenCalledTimes(1);
     expect(globalThis.sounds.doorClose.play).toHaveBeenCalledTimes(1);
     expect(globalThis.sounds.doorOpen.play).toHaveBeenCalledTimes(1);
-    expect(globalThis.sounds.doorClose.rate).toHaveBeenCalledWith(0.6);
-    expect(globalThis.sounds.doorOpen.rate).toHaveBeenCalledWith(0.6);
+    expect(globalThis.sounds.doorClose.rate).toHaveBeenCalledWith(0.8);
+    expect(globalThis.sounds.doorOpen.rate).toHaveBeenCalledWith(0.8);
     expect(globalThis.gameState.menu).toBe(4);
     expect(globalThis.gameState.menuButtonAnimation.active).toBe(false);
   });

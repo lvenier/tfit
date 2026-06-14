@@ -53,7 +53,7 @@
     gameResultBool
   } = root.TfitFlow;
 
-  const DOOR_SOUND_RATE = 0.6;
+  const DOOR_SOUND_RATE = 0.8;
   const DOOR_FILL_COLOR = [10, 11, 18, 255];
 
   function renderBackNavigation() {
