@@ -593,6 +593,128 @@ describe('fight mode rendering', () => {
     expect(globalThis.animationState.player).toMatchObject({ delay: 2, frame: 2 });
   });
 
+  it('does not reduce stamina when the same punch animation is not repeated consecutively', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 20, y: 30 },
+      nose: { confidence: 0.9, x: 10, y: 15 },
+      rightHand: { confidence: 0.9, x: 40, y: 50 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [{ hit: false, type: 2 }],
+        gameStarted: true,
+        gameTimer: 1,
+        gameTimerNext: 99,
+        moves: [],
+        my_opponent: { stamina: 6 },
+        opponent: 0
+      },
+      poses: [trackedPose],
+      timingState: {
+        leftDodge: 0,
+        leftHook: 0,
+        leftJab: 9850,
+        leftPoses: 9800,
+        leftUppercut: 0,
+        rightDodge: 0,
+        rightHook: 0,
+        rightJab: 0,
+        rightPoses: 0,
+        rightUppercut: 0
+      },
+      TfitPoseDetection: {
+        detectDodgeGestures: vi.fn(() => ({ left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: true, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderFightMode();
+
+    expect(globalThis.gameState.my_opponent.stamina).toBe(6);
+    expect(globalThis.animationState.player.type).toBe(1);
+    expect(globalThis.timingState.leftPoses).toBe(9500);
+  });
+
+  it('covers no-confidence branches for nose and hands', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.05, x: 20, y: 30 },
+      nose: { confidence: 0.05, x: 10, y: 15 },
+      rightHand: { confidence: 0.05, x: 40, y: 50 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [],
+        gameStarted: true,
+        gameTimer: 60,
+        gameTimerNext: 0,
+        moves: [1],
+        my_opponent: { stamina: 6 },
+        opponent: 0
+      },
+      poses: [trackedPose],
+      TfitPoseDetection: {
+        detectDodgeGestures: vi.fn(() => ({ left: true, right: true })),
+        detectHandGestures: vi.fn(() => ({ hook: true, jab: true, uppercut: true })),
+        hasPoseConfidence: vi.fn(() => false),
+        isInsideGuard: vi.fn(() => true),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderFightMode();
+
+    expect(globalThis.gameState.gameTimerNext).toBe(1);
+    expect(globalThis.gameState.curMoves).toEqual([]);
+    expect(globalThis.TfitPoseDetection.detectDodgeGestures).not.toHaveBeenCalled();
+    expect(globalThis.TfitPoseDetection.detectHandGestures).not.toHaveBeenCalled();
+    expect(calls.circle).toEqual([]);
+  });
+
+  it('covers opponent animation branch when opponent frame is below zero', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 20, y: 30 },
+      nose: { confidence: 0.9, x: 10, y: 15 },
+      rightHand: { confidence: 0.9, x: 40, y: 50 }
+    };
+    const api = installGlobals({
+      animationState: {
+        opponent: { delay: 0, frame: -2, type: 0 },
+        player: { delay: 0, frame: -1, type: 0 }
+      },
+      gameState: {
+        curMoves: [{ hit: false, type: 1 }],
+        feet_position: 0,
+        gameStarted: true,
+        gameTimer: 1,
+        gameTimerNext: 99,
+        moves: [],
+        my_opponent: { stamina: 6 },
+        opponent: 0
+      },
+      poses: [trackedPose],
+      TfitPoseDetection: {
+        detectDodgeGestures: vi.fn(() => ({ left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderFightMode();
+
+    expect(calls.image).toContainEqual([
+      globalThis.images.me,
+      640 / 3.5,
+      480 / 2,
+      640 / 2.2,
+      480 / 2
+    ]);
+  });
+
   it('marks opponent animation complete and resets player animation complete', () => {
     const trackedPose = {
       leftHand: { confidence: 0.9, x: 20, y: 30 },

@@ -181,6 +181,61 @@ describe('registerAppHandlers', () => {
     expect(installButton.hidden).toBe(true);
   });
 
+  it('hides the install button when clicked before any install prompt is available', async () => {
+    const api = installGlobals();
+    const handlers = {};
+    const installButton = {
+      addEventListener: vi.fn((type, handler) => {
+        handlers[`button:${type}`] = handler;
+      }),
+      hidden: false
+    };
+
+    api.registerInstallPrompt({
+      document: {
+        getElementById: vi.fn(() => installButton)
+      },
+      root: {
+        addEventListener: vi.fn()
+      }
+    });
+
+    await handlers['button:click']();
+
+    expect(installButton.hidden).toBe(true);
+  });
+
+  it('shows the install button again when install prompt throws', async () => {
+    const api = installGlobals();
+    const handlers = {};
+    const installButton = {
+      addEventListener: vi.fn((type, handler) => {
+        handlers[`button:${type}`] = handler;
+      }),
+      hidden: true
+    };
+    const promptEvent = {
+      preventDefault: vi.fn(),
+      prompt: vi.fn(() => Promise.reject(new Error('no prompt')))
+    };
+
+    api.registerInstallPrompt({
+      document: {
+        getElementById: vi.fn(() => installButton)
+      },
+      root: {
+        addEventListener: vi.fn((type, handler) => {
+          handlers[type] = handler;
+        })
+      }
+    });
+
+    handlers.beforeinstallprompt(promptEvent);
+    await handlers['button:click']();
+
+    expect(installButton.hidden).toBe(false);
+  });
+
   it('hides the install button after installation completes', () => {
     const api = installGlobals();
     const handlers = {};
