@@ -19,6 +19,21 @@ async function waitForGameCanvas(page) {
   await expect(page.locator('#p5_loading')).toBeHidden({ timeout: 20_000 });
 }
 
+async function waitForServiceWorkerReady(page, timeoutMs = 5000) {
+  return await page.evaluate(async (ms) => {
+    if (!('serviceWorker' in navigator)) {
+      return false;
+    }
+
+    return await Promise.race([
+      navigator.serviceWorker.ready
+        .then(() => true)
+        .catch(() => false),
+      new Promise(resolve => setTimeout(() => resolve(false), ms))
+    ]);
+  }, timeoutMs);
+}
+
 test('loads the game shell and creates a p5 canvas', async ({ page }) => {
   const consoleErrors = collectConsoleErrors(page);
 
@@ -50,16 +65,16 @@ test('shows a readable portrait orientation overlay on narrow screens', async ({
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
 
-  const overlayText = await page.evaluate(() => getComputedStyle(document.body, '::before').content);
-  expect(overlayText).toContain('Rotate your device to landscape');
+  await expect.poll(async () => {
+    return page.evaluate(() => getComputedStyle(document.body, '::before').content);
+  }).toContain('Rotate your device to landscape');
 });
 
 test('reloads the app shell from the service worker while offline', async ({ page }) => {
   await waitForGameCanvas(page);
 
-  await page.evaluate(async () => {
-    await navigator.serviceWorker.ready;
-  });
+  const serviceWorkerReady = await waitForServiceWorkerReady(page, 5000);
+  expect(serviceWorkerReady, 'service worker did not become ready within 5s').toBe(true);
 
   try {
     await page.context().setOffline(true);
