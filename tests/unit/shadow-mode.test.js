@@ -354,6 +354,37 @@ describe('shadow mode layout usage', () => {
     expect(calls.text).toContainEqual(['JAB', 440, 158]);
   });
 
+  it('leaves a punch miss untouched when a left-side move does not match gestures', () => {
+    const api = installGlobals({
+      gameState: {
+        curMoves: [{ hit: false, type: 1, x: 200, y: 170 }],
+        feet_position: 0,
+        gameStarted: true,
+        gameTimer: 1,
+        gameTimerNext: 99,
+        moves: []
+      },
+      TfitPoseDetection: {
+        areBothHandsRecent: vi.fn(() => true),
+        detectDodgeGestures: vi.fn(() => ({ down: false, left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(poses => poses[0])
+      }
+    });
+
+    api.renderShadowMode();
+
+    expect(globalThis.hitSuccess).not.toHaveBeenCalled();
+    expect(globalThis.TfitRender.renderMoveShape).toHaveBeenCalledWith(
+      expect.objectContaining({ hit: false, type: 1 }),
+      96,
+      440
+    );
+  });
+
   it('respects switch-guard cooldown and draws paired down-dodge text', () => {
     const api = installGlobals({
       gameState: {
@@ -503,6 +534,85 @@ describe('shadow mode layout usage', () => {
     expect(calls.rect).toContainEqual([0, 0, 120, 480]);
     expect(calls.rect).toContainEqual([0, 0, 640, 100]);
     expect(calls.rect).toContainEqual([520, 0, 520, 480]);
+  });
+
+  it('does not trigger left-jab/dodge updates when they are not detected', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 40, y: 40 },
+      nose: { confidence: 0.9, x: 10, y: 170 },
+      rightHand: { confidence: 0.05, x: 300, y: 40 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [],
+        gameCalibration: true,
+        gameStarted: false,
+        gameTimer: 0,
+        gameTimerNext: 0,
+        moves: []
+      },
+      poses: [trackedPose],
+      timingState: {
+        downDodge: 9000,
+        leftDodge: 111,
+        leftHook: 222,
+        leftJab: 333,
+        leftPoses: 10,
+        leftUppercut: 444,
+        rightDodge: 555,
+        rightHook: 666,
+        rightJab: 777,
+        rightPoses: 888,
+        rightUppercut: 999,
+        switchGuard: 0
+      },
+      TfitPoseDetection: {
+        areBothHandsRecent: vi.fn(() => true),
+        detectDodgeGestures: vi.fn(() => ({ down: false, left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn((hand) => hand && hand.x === 40),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderShadowMode();
+
+    expect(globalThis.timingState.leftPoses).toBe(10_000);
+    expect(globalThis.timingState.leftJab).toBe(333);
+    expect(globalThis.timingState.leftDodge).toBe(111);
+    expect(globalThis.timingState.leftHook).toBe(10_000);
+    expect(globalThis.timingState.leftUppercut).toBe(444);
+    expect(globalThis.timingState.rightDodge).toBe(555);
+    expect(globalThis.timingState.rightPoses).toBe(888);
+    expect(globalThis.punchSound).toHaveBeenCalledTimes(0);
+  });
+
+  it('renders right hand markers when detection is enabled', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.05, x: 300, y: 40 },
+      nose: { confidence: 0.9, x: 10, y: 170 },
+      rightHand: { confidence: 0.9, x: 540, y: 80 }
+    };
+    const api = installGlobals({
+      poses: [trackedPose],
+      isDetecting: true,
+      TfitPoseDetection: {
+        areBothHandsRecent: vi.fn(() => false),
+        detectDodgeGestures: vi.fn(() => ({ down: false, left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderShadowMode();
+
+    expect(calls.circle).toContainEqual([1080, 160, 48]);
+    expect(globalThis.punchSound).toHaveBeenCalledTimes(0);
   });
 
   it('updates uppercut timing and draws uppercut zones for both hands', () => {
@@ -691,6 +801,150 @@ describe('shadow mode layout usage', () => {
     expect(globalThis.punchSound).not.toHaveBeenCalled();
   });
 
+  it('keeps right jab inactive when gesture is not detected', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.05, x: 200, y: 40 },
+      nose: { confidence: 0.9, x: 10, y: 170 },
+      rightHand: { confidence: 0.9, x: 250, y: 40 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [],
+        gameCalibration: false,
+        gameStarted: true,
+        gameTimer: 0,
+        gameTimerNext: 0,
+        moves: []
+      },
+      poses: [trackedPose],
+      timingState: {
+        downDodge: 0,
+        leftDodge: 0,
+        leftHook: 0,
+        leftJab: 0,
+        leftPoses: 0,
+        leftUppercut: 0,
+        rightDodge: 0,
+        rightHook: 0,
+        rightJab: 777,
+        rightPoses: 0,
+        rightUppercut: 0,
+        switchGuard: 0
+      },
+      TfitPoseDetection: {
+        areBothHandsRecent: vi.fn(() => false),
+        detectDodgeGestures: vi.fn(() => ({ down: false, left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderShadowMode();
+
+    expect(globalThis.timingState.rightJab).toBe(777);
+    expect(globalThis.punchSound).toHaveBeenCalledTimes(0);
+    expect(calls.rect).toContainEqual([0, 0, 640, 100]);
+  });
+
+  it('updates left jab timing without sound when not started', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 40, y: 40 },
+      nose: { confidence: 0.9, x: 10, y: 170 },
+      rightHand: { confidence: 0.05, x: 250, y: 40 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [],
+        gameStarted: false,
+        gameTimer: 0,
+        gameTimerNext: 0,
+        moves: []
+      },
+      timingState: {
+        downDodge: 12,
+        leftDodge: 34,
+        leftHook: 56,
+        leftJab: 78,
+        leftPoses: 90,
+        leftUppercut: 9100,
+        rightDodge: 0,
+        rightHook: 0,
+        rightJab: 0,
+        rightPoses: 0,
+        rightUppercut: 0,
+        switchGuard: 0
+      },
+      poses: [trackedPose],
+      TfitPoseDetection: {
+        areBothHandsRecent: vi.fn(() => true),
+        detectDodgeGestures: vi.fn(() => ({ down: false, left: false, right: false })),
+        detectHandGestures: vi.fn(({ side }) => ({ hook: false, jab: side === 'left', uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn((hand) => hand && hand.x === 40),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderShadowMode();
+
+    expect(globalThis.timingState.leftJab).toBe(10_000);
+    expect(globalThis.timingState.leftPoses).toBe(10_000);
+    expect(globalThis.timingState.leftHook).toBe(10_000);
+    expect(globalThis.timingState.leftDodge).toBe(34);
+    expect(globalThis.punchSound).not.toHaveBeenCalled();
+  });
+
+  it('updates right jab timing without sound when not started', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.05, x: 200, y: 200 },
+      nose: { confidence: 0.9, x: 10, y: 170 },
+      rightHand: { confidence: 0.9, x: 250, y: 40 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [],
+        gameStarted: false,
+        gameTimer: 0,
+        gameTimerNext: 0,
+        moves: []
+      },
+      timingState: {
+        downDodge: 0,
+        leftDodge: 0,
+        leftHook: 0,
+        leftJab: 0,
+        leftPoses: 0,
+        leftUppercut: 0,
+        rightDodge: 0,
+        rightHook: 0,
+        rightJab: 111,
+        rightPoses: 0,
+        rightUppercut: 0,
+        switchGuard: 0
+      },
+      poses: [trackedPose],
+      TfitPoseDetection: {
+        areBothHandsRecent: vi.fn(() => false),
+        detectDodgeGestures: vi.fn(() => ({ down: false, left: false, right: false })),
+        detectHandGestures: vi.fn(({ side }) => ({ hook: false, jab: side === 'right', uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderShadowMode();
+
+    expect(globalThis.timingState.rightJab).toBe(10_000);
+    expect(globalThis.punchSound).not.toHaveBeenCalled();
+    expect(calls.rect).toContainEqual([0, 0, 640, 100]);
+  });
+
   it('keeps left guard feedback quiet when recent windows and gestures are absent', () => {
     const trackedPose = {
       leftHand: { confidence: 0.9, x: 100, y: 40 },
@@ -738,6 +992,525 @@ describe('shadow mode layout usage', () => {
     expect(globalThis.timingState.leftDodge).toBe(0);
     expect(globalThis.timingState.rightPoses).toBe(0);
     expect(globalThis.punchSound).not.toHaveBeenCalled();
+  });
+
+  it('executes active punch and dodge branches for both sides while game is running', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 40, y: 40 },
+      nose: { confidence: 0.9, x: 10, y: 170 },
+      rightHand: { confidence: 0.9, x: 540, y: 40 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [],
+        gameStarted: true,
+        gameTimer: 0,
+        gameTimerNext: 0,
+        moves: []
+      },
+      timingState: {
+        downDodge: 0,
+        leftDodge: 0,
+        leftHook: 9950,
+        leftJab: 0,
+        leftPoses: 0,
+        leftUppercut: 0,
+        rightDodge: 0,
+        rightHook: 9950,
+        rightJab: 0,
+        rightPoses: 0,
+        rightUppercut: 0,
+        switchGuard: 0
+      },
+      isDetecting: true,
+      poses: [trackedPose],
+      TfitPoseDetection: {
+        areBothHandsRecent: vi.fn(() => true),
+        detectDodgeGestures: vi.fn(() => ({ down: true, left: true, right: true })),
+        detectHandGestures: vi.fn(({ side }) => ({ hook: false, jab: side === 'left' || side === 'right', uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => true),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderShadowMode();
+
+    expect(globalThis.timingState.leftJab).toBe(10_000);
+    expect(globalThis.timingState.rightJab).toBe(10_000);
+    expect(globalThis.timingState.leftDodge).toBe(10_000);
+    expect(globalThis.timingState.rightDodge).toBe(10_000);
+    expect(globalThis.timingState.downDodge).toBe(10_000);
+    expect(globalThis.timingState.leftHook).toBe(10_000);
+    expect(globalThis.timingState.rightHook).toBe(10_000);
+    expect(globalThis.timingState.rightPoses).toBe(10_000);
+    expect(globalThis.timingState.leftPoses).toBe(10_000);
+    expect(calls.circle).toContainEqual([1_080, 80, 48]);
+    expect(globalThis.punchSound).toHaveBeenCalled();
+  });
+
+  it('plays left jab sound only when started and jab is detected', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 40, y: 40 },
+      nose: { confidence: 0.9, x: 10, y: 170 },
+      rightHand: { confidence: 0.05, x: 200, y: 200 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [],
+        gameStarted: true,
+        gameTimer: 0,
+        gameTimerNext: 0,
+        moves: []
+      },
+      timingState: {
+        downDodge: 0,
+        leftDodge: 0,
+        leftHook: 9950,
+        leftJab: 111,
+        leftPoses: 0,
+        leftUppercut: 9950,
+        rightDodge: 0,
+        rightHook: 9950,
+        rightJab: 0,
+        rightPoses: 0,
+        rightUppercut: 0,
+        switchGuard: 0
+      },
+      poses: [trackedPose],
+      isDetecting: true,
+      TfitPoseDetection: {
+        areBothHandsRecent: vi.fn(() => true),
+        detectDodgeGestures: vi.fn(() => ({ down: false, left: false, right: false })),
+        detectHandGestures: vi.fn(({ side }) => ({ hook: false, jab: side === 'left', uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderShadowMode();
+
+    expect(globalThis.timingState.leftJab).toBe(10_000);
+    expect(globalThis.punchSound).toHaveBeenCalled();
+  });
+
+  it('updates right jab timing and plays punch when started and jab is detected', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.05, x: 200, y: 200 },
+      nose: { confidence: 0.9, x: 10, y: 170 },
+      rightHand: { confidence: 0.9, x: 540, y: 40 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [],
+        gameStarted: true,
+        gameTimer: 0,
+        gameTimerNext: 0,
+        moves: []
+      },
+      timingState: {
+        downDodge: 0,
+        leftDodge: 0,
+        leftHook: 0,
+        leftJab: 0,
+        leftPoses: 0,
+        leftUppercut: 0,
+        rightDodge: 0,
+        rightHook: 9950,
+        rightJab: 222,
+        rightPoses: 0,
+        rightUppercut: 9950,
+        switchGuard: 0
+      },
+      isDetecting: true,
+      poses: [trackedPose],
+      TfitPoseDetection: {
+        areBothHandsRecent: vi.fn(() => true),
+        detectDodgeGestures: vi.fn(() => ({ down: false, left: false, right: false })),
+        detectHandGestures: vi.fn(({ side }) => ({ hook: false, jab: side === 'right', uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderShadowMode();
+
+    expect(globalThis.timingState.rightJab).toBe(10_000);
+    expect(globalThis.punchSound).toHaveBeenCalled();
+  });
+
+  it('does not set dodge timestamps when no dodge gestures are detected', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 200, y: 200 },
+      nose: { confidence: 0.9, x: 10, y: 170 },
+      rightHand: { confidence: 0.05, x: 200, y: 200 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [],
+        gameStarted: false,
+        gameTimer: 0,
+        gameTimerNext: 0,
+        moves: []
+      },
+      timingState: {
+        downDodge: 123,
+        leftDodge: 234,
+        leftHook: 0,
+        leftJab: 0,
+        leftPoses: 0,
+        leftUppercut: 0,
+        rightDodge: 345,
+        rightHook: 0,
+        rightJab: 0,
+        rightPoses: 0,
+        rightUppercut: 0,
+        switchGuard: 0
+      },
+      poses: [trackedPose],
+      TfitPoseDetection: {
+        areBothHandsRecent: vi.fn(() => true),
+        detectDodgeGestures: vi.fn(() => ({ down: false, left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderShadowMode();
+
+    expect(globalThis.timingState.leftDodge).toBe(234);
+    expect(globalThis.timingState.rightDodge).toBe(345);
+    expect(globalThis.timingState.downDodge).toBe(123);
+  });
+
+  it('covers false branch for all left dodge/jab and right marker conditions', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 40, y: 40 },
+      nose: { confidence: 0.9, x: 10, y: 170 },
+      rightHand: { confidence: 0.9, x: 540, y: 40 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [],
+        gameStarted: false,
+        gameTimer: 0,
+        gameTimerNext: 0,
+        moves: []
+      },
+      timingState: {
+        downDodge: 123,
+        leftDodge: 234,
+        leftHook: 0,
+        leftJab: 0,
+        leftPoses: 0,
+        leftUppercut: 0,
+        rightDodge: 345,
+        rightHook: 0,
+        rightJab: 456,
+        rightPoses: 0,
+        rightUppercut: 0,
+        switchGuard: 0
+      },
+      isDetecting: false,
+      poses: [trackedPose],
+      TfitPoseDetection: {
+        areBothHandsRecent: vi.fn(() => true),
+        detectDodgeGestures: vi.fn(() => ({ down: false, left: false, right: false })),
+        detectHandGestures: vi.fn(({ side }) => ({ hook: false, jab: side === 'left' || side === 'right', uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => true),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderShadowMode();
+
+    expect(globalThis.timingState.leftJab).toBe(10_000);
+    expect(globalThis.timingState.rightJab).toBe(10_000);
+    expect(globalThis.timingState.leftDodge).toBe(234);
+    expect(globalThis.timingState.rightDodge).toBe(345);
+    expect(globalThis.timingState.downDodge).toBe(123);
+    expect(globalThis.timingState.leftHook).toBe(10_000);
+    expect(globalThis.timingState.rightHook).toBe(10_000);
+    expect(globalThis.punchSound).not.toHaveBeenCalled();
+  });
+
+  it('covers right jab false branch when right jab gesture is missing', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.05, x: 40, y: 200 },
+      nose: { confidence: 0.9, x: 10, y: 170 },
+      rightHand: { confidence: 0.9, x: 540, y: 40 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [],
+        gameStarted: true,
+        gameTimer: 0,
+        gameTimerNext: 0,
+        moves: []
+      },
+      timingState: {
+        downDodge: 0,
+        leftDodge: 0,
+        leftHook: 0,
+        leftJab: 0,
+        leftPoses: 0,
+        leftUppercut: 0,
+        rightDodge: 0,
+        rightHook: 0,
+        rightJab: 111,
+        rightPoses: 0,
+        rightUppercut: 0,
+        switchGuard: 0
+      },
+      isDetecting: true,
+      poses: [trackedPose],
+      TfitPoseDetection: {
+        areBothHandsRecent: vi.fn(() => true),
+        detectDodgeGestures: vi.fn(() => ({ down: false, left: false, right: false })),
+        detectHandGestures: vi.fn(({ side }) => ({ hook: false, jab: side === 'left', uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderShadowMode();
+
+    expect(globalThis.timingState.rightJab).toBe(111);
+    expect(globalThis.punchSound).not.toHaveBeenCalled();
+  });
+
+  it('exercises left jab else-branch when game has not started', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 40, y: 40 },
+      nose: { confidence: 0.9, x: 10, y: 170 },
+      rightHand: { confidence: 0.05, x: 250, y: 40 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [],
+        gameStarted: false,
+        gameTimer: 0,
+        gameTimerNext: 0,
+        moves: []
+      },
+      timingState: {
+        downDodge: 0,
+        leftDodge: 999,
+        leftHook: 0,
+        leftJab: 111,
+        leftPoses: 0,
+        leftUppercut: 0,
+        rightDodge: 0,
+        rightHook: 0,
+        rightJab: 0,
+        rightPoses: 0,
+        rightUppercut: 0,
+        switchGuard: 0
+      },
+      poses: [trackedPose],
+      TfitPoseDetection: {
+        areBothHandsRecent: vi.fn(() => false),
+        detectDodgeGestures: vi.fn(() => ({ down: false, left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: true, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderShadowMode();
+
+    expect(globalThis.timingState.leftJab).toBe(10_000);
+    expect(globalThis.timingState.leftDodge).toBe(999);
+    expect(globalThis.punchSound).not.toHaveBeenCalled();
+  });
+
+  it('exercises right jab then branch with game not started and jab gesture detected', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.05, x: 200, y: 200 },
+      nose: { confidence: 0.9, x: 10, y: 170 },
+      rightHand: { confidence: 0.9, x: 250, y: 40 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [],
+        gameStarted: false,
+        gameTimer: 0,
+        gameTimerNext: 0,
+        moves: []
+      },
+      timingState: {
+        downDodge: 0,
+        leftDodge: 0,
+        leftHook: 0,
+        leftJab: 0,
+        leftPoses: 0,
+        leftUppercut: 0,
+        rightDodge: 0,
+        rightHook: 0,
+        rightJab: 111,
+        rightPoses: 0,
+        rightUppercut: 0,
+        switchGuard: 0
+      },
+      poses: [trackedPose],
+      isDetecting: true,
+      TfitPoseDetection: {
+        areBothHandsRecent: vi.fn(() => false),
+        detectDodgeGestures: vi.fn(() => ({ down: false, left: false, right: false })),
+        detectHandGestures: vi.fn(({ side }) => ({ hook: false, jab: side === 'right', uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderShadowMode();
+
+    expect(globalThis.timingState.rightJab).toBe(10_000);
+    expect(globalThis.punchSound).not.toHaveBeenCalled();
+  });
+
+  it('exercises right jab else-branch when jab gesture is absent in the jab zone', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.05, x: 200, y: 200 },
+      nose: { confidence: 0.9, x: 10, y: 170 },
+      rightHand: { confidence: 0.9, x: 250, y: 40 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [],
+        gameStarted: true,
+        gameTimer: 0,
+        gameTimerNext: 0,
+        moves: []
+      },
+      timingState: {
+        downDodge: 0,
+        leftDodge: 0,
+        leftHook: 0,
+        leftJab: 0,
+        leftPoses: 0,
+        leftUppercut: 0,
+        rightDodge: 0,
+        rightHook: 0,
+        rightJab: 777,
+        rightPoses: 0,
+        rightUppercut: 0,
+        switchGuard: 0
+      },
+      poses: [trackedPose],
+      isDetecting: true,
+      TfitPoseDetection: {
+        areBothHandsRecent: vi.fn(() => false),
+        detectDodgeGestures: vi.fn(() => ({ down: false, left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderShadowMode();
+
+    expect(globalThis.timingState.rightJab).toBe(777);
+    expect(globalThis.punchSound).not.toHaveBeenCalled();
+  });
+
+  it('covers right detect flag false branch on marker drawing while right hand is present', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.05, x: 200, y: 200 },
+      nose: { confidence: 0.9, x: 10, y: 170 },
+      rightHand: { confidence: 0.9, x: 250, y: 40 }
+    };
+    const api = installGlobals({
+      isDetecting: false,
+      poses: [trackedPose],
+      gameState: {
+        curMoves: [],
+        gameStarted: false,
+        gameTimer: 0,
+        gameTimerNext: 0,
+        moves: []
+      },
+      TfitPoseDetection: {
+        areBothHandsRecent: vi.fn(() => false),
+        detectDodgeGestures: vi.fn(() => ({ down: false, left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderShadowMode();
+
+    expect(globalThis.punchSound).not.toHaveBeenCalled();
+    expect(calls.circle).not.toContainEqual([500, 80, 48]);
+  });
+
+  it('exercises no-dodge branches when dodge gestures are absent', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 40, y: 40 },
+      nose: { confidence: 0.9, x: 10, y: 170 },
+      rightHand: { confidence: 0.9, x: 250, y: 200 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [],
+        gameStarted: true,
+        gameTimer: 0,
+        gameTimerNext: 0,
+        moves: []
+      },
+      timingState: {
+        downDodge: 11,
+        leftDodge: 22,
+        leftHook: 33,
+        leftJab: 44,
+        leftPoses: 0,
+        leftUppercut: 55,
+        rightDodge: 66,
+        rightHook: 77,
+        rightJab: 88,
+        rightPoses: 0,
+        rightUppercut: 99,
+        switchGuard: 0
+      },
+      poses: [trackedPose],
+      TfitPoseDetection: {
+        areBothHandsRecent: vi.fn(() => true),
+        detectDodgeGestures: vi.fn(() => ({ down: false, left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => true),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderShadowMode();
+
+    expect(globalThis.timingState.leftDodge).toBe(22);
+    expect(globalThis.timingState.rightDodge).toBe(66);
+    expect(globalThis.timingState.downDodge).toBe(11);
+    expect(calls.rect).toContainEqual([0, 0, 640, 100]);
   });
 
   it('renders pose input only when there are poses and keeps recent empty results in normal flow', () => {

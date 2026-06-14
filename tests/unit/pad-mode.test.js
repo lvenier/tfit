@@ -234,6 +234,39 @@ describe('pad target generation', () => {
       y: 360
     });
   });
+
+  it('covers both branch outcomes for right-side OR guard overlap terms', () => {
+    const api = installGlobals({
+      calibrationState: {
+        init_uppercut_y: 300,
+        left_init_pose_x: 200,
+        left_init_pose_y: 200,
+        right_init_pose_x: 440,
+        right_init_pose_y: 0
+      },
+      randomInteger: vi.fn()
+        .mockReturnValueOnce(320)
+        .mockReturnValueOnce(150)
+        .mockReturnValueOnce(600)
+        .mockReturnValueOnce(100)
+    });
+
+    expect(api.nextPadTarget()).toEqual({
+      type: 2,
+      x: 320,
+      y: 150
+    });
+    expect(api.nextPadTarget()).toEqual({
+      type: 1,
+      x: 600,
+      y: 100
+    });
+
+    expect(globalThis.randomInteger).toHaveBeenNthCalledWith(1, 96, 544);
+    expect(globalThis.randomInteger).toHaveBeenNthCalledWith(2, 96, 384);
+    expect(globalThis.randomInteger).toHaveBeenNthCalledWith(3, 96, 544);
+    expect(globalThis.randomInteger).toHaveBeenNthCalledWith(4, 96, 384);
+  });
 });
 
 describe('pad mode rendering', () => {
@@ -622,5 +655,43 @@ describe('pad mode rendering', () => {
     expect(globalThis.timingState.downDodgeDone).toBe(true);
     expect(globalThis.timingState.downDodgeSwitch).toBe(true);
     expect(globalThis.hitSuccess).not.toHaveBeenCalled();
+  });
+
+  it('ignores unknown pad target types and only advances the game timer', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 20, y: 30 },
+      nose: { confidence: 0.9, x: 10, y: 15 },
+      rightHand: { confidence: 0.9, x: 40, y: 50 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [{ hit: false, type: 1, x: 100, y: 200 }],
+        gameStarted: true,
+        gameTimer: 7
+      },
+      padState: {
+        type: 99,
+        x: 100,
+        y: 200
+      },
+      poses: [trackedPose],
+      TfitPoseDetection: {
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        isPadPunchHit: vi.fn(() => false),
+        nextDownDodgeState: vi.fn(() => ({
+          done: false,
+          switched: false,
+          touchedDown: false
+        })),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderPadMode();
+
+    expect(calls.text).toEqual([]);
+    expect(globalThis.gameState.curMoves).toEqual([{ hit: false, type: 1, x: 100, y: 200 }]);
+    expect(globalThis.gameState.gameTimer).toBe(8);
   });
 });

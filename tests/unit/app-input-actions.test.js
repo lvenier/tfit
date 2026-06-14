@@ -315,6 +315,49 @@ describe('applyInputAction', () => {
       right_init_hook_dragging: true
     });
   });
+
+  it('ignores unhandled action types at the final calibration_drag check', () => {
+    const api = installGlobals({
+      gameState: {
+        curMoves: [{ hit: false }],
+        gameCalibration: false,
+        gameLength: '60',
+        gameLengthIndex: 2,
+        gameOver: false,
+        gameSeries: 1,
+        gameStarted: false,
+        level: 0,
+        menu: 0,
+        my_opponent: null,
+        opponent: 0,
+        shadow_focus: 0
+      }
+    });
+
+    api.applyInputAction({
+      type: 'unsupported_action',
+      click: false,
+      flags: {
+        init_jab_dragging: true,
+        init_uppercut_dragging: true,
+        left_init_hook_dragging: true,
+        left_init_pose_dragging: true,
+        right_init_hook_dragging: true,
+        right_init_pose_dragging: true
+      }
+    });
+
+    expect(globalThis.calibrationState).toMatchObject({
+      init_jab_dragging: false,
+      init_uppercut_dragging: false,
+      left_init_hook_dragging: false,
+      left_init_pose_dragging: false,
+      right_init_hook_dragging: false,
+      right_init_pose_dragging: false
+    });
+    expect(globalThis.gameState.menu).toBe(0);
+    expect(globalThis.gameState.gameOver).toBe(false);
+  });
 });
 
 describe('calibration helpers and input adapters', () => {

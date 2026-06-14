@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { createRequire } from 'node:module';
+import { readFileSync } from 'node:fs';
+import { runInNewContext } from 'node:vm';
 
 const require = createRequire(import.meta.url);
 const modulePath = require.resolve('../../js/loading-progress');
@@ -70,5 +72,41 @@ describe('TfitLoadingProgress', () => {
       loaded: 1,
       total: 1
     });
+  });
+
+  it('works when document is unavailable', () => {
+    globalThis.document = undefined;
+
+    const api = require('../../js/loading-progress');
+
+    expect(api.updateLoadingProgress({
+      label: 'No DOM',
+      loaded: 3,
+      total: 4
+    })).toEqual({
+      label: 'No DOM',
+      loaded: 3,
+      total: 4
+    });
+  });
+
+  it('supports environments without CommonJS module object', () => {
+    const sandbox = {};
+    sandbox.globalThis = sandbox;
+    sandbox.globalThis.globalThis = sandbox.globalThis;
+
+    const code = readFileSync(modulePath, 'utf8');
+    runInNewContext(code, sandbox);
+
+    const api = sandbox.TfitLoadingProgress;
+    const result = api.updateLoadingProgress({
+      label: 'Sandbox',
+      loaded: 1,
+      total: 2
+    });
+
+    expect(result).toEqual({ label: 'Sandbox', loaded: 1, total: 2 });
+    expect(api).toBeDefined();
+    expect(sandbox).not.toHaveProperty('module');
   });
 });
