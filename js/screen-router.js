@@ -159,6 +159,40 @@
     }
   }
 
+  function renderMenuButtonDoorAnimation() {
+    const animation = gameState.menuButtonAnimation;
+
+    if (!animation || !animation.active) {
+      return;
+    }
+
+    const duration = animation.duration || 18;
+    const closeDuration = Math.max(1, Math.floor(duration / 2));
+    const openDuration = Math.max(1, duration - closeDuration);
+    const currentFrame = Math.min(animation.frame || 0, duration);
+    const phase = currentFrame < closeDuration
+      ? (currentFrame + 1) / closeDuration
+      : 1 - Math.min(currentFrame - closeDuration + 1, openDuration) / openDuration;
+    const progress = Math.max(0, Math.min(phase, 1));
+    const wallWidth = (animation.width / 2) * progress;
+
+    animation.frame = currentFrame + 1;
+    animation.progress = progress;
+
+    if (currentFrame >= duration) {
+      animation.active = false;
+      animation.progress = 0;
+      return;
+    }
+
+    push();
+    noStroke();
+    fill(0, 0, 0, 210);
+    rect(animation.x, animation.y, wallWidth, animation.height);
+    rect(animation.width - wallWidth, animation.y, wallWidth, animation.height);
+    pop();
+  }
+
   function renderActiveMode() {
     if (gameState.menu === 4) {
       renderFightMode();
@@ -190,6 +224,7 @@
     }
 
     renderActiveMode();
+    renderMenuButtonDoorAnimation();
   }
 
   function renderAppFrame() {

@@ -5,18 +5,18 @@
     coef: 0.75,
     FRAME_RATE: storageNumber("frame_rate", 20, { allowed: [20, 40, 60, 80, 100, 120] }),
     LEVEL: 50,
-    myWindowHeight: 320,
+    myWindowHeight: 480,
     myWindowWidth: 480,
     OBJECT_POSE_SIZE: 36
   });
 
   function calculateLayout(width, height) {
-    const nextCoef = Math.max(0.5, 0.05 * (Math.floor(Math.min(width / 32, height / 24))));
+    const nextCoef = Math.max(0.5, Math.min(width / 640, height / 480));
     return {
       coef: nextCoef,
-      height: nextCoef * 480,
+      height: height,
       objectPoseSize: 48 * nextCoef,
-      width: nextCoef * 640
+      width: width
     };
   }
 
@@ -35,12 +35,12 @@
     return applyLayout(calculateLayout(width, height));
   }
 
-  function positionCanvas(canvas = root.cnv, width = root.window.innerWidth) {
+  function positionCanvas(canvas = root.cnv) {
     if (!canvas) {
       return false;
     }
 
-    canvas.position(Math.max((width - root.myWindowWidth) / 2, 0), 0);
+    canvas.position(0, 0);
     return true;
   }
 

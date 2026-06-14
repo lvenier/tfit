@@ -27,6 +27,34 @@
     snapshot: layoutSnapshot
   } = root.TfitLayoutState;
 
+  const MENU_BUTTON_ANIMATION_DURATION = 60;
+
+  function queueMenuDoorAnimation(button) {
+    const layout = layoutSnapshot();
+    const buttonMeta = {
+      open_shadow: true,
+      open_pad: true,
+      open_fight: true,
+      open_settings: true
+    }[button];
+
+    if (!buttonMeta) {
+      return;
+    }
+
+    gameState.menuButtonAnimation = {
+      active: true,
+      button,
+      duration: MENU_BUTTON_ANIMATION_DURATION,
+      frame: 0,
+      x: 0,
+      y: 0,
+      width: layout.width,
+      height: layout.height,
+      progress: 0
+    };
+  }
+
   function resetCalibrationDefaults() {
     const layout = layoutSnapshot();
     const defaults = calibrationDefaults(layout.width, layout.height, layout.objectPoseSize, layout.coef);
@@ -84,11 +112,17 @@
       return;
     }
     if (action.type === "open_settings") {
+      if (action.click) {
+        queueMenuDoorAnimation("open_settings");
+      }
       playClick();
       gameState.menu = 1;
       return;
     }
     if (action.type === "open_shadow") {
+      if (action.click) {
+        queueMenuDoorAnimation("open_shadow");
+      }
       playClick();
       gameState.menu = 2;
       gameState.curMoves = [];
@@ -96,6 +130,9 @@
       return;
     }
     if (action.type === "open_pad") {
+      if (action.click) {
+        queueMenuDoorAnimation("open_pad");
+      }
       playClick();
       gameState.menu = 3;
       gameState.curMoves = [];
@@ -103,6 +140,9 @@
       return;
     }
     if (action.type === "open_fight") {
+      if (action.click) {
+        queueMenuDoorAnimation("open_fight");
+      }
       playClick();
       gameState.menu = 4;
       gameState.curMoves = [];
