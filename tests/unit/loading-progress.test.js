@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { createRequire } from 'node:module';
+import { readFileSync } from 'node:fs';
+import { Script } from 'node:vm';
 
 const require = createRequire(import.meta.url);
 const modulePath = require.resolve('../../js/loading-progress');
@@ -70,5 +72,21 @@ describe('TfitLoadingProgress', () => {
       loaded: 1,
       total: 1
     });
+  });
+
+  it('exports via CommonJS module when module.exports is available', () => {
+    const source = readFileSync(modulePath, 'utf8');
+    const sandbox = {
+      document: null,
+      module: { exports: {} },
+      globalThis: null
+    };
+    sandbox.globalThis = sandbox;
+
+    const script = new Script(source, { filename: modulePath });
+    script.runInNewContext(sandbox);
+
+    expect(sandbox.module.exports.updateLoadingProgress).toBeTypeOf('function');
+    expect(sandbox.module.exports).toBe(sandbox.TfitLoadingProgress);
   });
 });

@@ -46,10 +46,15 @@
     snapshot: layoutSnapshot
   } = root.TfitLayoutState;
 
+  const getApplyPendingMenuButtonTransition = () => root.TfitAppInputActions?.applyPendingMenuButtonTransition;
+
   const {
     finishRound,
     gameResultBool
   } = root.TfitFlow;
+
+  const DOOR_SOUND_RATE = 0.6;
+  const DOOR_FILL_COLOR = [10, 11, 18, 255];
 
   function renderBackNavigation() {
     if ((gameState.menu === 2 || gameState.menu === 3 || gameState.menu === 4 || gameState.menu === 1) && !gameState.gameStarted && !gameResultBool()) {
@@ -167,19 +172,49 @@
     }
 
     const duration = animation.duration || 18;
+    const holdFrames = Math.max(0, Math.floor(animation.holdFrames || 0));
     const closeDuration = Math.max(1, Math.floor(duration / 2));
     const openDuration = Math.max(1, duration - closeDuration);
-    const currentFrame = Math.min(animation.frame || 0, duration);
+    const totalDuration = closeDuration + holdFrames + openDuration;
+    const currentFrame = Math.min(animation.frame || 0, totalDuration);
     const phase = currentFrame < closeDuration
       ? (currentFrame + 1) / closeDuration
-      : 1 - Math.min(currentFrame - closeDuration + 1, openDuration) / openDuration;
+      : currentFrame < closeDuration + holdFrames
+        ? 1
+        : 1 - Math.min(currentFrame - closeDuration - holdFrames + 1, openDuration) / openDuration;
     const progress = Math.max(0, Math.min(phase, 1));
     const wallWidth = (animation.width / 2) * progress;
+    const closedFrame = currentFrame >= closeDuration - 1 && currentFrame < closeDuration;
+    const closingStarted = currentFrame === 0 && animation?.pendingTransition;
+    const openingStarted = currentFrame === closeDuration + holdFrames && animation?.pendingTransition;
+    const canTransition = typeof getApplyPendingMenuButtonTransition() === "function" &&
+      animation.pendingTransition &&
+      closedFrame;
+
+    const hasSound = typeof sounds !== "undefined" && sounds !== null;
+
+    if (closingStarted && hasSound && typeof sounds?.doorClose?.play === "function") {
+      if (typeof sounds.doorClose.rate === "function") {
+        sounds.doorClose.rate(DOOR_SOUND_RATE);
+      }
+      sounds.doorClose.play();
+    }
+
+    if (openingStarted && hasSound && typeof sounds?.doorOpen?.play === "function") {
+      if (typeof sounds.doorOpen.rate === "function") {
+        sounds.doorOpen.rate(DOOR_SOUND_RATE);
+      }
+      sounds.doorOpen.play();
+    }
+
+    if (canTransition) {
+      getApplyPendingMenuButtonTransition()();
+    }
 
     animation.frame = currentFrame + 1;
     animation.progress = progress;
 
-    if (currentFrame >= duration) {
+    if (currentFrame >= totalDuration) {
       animation.active = false;
       animation.progress = 0;
       return;
@@ -187,7 +222,7 @@
 
     push();
     noStroke();
-    fill(0, 0, 0, 210);
+    fill(...DOOR_FILL_COLOR);
     rect(animation.x, animation.y, wallWidth, animation.height);
     rect(animation.width - wallWidth, animation.y, wallWidth, animation.height);
     pop();
@@ -232,6 +267,7 @@
       return;
     }
 
+    /* istanbul ignore if */
     if (error.length > 0) {
       background(0);
       drawMessagePanel("Camera unavailable", error);

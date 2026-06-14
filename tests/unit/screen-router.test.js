@@ -22,10 +22,15 @@ const STUBBED_GLOBALS = [
   'myWindowHeight',
   'myWindowWidth',
   'OBJECT_POSE_SIZE',
+  'noStroke',
+  'pop',
   'sounds',
   'speechString',
+  'push',
   'textSize',
   'timingState',
+  'rect',
+  'TfitAppInputActions',
   'TfitCameraRuntime',
   'TfitFightMode',
   'TfitFlow',
@@ -71,7 +76,7 @@ function installGlobals(overrides = {}) {
     }
   }
 
-  for (const name of ['background', 'clear', 'fill', 'image', 'textSize']) {
+  for (const name of ['background', 'clear', 'fill', 'image', 'noStroke', 'pop', 'push', 'rect', 'textSize']) {
     calls[name] = [];
     globalThis[name] = record(name);
   }
@@ -96,7 +101,18 @@ function installGlobals(overrides = {}) {
     OBJECT_POSE_SIZE: 48,
     sounds: {
       keepTrying: { play: vi.fn() },
-      yourGuard: { play: vi.fn() }
+      yourGuard: { play: vi.fn() },
+      doorClose: {
+        play: vi.fn(),
+        rate: vi.fn()
+      },
+      doorOpen: {
+        play: vi.fn(),
+        rate: vi.fn()
+      }
+    },
+    TfitAppInputActions: {
+      applyPendingMenuButtonTransition: vi.fn()
     },
     speechString: null,
     timingState: {
@@ -303,6 +319,105 @@ describe('app frame routing', () => {
     expect(globalThis.TfitRender.renderMainMenu).toHaveBeenCalledTimes(1);
   });
 
+  it('clears and draws loading when camera has not started but there is no camera error', () => {
+    const checkStartCondition = vi.fn(() => false);
+    const api = installGlobals({
+      error: '',
+      TfitCameraRuntime: {
+        checkStartCondition,
+        startPoseDetection: vi.fn(),
+        stopPoseDetection: vi.fn()
+      }
+    });
+
+    api.renderAppFrame();
+
+    expect(checkStartCondition).toHaveBeenCalledTimes(1);
+    expect(calls.background).toEqual([[0]]);
+    expect(globalThis.TfitRender.renderLoadingScreen).toHaveBeenCalledTimes(1);
+    expect(globalThis.TfitRender.drawMessagePanel).not.toHaveBeenCalled();
+  });
+
+  it('renders normal layout when the camera is ready and no error is set', () => {
+    const api = installGlobals({
+      error: '',
+      TfitCameraRuntime: {
+        checkStartCondition: vi.fn(() => true),
+        startPoseDetection: vi.fn(),
+        stopPoseDetection: vi.fn()
+      }
+    });
+
+    api.renderAppFrame();
+
+    expect(globalThis.TfitRender.drawMessagePanel).not.toHaveBeenCalled();
+    expect(globalThis.TfitRender.renderLoadingScreen).not.toHaveBeenCalled();
+    expect(globalThis.TfitRender.renderSceneBackground).toHaveBeenCalledTimes(1);
+  });
+
+  it('treats an empty-length error object as no camera error', () => {
+    const checkStartCondition = vi.fn(() => true);
+    const api = installGlobals({
+      error: { length: 0 },
+      TfitCameraRuntime: {
+        checkStartCondition,
+        startPoseDetection: vi.fn(),
+        stopPoseDetection: vi.fn()
+      }
+    });
+
+    api.renderAppFrame();
+
+    expect(checkStartCondition).toHaveBeenCalledTimes(1);
+    expect(globalThis.TfitRender.drawMessagePanel).not.toHaveBeenCalled();
+    expect(globalThis.TfitRender.renderSceneBackground).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not call start condition checks when camera error is present', () => {
+    const checkStartCondition = vi.fn(() => {
+      throw new Error('start condition should not run');
+    });
+    const api = installGlobals({
+      error: 'camera offline',
+      TfitCameraRuntime: {
+        checkStartCondition,
+        startPoseDetection: vi.fn(),
+        stopPoseDetection: vi.fn()
+      }
+    });
+
+    api.renderAppFrame();
+
+    expect(checkStartCondition).not.toHaveBeenCalled();
+    expect(globalThis.TfitRender.drawMessagePanel).toHaveBeenCalledWith('Camera unavailable', 'camera offline');
+  });
+
+  it('renders the camera error overlay for non-empty errors', () => {
+    const api = installGlobals({
+      error: 'permission denied',
+      innerWidth: 1024,
+      innerHeight: 768
+    });
+
+    api.renderAppFrame();
+
+    expect(calls.background).toEqual([[0]]);
+    expect(globalThis.TfitRender.drawMessagePanel).toHaveBeenCalledWith('Camera unavailable', 'permission denied');
+  });
+
+  it('returns early and skips camera start check when errors are present', () => {
+    const api = installGlobals();
+
+    const checkStartCondition = vi.fn(() => { throw new Error('should not be called'); });
+    globalThis.TfitCameraRuntime.checkStartCondition = checkStartCondition;
+    globalThis.error = 'camera offline';
+
+    api.renderAppFrame();
+
+    expect(checkStartCondition).not.toHaveBeenCalled();
+    expect(globalThis.TfitRender.drawMessagePanel).toHaveBeenCalledWith('Camera unavailable', 'camera offline');
+  });
+
   it('falls back to black canvas clearing when transparent clear is unavailable', () => {
     const api = installGlobals({ clear: undefined });
 
@@ -334,6 +449,152 @@ describe('menu routing', () => {
 
     expect(globalThis.TfitRender.renderBackButton).toHaveBeenCalledTimes(1);
     expect(globalThis.TfitSettingsScreen.renderSettingsScreen).toHaveBeenCalledTimes(1);
+  });
+
+  it('animates the menu door and applies the pending transition during the close phase', () => {
+    const api = installGlobals({
+      TfitAppInputActions: {
+        applyPendingMenuButtonTransition: vi.fn(() => {
+          globalThis.gameState.menu = 4;
+        })
+      },
+      gameState: {
+        ...defaultGameState({ menu: 0 }),
+        menuButtonAnimation: {
+          active: true,
+          button: 'open_fight',
+          duration: 20,
+          holdFrames: 2,
+          frame: 0,
+          x: 0,
+          y: 0,
+          width: 640,
+          height: 480,
+          progress: 0,
+          pendingTransition: {
+            menu: 4,
+            clearCurMoves: true,
+            loadSongmoves: true,
+            resetOpponent: true
+          }
+        }
+      }
+    });
+
+    for (let frame = 0; frame < 23; frame++) {
+      api.renderGameScreen();
+    }
+
+    expect(globalThis.TfitAppInputActions.applyPendingMenuButtonTransition).toHaveBeenCalledTimes(1);
+    expect(globalThis.sounds.doorClose.play).toHaveBeenCalledTimes(1);
+    expect(globalThis.sounds.doorOpen.play).toHaveBeenCalledTimes(1);
+    expect(globalThis.sounds.doorClose.rate).toHaveBeenCalledWith(0.6);
+    expect(globalThis.sounds.doorOpen.rate).toHaveBeenCalledWith(0.6);
+    expect(globalThis.gameState.menu).toBe(4);
+    expect(globalThis.gameState.menuButtonAnimation.active).toBe(false);
+  });
+
+  it('plays close and open door sounds while the pending transition stays queued', () => {
+    const transition = {
+      menu: 4,
+      clearCurMoves: true,
+      loadSongmoves: true,
+      resetOpponent: true
+    };
+    const api = installGlobals({
+      TfitAppInputActions: {
+        applyPendingMenuButtonTransition: vi.fn(() => {
+          globalThis.gameState.menu = 4;
+        })
+      },
+      gameState: {
+        ...defaultGameState({ menu: 0 }),
+        menuButtonAnimation: {
+          active: true,
+          button: 'open_fight',
+          duration: 4,
+          holdFrames: 0,
+          frame: 0,
+          x: 0,
+          y: 0,
+          width: 640,
+          height: 480,
+          progress: 0,
+          pendingTransition: transition
+        }
+      }
+    });
+
+    for (let frame = 0; frame < 5; frame++) {
+      api.renderGameScreen();
+    }
+
+    expect(globalThis.sounds.doorClose.play).toHaveBeenCalledTimes(1);
+    expect(globalThis.sounds.doorOpen.play).toHaveBeenCalledTimes(1);
+    expect(globalThis.sounds.doorClose.rate).toHaveBeenCalledTimes(1);
+    expect(globalThis.sounds.doorOpen.rate).toHaveBeenCalledTimes(1);
+    expect(globalThis.TfitAppInputActions.applyPendingMenuButtonTransition).toHaveBeenCalledTimes(1);
+    expect(globalThis.gameState.menu).toBe(4);
+  });
+
+  it('plays door sounds when rate handlers are absent', () => {
+    const transition = {
+      menu: 4,
+      clearCurMoves: true,
+      loadSongmoves: true,
+      resetOpponent: true
+    };
+    const api = installGlobals({
+      TfitAppInputActions: {
+        applyPendingMenuButtonTransition: vi.fn(() => {
+          globalThis.gameState.menu = 4;
+        })
+      },
+      gameState: {
+        ...defaultGameState({ menu: 0 }),
+        menuButtonAnimation: {
+          active: true,
+          button: 'open_fight',
+          duration: 4,
+          holdFrames: 0,
+          frame: 0,
+          x: 0,
+          y: 0,
+          width: 640,
+          height: 480,
+          progress: 0,
+          pendingTransition: transition
+        }
+      },
+      sounds: {
+        keepTrying: { play: vi.fn() },
+        yourGuard: { play: vi.fn() },
+        doorClose: { play: vi.fn() },
+        doorOpen: { play: vi.fn() }
+      }
+    });
+
+    for (let frame = 0; frame < 5; frame++) {
+      api.renderGameScreen();
+    }
+
+    expect(globalThis.sounds.doorClose.play).toHaveBeenCalledTimes(1);
+    expect(globalThis.sounds.doorOpen.play).toHaveBeenCalledTimes(1);
+    expect(globalThis.sounds.doorClose.rate).toBeUndefined();
+    expect(globalThis.sounds.doorOpen.rate).toBeUndefined();
+    expect(globalThis.TfitAppInputActions.applyPendingMenuButtonTransition).toHaveBeenCalledTimes(1);
+    expect(globalThis.gameState.menu).toBe(4);
+  });
+
+  it('shows camera error screen when error text is set', () => {
+    const api = installGlobals({
+      error: 'permission denied'
+    });
+
+    api.renderAppFrame();
+
+    expect(globalThis.TfitRender.drawMessagePanel).toHaveBeenCalledWith('Camera unavailable', 'permission denied');
+    expect(globalThis.TfitRender.renderLoadingScreen).not.toHaveBeenCalled();
   });
 
   it('does not render back navigation while showing game results', () => {

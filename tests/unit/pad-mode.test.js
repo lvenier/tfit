@@ -623,4 +623,201 @@ describe('pad mode rendering', () => {
     expect(globalThis.timingState.downDodgeSwitch).toBe(true);
     expect(globalThis.hitSuccess).not.toHaveBeenCalled();
   });
+
+  it('generates a punch target when default overlap check does not hit any guard zone', () => {
+    const api = installGlobals({
+      randomInteger: vi.fn()
+        .mockReturnValueOnce(600)
+        .mockReturnValueOnce(20),
+      calibrationState: {
+        init_uppercut_y: 300,
+        left_init_pose_x: 200,
+        left_init_pose_y: 180,
+        right_init_pose_x: 440,
+        right_init_pose_y: 180
+      }
+    });
+
+    expect(api.nextPadTarget()).toEqual({
+      type: 1,
+      x: 600,
+      y: 20
+    });
+  });
+
+  it('enters the down-dodge rendering path when pad target type is 2', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 20, y: 30 },
+      nose: { confidence: 0.9, x: 10, y: 200 },
+      rightHand: { confidence: 0.9, x: 40, y: 50 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [{ hit: false, type: 2, x: 200, y: 300 }],
+        gameStarted: true,
+        gameTimer: 1
+      },
+      padState: {
+        type: 2,
+        x: 200,
+        y: 300
+      },
+      poses: [trackedPose],
+      timingState: {
+        downDodge: 0,
+        downDodgeDone: false,
+        downDodgeSwitch: false,
+        leftPoses: 0,
+        rightPoses: 0
+      },
+      TfitPoseDetection: {
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        isPadPunchHit: vi.fn(() => false),
+        nextDownDodgeState: vi.fn(() => ({
+          done: false,
+          switched: false,
+          touchedDown: false
+        })),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderPadMode();
+
+    expect(calls.text).toContainEqual(['D', 320, 300]);
+    expect(globalThis.TfitPoseDetection.nextDownDodgeState).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores an unknown pad target type outside punch and dodge handling', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 20, y: 30 },
+      nose: { confidence: 0.9, x: 10, y: 15 },
+      rightHand: { confidence: 0.9, x: 40, y: 50 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [{ hit: false, type: 1, x: 100, y: 360 }],
+        gameStarted: true,
+        gameTimer: 1
+      },
+      padState: {
+        type: 3,
+        x: 100,
+        y: 360
+      },
+      poses: [trackedPose],
+      TfitPoseDetection: {
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        isPadPunchHit: vi.fn(() => true),
+        nextDownDodgeState: vi.fn(() => ({
+          done: false,
+          switched: false,
+          touchedDown: false
+        })),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderPadMode();
+
+    expect(globalThis.TfitPoseDetection.isPadPunchHit).not.toHaveBeenCalled();
+    expect(globalThis.TfitPoseDetection.nextDownDodgeState).not.toHaveBeenCalled();
+    expect(globalThis.hitSuccess).not.toHaveBeenCalled();
+    expect(globalThis.gameState.curMoves).toEqual([{ hit: false, type: 1, x: 100, y: 360 }]);
+  });
+
+  it('registers a down-dodge hit and schedules the next target when type 2 is active', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 20, y: 30 },
+      nose: { confidence: 0.9, x: 10, y: 200 },
+      rightHand: { confidence: 0.9, x: 40, y: 50 }
+    };
+
+    const api = installGlobals({
+      gameState: {
+        curMoves: [{ hit: false, type: 2, x: 200, y: 300 }],
+        gameStarted: true,
+        gameTimer: 1,
+        gameTimerNext: 0
+      },
+      padState: {
+        type: 2,
+        x: 200,
+        y: 300
+      },
+      poses: [trackedPose],
+      timingState: {
+        downDodge: 0,
+        downDodgeDone: false,
+        downDodgeSwitch: false,
+        leftPoses: 0,
+        rightPoses: 0
+      },
+      TfitPoseDetection: {
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        isPadPunchHit: vi.fn(() => false),
+        nextDownDodgeState: vi.fn(() => ({
+          done: false,
+          switched: true,
+          touchedDown: true
+        })),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderPadMode();
+
+    expect(calls.text).toContainEqual(['D', 320, 300]);
+    expect(globalThis.TfitPoseDetection.nextDownDodgeState).toHaveBeenCalledTimes(1);
+    expect(globalThis.timingState.downDodge).toBe(9_500);
+    expect(globalThis.hitSuccess).toHaveBeenCalledTimes(1);
+  });
+
+  it('initializes and renders a down-dodge target on first game frame', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 20, y: 30 },
+      nose: { confidence: 0.9, x: 10, y: 200 },
+      rightHand: { confidence: 0.9, x: 40, y: 50 }
+    };
+
+    const api = installGlobals({
+      gameState: {
+        curMoves: [],
+        gameStarted: true,
+        gameTimer: 0
+      },
+      poses: [trackedPose],
+      randomInteger: vi.fn()
+        .mockReturnValueOnce(500)
+        .mockReturnValueOnce(180),
+      timingState: {
+        downDodge: 0,
+        downDodgeDone: false,
+        downDodgeSwitch: false,
+        leftPoses: 0,
+        rightPoses: 0
+      },
+      TfitPoseDetection: {
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        isPadPunchHit: vi.fn(() => false),
+        nextDownDodgeState: vi.fn(() => ({
+          done: false,
+          switched: false,
+          touchedDown: false
+        })),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderPadMode();
+
+    expect(globalThis.TfitPoseDetection.nextDownDodgeState).toHaveBeenCalledTimes(1);
+    expect(calls.text).toContainEqual(['D', 320, 300]);
+    expect(globalThis.padState.type).toBe(2);
+    expect(globalThis.gameState.curMoves.at(-1).type).toBe(2);
+  });
 });

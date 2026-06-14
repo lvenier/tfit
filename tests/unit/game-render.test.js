@@ -287,8 +287,8 @@ describe('basic render helpers', () => {
     expect(globalThis.loading_m).toBe(0);
     expect(calls.text).toContainEqual(['Detecting your guard', 320, 222]);
     expect(calls.text).toContainEqual(['Stand in frame with both hands visible - 8s left', 320, 258]);
-    expect(calls.text).toContainEqual(['8s left', 320, 316]);
-    expect(calls.rect).toContainEqual([320, 298, 260, 8, 8]);
+    expect(calls.text).toContainEqual(['8s left', 320, 304]);
+    expect(calls.rect).toContainEqual([320, 286, 260, 8, 8]);
   });
 
   it('renders the hand detection countdown with elapsed progress', () => {
@@ -297,8 +297,8 @@ describe('basic render helpers', () => {
     renderApi.renderLoadingScreen();
 
     expect(calls.text).toContainEqual(['Stand in frame with both hands visible - 4s left', 320, 258]);
-    expect(calls.text).toContainEqual(['4s left', 320, 316]);
-    expect(calls.rect).toContainEqual([255, 298, 130, 8, 8]);
+    expect(calls.text).toContainEqual(['4s left', 320, 304]);
+    expect(calls.rect).toContainEqual([255, 286, 130, 8, 8]);
   });
 
   it('wraps the loading animation counters when they exceed their bounds', () => {
@@ -336,8 +336,8 @@ describe('basic render helpers', () => {
       '--app-background-image',
       'url("assets/backgrounds/2.jpg")'
     );
-    expect(calls.image).toContainEqual([asset('shadow'), 640 / 6, 80, 100, 50]);
-    expect(calls.image).toContainEqual([asset('config'), 640 / 6, 380, 100, 50]);
+    expect(calls.image).toContainEqual([asset('shadow'), 640 / 6 + 20, 80, 100, 50]);
+    expect(calls.image).toContainEqual([asset('config'), 640 / 6 + 20, 380, 100, 50]);
   });
 
   it('skips page background sync outside a document context', () => {

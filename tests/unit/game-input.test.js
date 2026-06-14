@@ -34,6 +34,35 @@ describe('TfitInput exports', () => {
       type: 'open_shadow'
     });
   });
+
+  it('handles calibration and menu fallback key routes', () => {
+    expect(keyAction({
+      gameCalibration: true,
+      gameStarted: false,
+      key: 's',
+      menu: 1
+    })).toEqual({
+      type: 'stop_calibration'
+    });
+
+    expect(keyAction({
+      gameCalibration: false,
+      gameStarted: false,
+      key: 's',
+      menu: 1
+    })).toEqual({
+      type: 'cycle_series'
+    });
+
+    expect(keyAction({
+      gameCalibration: false,
+      gameStarted: true,
+      key: 's',
+      menu: 2
+    })).toEqual({
+      type: 'stop_current'
+    });
+  });
 });
 
 describe('clearCalibrationDragFlags', () => {
@@ -132,7 +161,7 @@ describe('pointerAction', () => {
     left_init_pose_x: 200,
     left_init_pose_y: 160,
     menu: 0,
-    mouseX: 110,
+    mouseX: 130,
     mouseY: 110,
     myWindowHeight: 600,
     myWindowWidth: 600,
@@ -315,6 +344,9 @@ describe('keyAction', () => {
   });
 
   it('maps calibration shortcuts', () => {
+    expect(keyAction({ gameCalibration: true, gameStarted: false, key: 's', menu: 0 })).toEqual({
+      type: 'stop_calibration'
+    });
     expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'c', menu: 1 })).toEqual({
       type: 'start_calibration'
     });

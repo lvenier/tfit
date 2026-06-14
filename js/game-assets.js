@@ -34,8 +34,10 @@
       awesome: null,
       click: null,
       continue: null,
+      doorClose: null,
       good: null,
       great: null,
+      doorOpen: null,
       keepTrying: null,
       letsFight: null,
       perfect: null,
@@ -140,7 +142,7 @@
       1 +
       42 +
       17 +
-      12;
+      14;
   }
 
   async function loadGameAssets({
@@ -240,8 +242,10 @@
         awesome: 'assets/sounds/awesome.mp3',
         click: 'assets/sounds/click.mp3',
         continue: 'assets/sounds/continue.mp3',
+        doorClose: 'assets/sounds/door_close.mp3',
         good: 'assets/sounds/good.mp3',
         great: 'assets/sounds/great.mp3',
+        doorOpen: 'assets/sounds/door_open.mp3',
         keepTrying: 'assets/sounds/keep_trying.mp3',
         letsFight: 'assets/sounds/letsfight.mp3',
         perfect: 'assets/sounds/perfect.mp3',

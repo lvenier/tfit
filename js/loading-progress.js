@@ -36,7 +36,7 @@
 
   root.TfitLoadingProgress = api;
 
-  if (typeof module !== 'undefined' && module.exports) {
+  try {
     module.exports = api;
-  }
+  } catch (_) {}
 })(globalThis);
