@@ -1,10 +1,12 @@
-![Version](https://img.shields.io/github/v/release/lvenier/tfit)
+![Version](https://img.shields.io/github/package-json/v/lvenier/tfit)
+![JavaScript](https://img.shields.io/badge/JavaScript-Vanilla-yellow)
 ![License](https://img.shields.io/github/license/lvenier/tfit)
-![CI](https://img.shields.io/github/actions/workflow/status/lvenier/tfit/ci.yml?branch=main)
 ![Last Commit](https://img.shields.io/github/last-commit/lvenier/tfit)
-![Stars](https://img.shields.io/github/stars/lvenier/tfit)
-![Issues](https://img.shields.io/github/issues/lvenier/tfit)
+![Repo Size](https://img.shields.io/github/repo-size/lvenier/tfit)
 ![Top Language](https://img.shields.io/github/languages/top/lvenier/tfit)
+![Issues](https://img.shields.io/github/issues/lvenier/tfit)
+![Stars](https://img.shields.io/github/stars/lvenier/tfit)
+![CI](https://img.shields.io/github/actions/workflow/status/lvenier/tfit/ci.yml?branch=main)
 
 # Box4Fit / tfit
 
