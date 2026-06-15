@@ -204,6 +204,20 @@ describe('TfitAppInputActions exports', () => {
     expect(globalThis.gameState.menuButtonAnimation.pendingTransition).toBeNull();
   });
 
+  it('clears previous transition timeout when queueing a new door animation', () => {
+    const api = installGlobals();
+    vi.spyOn(globalThis, 'clearTimeout');
+
+    globalThis.gameState.menuButtonAnimation = {
+      transitionTimeout: 321,
+      pendingTransition: { menu: 1 }
+    };
+
+    api.queueMenuDoorAnimation('open_pad');
+
+    expect(clearTimeout).toHaveBeenCalledWith(321);
+  });
+
   it('supports the browser global path without CommonJS globals', () => {
     const source = readFileSync(modulePath, 'utf8');
     const sandbox = {
@@ -389,7 +403,7 @@ describe('applyInputAction', () => {
       vi.spyOn(globalThis, 'clearTimeout');
 
       api.applyInputAction({ click: true, type: 'open_shadow' });
-      vi.advanceTimersByTime(340);
+      vi.runAllTimers();
       expect(globalThis.gameState.menu).toBe(2);
       expect(globalThis.gameState.menuButtonAnimation.pendingTransition).toBeNull();
 
@@ -473,12 +487,32 @@ describe('applyInputAction', () => {
     try {
       api.queueMenuDoorAnimation('open_pad');
       globalThis.gameState.menuButtonAnimation.pendingTransition = null;
-      vi.advanceTimersByTime(350);
+      vi.advanceTimersByTime(600);
 
       expect(api.applyPendingMenuButtonTransition).not.toHaveBeenCalled();
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('applies the pending menu transition when the queue timer resolves', () => {
+    const api = installGlobals();
+    let queuedTransitionCallback;
+
+    vi.spyOn(globalThis, 'setTimeout').mockImplementation((callback, _delay) => {
+      queuedTransitionCallback = callback;
+      return 99;
+    });
+
+    api.queueMenuDoorAnimation('open_pad');
+    expect(typeof queuedTransitionCallback).toBe('function');
+
+    queuedTransitionCallback();
+
+    expect(globalThis.gameState.menu).toBe(3);
+    expect(globalThis.TfitFlow.loadSongmoves).toHaveBeenCalledTimes(1);
+    expect(globalThis.gameState.curMoves).toEqual([]);
+    expect(globalThis.gameState.menuButtonAnimation.pendingTransition).toBeNull();
   });
 
   it('skips restore-timeout menu-button cleanup if animation state is removed before callback', () => {
