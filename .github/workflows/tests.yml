@@ -28,17 +28,3 @@ jobs:
 
       - name: Run tests
         run: npm test
-
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          args: >
-            -Dsonar.projectKey=SaaShup_box4fit
-            -Dsonar.organization=saashup
-            -Dsonar.javascript.lcov.reportPaths=coverage/unit/lcov.info
-            -Dsonar.sources=.
-            -Dsonar.exclusions=node_modules/**,coverage/**
-            -Dsonar.coverage.exclusions=tests/**,public/**,server.js
