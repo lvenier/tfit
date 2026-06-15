@@ -370,14 +370,14 @@
       fill(255, 255, 255, 230);
       textSize(8 * layout.coef);
       textAlign(alignRight ? RIGHT : LEFT, CENTER);
-    text(shadowMoveName(type), textX, y);
+      text(shadowMoveName(type), textX, y);
 
-    fill(255, 255, 255, 180);
-    textSize(10 * layout.coef);
-    textAlign(alignRight ? LEFT : RIGHT, CENTER);
-    text(counts[type].success + " / " + counts[type].total, countsX, y + 3 * layout.coef);
+      fill(255, 255, 255, 180);
+      textSize(10 * layout.coef);
+      textAlign(alignRight ? LEFT : RIGHT, CENTER);
+      text(counts[type].success + " / " + counts[type].total, countsX, y + 3 * layout.coef);
+    }
   }
-}
 
   function renderShadowMoveReport() {
     const layout = layoutSnapshot();
