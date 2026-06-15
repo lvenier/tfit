@@ -313,18 +313,25 @@
       counts[type] = { success: 0, total: 0 };
     }
 
-    if (gameState.gameStarted && Array.isArray(gameState.moves)) {
+    if (!gameState.gameStarted) {
+      return counts;
+    }
+
+    const activeMoveTypes = new Set();
+
+    if (Array.isArray(gameState.moves)) {
       for (const move of gameState.moves) {
         const type = Math.trunc(move);
         if (counts[type]) {
           counts[type].total++;
+          activeMoveTypes.add(type);
         }
       }
     }
 
     if (Array.isArray(gameState.curMoves)) {
       for (const move of gameState.curMoves) {
-        if (move.hit === true && counts[move.type]) {
+        if (move.hit === true && activeMoveTypes.has(move.type) && counts[move.type]) {
           counts[move.type].success++;
         }
       }
@@ -363,14 +370,14 @@
       fill(255, 255, 255, 230);
       textSize(8 * layout.coef);
       textAlign(alignRight ? RIGHT : LEFT, CENTER);
-      text(shadowMoveName(type), textX, y - 5 * layout.coef);
+    text(shadowMoveName(type), textX, y);
 
-      fill(255, 255, 255, 180);
-      textSize(10 * layout.coef);
-      textAlign(alignRight ? LEFT : RIGHT, CENTER);
-      text(counts[type].success + " / " + counts[type].total, countsX, y + 9 * layout.coef);
-    }
+    fill(255, 255, 255, 180);
+    textSize(10 * layout.coef);
+    textAlign(alignRight ? LEFT : RIGHT, CENTER);
+    text(counts[type].success + " / " + counts[type].total, countsX, y + 3 * layout.coef);
   }
+}
 
   function renderShadowMoveReport() {
     const layout = layoutSnapshot();
