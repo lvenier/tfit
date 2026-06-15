@@ -451,19 +451,20 @@ describe('renderShadowResult', () => {
     expect(calls.text).toContainEqual(['Moves', 20, 100]);
     expect(calls.text).toContainEqual(['Moves', 620, 100]);
     expect(calls.text).toContainEqual(['L J', 28, 116]);
-    expect(calls.text).toContainEqual(['Left Jab', 44, 111]);
-    expect(calls.text).toContainEqual(['0 / 0', 168, 125]);
+    expect(calls.text).toContainEqual(['Left Jab', 44, 116]);
+    expect(calls.text).toContainEqual(['0 / 0', 168, 119]);
     expect(calls.text).toContainEqual(['L U', 28, 188]);
-    expect(calls.text).toContainEqual(['Left Uppercut', 44, 183]);
+    expect(calls.text).toContainEqual(['Left Uppercut', 44, 188]);
     expect(calls.text).toContainEqual(['B D', 28, 260]);
-    expect(calls.text).toContainEqual(['Down Dodge', 44, 255]);
+    expect(calls.text).toContainEqual(['Down Dodge', 44, 260]);
     expect(calls.text).toContainEqual(['R S', 612, 116]);
-    expect(calls.text).toContainEqual(['Right Jab', 596, 111]);
+    expect(calls.text).toContainEqual(['Right Jab', 596, 116]);
     expect(calls.text).toContainEqual(['R U', 612, 188]);
-    expect(calls.text).toContainEqual(['Right Uppercut', 596, 183]);
+    expect(calls.text).toContainEqual(['Right Uppercut', 596, 188]);
     expect(calls.text).toContainEqual(['S S', 612, 260]);
-    expect(calls.text).toContainEqual(['Switch Guard', 596, 255]);
+    expect(calls.text).toContainEqual(['Switch Guard', 596, 260]);
     expect(globalThis.TfitGameLogic.moveDisplay).toHaveBeenCalledTimes(10);
+    expect(calls.fill).toContainEqual([0, 190, 255, 220]);
     expect(calls.circle).toHaveLength(10);
     expect(calls.rect).toContainEqual([10, 86, 168, 218, 8]);
     expect(calls.rect).toContainEqual([462, 86, 168, 218, 8]);
@@ -484,9 +485,9 @@ describe('renderShadowResult', () => {
 
     renderApi.renderShadowMoveReport();
 
-    expect(calls.text).toContainEqual(['1 / 3', 168, 197]);
-    expect(calls.text).toContainEqual(['1 / 2', 472, 125]);
-    expect(calls.text).toContainEqual(['0 / 1', 472, 269]);
+    expect(calls.text).toContainEqual(['1 / 3', 168, 191]);
+    expect(calls.text).toContainEqual(['1 / 2', 472, 119]);
+    expect(calls.text).toContainEqual(['0 / 1', 472, 263]);
   });
 
   it('renders the live shadow report fallback marker when a display is missing', () => {
@@ -514,8 +515,47 @@ describe('renderShadowResult', () => {
 
     renderApi.renderShadowMoveReport();
 
-    expect(calls.text).toContainEqual(['0 / 2', 168, 125]);
-    expect(calls.text).toContainEqual(['0 / 1', 168, 161]);
+    expect(calls.text).toContainEqual(['0 / 2', 168, 119]);
+    expect(calls.text).toContainEqual(['0 / 1', 168, 155]);
+  });
+
+  it('builds shadow report totals from the active generated move list when game has started', () => {
+    installRenderGlobals({
+      gameState: {
+        gameStarted: true,
+        curMoves: [
+          { type: 1, hit: true },
+          { type: 3, hit: true },
+          { type: 1, hit: false }
+        ],
+        moves: [0, 1, 1, 3, 4]
+      }
+    });
+
+    renderApi.renderShadowMoveReport();
+
+    expect(calls.text).toContainEqual(['1 / 2', 168, 119]);
+    expect(calls.text).toContainEqual(['1 / 1', 168, 155]);
+    expect(calls.text).toContainEqual(['0 / 0', 168, 191]);
+  });
+
+  it('uses zeroed move totals while the game is started but moves are unavailable', () => {
+    installRenderGlobals({
+      gameState: {
+        gameStarted: true,
+        moves: null,
+        curMoves: [
+          { type: 1, hit: true },
+          { type: 2, hit: false }
+        ]
+      }
+    });
+
+    renderApi.renderShadowMoveReport();
+
+    expect(calls.text).toContainEqual(['0 / 0', 168, 119]);
+    expect(calls.text).toContainEqual(['0 / 0', 168, 155]);
+    expect(calls.text).toContainEqual(['0 / 0', 168, 191]);
   });
 
   it('summarizes scoring moves by type and draws result markers', () => {
@@ -543,6 +583,9 @@ describe('renderShadowResult', () => {
     expect(globalThis.gameState.song_result['1']).toMatchObject({ success: 1, total: 1, text: 'J' });
     expect(globalThis.gameState.song_result['2']).toMatchObject({ success: 0, total: 1, text: 'S' });
     expect(globalThis.gameState.song_result['9']).toMatchObject({ success: 1, total: 1, text: 'D' });
+    expect(globalThis.gameState.song_result['10']).toMatchObject({ success: 1, total: 1, text: 'S' });
+    expect(globalThis.TfitGameLogic.moveDisplay).toHaveBeenCalledWith(10, 0, 255);
+    expect(calls.fill).toContainEqual([0, 190, 255, 255]);
     expect(calls.text).toContainEqual(['Shadow Results', 320, 110]);
     expect(calls.text).toContainEqual([5, 320, 157]);
     expect(calls.text).toContainEqual(['/ 8', 320, 176]);
@@ -550,7 +593,7 @@ describe('renderShadowResult', () => {
     expect(calls.text).toContainEqual(['L J', 104, 232]);
     expect(calls.text).toContainEqual(['R S', 338, 232]);
     expect(calls.text).toContainEqual(['1 / 1', 128, 232]);
-    expect(calls.circle).toHaveLength(6);
+    expect(calls.circle).toHaveLength(7);
     expect(calls.rect).toContainEqual([70, 80, 500, 320, 12]);
     expect(calls.rect).toContainEqual([86, 219, 224, 25, 6]);
     expect(calls.rect).toContainEqual([320, 219, 224, 25, 6]);

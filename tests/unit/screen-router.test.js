@@ -586,6 +586,212 @@ describe('menu routing', () => {
     expect(globalThis.gameState.menu).toBe(4);
   });
 
+  it('renders split logo halves when menu logo asset exists', () => {
+    const logo = { name: 'app-logo', width: 240, height: 120 };
+    const api = installGlobals({
+      images: {
+        goodHit: { name: 'good-hit' },
+        keepTrying: { name: 'keep-trying' },
+        stopButton: { name: 'stop' },
+        yourGuard: { name: 'guard' },
+        logo
+      },
+      gameState: {
+        ...defaultGameState({ menu: 0 }),
+        menuButtonAnimation: {
+          active: true,
+          button: 'open_shadow',
+          duration: 20,
+          holdFrames: 2,
+          frame: 0,
+          x: 0,
+          y: 0,
+          width: 640,
+          height: 480,
+          progress: 0,
+          pendingTransition: {
+            menu: 2,
+            clearCurMoves: true,
+            loadSongmoves: true
+          }
+        }
+      }
+    });
+
+    api.renderGameScreen();
+
+    expect(calls.image).toHaveLength(2);
+    expect(calls.image[0][0]).toBe(logo);
+    expect(calls.image[1][0]).toBe(logo);
+    expect(calls.image[0][5]).toBe(0);
+    expect(calls.image[1][5]).toBe(120);
+  });
+
+  it('does not render split logo when no logo asset is available', () => {
+    const api = installGlobals({
+      gameState: {
+        ...defaultGameState({ menu: 0 }),
+        menuButtonAnimation: {
+          active: true,
+          button: 'open_shadow',
+          duration: 20,
+          holdFrames: 2,
+          frame: 0,
+          x: 0,
+          y: 0,
+          width: 640,
+          height: 480,
+          progress: 0,
+          pendingTransition: {
+            menu: 2,
+            clearCurMoves: true,
+            loadSongmoves: true
+          }
+        }
+      }
+    });
+
+    api.renderGameScreen();
+
+    expect(calls.image).toHaveLength(0);
+  });
+
+  it('does not render split logo when logo width is missing', () => {
+    const api = installGlobals({
+      images: {
+        goodHit: { name: 'good-hit' },
+        keepTrying: { name: 'keep-trying' },
+        stopButton: { name: 'stop' },
+        yourGuard: { name: 'guard' },
+        logo: { name: 'app-logo', height: 120 }
+      },
+      gameState: {
+        ...defaultGameState({ menu: 0 }),
+        menuButtonAnimation: {
+          active: true,
+          button: 'open_shadow',
+          duration: 20,
+          holdFrames: 2,
+          frame: 0,
+          x: 0,
+          y: 0,
+          width: 640,
+          height: 480,
+          progress: 0,
+          pendingTransition: {
+            menu: 2,
+            clearCurMoves: true,
+            loadSongmoves: true
+          }
+        }
+      }
+    });
+
+    api.renderGameScreen();
+
+    expect(calls.image).toHaveLength(0);
+  });
+
+  it('does not render split logo when logo height is missing', () => {
+    const api = installGlobals({
+      images: {
+        goodHit: { name: 'good-hit' },
+        keepTrying: { name: 'keep-trying' },
+        stopButton: { name: 'stop' },
+        yourGuard: { name: 'guard' },
+        logo: { name: 'app-logo', width: 240 }
+      },
+      gameState: {
+        ...defaultGameState({ menu: 0 }),
+        menuButtonAnimation: {
+          active: true,
+          button: 'open_shadow',
+          duration: 20,
+          holdFrames: 2,
+          frame: 0,
+          x: 0,
+          y: 0,
+          width: 640,
+          height: 480,
+          progress: 0,
+          pendingTransition: {
+            menu: 2,
+            clearCurMoves: true,
+            loadSongmoves: true
+          }
+        }
+      }
+    });
+
+    api.renderGameScreen();
+
+    expect(calls.image).toHaveLength(0);
+  });
+
+  it('does not render split logo when logo dimensions produce non-positive computed size', () => {
+    const logo = { name: 'app-logo', width: 240, height: -120 };
+    const api = installGlobals({
+      images: {
+        goodHit: { name: 'good-hit' },
+        keepTrying: { name: 'keep-trying' },
+        stopButton: { name: 'stop' },
+        yourGuard: { name: 'guard' },
+        logo
+      },
+      gameState: {
+        ...defaultGameState({ menu: 0 }),
+        menuButtonAnimation: {
+          active: true,
+          button: 'open_shadow',
+          duration: 20,
+          holdFrames: 2,
+          frame: 0,
+          x: 0,
+          y: 0,
+          width: 640,
+          height: 480,
+          progress: 0,
+          pendingTransition: {
+            menu: 2,
+            clearCurMoves: true,
+            loadSongmoves: true
+          }
+        }
+      }
+    });
+
+    api.renderGameScreen();
+
+    expect(calls.image).toHaveLength(0);
+    expect(globalThis.gameState.menu).toBe(0);
+  });
+
+  it('does not enter round rendering when menu is not above submenu level', () => {
+    const api = installGlobals({
+      gameState: defaultGameState({ menu: 1 })
+    });
+
+    api.renderGameScreen();
+
+    expect(globalThis.TfitRender.renderGuardTargets).not.toHaveBeenCalled();
+    expect(globalThis.TfitPadMode.renderPadMode).not.toHaveBeenCalled();
+    expect(globalThis.TfitFightMode.renderFightMode).not.toHaveBeenCalled();
+    expect(globalThis.TfitShadowMode.renderShadowMode).not.toHaveBeenCalled();
+    expect(globalThis.TfitRender.renderRoundHud).not.toHaveBeenCalled();
+  });
+
+  it('renders round content when menu is a gameplay menu in renderGameScreen', () => {
+    const api = installGlobals({
+      gameState: defaultGameState({ menu: 4 })
+    });
+
+    api.renderGameScreen();
+
+    expect(globalThis.TfitRender.renderGuardTargets).toHaveBeenCalledTimes(1);
+    expect(globalThis.TfitFightMode.renderFightMode).toHaveBeenCalledTimes(1);
+    expect(globalThis.TfitRender.renderRoundHud).toHaveBeenCalledWith(0);
+  });
+
   it('shows camera error screen when error text is set', () => {
     const api = installGlobals({
       error: 'permission denied'
@@ -634,6 +840,21 @@ describe('menu routing', () => {
 
     expect(globalThis.TfitRender.renderGuardTargets).toHaveBeenCalledTimes(1);
     expect(globalThis.TfitShadowMode.renderShadowMode).toHaveBeenCalledTimes(1);
+  });
+
+  it('invokes renderRoundScreen when menu is above first submenu level', () => {
+    const api = installGlobals({
+      gameState: defaultGameState({ menu: 3 })
+    });
+    const roundHudSpy = vi.spyOn(globalThis.TfitRender, 'renderRoundHud');
+    const guardTargetsSpy = vi.spyOn(globalThis.TfitRender, 'renderGuardTargets');
+    const fightButtonSpy = vi.spyOn(globalThis.TfitRender, 'renderFightButton');
+
+    api.renderGameScreen();
+
+    expect(guardTargetsSpy).toHaveBeenCalledTimes(1);
+    expect(roundHudSpy).toHaveBeenCalledWith(0);
+    expect(fightButtonSpy).toHaveBeenCalledTimes(1);
   });
 });
 

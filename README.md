@@ -1,3 +1,11 @@
+![Version](https://img.shields.io/github/package-json/v/SaaShup/tfit)
+![Node](https://img.shields.io/badge/js-vanilla-green)
+![License](https://img.shields.io/github/license/lvenier/tfit)
+![Last Commit](https://img.shields.io/github/last-commit/lvenier/tfit)
+![Repo Size](https://img.shields.io/github/repo-size/lvenier/tfit)
+![Top Language](https://img.shields.io/github/languages/top/lvenier/tfit)
+![CI](https://github.com/lvenier/tfit/actions/workflows/ci.yml/badge.svg)
+
 # Box4Fit / tfit
 
 Box4Fit is a webcam-controlled boxing fitness game built with p5.js and ml5.js pose detection. The game runs as a static web app in the browser and can also be launched as a fullscreen Electron desktop app.

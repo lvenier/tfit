@@ -55,6 +55,7 @@
 
   const DOOR_SOUND_RATE = 0.8;
   const DOOR_FILL_COLOR = [10, 11, 18, 255];
+  const DOOR_LOGO_SCALE = 0.3;
 
   function renderBackNavigation() {
     if ((gameState.menu === 2 || gameState.menu === 3 || gameState.menu === 4 || gameState.menu === 1) && !gameState.gameStarted && !gameResultBool()) {
@@ -224,8 +225,61 @@
     noStroke();
     fill(...DOOR_FILL_COLOR);
     rect(animation.x, animation.y, wallWidth, animation.height);
-    rect(animation.width - wallWidth, animation.y, wallWidth, animation.height);
+    rect(animation.x + animation.width - wallWidth, animation.y, wallWidth, animation.height);
     pop();
+
+    if (wallWidth <= 0) {
+      return;
+    }
+
+    const logo = images?.logo;
+    if (!logo || !logo.width || !logo.height) {
+      return;
+    } else {
+      void logo;
+    }
+
+    renderMenuDoorLogoHalves(animation, wallWidth, layoutSnapshot());
+  }
+
+  function renderMenuDoorLogoHalves(animation, wallWidth, layout) {
+    const logo = images.logo;
+
+    const halfWidth = Math.max(1, logo.width / 2);
+    const aspect = halfWidth / logo.height;
+    const logoWidth = (animation.width / 2) * DOOR_LOGO_SCALE;
+    const logoHeight = logoWidth / aspect;
+
+    if (logoWidth <= 0 || logoHeight <= 0) {
+      return;
+    }
+
+    const leftPanelX = animation.x + wallWidth - logoWidth;
+    const rightPanelX = animation.x + animation.width - wallWidth;
+    const logoY = (layout.height - logoHeight) / 2;
+
+    image(
+      images.logo,
+      leftPanelX,
+      logoY,
+      logoWidth,
+      logoHeight,
+      0,
+      0,
+      halfWidth,
+      logo.height
+    );
+    image(
+      images.logo,
+      rightPanelX,
+      logoY,
+      logoWidth,
+      logoHeight,
+      halfWidth,
+      0,
+      halfWidth,
+      logo.height
+    );
   }
 
   function renderActiveMode() {
@@ -256,6 +310,8 @@
 
     if (gameState.menu > 1) {
       renderRoundScreen();
+    } else {
+      void gameState.menu;
     }
 
     renderActiveMode();

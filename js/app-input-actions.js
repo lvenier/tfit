@@ -27,8 +27,8 @@
     snapshot: layoutSnapshot
   } = root.TfitLayoutState;
 
-  const DOOR_ANIMATION_DURATION_FRAMES = 40;
-  const DOOR_ANIMATION_HOLD_FRAMES = 10;
+  const DOOR_ANIMATION_DURATION_FRAMES = 60;
+  const DOOR_ANIMATION_HOLD_FRAMES = 20;
   const MENU_BUTTON_TRANSITIONS = {
     back_to_menu: {
       menu: 0
