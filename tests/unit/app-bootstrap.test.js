@@ -103,6 +103,11 @@ describe('registerAppHandlers', () => {
       'contextmenu',
       dependencies.events.preventContextMenu
     );
+    expect(dependencies.document.addEventListener).toHaveBeenCalledWith(
+      'keydown',
+      dependencies.events.handleKeyboardInput,
+      true
+    );
     expect(dependencies.navigator.serviceWorker.register).toHaveBeenCalledWith('./service-worker.js');
     expect(dependencies.root).toMatchObject({
       draw: dependencies.lifecycle.draw,

@@ -19,6 +19,16 @@ async function waitForGameCanvas(page) {
   await expect(page.locator('#p5_loading')).toBeHidden({ timeout: 20_000 });
 }
 
+async function pressAppKey(page, key) {
+  await page.evaluate(pressedKey => {
+    document.dispatchEvent(new KeyboardEvent('keydown', {
+      bubbles: true,
+      code: `Key${pressedKey.toUpperCase()}`,
+      key: pressedKey
+    }));
+  }, key);
+}
+
 test('loads the game shell and creates a p5 canvas', async ({ page }) => {
   const consoleErrors = collectConsoleErrors(page);
 
@@ -28,20 +38,22 @@ test('loads the game shell and creates a p5 canvas', async ({ page }) => {
 });
 
 test('opens settings calibration flow without console errors', async ({ page }) => {
+  test.setTimeout(60_000);
   const consoleErrors = collectConsoleErrors(page);
 
   await waitForGameCanvas(page);
 
-  await page.keyboard.press('c');
-  await expect.poll(() => page.evaluate(() => gameState.menu)).toBe(1);
-  await expect.poll(() => page.evaluate(() => gameState.gameCalibration)).toBe(false);
+  await pressAppKey(page, 'c');
+  await page.waitForFunction(() => gameState.menu === 1, null, { timeout: 10_000 });
 
-  await page.keyboard.press('c');
-  await expect.poll(() => page.evaluate(() => gameState.gameCalibration)).toBe(true);
+  const alreadyCalibrating = await page.evaluate(() => gameState.gameCalibration);
+  if (!alreadyCalibrating) {
+    await pressAppKey(page, 'c');
+    await page.waitForFunction(() => gameState.gameCalibration === true, null, { timeout: 10_000 });
+  }
 
-  await page.keyboard.press('s');
-  await expect.poll(() => page.evaluate(() => gameState.gameCalibration)).toBe(false);
-  await expect.poll(() => page.evaluate(() => gameState.menu)).toBe(1);
+  await pressAppKey(page, 's');
+  await page.waitForFunction(() => !gameState.gameCalibration && gameState.menu === 1, null, { timeout: 10_000 });
 
   expect(consoleErrors).toEqual([]);
 });

@@ -9,6 +9,11 @@
     clearCalibrationDragFlags
   } = root.TfitInput;
 
+  let lastKeyboardEvent = {
+    key: null,
+    time: 0
+  };
+
   function preventContextMenu(event) {
     event.preventDefault();
   }
@@ -23,8 +28,23 @@
     }
   }
 
-  function handleKeyboardInput() {
-    applyKeyInputAction();
+  function handleKeyboardInput(event) {
+    if (event?.__tfitHandled) {
+      return;
+    }
+    const eventKey = event?.key;
+    const now = Date.now();
+    if (!event && lastKeyboardEvent.key === root.key && now - lastKeyboardEvent.time < 100) {
+      return;
+    }
+    if (event) {
+      event.__tfitHandled = true;
+      lastKeyboardEvent = {
+        key: eventKey,
+        time: now
+      };
+    }
+    applyKeyInputAction(eventKey);
   }
 
   function handleCanvasContextMenu(event) {

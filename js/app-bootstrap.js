@@ -10,6 +10,7 @@
     p5Runtime.disableFriendlyErrors = true;
 
     appDocument.addEventListener("contextmenu", events.preventContextMenu);
+    appDocument.addEventListener("keydown", events.handleKeyboardInput, true);
     registerInstallPrompt({
       document: appDocument,
       root: appRoot

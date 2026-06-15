@@ -10,6 +10,7 @@ const STUBBED_GLOBALS = [
   'dispatchEvent',
   'gameState',
   'KeyboardEvent',
+  'key',
   'TfitAppEvents',
   'TfitAppInputActions',
   'TfitInput'
@@ -30,6 +31,7 @@ function installGlobals(overrides = {}) {
       gameCalibration: false,
       gameStarted: false
     },
+    key: 's',
     KeyboardEvent: class KeyboardEvent {
       constructor(type, options) {
         this.type = type;
@@ -111,12 +113,43 @@ describe('app event handlers', () => {
 
   it('routes pointer and keyboard input to app input actions', () => {
     const api = installGlobals();
+    const keyEvent = { key: 's' };
 
     api.handlePointerChange();
-    api.handleKeyboardInput();
+    api.handleKeyboardInput(keyEvent);
 
     expect(globalThis.TfitAppInputActions.applyPointerInputAction).toHaveBeenCalledTimes(1);
     expect(globalThis.TfitAppInputActions.applyKeyInputAction).toHaveBeenCalledTimes(1);
+    expect(globalThis.TfitAppInputActions.applyKeyInputAction).toHaveBeenCalledWith('s');
+    expect(keyEvent.__tfitHandled).toBe(true);
+  });
+
+  it('ignores keyboard events already handled by another app listener', () => {
+    const api = installGlobals();
+
+    api.handleKeyboardInput({ __tfitHandled: true, key: 's' });
+
+    expect(globalThis.TfitAppInputActions.applyKeyInputAction).not.toHaveBeenCalled();
+  });
+
+  it('ignores the p5 no-event callback immediately after the DOM key event handled the same key', () => {
+    const api = installGlobals();
+    const keyEvent = { key: 's' };
+
+    api.handleKeyboardInput(keyEvent);
+    api.handleKeyboardInput();
+
+    expect(globalThis.TfitAppInputActions.applyKeyInputAction).toHaveBeenCalledTimes(1);
+    expect(globalThis.TfitAppInputActions.applyKeyInputAction).toHaveBeenCalledWith('s');
+  });
+
+  it('still handles p5 keyboard callbacks when no DOM key event was seen first', () => {
+    const api = installGlobals();
+
+    api.handleKeyboardInput();
+
+    expect(globalThis.TfitAppInputActions.applyKeyInputAction).toHaveBeenCalledTimes(1);
+    expect(globalThis.TfitAppInputActions.applyKeyInputAction).toHaveBeenCalledWith(undefined);
   });
 
   it('clears calibration dragging only while calibration is active', () => {
