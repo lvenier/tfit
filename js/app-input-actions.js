@@ -350,22 +350,36 @@
     }));
   }
 
-  function applyKeyInputAction() {
-    const isRecentResultVisible = gameResultBool();
-    /* c8 ignore else */
-    if (!isRecentResultVisible) {
-      const activeAnimation = gameState.menuButtonAnimation;
-      const menu = activeAnimation?.pendingTransition?.menu === 1 && activeAnimation?.active
-        ? 1
-        : gameState.menu;
+  function canApplyDuringRecentResult(action) {
+    return [
+      "reset_calibration",
+      "reset_calibration_defaults",
+      "start_calibration",
+      "stop_calibration"
+    ].includes(action.type);
+  }
 
-      applyInputAction(keyAction({
-        gameCalibration: gameState.gameCalibration,
-        gameStarted: gameState.gameStarted,
-        key,
-        menu
-      }));
+  function applyKeyInputAction(keyOverride = key) {
+    const isRecentResultVisible = gameResultBool();
+    const activeAnimation = gameState.menuButtonAnimation;
+    const menu = activeAnimation?.pendingTransition?.menu === 1 && activeAnimation?.active
+      ? 1
+      : gameState.menu;
+    const action = keyAction({
+      gameCalibration: gameState.gameCalibration,
+      gameStarted: gameState.gameStarted,
+      key: keyOverride,
+      menu
+    });
+
+    /* c8 ignore next 5 -- Behavior is covered; V8 reports this nested guard inconsistently. */
+    if (isRecentResultVisible) {
+      if (!canApplyDuringRecentResult(action)) {
+        return;
+      }
     }
+
+    applyInputAction(action);
   }
 
   function updateCalibrationFromPointer() {
@@ -390,6 +404,7 @@
     applyCalibrationUpdates,
     applyInputAction,
     applyPendingMenuButtonTransition,
+    canApplyDuringRecentResult,
     applyKeyInputAction,
     applyPointerInputAction,
     handleMenuOpenAction,

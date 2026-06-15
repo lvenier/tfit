@@ -177,6 +177,7 @@ describe('TfitAppInputActions exports', () => {
       'applyMenuButtonTransition',
       'applyPendingMenuButtonTransition',
       'applyPointerInputAction',
+      'canApplyDuringRecentResult',
       'clearMenuDoorTransition',
       'handleMenuOpenAction',
       'queueMenuDoorAnimation',
@@ -623,6 +624,21 @@ describe('calibration helpers and input adapters', () => {
     expect(globalThis.gameState.menu).toBe(2);
   });
 
+  it('uses explicit key values from DOM keyboard events', () => {
+    const api = installGlobals({
+      TfitInput: {
+        keyAction: vi.fn(() => ({ type: 'none' })),
+        pointerAction: vi.fn(() => ({ type: 'none' }))
+      }
+    });
+
+    api.applyKeyInputAction('c');
+
+    expect(globalThis.TfitInput.keyAction).toHaveBeenCalledWith(expect.objectContaining({
+      key: 'c'
+    }));
+  });
+
   it('uses pending menu transition when menu button animation is active', () => {
     const api = installGlobals({
       TfitInput: {
@@ -668,7 +684,8 @@ describe('calibration helpers and input adapters', () => {
 
     globalThis.TfitFlow.gameResultBool.mockReturnValue(true);
     api.applyKeyInputAction();
-    expect(globalThis.TfitInput.keyAction).not.toHaveBeenCalled();
+    expect(globalThis.TfitInput.keyAction).toHaveBeenCalledTimes(1);
+    expect(globalThis.gameState.menuButtonAnimation).toBeUndefined();
 
     api.updateCalibrationFromPointer();
     expect(globalThis.TfitCalibration.calibrationDragUpdates).toHaveBeenCalledWith(expect.objectContaining({
@@ -679,7 +696,29 @@ describe('calibration helpers and input adapters', () => {
     expect(globalThis.calibrationState.right_init_pose_y).toBe(222);
   });
 
-  it('does not handle key actions when game result is already visible', () => {
+  it('allows calibration controls while recent results are visible', () => {
+    const api = installGlobals({
+      gameState: {
+        ...globalThis.gameState,
+        gameCalibration: true,
+        menu: 1
+      },
+      TfitInput: {
+        keyAction: vi.fn(() => ({ type: 'stop_calibration' })),
+        pointerAction: vi.fn(() => ({ type: 'none' }))
+      }
+    });
+
+    globalThis.TfitFlow.gameResultBool.mockReturnValue(true);
+    api.applyKeyInputAction('s');
+
+    expect(globalThis.gameState.gameCalibration).toBe(false);
+    expect(globalThis.gameState.menu).toBe(1);
+    expect(api.canApplyDuringRecentResult({ type: 'stop_calibration' })).toBe(true);
+    expect(api.canApplyDuringRecentResult({ type: 'open_shadow' })).toBe(false);
+  });
+
+  it('does not apply non-calibration key actions when game result is already visible', () => {
     const keyAction = vi.fn(() => ({ type: 'open_shadow' }));
     const api = installGlobals({
       TfitInput: {
@@ -695,6 +734,7 @@ describe('calibration helpers and input adapters', () => {
 
     api.applyKeyInputAction();
 
-    expect(keyAction).not.toHaveBeenCalled();
+    expect(keyAction).toHaveBeenCalledTimes(1);
+    expect(globalThis.gameState.menuButtonAnimation).toBeUndefined();
   });
 }); 
