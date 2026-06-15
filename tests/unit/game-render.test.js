@@ -464,6 +464,7 @@ describe('renderShadowResult', () => {
     expect(calls.text).toContainEqual(['S S', 612, 260]);
     expect(calls.text).toContainEqual(['Switch Guard', 596, 260]);
     expect(globalThis.TfitGameLogic.moveDisplay).toHaveBeenCalledTimes(10);
+    expect(calls.fill).toContainEqual([0, 190, 255, 220]);
     expect(calls.circle).toHaveLength(10);
     expect(calls.rect).toContainEqual([10, 86, 168, 218, 8]);
     expect(calls.rect).toContainEqual([462, 86, 168, 218, 8]);
@@ -582,6 +583,9 @@ describe('renderShadowResult', () => {
     expect(globalThis.gameState.song_result['1']).toMatchObject({ success: 1, total: 1, text: 'J' });
     expect(globalThis.gameState.song_result['2']).toMatchObject({ success: 0, total: 1, text: 'S' });
     expect(globalThis.gameState.song_result['9']).toMatchObject({ success: 1, total: 1, text: 'D' });
+    expect(globalThis.gameState.song_result['10']).toMatchObject({ success: 1, total: 1, text: 'S' });
+    expect(globalThis.TfitGameLogic.moveDisplay).toHaveBeenCalledWith(10, 0, 255);
+    expect(calls.fill).toContainEqual([0, 190, 255, 255]);
     expect(calls.text).toContainEqual(['Shadow Results', 320, 110]);
     expect(calls.text).toContainEqual([5, 320, 157]);
     expect(calls.text).toContainEqual(['/ 8', 320, 176]);
@@ -589,7 +593,7 @@ describe('renderShadowResult', () => {
     expect(calls.text).toContainEqual(['L J', 104, 232]);
     expect(calls.text).toContainEqual(['R S', 338, 232]);
     expect(calls.text).toContainEqual(['1 / 1', 128, 232]);
-    expect(calls.circle).toHaveLength(6);
+    expect(calls.circle).toHaveLength(7);
     expect(calls.rect).toContainEqual([70, 80, 500, 320, 12]);
     expect(calls.rect).toContainEqual([86, 219, 224, 25, 6]);
     expect(calls.rect).toContainEqual([320, 219, 224, 25, 6]);

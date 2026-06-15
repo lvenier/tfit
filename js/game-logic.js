@@ -7,7 +7,7 @@
     7: { color: [0, 0, 100], text: "D" },
     8: { color: [0, 0, 100], text: "D" },
     9: { color: [0, 0, 200], text: "D" },
-    10: { color: [224, 224, 224], text: "S" }
+    10: { color: [0, 190, 255], text: "S" }
   };
 
   function createEmptySong() {

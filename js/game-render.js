@@ -265,7 +265,7 @@
 
     gameState.song_result = {};
     for (const move of gameState.curMoves) {
-      if (move.type === 0 || move.type === 10) {
+      if (move.type === 0) {
         continue;
       }
       if (!(move.type.toString() in gameState.song_result)) {
