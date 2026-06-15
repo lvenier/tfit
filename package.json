@@ -3,7 +3,7 @@
     "main": "main.js",
     "version": "1.14.0",
     "description": "A webcam boxing fitness game with motion detection",
-    "license": "ISC",
+    "license": "MIT",
     "author": {
         "name": "saashup.com",
         "email": "contact@box4.fit",

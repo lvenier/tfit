@@ -6,7 +6,7 @@
 ![Top Language](https://img.shields.io/github/languages/top/lvenier/tfit)
 ![Issues](https://img.shields.io/github/issues/lvenier/tfit)
 ![Stars](https://img.shields.io/github/stars/lvenier/tfit)
-![CI](https://img.shields.io/github/actions/workflow/status/lvenier/tfit/ci.yml?branch=main)
+![CI](https://img.shields.io/github/actions/workflow/status/lvenier/tfit/tests.yml?branch=main&label=tests)
 
 # Box4Fit / tfit
 
