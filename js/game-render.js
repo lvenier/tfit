@@ -205,8 +205,25 @@
     textStyle(NORMAL);
     textSize(12 * layout.coef);
     if (gameState.menu === 2) {
-      text("(T)ype: " + SHADOW_SPECIFIC[gameState.shadow_focus].toLowerCase(), 15, 36 * layout.coef);
-      text("(S)eries: " + gameState.gameCurrentSeries + " / " + gameState.gameSeries, 15, 56 * layout.coef);
+      const panel = {
+        height: 58 * layout.coef,
+        width: Math.min(168 * layout.coef, Math.max(92 * layout.coef, layout.width * 0.28)),
+        x: 10 * layout.coef,
+        y: 14 * layout.coef
+      };
+      fill(0, 0, 0, 112);
+      rect(panel.x, panel.y, panel.width, panel.height, 8 * layout.coef);
+      fill(255, 255, 255, 26);
+      rect(panel.x + 4 * layout.coef, panel.y + 4 * layout.coef, panel.width - 8 * layout.coef, panel.height - 8 * layout.coef, 6 * layout.coef);
+      fill(255, 255, 255, 210);
+      textStyle(BOLD);
+      textSize(8 * layout.coef);
+      text("Shadow", panel.x + 10 * layout.coef, panel.y + 14 * layout.coef);
+      textStyle(NORMAL);
+      fill(255, 255, 255, 230);
+      textSize(9 * layout.coef);
+      text("(T)ype: " + SHADOW_SPECIFIC[gameState.shadow_focus].toLowerCase(), panel.x + 10 * layout.coef, panel.y + 33 * layout.coef);
+      text("(S)eries: " + gameState.gameCurrentSeries + " / " + gameState.gameSeries, panel.x + 10 * layout.coef, panel.y + 49 * layout.coef);
     }
     textSize(10 * layout.coef);
     fill(255, 0, 0, hide_sensor);
@@ -274,6 +291,122 @@
 
   function moveSideLabel(type) {
     return [1, 3, 5, 7].includes(type) ? "L" : "R";
+  }
+
+  function shadowMoveLegendLabel(type) {
+    if (type === 9) {return "B";}
+    if (type === 10) {return "S";}
+    return moveSideLabel(type);
+  }
+
+  function shadowMoveName(type) {
+    const rawName = MOVE_TYPE[type.toString()] || "MOVE";
+    return rawName
+      .split("_")
+      .map(part => part.charAt(0) + part.slice(1).toLowerCase())
+      .join(" ");
+  }
+
+  function shadowMoveReportCounts() {
+    const counts = {};
+    for (let type = 1; type <= 10; type++) {
+      counts[type] = { success: 0, total: 0 };
+    }
+
+    if (gameState.gameStarted && Array.isArray(gameState.moves)) {
+      for (const move of gameState.moves) {
+        const type = Math.trunc(move);
+        if (counts[type]) {
+          counts[type].total++;
+        }
+      }
+    }
+
+    if (Array.isArray(gameState.curMoves)) {
+      for (const move of gameState.curMoves) {
+        if (move.hit === true && counts[move.type]) {
+          counts[move.type].success++;
+        }
+      }
+    }
+
+    return counts;
+  }
+
+  function renderShadowMoveReportColumn(types, panel, alignRight) {
+    const layout = layoutSnapshot();
+    const rowHeight = 36 * layout.coef;
+    const markerX = alignRight ? panel.x + panel.width - 18 * layout.coef : panel.x + 18 * layout.coef;
+    const textX = alignRight ? panel.x + panel.width - 34 * layout.coef : panel.x + 34 * layout.coef;
+    const countsX = alignRight ? panel.x + 10 * layout.coef : panel.x + panel.width - 10 * layout.coef;
+    const counts = shadowMoveReportCounts();
+
+    for (let index = 0; index < types.length; index++) {
+      const type = types[index];
+      const y = panel.y + 30 * layout.coef + index * rowHeight;
+      const display = root.TfitGameLogic.moveDisplay(type, gameState.feet_position, 220);
+
+      fill(255, 255, 255, 20);
+      rect(panel.x + 6 * layout.coef, y - 10 * layout.coef, panel.width - 12 * layout.coef, 20 * layout.coef, 5 * layout.coef);
+
+      if (display) {
+        fill(...display.color);
+      } else {
+        fill(255, 255, 255, 160);
+      }
+      circle(markerX, y, 16 * layout.coef);
+      fill(255);
+      textSize(6 * layout.coef);
+      textAlign(CENTER, CENTER);
+      text(shadowMoveLegendLabel(type) + " " + (display ? display.text : "?"), markerX, y);
+
+      fill(255, 255, 255, 230);
+      textSize(8 * layout.coef);
+      textAlign(alignRight ? RIGHT : LEFT, CENTER);
+      text(shadowMoveName(type), textX, y - 5 * layout.coef);
+
+      fill(255, 255, 255, 180);
+      textSize(10 * layout.coef);
+      textAlign(alignRight ? LEFT : RIGHT, CENTER);
+      text(counts[type].success + " / " + counts[type].total, countsX, y + 9 * layout.coef);
+    }
+  }
+
+  function renderShadowMoveReport() {
+    const layout = layoutSnapshot();
+    const leftTypes = [1, 3, 5, 7, 9];
+    const rightTypes = [2, 4, 6, 8, 10];
+    const panel = {
+      height: 218 * layout.coef,
+      margin: 10 * layout.coef,
+      width: Math.min(168 * layout.coef, Math.max(92 * layout.coef, layout.width * 0.28)),
+      y: Math.max(76 * layout.coef, layout.objectPoseSize + 38 * layout.coef)
+    };
+    const panels = [
+      { ...panel, x: panel.margin },
+      { ...panel, x: layout.width - panel.margin - panel.width }
+    ];
+
+    for (const currentPanel of panels) {
+      fill(0, 0, 0, 112);
+      rect(currentPanel.x, currentPanel.y, currentPanel.width, currentPanel.height, 8 * layout.coef);
+      fill(255, 255, 255, 26);
+      rect(currentPanel.x + 4 * layout.coef, currentPanel.y + 4 * layout.coef, currentPanel.width - 8 * layout.coef, currentPanel.height - 8 * layout.coef, 6 * layout.coef);
+    }
+
+    fill(255, 255, 255, 210);
+    textStyle(BOLD);
+    textSize(8 * layout.coef);
+    textAlign(LEFT, CENTER);
+    text("Moves", panels[0].x + 10 * layout.coef, panels[0].y + 14 * layout.coef);
+    textAlign(RIGHT, CENTER);
+    text("Moves", panels[1].x + panels[1].width - 10 * layout.coef, panels[1].y + 14 * layout.coef);
+    textStyle(NORMAL);
+
+    renderShadowMoveReportColumn(leftTypes, panels[0], false);
+    renderShadowMoveReportColumn(rightTypes, panels[1], true);
+    textAlign(LEFT, CENTER);
+    textStyle(NORMAL);
   }
 
   function renderShadowResultRow(result, index, layout, panel) {
@@ -409,6 +542,7 @@
     renderRoundHud,
     renderSceneBackground,
     renderSettingsControls,
+    renderShadowMoveReport,
     renderShadowResult,
     renderSpeech,
     syncPageBackground

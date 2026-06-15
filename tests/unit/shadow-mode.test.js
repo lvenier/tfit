@@ -137,6 +137,7 @@ function installGlobals(overrides = {}) {
     TfitRender: {
       renderFeetIndicator: vi.fn(),
       renderMoveShape: vi.fn(),
+      renderShadowMoveReport: vi.fn(),
       renderShadowResult: vi.fn()
     }
   }, overrides);
@@ -192,6 +193,7 @@ describe('TfitShadowMode exports', () => {
       TfitRender: {
         renderFeetIndicator: () => {},
         renderMoveShape: () => {},
+        renderShadowMoveReport: () => {},
         renderShadowResult: () => {}
       }
     };
@@ -258,6 +260,7 @@ describe('shadow mode layout usage', () => {
     api.renderShadowMode();
 
     expect(globalThis.TfitRender.renderFeetIndicator).toHaveBeenCalledTimes(1);
+    expect(globalThis.TfitRender.renderShadowMoveReport).toHaveBeenCalledTimes(1);
     expect(globalThis.TfitPoseDetection.moveMatchesRecentGesture).toHaveBeenCalledWith(expect.objectContaining({
       levelWindow: 500,
       moveType: 1,
@@ -287,6 +290,7 @@ describe('shadow mode layout usage', () => {
     api.renderShadowMode();
 
     expect(globalThis.TfitRender.renderShadowResult).toHaveBeenCalledTimes(1);
+    expect(globalThis.TfitRender.renderShadowMoveReport).not.toHaveBeenCalled();
     expect(globalThis.TfitRender.renderMoveShape).not.toHaveBeenCalled();
   });
 

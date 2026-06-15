@@ -31,6 +31,7 @@ const STUBBED_GLOBALS = [
   'map',
   'myWindowHeight',
   'myWindowWidth',
+  'MOVE_TYPE',
   'noFill',
   'NORMAL',
   'noStroke',
@@ -44,6 +45,7 @@ const STUBBED_GLOBALS = [
   'rect',
   'rectMode',
   'resetMatrix',
+  'RIGHT',
   'SHADOW_SPECIFIC',
   'sin',
   'speechString',
@@ -194,7 +196,20 @@ function installRenderGlobals(overrides = {}) {
     OPPONENTS: { 0: { stamina: 6 } },
     PI: Math.PI,
     radians: degrees => degrees * Math.PI / 180,
+    RIGHT: 'right',
     SHADOW_SPECIFIC: { 1: 'JAB' },
+    MOVE_TYPE: {
+      1: 'LEFT_JAB',
+      2: 'RIGHT_JAB',
+      3: 'LEFT_HOOK',
+      4: 'RIGHT_HOOK',
+      5: 'LEFT_UPPERCUT',
+      6: 'RIGHT_UPPERCUT',
+      7: 'LEFT_DODGE',
+      8: 'RIGHT_DODGE',
+      9: 'DOWN_DODGE',
+      10: 'SWITCH_GUARD'
+    },
     sin: Math.sin,
     speechString: 'keep guard',
     TfitGameLogic: {
@@ -249,6 +264,7 @@ describe('TfitRender exports', () => {
       'renderRoundHud',
       'renderSceneBackground',
       'renderSettingsControls',
+      'renderShadowMoveReport',
       'renderShadowResult',
       'renderSpeech',
       'syncPageBackground'
@@ -383,8 +399,11 @@ describe('hud and meter rendering', () => {
     expect(calls.ellipse).toContainEqual([2 * 640 / 3, 48, 48, 48]);
     expect(calls.text).toContainEqual([29, 640 / 3, 48]);
     expect(calls.text).toContainEqual([4, 2 * 640 / 3, 48]);
-    expect(calls.text).toContainEqual(['(T)ype: jab', 15, 36]);
-    expect(calls.text).toContainEqual(['(S)eries: 1 / 3', 15, 56]);
+    expect(calls.rect).toContainEqual([10, 14, 168, 58, 8]);
+    expect(calls.rect).toContainEqual([14, 18, 160, 50, 6]);
+    expect(calls.text).toContainEqual(['Shadow', 20, 28]);
+    expect(calls.text).toContainEqual(['(T)ype: jab', 20, 47]);
+    expect(calls.text).toContainEqual(['(S)eries: 1 / 3', 20, 63]);
     expect(calls.arc[1][5]).toBeCloseTo(54);
   });
 
@@ -393,8 +412,9 @@ describe('hud and meter rendering', () => {
 
     renderApi.renderRoundHud(4);
 
-    expect(calls.text).not.toContainEqual(['(T)ype: jab', 15, 36]);
-    expect(calls.text).not.toContainEqual(['(S)eries: 1 / 3', 15, 56]);
+    expect(calls.text).not.toContainEqual(['Shadow', 20, 28]);
+    expect(calls.text).not.toContainEqual(['(T)ype: jab', 20, 47]);
+    expect(calls.text).not.toContainEqual(['(S)eries: 1 / 3', 20, 63]);
   });
 
   it('renders fight meters with reduced opponent stamina', () => {
@@ -425,6 +445,79 @@ describe('hud and meter rendering', () => {
 });
 
 describe('renderShadowResult', () => {
+  it('renders all shadow move types split across left and right panels', () => {
+    renderApi.renderShadowMoveReport();
+
+    expect(calls.text).toContainEqual(['Moves', 20, 100]);
+    expect(calls.text).toContainEqual(['Moves', 620, 100]);
+    expect(calls.text).toContainEqual(['L J', 28, 116]);
+    expect(calls.text).toContainEqual(['Left Jab', 44, 111]);
+    expect(calls.text).toContainEqual(['0 / 0', 168, 125]);
+    expect(calls.text).toContainEqual(['L U', 28, 188]);
+    expect(calls.text).toContainEqual(['Left Uppercut', 44, 183]);
+    expect(calls.text).toContainEqual(['B D', 28, 260]);
+    expect(calls.text).toContainEqual(['Down Dodge', 44, 255]);
+    expect(calls.text).toContainEqual(['R S', 612, 116]);
+    expect(calls.text).toContainEqual(['Right Jab', 596, 111]);
+    expect(calls.text).toContainEqual(['R U', 612, 188]);
+    expect(calls.text).toContainEqual(['Right Uppercut', 596, 183]);
+    expect(calls.text).toContainEqual(['S S', 612, 260]);
+    expect(calls.text).toContainEqual(['Switch Guard', 596, 255]);
+    expect(globalThis.TfitGameLogic.moveDisplay).toHaveBeenCalledTimes(10);
+    expect(calls.circle).toHaveLength(10);
+    expect(calls.rect).toContainEqual([10, 86, 168, 218, 8]);
+    expect(calls.rect).toContainEqual([462, 86, 168, 218, 8]);
+  });
+
+  it('shows live shadow move success against generated round totals', () => {
+    installRenderGlobals({
+      gameState: {
+        curMoves: [
+          { type: 5, hit: true },
+          { type: 5, hit: false },
+          { type: 2, hit: true }
+        ],
+        gameStarted: true,
+        moves: [0, 5, 5, 5, 2, 2, 10]
+      }
+    });
+
+    renderApi.renderShadowMoveReport();
+
+    expect(calls.text).toContainEqual(['1 / 3', 168, 197]);
+    expect(calls.text).toContainEqual(['1 / 2', 472, 125]);
+    expect(calls.text).toContainEqual(['0 / 1', 472, 269]);
+  });
+
+  it('renders the live shadow report fallback marker when a display is missing', () => {
+    installRenderGlobals({
+      TfitGameLogic: {
+        detectStartCountdown: vi.fn(globalThis.TfitGameLogic.detectStartCountdown),
+        moveDisplay: vi.fn(() => null)
+      }
+    });
+
+    renderApi.renderShadowMoveReport();
+
+    expect(calls.fill).toContainEqual([255, 255, 255, 160]);
+    expect(calls.text).toContainEqual(['L ?', 28, 116]);
+  });
+
+  it('renders live shadow report counts before curMoves has been initialized', () => {
+    installRenderGlobals({
+      gameState: {
+        curMoves: undefined,
+        gameStarted: true,
+        moves: [1, 1, 3]
+      }
+    });
+
+    renderApi.renderShadowMoveReport();
+
+    expect(calls.text).toContainEqual(['0 / 2', 168, 125]);
+    expect(calls.text).toContainEqual(['0 / 1', 168, 161]);
+  });
+
   it('summarizes scoring moves by type and draws result markers', () => {
     installRenderGlobals({
       gameState: {

@@ -16,6 +16,7 @@
   const {
     renderFeetIndicator,
     renderMoveShape,
+    renderShadowMoveReport,
     renderShadowResult
   } = root.TfitRender;
 
@@ -239,6 +240,7 @@
       renderShadowResult();
       return;
     }
+    renderShadowMoveReport();
 
     if (gameState.gameStarted) {
       addShadowMoveAtTimer();
