@@ -45,13 +45,10 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Build Electron app
-        run: npm run ${{ matrix.build_script }} -- --publish always
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v7
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: ${{ matrix.artifact_name }}
-          path: ${{ matrix.artifact_path }}
+          tag_name: v${{ github.ref_name }}
+          files: |
+            dist/*.exe
+            dist/*.deb
