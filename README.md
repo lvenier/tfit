@@ -4,7 +4,6 @@
 ![Last Commit](https://img.shields.io/github/last-commit/lvenier/tfit)
 ![Repo Size](https://img.shields.io/github/repo-size/lvenier/tfit)
 ![Issues](https://img.shields.io/github/issues/lvenier/tfit)
-![Stars](https://img.shields.io/github/stars/lvenier/tfit)
 ![CI](https://img.shields.io/github/actions/workflow/status/lvenier/tfit/tests.yml?branch=main&label=tests)
 
 # Box4Fit / tfit
