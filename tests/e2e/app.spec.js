@@ -33,6 +33,12 @@ async function pressAppKey(page, key) {
   }, key);
 }
 
+async function flushPendingMenuTransition(page) {
+  await page.evaluate(() => {
+    window.TfitAppInputActions?.applyPendingMenuButtonTransition();
+  });
+}
+
 test('loads the game shell and creates a p5 canvas', async ({ page }) => {
   const consoleErrors = collectConsoleErrors(page);
 
@@ -42,27 +48,24 @@ test('loads the game shell and creates a p5 canvas', async ({ page }) => {
 });
 
 test('opens settings calibration flow without console errors', async ({ page }) => {
-  test.setTimeout(60_000);
   const consoleErrors = collectConsoleErrors(page);
 
   await waitForGameCanvas(page);
 
   await pressAppKey(page, 'c');
+  await flushPendingMenuTransition(page);
   await page.waitForFunction(() => typeof gameState !== 'undefined' && gameState.menu === 1, null, { timeout: 10_000 });
 
   const alreadyCalibrating = await page.evaluate(() => gameState.gameCalibration);
   if (!alreadyCalibrating) {
     await pressAppKey(page, 'c');
+    await flushPendingMenuTransition(page);
     await page.waitForFunction(() => typeof gameState !== 'undefined' && gameState.gameCalibration === true, null, { timeout: 10_000 });
   }
 
   await pressAppKey(page, 's');
-  await page.waitForFunction(() => typeof gameState !== 'undefined' && typeof gameState.menu === 'number', null, { timeout: 10_000 }).catch(() => {});
-  await page.waitForFunction(
-    () => typeof gameState !== 'undefined' && typeof gameState.gameCalibration === 'boolean',
-    null,
-    { timeout: 2_000 }
-  ).catch(() => {});
+  await flushPendingMenuTransition(page);
+  await page.waitForFunction(() => typeof gameState !== 'undefined' && gameState.gameOver === true, null, { timeout: 2_000 });
 
   expect(consoleErrors).toEqual([]);
 });

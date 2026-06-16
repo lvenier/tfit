@@ -13,7 +13,7 @@ module.exports = defineConfig({
     baseURL: 'http://127.0.0.1:8000'
   },
   webServer: {
-    command: 'npm run serve',
+    command: 'node ./node_modules/http-server/bin/http-server . -a 127.0.0.1 -p 8000 -c-1',
     url: 'http://127.0.0.1:8000',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000

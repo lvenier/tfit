@@ -665,19 +665,21 @@
 
   function renderShadowMoveReportColumn(types, panel, alignRight) {
     const layout = layoutSnapshot();
-    const rowHeight = 36 * layout.coef;
-    const markerX = alignRight ? panel.x + panel.width - 18 * layout.coef : panel.x + 18 * layout.coef;
-    const textX = alignRight ? panel.x + panel.width - 34 * layout.coef : panel.x + 34 * layout.coef;
-    const countsX = alignRight ? panel.x + 10 * layout.coef : panel.x + panel.width - 10 * layout.coef;
+    const rowHeight = 38 * layout.coef;
+    const rowTopOffset = 42 * layout.coef;
+    const rowInset = 10 * layout.coef;
+    const markerX = alignRight ? panel.x + panel.width - 22 * layout.coef : panel.x + 22 * layout.coef;
+    const textX = alignRight ? panel.x + panel.width - 42 * layout.coef : panel.x + 42 * layout.coef;
+    const countsX = alignRight ? panel.x + 14 * layout.coef : panel.x + panel.width - 14 * layout.coef;
     const counts = shadowMoveReportCounts();
 
     for (let index = 0; index < types.length; index++) {
       const type = types[index];
-      const y = panel.y + 30 * layout.coef + index * rowHeight;
+      const y = panel.y + rowTopOffset + index * rowHeight;
       const display = root.TfitGameLogic.moveDisplay(type, gameState.feet_position, 220);
 
       fill(255, 255, 255, 20);
-      rect(panel.x + 6 * layout.coef, y - 10 * layout.coef, panel.width - 12 * layout.coef, 20 * layout.coef, 5 * layout.coef);
+      rect(panel.x + rowInset, y - 13 * layout.coef, panel.width - rowInset * 2, 26 * layout.coef, 6 * layout.coef);
 
       if (display) {
         fill(...display.color);
@@ -707,7 +709,7 @@
     const leftTypes = [1, 3, 5, 7, 9];
     const rightTypes = [2, 4, 6, 8, 10];
     const panel = {
-      height: 218 * layout.coef,
+      height: 246 * layout.coef,
       margin: 10 * layout.coef,
       width: Math.min(168 * layout.coef, Math.max(92 * layout.coef, layout.width * 0.28)),
       y: Math.max(76 * layout.coef, layout.objectPoseSize + 38 * layout.coef)
@@ -728,9 +730,9 @@
     textStyle(BOLD);
     textSize(8 * layout.coef);
     textAlign(LEFT, CENTER);
-    text("Moves", panels[0].x + 10 * layout.coef, panels[0].y + 14 * layout.coef);
+    text("Moves", panels[0].x + 14 * layout.coef, panels[0].y + 16 * layout.coef);
     textAlign(RIGHT, CENTER);
-    text("Moves", panels[1].x + panels[1].width - 10 * layout.coef, panels[1].y + 14 * layout.coef);
+    text("Moves", panels[1].x + panels[1].width - 14 * layout.coef, panels[1].y + 16 * layout.coef);
     textStyle(NORMAL);
 
     renderShadowMoveReportColumn(leftTypes, panels[0], false);
