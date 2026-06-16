@@ -2,7 +2,7 @@ name: Build Electron
 
 on:
   push:
-    tags: ["v*"]
+    tags: ["*"]
   workflow_dispatch:
 
 permissions:
@@ -48,7 +48,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
           files: |
             dist/*.exe
             dist/*.deb
