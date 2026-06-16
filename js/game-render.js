@@ -173,35 +173,92 @@
 
   function renderRoundHud(currentScore) {
     const layout = layoutSnapshot();
+    textAlign(LEFT, CENTER);
 
-    textStyle(BOLD);
-    textSize(12 * layout.coef);
-    const myCurrentTime = Math.ceil((gameState.gameDuration - gameState.gameTimer - 1) / layout.frameRate);
-    strokeWeight(8 * layout.coef);
-    stroke(80);
-    noFill();
-    ellipse(layout.width / 3, layout.objectPoseSize, layout.objectPoseSize, layout.objectPoseSize);
-    stroke(0, 128, 128);
-    arc(layout.width / 3, layout.objectPoseSize, layout.objectPoseSize, layout.objectPoseSize, -90, -90 + map(Math.ceil(gameState.gameDuration / layout.frameRate) - myCurrentTime, 0, Math.ceil(gameState.gameDuration / layout.frameRate), 0, 360));
-    noStroke();
-    fill(255);
-    textSize(20 * layout.coef);
-    textAlign(CENTER, CENTER);
-    text(myCurrentTime, layout.width / 3, layout.objectPoseSize);
-    textAlign(LEFT, CENTER);
-    textSize(12 * layout.coef);
-    strokeWeight(8 * layout.coef);
-    stroke(80);
-    noFill();
-    ellipse(2 * layout.width / 3, layout.objectPoseSize, layout.objectPoseSize, layout.objectPoseSize);
-    stroke(128, 0, 128);
-    arc(2 * layout.width / 3, layout.objectPoseSize, layout.objectPoseSize, layout.objectPoseSize, -90, -90 + map(currentScore, 0, gameState.score_max, 0, 360));
-    noStroke();
-    fill(255);
-    textSize(20 * layout.coef);
-    textAlign(CENTER, CENTER);
-    text(currentScore, 2 * layout.width / 3, layout.objectPoseSize);
-    textAlign(LEFT, CENTER);
+    const totalSeconds = Math.max(1, Math.ceil(gameState.gameDuration / layout.frameRate));
+    const remainingSeconds = Math.max(0, Math.ceil((gameState.gameDuration - gameState.gameTimer - 1) / layout.frameRate));
+    const timeProgress = Math.max(0, Math.min(totalSeconds - remainingSeconds, totalSeconds));
+    const scoreProgress = Math.max(0, Math.min(currentScore, gameState.score_max || 1));
+    const scoreDenominator = Math.max(gameState.score_max, 1);
+    const gaugeRadius = Math.max(12, Math.min(28 * layout.coef, layout.objectPoseSize * 0.58));
+    const panelY = layout.height - (gaugeRadius + 24 * layout.coef);
+    const gaugeYOffset = 8 * layout.coef;
+    const leftCenterX = layout.width / 3;
+    const rightCenterX = 2 * layout.width / 3;
+
+    function drawRoundGauge({ x, y, title, value, valueSuffix, maxValue, progress, trailColor, fillColor }) {
+      const cardWidth = Math.max(50 * layout.coef, Math.min(layout.width * 0.145, 74 * layout.coef));
+      const cardHeight = Math.max(46 * layout.coef, gaugeRadius * 2.55);
+      const cardX = x - cardWidth / 2;
+      const gaugeY = y + gaugeYOffset;
+      const cardY = gaugeY - cardHeight / 2;
+      const titleY = cardY + 21 * layout.coef;
+      const valueY = gaugeY + 3 * layout.coef;
+      const ratioY = gaugeY + 17 * layout.coef;
+
+      noStroke();
+      fill(0, 0, 0, 112);
+      rect(cardX, cardY, cardWidth, cardHeight, 8 * layout.coef);
+      fill(255, 255, 255, 26);
+      rect(cardX + 4 * layout.coef, cardY + 4 * layout.coef, cardWidth - 8 * layout.coef, cardHeight - 8 * layout.coef, 6 * layout.coef);
+
+      noStroke();
+      fill(255, 255, 255, 200);
+      textSize(8 * layout.coef);
+      textStyle(BOLD);
+      textAlign(CENTER, CENTER);
+      text(title, x, titleY);
+
+      stroke(255, 255, 255, 38);
+      strokeWeight(5 * layout.coef);
+      noFill();
+      ellipse(x, gaugeY, gaugeRadius * 2, gaugeRadius * 2);
+      stroke(trailColor);
+      strokeWeight(5 * layout.coef);
+      arc(x, gaugeY, gaugeRadius * 2, gaugeRadius * 2, -90, -90 + map(progress, 0, 1, 0, 360));
+
+      noStroke();
+      fill(fillColor);
+      textSize(16 * layout.coef);
+      textStyle(BOLD);
+      text(`${value}${valueSuffix}`, x, valueY);
+      if (maxValue !== null) {
+        fill(255, 255, 255, 190);
+        textSize(9 * layout.coef);
+        textStyle(NORMAL);
+        text(`of ${maxValue}`, x, ratioY);
+      } else {
+        fill(255, 255, 255, 220);
+        textSize(8 * layout.coef);
+        textAlign(CENTER, CENTER);
+        text("secs", x, ratioY);
+      }
+    }
+
+    drawRoundGauge({
+      x: leftCenterX,
+      y: panelY,
+      title: "TIME",
+      value: remainingSeconds,
+      valueSuffix: "",
+      maxValue: totalSeconds,
+      progress: timeProgress / totalSeconds,
+      trailColor: [0, 176, 176],
+      fillColor: [255, 255, 255, 230]
+    });
+
+    drawRoundGauge({
+      x: rightCenterX,
+      y: panelY,
+      title: "POINTS",
+      value: currentScore,
+      valueSuffix: "",
+      maxValue: scoreDenominator,
+      progress: scoreProgress / scoreDenominator,
+      trailColor: [184, 64, 184],
+      fillColor: [255, 255, 255, 230]
+    });
+
     textStyle(NORMAL);
     textSize(12 * layout.coef);
     if (gameState.menu === 2) {
@@ -218,6 +275,7 @@
       fill(255, 255, 255, 210);
       textStyle(BOLD);
       textSize(8 * layout.coef);
+      textAlign(LEFT, CENTER);
       text("Shadow", panel.x + 10 * layout.coef, panel.y + 14 * layout.coef);
       textStyle(NORMAL);
       fill(255, 255, 255, 230);
