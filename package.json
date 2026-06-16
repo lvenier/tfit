@@ -4,6 +4,17 @@
     "version": "1.15.2",
     "description": "A webcam boxing fitness game with motion detection",
     "license": "MIT",
+    "keywords": [
+        "boxing",
+        "fitness",
+        "workout",
+        "game",
+        "ml5",
+        "webcam",
+        "javascript",
+        "training",
+        "box4fit"
+    ],
     "author": {
         "name": "saashup.com",
         "email": "contact@box4.fit",
