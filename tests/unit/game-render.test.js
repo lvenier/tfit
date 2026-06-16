@@ -395,10 +395,28 @@ describe('hud and meter rendering', () => {
   it('renders round HUD timers, score arcs, and shadow labels', () => {
     renderApi.renderRoundHud(4);
 
-    expect(calls.ellipse).toContainEqual([640 / 3, 48, 48, 48]);
-    expect(calls.ellipse).toContainEqual([2 * 640 / 3, 48, 48, 48]);
-    expect(calls.text).toContainEqual([29, 640 / 3, 48]);
-    expect(calls.text).toContainEqual([4, 2 * 640 / 3, 48]);
+    expect(calls.ellipse).toContainEqual([640 / 3, 436.16, 55.67999999999999, 55.67999999999999]);
+    expect(calls.ellipse).toContainEqual([2 * 640 / 3, 436.16, 55.67999999999999, 55.67999999999999]);
+    expect(calls.rect).toEqual(expect.arrayContaining([
+      [
+        expect.closeTo(176.33333333333334),
+        expect.closeTo(400.664),
+        74,
+        70.99199999999999,
+        8
+      ],
+      [
+        expect.closeTo(180.33333333333334),
+        expect.closeTo(404.664),
+        66,
+        62.99199999999999,
+        6
+      ]
+    ]));
+    expect(calls.text).toContainEqual(['TIME', 640 / 3, 421.66400000000004]);
+    expect(calls.text).toContainEqual(['29', 640 / 3, 439.16]);
+    expect(calls.text).toContainEqual(['POINTS', 2 * 640 / 3, 421.66400000000004]);
+    expect(calls.text).toContainEqual(['4', 2 * 640 / 3, 439.16]);
     expect(calls.rect).toContainEqual([10, 14, 168, 58, 8]);
     expect(calls.rect).toContainEqual([14, 18, 160, 50, 6]);
     expect(calls.text).toContainEqual(['Shadow', 20, 28]);

@@ -222,17 +222,10 @@
       textSize(16 * layout.coef);
       textStyle(BOLD);
       text(`${value}${valueSuffix}`, x, valueY);
-      if (maxValue !== null) {
-        fill(255, 255, 255, 190);
-        textSize(9 * layout.coef);
-        textStyle(NORMAL);
-        text(`of ${maxValue}`, x, ratioY);
-      } else {
-        fill(255, 255, 255, 220);
-        textSize(8 * layout.coef);
-        textAlign(CENTER, CENTER);
-        text("secs", x, ratioY);
-      }
+      fill(255, 255, 255, 190);
+      textSize(9 * layout.coef);
+      textStyle(NORMAL);
+      text(`of ${maxValue}`, x, ratioY);
     }
 
     drawRoundGauge({
