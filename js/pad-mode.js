@@ -11,6 +11,17 @@
     snapshot: layoutSnapshot
   } = root.TfitLayoutState;
 
+  const POSE_INPUT_WIDTH = 640;
+  const POSE_INPUT_HEIGHT = 480;
+
+  function poseX(point, layout) {
+    return point.x * (layout.width / POSE_INPUT_WIDTH);
+  }
+
+  function poseY(point, layout) {
+    return point.y * (layout.height / POSE_INPUT_HEIGHT);
+  }
+
   function nextPadTarget(useAndCollision = false) {
     const layout = layoutSnapshot();
     const x = randomInteger(2 * layout.objectPoseSize, layout.width - 2 * layout.objectPoseSize);
@@ -46,7 +57,7 @@
       ({ pose, leftHand, rightHand, nose } = posePartsFromPoses(poses));
       if (hasPoseConfidence(nose) && isDetecting) {
         fill(0, 255, 0, 128);
-        circle(nose.x * layout.coef, nose.y * layout.coef, layout.objectPoseSize / 8);
+        circle(poseX(nose, layout), poseY(nose, layout), layout.objectPoseSize / 8);
         fill(255, 255, 255, hide_sensor);
       }
       if (hasPoseConfidence(leftHand)) {
@@ -56,7 +67,7 @@
           circle(calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, layout.objectPoseSize);
         }
         fill(255, 0, 0, 128);
-        circle(leftHand.x * layout.coef, leftHand.y * layout.coef, layout.objectPoseSize / 2);
+        circle(poseX(leftHand, layout), poseY(leftHand, layout), layout.objectPoseSize / 2);
         fill(255, 255, 255, hide_sensor);
       }
       if (hasPoseConfidence(rightHand)) {
@@ -66,7 +77,7 @@
           circle(calibrationState.right_init_pose_x, calibrationState.right_init_pose_y, layout.objectPoseSize);
         }
         fill(255, 0, 0, 128);
-        circle(rightHand.x * layout.coef, rightHand.y * layout.coef, layout.objectPoseSize / 2);
+        circle(poseX(rightHand, layout), poseY(rightHand, layout), layout.objectPoseSize / 2);
         fill(255, 255, 255, hide_sensor);
       }
       if (gameState.gameStarted) {

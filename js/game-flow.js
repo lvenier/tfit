@@ -102,6 +102,8 @@
     hide_sensor = 0;
     gameState.gameTimer = -1;
     gameState.gameOver = false;
+    const manualStop = gameState.manualStop;
+    gameState.manualStop = false;
 
     const roundEnd = root.TfitRound.roundEndState({
       currentSeries: gameState.gameCurrentSeries,
@@ -114,13 +116,13 @@
       timingState.gameResult = now;
     }
 
-    if (roundEnd.shouldStartNextSeries) {
+    if (!manualStop && roundEnd.shouldStartNextSeries) {
       scheduleNextSeries(() => {
         letsfight();
       });
     }
 
-    gameState.gameCurrentSeries = roundEnd.gameSeries;
+    gameState.gameCurrentSeries = manualStop ? 1 : roundEnd.gameSeries;
     gameState.feet_position = 0;
     calibrationState.left_init_pose_y = storageNumber("left_init_pose_y", root.TfitLayoutState.snapshot().height / 3);
     calibrationState.right_init_pose_y = storageNumber("right_init_pose_y", root.TfitLayoutState.snapshot().height / 3);

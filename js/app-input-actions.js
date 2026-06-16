@@ -51,6 +51,20 @@
       clearCurMoves: true,
       loadSongmoves: true,
       resetOpponent: true
+    },
+    start_calibration: {
+      menu: 1,
+      onApply: () => {
+        gameState.gameCalibration = true;
+        gameState.curMoves = [];
+        hide_sensor = 64;
+      }
+    },
+    leave_calibration: {
+      menu: 1,
+      onApply: () => {
+        gameState.gameOver = true;
+      }
     }
   };
 
@@ -74,6 +88,9 @@
     }
     if (transition.resetOpponent) {
       gameState.my_opponent = cloneOpponent(gameState.opponent);
+    }
+    if (typeof transition.onApply === "function") {
+      transition.onApply();
     }
   }
 
@@ -284,10 +301,13 @@
       return;
     }
     if (action.type === "start_calibration") {
+      handleMenuOpenAction("start_calibration", true);
       playClick();
-      gameState.gameCalibration = true;
-      gameState.curMoves = [];
-      hide_sensor = 64;
+      return;
+    }
+    if (action.type === "leave_calibration") {
+      playClick();
+      handleMenuOpenAction("leave_calibration", true);
       return;
     }
     if (action.type === "stop_calibration") {
@@ -317,6 +337,7 @@
     }
     if (action.type === "stop_current") {
       playClick();
+      gameState.manualStop = true;
       gameState.gameOver = true;
       return;
     }
@@ -355,7 +376,8 @@
       "reset_calibration",
       "reset_calibration_defaults",
       "start_calibration",
-      "stop_calibration"
+      "stop_calibration",
+      "leave_calibration"
     ].includes(action.type);
   }
 

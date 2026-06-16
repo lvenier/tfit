@@ -3,6 +3,90 @@
     return root.TfitLayoutState.snapshot();
   }
 
+  const MENU_HOVER_PURPLE = [160, 32, 240];
+  const MENU_BORDER_PURPLE = [175, 70, 255];
+  const SYSTEM_BUTTON_WIDTH = 100;
+  const SYSTEM_BUTTON_HEIGHT = 42;
+  const SYSTEM_BUTTON_GUTTER = 10;
+  const SETTINGS_BUTTON_WIDTH = 150;
+  const SETTINGS_BUTTON_HEIGHT = 42;
+  const CALIBRATION_RESET_BUTTON_WIDTH = 120;
+  const CALIBRATION_RESET_BUTTON_HEIGHT = 42;
+  const SETTINGS_BUTTON_X_OFFSET = 60;
+  const LEVEL_LABELS = (root.TfitConfig && root.TfitConfig.GAME_LEVEL) || {
+    0: "easy",
+    1: "medium",
+    2: "hard"
+  };
+  const SERIES_TOTAL = 5;
+  const GAME_LENGTH_LABELS = (root.TfitConfig && root.TfitConfig.GAME_LENGTH) || {
+    1: "30",
+    2: "60",
+    3: "120",
+    4: "180",
+    5: "300"
+  };
+  const MENU_BUTTONS = [
+    { label: "SHADOW", yIndex: 0, variant: "default" },
+    { label: "PUNCH PAD", yIndex: 1, variant: "default" },
+    { label: "FIGHT", yIndex: 2, variant: "default" },
+    { label: "SETTINGS", yIndex: 3, variant: "settings" }
+  ];
+
+  function isPointInRect({ x, y }, rect) {
+    return x > rect.left && x < rect.right && y > rect.top && y < rect.bottom;
+  }
+
+  function rectFor({ x, y, w, h }) {
+    return {
+      left: x,
+      right: x + w,
+      top: y,
+      bottom: y + h
+    };
+  }
+
+  function drawMenuButton({ x, y, w, h, label, variant = "default", textSizePx = 11 }) {
+    const labelToRender = label && /^[A-Z]/.test(label) && !label.startsWith("(")
+      ? `(${label[0]})${label.slice(1)}`
+      : label;
+    const hovered = isPointInRect({ x: mouseX, y: mouseY }, rectFor({ x, y, w, h }));
+    const radius = Math.max(12, 16 * layoutSnapshot().coef);
+    const isSettingsButton = variant === "settings";
+    const baseFill = [0, 0, 0];
+    const baseBorder = isSettingsButton ? [255, 80, 90] : MENU_BORDER_PURPLE;
+    const hoverBorder = isSettingsButton ? [255, 130, 130] : MENU_HOVER_PURPLE;
+    const hoverGlow = isSettingsButton ? [255, 64, 64, 45] : [175, 70, 255, 42];
+    const textColor = isSettingsButton ? [255, 160, 160] : [255, 255, 255];
+
+    push();
+    rectMode(CORNER);
+    fill(baseFill[0], baseFill[1], baseFill[2], hovered ? 225 : 185);
+    stroke(...baseBorder, hovered ? 255 : 145);
+    strokeWeight(hovered ? 3 : 2);
+    rect(x, y, w, h, radius);
+
+    if (hovered) {
+      noStroke();
+      fill(...hoverGlow);
+      rect(x - 2, y - 2, w + 4, h + 4, radius + 2);
+
+      noFill();
+      stroke(...hoverBorder, 255);
+      strokeWeight(2.4);
+      rect(x - 3, y - 3, w + 6, h + 6, radius + 4);
+    }
+
+    noStroke();
+
+    fill(...textColor);
+    textAlign(CENTER, CENTER);
+    textSize(textSizePx * layoutSnapshot().coef);
+    textStyle(BOLD);
+    text(labelToRender, x + w / 2, y + h / 2 + 1);
+    pop();
+  }
+
   function drawMessagePanel(title, details) {
     const layout = layoutSnapshot();
 
@@ -59,9 +143,44 @@
     pop();
   }
 
+  function drawArena() {
+    background(7, 9, 20);
+
+    noStroke();
+    for (let r = 700; r > 0; r -= 20) {
+      fill(30, 45, 100, map(r, 700, 0, 0, 20));
+      ellipse(width * 0.35, height * 0.35, r * 1.4, r);
+    }
+
+    stroke(255, 255, 255, 22);
+    strokeWeight(1);
+    const horizon = height * 0.62;
+    line(0, horizon, width, horizon);
+
+    for (let i = -8; i <= 8; i++) {
+      line(width * 0.35, horizon, width * 0.35 + i * width * 0.16, height);
+    }
+
+    for (let y = horizon; y < height; y += (y - horizon) * 0.11 + 18) {
+      line(0, y, width, y);
+    }
+
+    stroke(255, 80, 90, 120);
+    strokeWeight(6);
+    line(0, height * 0.55, width, height * 0.55);
+    stroke(255, 255, 255, 90);
+    strokeWeight(4);
+    line(0, height * 0.49, width, height * 0.49);
+  }
+
   function syncPageBackground(menu = gameState.menu) {
     if (!root.document || !root.document.body) {
       return false;
+    }
+
+    if (menu === 0) {
+      root.document.body.style.setProperty("--app-background-image", "none");
+      return true;
     }
 
     root.document.body.style.setProperty(
@@ -99,9 +218,13 @@
     const layout = layoutSnapshot();
 
     syncPageBackground();
-    textSize(10 * layout.coef);
-    fill(0, 0, 0);
-    strokeWeight(0);
+    drawArena();
+
+    if (gameState.menu !== 0) {
+      textSize(10 * layout.coef);
+      fill(0, 0, 0);
+      strokeWeight(0);
+    }
   }
 
   function renderMainMenu() {
@@ -110,28 +233,150 @@
     const menuImageSize = Math.min(layout.width * 0.58, layout.height * 0.65, 720);
     const menuImageX = layout.width / 2 - menuImageSize / 2 + 40 * layout.coef;
     const menuImageY = layout.height / 8 + 10 * layout.coef;
+    const menuButtonX = layout.width / 6 + menuButtonOffset;
+    const menuButtonW = 100 * layout.coef;
+    const menuButtonH = 42 * layout.coef;
 
     fill(0, 0, 0);
     image(images.logo, layout.width - 60 * layout.coef, layout.height - 55 * layout.coef, 50 * layout.coef, 50 * layout.coef);
     image(images.menu, menuImageX, menuImageY, menuImageSize, menuImageSize);
-    image(images.shadowButton, layout.width / 6 + menuButtonOffset, Math.trunc(layout.height / 6), 100 * layout.coef, 50 * layout.coef);
-    image(images.padButton, layout.width / 6 + menuButtonOffset, Math.trunc(layout.height / 6 + 100 * layout.coef), 100 * layout.coef, 50 * layout.coef);
-    image(images.fightMenuButton, layout.width / 6 + menuButtonOffset, Math.trunc(layout.height / 6 + 200 * layout.coef), 100 * layout.coef, 50 * layout.coef);
-    image(images.configMenuButton, layout.width / 6 + menuButtonOffset, Math.trunc(layout.height / 6 + 300 * layout.coef), 100 * layout.coef, 50 * layout.coef);
+    MENU_BUTTONS.forEach((button, index) => {
+      drawMenuButton({
+        label: button.label,
+        variant: button.variant,
+        x: menuButtonX,
+        y: Math.trunc(layout.height / 6 + index * 100 * layout.coef),
+        w: menuButtonW,
+        h: menuButtonH
+      });
+    });
   }
 
   function renderBackButton() {
     const layout = layoutSnapshot();
-    image(images.backButton, layout.width - 100 * layout.coef - 10, Math.trunc(layout.height - 60 * layout.coef), 100 * layout.coef, 50 * layout.coef);
+    renderSettingsStyleButton({
+      label: "BACK",
+      layout
+    });
+  }
+
+  function renderStopButton() {
+    const layout = layoutSnapshot();
+    renderSettingsStyleButton({
+      label: "STOP",
+      layout
+    });
+  }
+
+  function renderCalibrationResetButton() {
+    const layout = layoutSnapshot();
+    drawMenuButton({
+      label: "RESET",
+      variant: "settings",
+      x: layout.width / 2 - (CALIBRATION_RESET_BUTTON_WIDTH / 2) * layout.coef,
+      y: layout.height - 100 * layout.coef,
+      w: CALIBRATION_RESET_BUTTON_WIDTH * layout.coef,
+      h: CALIBRATION_RESET_BUTTON_HEIGHT * layout.coef,
+      textSizePx: 11
+    });
+  }
+
+  function getCalibrationResetButtonBounds() {
+    const layout = layoutSnapshot();
+    return {
+      left: layout.width / 2 - (CALIBRATION_RESET_BUTTON_WIDTH * layout.coef) / 2,
+      right: layout.width / 2 + (CALIBRATION_RESET_BUTTON_WIDTH * layout.coef) / 2,
+      top: Math.trunc(layout.height - 100 * layout.coef),
+      bottom: Math.trunc(layout.height - 100 * layout.coef + CALIBRATION_RESET_BUTTON_HEIGHT * layout.coef)
+    };
+  }
+
+  function getSettingsButtonBounds() {
+    const layout = layoutSnapshot();
+    return {
+      left: layout.width - SYSTEM_BUTTON_WIDTH * layout.coef - SYSTEM_BUTTON_GUTTER,
+      right: layout.width - SYSTEM_BUTTON_GUTTER,
+      top: Math.trunc(layout.height - 60 * layout.coef),
+      bottom: Math.trunc(layout.height - 60 * layout.coef + SYSTEM_BUTTON_HEIGHT * layout.coef)
+    };
+  }
+
+  function renderSettingsStyleButton({
+    label,
+    layout
+  }) {
+    const bounds = getSettingsButtonBounds();
+    drawMenuButton({
+      label,
+      variant: "settings",
+      x: bounds.left,
+      y: bounds.top,
+      w: SYSTEM_BUTTON_WIDTH * layout.coef,
+      h: SYSTEM_BUTTON_HEIGHT * layout.coef
+    });
   }
 
   function renderSettingsControls() {
     const layout = layoutSnapshot();
-    image(images.seriesButtons[gameState.gameSeries], layout.width / 2 - 50 * layout.coef, layout.height - 300 * layout.coef, 120 * layout.coef, 60 * layout.coef);
-    image(images.durationButtons[gameState.gameLengthIndex], layout.width / 2 - 50 * layout.coef, layout.height - 250 * layout.coef, 120 * layout.coef, 60 * layout.coef);
-    image(images.levelButtons[gameState.level], layout.width / 2 - 50 * layout.coef, layout.height - 200 * layout.coef, 120 * layout.coef, 60 * layout.coef);
-    image(images.framerateButtons[layout.frameRate / 20], layout.width / 2 - 50 * layout.coef, layout.height - 150 * layout.coef, 120 * layout.coef, 60 * layout.coef);
-    image(images.calibrateButton, layout.width / 2 - 50 * layout.coef, layout.height - 100 * layout.coef, 120 * layout.coef, 60 * layout.coef);
+    const controlsY = [
+      layout.height - 300 * layout.coef,
+      layout.height - 250 * layout.coef,
+      layout.height - 200 * layout.coef,
+      layout.height - 150 * layout.coef,
+      layout.height - 100 * layout.coef
+    ];
+    const settingsButtonX = Math.trunc(layout.width / 2 - (SETTINGS_BUTTON_WIDTH / 2) * layout.coef);
+    const controlTextSize = 11;
+
+    drawMenuButton({
+      label: `SERIES (${gameState.gameSeries}/${SERIES_TOTAL})`,
+      variant: "default",
+      x: settingsButtonX,
+      y: controlsY[0],
+      w: SETTINGS_BUTTON_WIDTH * layout.coef,
+      h: SETTINGS_BUTTON_HEIGHT * layout.coef,
+      textSizePx: controlTextSize
+    });
+
+    drawMenuButton({
+      label: `LENGTH (${GAME_LENGTH_LABELS[gameState.gameLengthIndex]}s)`,
+      variant: "default",
+      x: settingsButtonX,
+      y: controlsY[1],
+      w: SETTINGS_BUTTON_WIDTH * layout.coef,
+      h: SETTINGS_BUTTON_HEIGHT * layout.coef,
+      textSizePx: controlTextSize
+    });
+
+    drawMenuButton({
+      label: `LEVEL (${(LEVEL_LABELS[gameState.level] || "medium").toUpperCase()})`,
+      variant: "default",
+      x: settingsButtonX,
+      y: controlsY[2],
+      w: SETTINGS_BUTTON_WIDTH * layout.coef,
+      h: SETTINGS_BUTTON_HEIGHT * layout.coef,
+      textSizePx: controlTextSize
+    });
+
+    drawMenuButton({
+      label: `FRAMERATE (${layout.frameRate} FPS)`,
+      variant: "default",
+      x: settingsButtonX,
+      y: controlsY[3],
+      w: SETTINGS_BUTTON_WIDTH * layout.coef,
+      h: SETTINGS_BUTTON_HEIGHT * layout.coef,
+      textSizePx: controlTextSize
+    });
+
+    drawMenuButton({
+      label: "CALIBRATE",
+      variant: "default",
+      x: settingsButtonX,
+      y: controlsY[4],
+      w: SETTINGS_BUTTON_WIDTH * layout.coef,
+      h: SETTINGS_BUTTON_HEIGHT * layout.coef,
+      textSizePx: controlTextSize
+    });
   }
 
   function renderGuardTargets() {
@@ -168,7 +413,15 @@
 
   function renderFightButton() {
     const layout = layoutSnapshot();
-    image(images.fightButton, layout.width / 2 - 50 * layout.coef, layout.height - 150 * layout.coef, 120 * layout.coef, 60 * layout.coef);
+    const width = 120 * layout.coef;
+    drawMenuButton({
+      label: "FIGHT",
+      variant: "default",
+      x: layout.width / 2 - width / 2,
+      y: layout.height - 150 * layout.coef,
+      w: width,
+      h: 42 * layout.coef
+    });
   }
 
   function renderRoundHud(currentScore) {
@@ -593,11 +846,15 @@
     renderCalibrationOverlay,
     renderFeetIndicator,
     renderFightButton,
+    renderCalibrationResetButton,
     renderFightMeters,
     renderGuardTargets,
     renderLoadingScreen,
     renderMainMenu,
     renderRoundHud,
+    renderStopButton,
+    getCalibrationResetButtonBounds,
+    getSettingsButtonBounds,
     renderSceneBackground,
     renderSettingsControls,
     renderShadowMoveReport,

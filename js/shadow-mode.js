@@ -110,11 +110,22 @@
     if (poses.length > 0) {
       const layout = layoutSnapshot();
       ({ pose, leftHand, rightHand, nose } = posePartsFromPoses(poses));
+      const poseScaleX = layout.width / 640;
+      const poseScaleY = layout.height / 480;
+      const leftHandCanvas = leftHand
+        ? { x: leftHand.x * poseScaleX, y: leftHand.y * poseScaleY }
+        : null;
+      const rightHandCanvas = rightHand
+        ? { x: rightHand.x * poseScaleX, y: rightHand.y * poseScaleY }
+        : null;
+      const noseCanvas = nose
+        ? { x: nose.x * poseScaleX, y: nose.y * poseScaleY }
+        : null;
       const now = Date.now();
       const levelWindow = layout.levelWindowBase * 10;
       if (hasPoseConfidence(nose) && isDetecting) {
         fill(0, 255, 0, 128);
-        circle(nose.x * layout.coef, nose.y * layout.coef, layout.objectPoseSize / 8);
+        circle(noseCanvas.x, noseCanvas.y, layout.objectPoseSize / 8);
         fill(255, 255, 255, hide_sensor);
       }
       if (hasPoseConfidence(leftHand)) {
@@ -132,7 +143,7 @@
           }
         }
         fill(255, 0, 0, 128);
-        circle(leftHand.x * layout.coef, leftHand.y * layout.coef, layout.objectPoseSize / 2);
+        circle(leftHandCanvas.x, leftHandCanvas.y, layout.objectPoseSize / 2);
         fill(255, 255, 255, hide_sensor);
         const leftGestures = detectHandGestures({
           coef: layout.coef,
@@ -147,15 +158,15 @@
           rightPoseTime: timingState.rightPoses,
           side: "left"
         });
-        if (leftHand.x * layout.coef < calibrationState.left_init_hook_x) {
+        if (leftHandCanvas.x < calibrationState.left_init_hook_x) {
           timingState.leftHook = now;
           rect(0, 0, calibrationState.left_init_hook_x, layout.height);
         }
-        if (leftHand.y * layout.coef > calibrationState.init_uppercut_y) {
+        if (leftHandCanvas.y > calibrationState.init_uppercut_y) {
           timingState.leftUppercut = now;
           rect(0, calibrationState.init_uppercut_y, layout.width, layout.height - calibrationState.init_uppercut_y);
         }
-        if (leftHand.y * layout.coef < calibrationState.init_jab_y) {
+        if (leftHandCanvas.y < calibrationState.init_jab_y) {
           fill(255, 255, 255, hide_sensor);
           rect(0, 0, layout.width, calibrationState.init_jab_y);
           if (leftGestures.jab) {
@@ -198,7 +209,7 @@
         }
         fill(255, 0, 0, 128);
         /* istanbul ignore if */
-        if (isDetecting) {circle(rightHand.x * layout.coef, rightHand.y * layout.coef, layout.objectPoseSize / 2);}
+        if (isDetecting) {circle(rightHandCanvas.x, rightHandCanvas.y, layout.objectPoseSize / 2);}
         fill(255, 255, 255, hide_sensor);
         const rightGestures = detectHandGestures({
           coef: layout.coef,
@@ -213,15 +224,15 @@
           rightPoseTime: timingState.rightPoses,
           side: "right"
         });
-        if (rightHand.x * layout.coef > calibrationState.right_init_hook_x) {
+        if (rightHandCanvas.x > calibrationState.right_init_hook_x) {
           timingState.rightHook = now;
           rect(calibrationState.right_init_hook_x, 0, calibrationState.right_init_hook_x, layout.height);
         }
-        if (rightHand.y * layout.coef > calibrationState.init_uppercut_y) {
+        if (rightHandCanvas.y > calibrationState.init_uppercut_y) {
           timingState.rightUppercut = now;
           rect(0, calibrationState.init_uppercut_y, layout.width, layout.height - calibrationState.init_uppercut_y);
         }
-        if (rightHand.y * layout.coef < calibrationState.init_jab_y) {
+        if (rightHandCanvas.y < calibrationState.init_jab_y) {
           rect(0, 0, layout.width, calibrationState.init_jab_y);
           /* istanbul ignore if */
           if (rightGestures.jab) {

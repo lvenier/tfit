@@ -16,6 +16,7 @@
     drawMessagePanel,
     renderBackButton,
     renderFightButton,
+    renderStopButton,
     renderGuardTargets,
     renderLoadingScreen,
     renderMainMenu,
@@ -159,7 +160,7 @@
     }
 
     if (gameState.gameStarted) {
-      image(images.stopButton, layout.width - 100 * layout.coef - 10, Math.trunc(layout.height - 60 * layout.coef), 100 * layout.coef, 50 * layout.coef);
+      renderStopButton();
       fill(255, 0, 0, hide_sensor);
       renderRoundFeedback();
     }

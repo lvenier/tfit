@@ -1,4 +1,12 @@
 (function(root) {
+  function layoutSnapshot() {
+    return root.TfitLayoutState && root.TfitLayoutState.snapshot
+      ? root.TfitLayoutState.snapshot()
+      : { width: 640, height: 480 };
+  }
+  const POSE_INPUT_WIDTH = 640;
+  const POSE_INPUT_HEIGHT = 480;
+
   function posePartsFromPoses(poses) {
     const pose = poses.length > 0 ? poses[0] : undefined;
 
@@ -14,20 +22,38 @@
     return Boolean(part && part.confidence > threshold);
   }
 
+  function poseScaleX() {
+    const layout = layoutSnapshot();
+    return layout.width / POSE_INPUT_WIDTH;
+  }
+
+  function poseScaleY() {
+    const layout = layoutSnapshot();
+    return layout.height / POSE_INPUT_HEIGHT;
+  }
+
+  function poseX(point, scale = poseScaleX()) {
+    return point?.x * scale;
+  }
+
+  function poseY(point, scale = poseScaleY()) {
+    return point?.y * scale;
+  }
+
   function isInsideGuard(point, guardX, guardY, objectPoseSize, coef = 1) {
     return hasPoseConfidence(point) &&
-      point.x * coef < guardX + objectPoseSize &&
-      point.x * coef > guardX - objectPoseSize &&
-      point.y * coef < guardY + objectPoseSize &&
-      point.y * coef > guardY - objectPoseSize;
+      poseX(point) < guardX + objectPoseSize &&
+      poseX(point) > guardX - objectPoseSize &&
+      poseY(point) < guardY + objectPoseSize &&
+      poseY(point) > guardY - objectPoseSize;
   }
 
   function isInsideTarget(point, targetX, targetY, objectPoseSize, coef = 1) {
     return hasPoseConfidence(point) &&
-      point.x * coef < targetX + objectPoseSize &&
-      point.x * coef > targetX - objectPoseSize &&
-      point.y * coef - objectPoseSize < targetY &&
-      point.y * coef + objectPoseSize > targetY;
+      poseX(point) < targetX + objectPoseSize &&
+      poseX(point) > targetX - objectPoseSize &&
+      poseY(point) - objectPoseSize < targetY &&
+      poseY(point) + objectPoseSize > targetY;
   }
 
   function areBothHandsRecent(now, leftPoseTime, rightPoseTime, levelWindow) {
@@ -53,9 +79,9 @@
   }) {
     const ready = hasPoseConfidence(hand) && areBothHandsRecent(now, leftPoseTime, rightPoseTime, levelWindow);
     return {
-      hook: ready && (side === "left" ? hand.x * coef < leftHookX : hand.x * coef > rightHookX),
-      jab: ready && hand.y * coef < initJabY,
-      uppercut: ready && hand.y * coef > initUppercutY
+      hook: ready && (side === "left" ? poseX(hand) < leftHookX : poseX(hand) > rightHookX),
+      jab: ready && poseY(hand) < initJabY,
+      uppercut: ready && poseY(hand) > initUppercutY
     };
   }
 
@@ -69,9 +95,9 @@
     rightGuardX
   }) {
     return {
-      down: hasPoseConfidence(nose) && ready && nose.y * coef > initUppercutY,
-      left: hasPoseConfidence(nose) && ready && nose.x * coef < leftGuardX - objectPoseSize / 2,
-      right: hasPoseConfidence(nose) && ready && nose.x * coef > rightGuardX + objectPoseSize / 2
+      down: hasPoseConfidence(nose) && ready && poseY(nose) > initUppercutY,
+      left: hasPoseConfidence(nose) && ready && poseX(nose) < leftGuardX - objectPoseSize / 2,
+      right: hasPoseConfidence(nose) && ready && poseX(nose) > rightGuardX + objectPoseSize / 2
     };
   }
 
@@ -124,14 +150,14 @@
     nose,
     switched
   }) {
-    if (hasPoseConfidence(nose) && nose.y * coef > initUppercutY) {
+    if (hasPoseConfidence(nose) && poseY(nose) > initUppercutY) {
       return {
         done: true,
         switched: false,
         touchedDown: true
       };
     }
-    if (hasPoseConfidence(nose) && nose.y * coef < initUppercutY && done === true) {
+    if (hasPoseConfidence(nose) && poseY(nose) < initUppercutY && done === true) {
       return {
         done: false,
         switched: true,

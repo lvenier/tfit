@@ -72,18 +72,19 @@
     const centerXHit = isWithin(mouseX, myWindowWidth / 2 - 40 * coef, myWindowWidth / 2 + 60 * coef);
 
     const menuButtonsOffset = 20 * coef;
+    const menuButtonH = 42;
 
     if (menu === 0 && isWithin(mouseX, Math.trunc(myWindowWidth / 6 + menuButtonsOffset), Math.trunc(myWindowWidth / 6 + menuButtonsOffset + 100 * coef))) {
-      if (isWithin(mouseY, Math.trunc(myWindowHeight / 6 + 300 * coef), Math.trunc(myWindowHeight / 6 + 350 * coef))) {
+      if (isWithin(mouseY, Math.trunc(myWindowHeight / 6 + 300 * coef), Math.trunc(myWindowHeight / 6 + 300 * coef + menuButtonH * coef))) {
         return { click: true, type: "open_settings" };
       }
-      if (isWithin(mouseY, Math.trunc(myWindowHeight / 6), Math.trunc(myWindowHeight / 6 + 50 * coef))) {
+      if (isWithin(mouseY, Math.trunc(myWindowHeight / 6), Math.trunc(myWindowHeight / 6 + menuButtonH * coef))) {
         return { click: true, type: "open_shadow" };
       }
-      if (isWithin(mouseY, Math.trunc(myWindowHeight / 6 + 100 * coef), Math.trunc(myWindowHeight / 6 + 150 * coef))) {
+      if (isWithin(mouseY, Math.trunc(myWindowHeight / 6 + 100 * coef), Math.trunc(myWindowHeight / 6 + 100 * coef + menuButtonH * coef))) {
         return { click: true, type: "open_pad" };
       }
-      if (isWithin(mouseY, Math.trunc(myWindowHeight / 6 + 200 * coef), Math.trunc(myWindowHeight / 6 + 250 * coef))) {
+      if (isWithin(mouseY, Math.trunc(myWindowHeight / 6 + 200 * coef), Math.trunc(myWindowHeight / 6 + 200 * coef + menuButtonH * coef))) {
         return { click: true, type: "open_fight" };
       }
     }
@@ -107,12 +108,24 @@
       }
     }
 
-    if (menu === 1 && centerXHit && isWithin(mouseY, myWindowHeight - 98 * coef, myWindowHeight - 58 * coef)) {
+    const calibrationActionButtonBounds = root.TfitRender?.getCalibrationResetButtonBounds
+      ? root.TfitRender.getCalibrationResetButtonBounds()
+      : null;
+    if (menu === 1 && calibrationActionButtonBounds && isWithin(mouseX, calibrationActionButtonBounds.left, calibrationActionButtonBounds.right) && isWithin(mouseY, calibrationActionButtonBounds.top, calibrationActionButtonBounds.bottom)) {
       return { click: true, type: gameCalibration ? "reset_calibration" : "start_calibration" };
     }
 
-    if (menu > 0 && isWithin(mouseX, myWindowWidth - 100 * coef, myWindowWidth) && isWithin(mouseY, Math.trunc(myWindowHeight - 60 * coef), Math.trunc(myWindowHeight - 10 * coef))) {
-      return { click: true, type: gameStarted || gameCalibration ? "stop_current" : "back_to_menu" };
+    const settingsButtonBounds = root.TfitRender?.getSettingsButtonBounds
+      ? root.TfitRender.getSettingsButtonBounds()
+      : null;
+    if (settingsButtonBounds && isWithin(mouseX, settingsButtonBounds.left, settingsButtonBounds.right) && isWithin(mouseY, settingsButtonBounds.top, settingsButtonBounds.bottom)) {
+      if (gameStarted) {
+        return { click: true, type: "stop_current" };
+      }
+      if (gameCalibration) {
+        return { click: true, type: "leave_calibration" };
+      }
+      return { click: true, type: "back_to_menu" };
     }
 
     if (gameCalibration) {
@@ -145,7 +158,7 @@
       return { type: "back_to_menu" };
     }
     if (['s', 'S'].includes(key) && menu === 1) {
-      return { type: gameCalibration ? "stop_calibration" : "cycle_series" };
+      return { type: gameCalibration ? "leave_calibration" : "cycle_series" };
     }
     if (['t', 'T'].includes(key) && menu === 2 && !gameStarted) {
       return { type: "cycle_shadow_focus" };

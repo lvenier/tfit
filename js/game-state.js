@@ -26,6 +26,7 @@
     gameReady: false,
     gameSeries: storageNumber("series", 1, { min: 1, max: 5 }),
     gameStarted: false,
+    manualStop: false,
     gameTimer: -1,
     gameTimerNext: 0,
     level: storageNumber("level", 0, { min: 0, max: Object.keys(GAME_LEVEL).length - 1 }),
