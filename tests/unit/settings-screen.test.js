@@ -93,9 +93,11 @@ function installGlobals(overrides = {}) {
       })
     },
     TfitRender: {
+      renderCalibrationResetButton: vi.fn(),
+      renderSettingsControls: vi.fn(),
       renderCalibrationOverlay: vi.fn(),
       renderGuardTargets: vi.fn(),
-      renderSettingsControls: vi.fn()
+      renderStopButton: vi.fn()
     }
   }, overrides);
 
@@ -155,7 +157,9 @@ describe('TfitSettingsScreen exports', () => {
       TfitRender: {
         renderCalibrationOverlay: () => {},
         renderGuardTargets: () => {},
-        renderSettingsControls: () => {}
+        renderSettingsControls: () => {},
+        renderCalibrationResetButton: () => {},
+        renderStopButton: () => {}
       }
     };
     sandbox.globalThis = sandbox;
@@ -199,13 +203,12 @@ describe('settings screen rendering', () => {
 
     expect(globalThis.TfitRender.renderGuardTargets).toHaveBeenCalledTimes(1);
     expect(globalThis.TfitCameraRuntime.startPoseDetection).toHaveBeenCalledTimes(1);
+    expect(globalThis.TfitRender.renderStopButton).toHaveBeenCalledTimes(1);
+    expect(globalThis.TfitRender.renderCalibrationResetButton).toHaveBeenCalledTimes(1);
     expect(globalThis.TfitAppInputActions.updateCalibrationFromPointer).toHaveBeenCalledTimes(1);
     expect(globalThis.TfitRender.renderCalibrationOverlay).toHaveBeenCalledTimes(1);
     expect(globalThis.timingState.gameResult).toBe(4999);
-    expect(calls.image).toEqual([
-      [globalThis.images.stopButton, 530, 420, 100, 50],
-      [globalThis.images.resetButton, 270, 380, 120, 60]
-    ]);
+    expect(calls.image).toEqual([]);
   });
 
   it('renders calibration through the settings screen when calibration is active', () => {
@@ -240,7 +243,7 @@ describe('settings screen rendering', () => {
     expect(globalThis.leftHand).toBe(trackedPose.left_wrist);
     expect(globalThis.rightHand).toBe(trackedPose.right_wrist);
     expect(globalThis.nose).toBe(trackedPose.nose);
-    expect(calls.circle).toEqual([[24, 68, 12]]);
+    expect(calls.circle).toEqual([[12, 34, 12]]);
     expect(calls.fill).toEqual([
       [0, 255, 0, 128],
       [255, 255, 255, 64]

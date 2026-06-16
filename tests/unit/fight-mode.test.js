@@ -234,9 +234,9 @@ describe('fight mode rendering', () => {
     api.renderFightMode();
 
     expect(calls.circle).toEqual([
-      [20, 30, 12],
-      [40, 60, 48],
-      [80, 100, 48]
+      [10, 15, 12],
+      [20, 30, 48],
+      [40, 50, 48]
     ]);
     expect(globalThis.TfitPoseDetection.detectDodgeGestures).toHaveBeenCalledWith(expect.objectContaining({
       coef: 2,
@@ -512,8 +512,8 @@ describe('fight mode rendering', () => {
 
     api.renderFightMode();
 
-    expect(calls.circle).toContainEqual([40, 60, 48]);
-    expect(calls.circle).toContainEqual([80, 100, 48]);
+    expect(calls.circle).toContainEqual([20, 30, 48]);
+    expect(calls.circle).toContainEqual([40, 50, 48]);
     expect(globalThis.gameState.curMoves[0].type).toBe(1);
     expect(calls.image).toContainEqual([
       globalThis.images.opponentAnimations[1][0],

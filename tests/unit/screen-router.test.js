@@ -151,6 +151,7 @@ function installGlobals(overrides = {}) {
       drawMessagePanel: vi.fn(),
       renderBackButton: vi.fn(),
       renderFightButton: vi.fn(),
+      renderStopButton: vi.fn(),
       renderGuardTargets: vi.fn(),
       renderLoadingScreen: vi.fn(),
       renderMainMenu: vi.fn(),
@@ -246,6 +247,7 @@ describe('TfitScreenRouter exports', () => {
         drawMessagePanel: () => {},
         renderBackButton: () => {},
         renderFightButton: () => {},
+        renderStopButton: () => {},
         renderGuardTargets: () => {},
         renderLoadingScreen: () => {},
         renderMainMenu: () => {},
@@ -923,8 +925,8 @@ describe('round routing', () => {
     expect(globalThis.timingState.guardWarning).toBe(456);
     expect(globalThis.sounds.keepTrying.play).toHaveBeenCalledTimes(1);
     expect(globalThis.sounds.yourGuard.play).toHaveBeenCalledTimes(1);
+    expect(globalThis.TfitRender.renderStopButton).toHaveBeenCalledTimes(1);
     expect(calls.image).toEqual([
-      [globalThis.images.stopButton, 530, 420, 100, 50],
       [globalThis.images.goodHit, 200, 96, 240],
       [globalThis.images.keepTrying, 200, 96, 240],
       [globalThis.images.yourGuard, 200, 96, 240]

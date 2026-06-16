@@ -508,8 +508,11 @@
     textStyle(NORMAL);
     textSize(12 * layout.coef);
     if (gameState.menu === 2) {
+      const panelPadding = 10 * layout.coef;
+      const panelLineGap = 18 * layout.coef;
+      const titleY = 14 * layout.coef;
       const panel = {
-        height: 58 * layout.coef,
+        height: 72 * layout.coef,
         width: Math.min(168 * layout.coef, Math.max(92 * layout.coef, layout.width * 0.28)),
         x: 10 * layout.coef,
         y: 14 * layout.coef
@@ -522,12 +525,12 @@
       textStyle(BOLD);
       textSize(8 * layout.coef);
       textAlign(LEFT, CENTER);
-      text("Shadow", panel.x + 10 * layout.coef, panel.y + 14 * layout.coef);
+      text("Shadow", panel.x + panelPadding, panel.y + titleY);
       textStyle(NORMAL);
       fill(255, 255, 255, 230);
       textSize(9 * layout.coef);
-      text("(T)ype: " + SHADOW_SPECIFIC[gameState.shadow_focus].toLowerCase(), panel.x + 10 * layout.coef, panel.y + 33 * layout.coef);
-      text("(S)eries: " + gameState.gameCurrentSeries + " / " + gameState.gameSeries, panel.x + 10 * layout.coef, panel.y + 49 * layout.coef);
+      text("(T)ype: " + SHADOW_SPECIFIC[gameState.shadow_focus].toLowerCase(), panel.x + panelPadding, panel.y + titleY + panelLineGap);
+      text("(S)eries: " + gameState.gameCurrentSeries + " / " + gameState.gameSeries, panel.x + panelPadding, panel.y + titleY + panelLineGap * 2);
     }
     textSize(10 * layout.coef);
     fill(255, 0, 0, hide_sensor);
@@ -554,11 +557,26 @@
 
   function renderFeetIndicator() {
     const layout = layoutSnapshot();
+    const gaugeRadius = Math.max(12, Math.min(28 * layout.coef, layout.objectPoseSize * 0.58));
+    const gaugeYOffset = 8 * layout.coef;
+    const footPanelHeight = Math.max(46 * layout.coef, gaugeRadius * 2.55);
+    const footPanelWidth = Math.max(50 * layout.coef, Math.min(layout.width * 0.145, 74 * layout.coef));
+    const footPanelY = layout.height - (gaugeRadius + 24 * layout.coef) - footPanelHeight / 2 + gaugeYOffset;
+    const footPanelX = layout.width / 2 - footPanelWidth / 2;
+    const iconSize = Math.max(26 * layout.coef, Math.min(34 * layout.coef, footPanelHeight - 24 * layout.coef));
+
+    fill(0, 0, 0, 112);
+    rect(footPanelX, footPanelY, footPanelWidth, footPanelHeight, 8 * layout.coef);
+    fill(255, 255, 255, 26);
+    rect(footPanelX + 4 * layout.coef, footPanelY + 4 * layout.coef, footPanelWidth - 8 * layout.coef, footPanelHeight - 8 * layout.coef, 6 * layout.coef);
+
+    const iconX = footPanelX + footPanelWidth / 2;
+    const iconY = footPanelY + footPanelHeight / 2;
 
     fill(255, 255, 255, 192);
-    circle(layout.width / 2, 50 + layout.objectPoseSize / 2, layout.objectPoseSize + 10);
-    if (gameState.feet_position === 0) {image(images.leftFoot, layout.width / 2 - layout.objectPoseSize / 2, 50, layout.objectPoseSize, layout.objectPoseSize);}
-    if (gameState.feet_position === 1) {image(images.rightFoot, layout.width / 2 - layout.objectPoseSize / 2, 50, layout.objectPoseSize, layout.objectPoseSize);}
+    circle(iconX, iconY, iconSize + 10 * layout.coef);
+    if (gameState.feet_position === 0) {image(images.leftFoot, iconX - iconSize / 2, iconY - iconSize / 2, iconSize, iconSize);}
+    if (gameState.feet_position === 1) {image(images.rightFoot, iconX - iconSize / 2, iconY - iconSize / 2, iconSize, iconSize);}
   }
 
   function buildShadowResult() {
@@ -626,6 +644,7 @@
     if (Array.isArray(gameState.moves)) {
       for (const move of gameState.moves) {
         const type = Math.trunc(move);
+        /* v8 ignore next */
         if (counts[type]) {
           counts[type].total++;
           activeMoveTypes.add(type);

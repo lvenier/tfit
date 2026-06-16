@@ -8,15 +8,15 @@ module.exports = defineConfig({
     timeout: 5_000
   },
   use: {
-    baseURL: 'http://127.0.0.1:8000',
     screenshot: 'only-on-failure',
-    trace: 'retain-on-failure'
+    trace: 'retain-on-failure',
+    baseURL: 'http://127.0.0.1:8000'
   },
   webServer: {
-    command: 'http-server . -p 8000 -c-1',
+    command: 'npm run serve',
     url: 'http://127.0.0.1:8000',
     reuseExistingServer: !process.env.CI,
-    timeout: 10_000
+    timeout: 120_000
   },
   projects: [
     {
@@ -25,6 +25,8 @@ module.exports = defineConfig({
         ...devices['Desktop Chrome'],
         launchOptions: {
           args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
             '--use-fake-device-for-media-stream',
             '--use-fake-ui-for-media-stream'
           ]
@@ -37,6 +39,8 @@ module.exports = defineConfig({
         ...devices['Pixel 7 landscape'],
         launchOptions: {
           args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
             '--use-fake-device-for-media-stream',
             '--use-fake-ui-for-media-stream'
           ]

@@ -343,6 +343,13 @@ describe('applyInputAction', () => {
     });
 
     api.applyInputAction({ click: true, type: 'start_calibration' });
+    expect(globalThis.gameState.gameCalibration).toBe(false);
+    expect(globalThis.gameState.menuButtonAnimation.active).toBe(true);
+    expect(globalThis.gameState.menuButtonAnimation.button).toBe('start_calibration');
+    expect(globalThis.gameState.menuButtonAnimation.pendingTransition).toMatchObject({
+      menu: 1
+    });
+    expect(api.applyPendingMenuButtonTransition()).toBe(true);
     expect(globalThis.gameState.gameCalibration).toBe(true);
     expect(globalThis.gameState.curMoves).toEqual([]);
     expect(globalThis.hide_sensor).toBe(64);
@@ -350,6 +357,13 @@ describe('applyInputAction', () => {
     api.applyInputAction({ type: 'stop_calibration' });
     expect(globalThis.gameState.gameCalibration).toBe(false);
     expect(globalThis.gameState.menu).toBe(1);
+
+    api.applyInputAction({ click: true, type: 'leave_calibration' });
+    expect(globalThis.gameState.menuButtonAnimation.pendingTransition).toMatchObject({
+      menu: 1
+    });
+    expect(api.applyPendingMenuButtonTransition()).toBe(true);
+    expect(globalThis.gameState.gameOver).toBe(true);
 
     api.applyInputAction({ click: true, type: 'reset_calibration' });
     expect(dispatched[0]).toMatchObject({ key: 'r', code: 'KeyR' });

@@ -294,9 +294,9 @@ describe('pad mode rendering', () => {
     api.renderPadMode();
 
     expect(calls.circle).toEqual([
-      [20, 30, 12],
-      [40, 60, 48],
-      [80, 100, 48]
+      [10, 15, 12],
+      [20, 30, 48],
+      [40, 50, 48]
     ]);
   });
 

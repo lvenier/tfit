@@ -10,6 +10,7 @@ const { moveDisplay } = require('../../js/game-logic');
 
 const STUBBED_GLOBALS = [
   'arc',
+  'background',
   'images',
   'BOLD',
   'calibrationState',
@@ -29,9 +30,12 @@ const STUBBED_GLOBALS = [
   'loading_k',
   'loading_m',
   'map',
+  'line',
   'myWindowHeight',
   'myWindowWidth',
   'MOVE_TYPE',
+  'mouseX',
+  'mouseY',
   'noFill',
   'NORMAL',
   'noStroke',
@@ -108,6 +112,7 @@ function installRenderGlobals(overrides = {}) {
   for (const name of [
     'arc',
     'circle',
+    'background',
     'ellipse',
     'fill',
     'image',
@@ -115,6 +120,7 @@ function installRenderGlobals(overrides = {}) {
     'noStroke',
     'pop',
     'push',
+    'line',
     'quad',
     'rect',
     'rectMode',
@@ -197,6 +203,9 @@ function installRenderGlobals(overrides = {}) {
     PI: Math.PI,
     radians: degrees => degrees * Math.PI / 180,
     RIGHT: 'right',
+    CORNER: 'CORNER',
+    mouseX: 0,
+    mouseY: 0,
     SHADOW_SPECIFIC: { 1: 'JAB' },
     MOVE_TYPE: {
       1: 'LEFT_JAB',
@@ -252,8 +261,11 @@ describe('TfitRender exports', () => {
     expect(Object.keys(renderApi).sort()).toEqual([
       'drawDetectionProgress',
       'drawMessagePanel',
+      'getCalibrationResetButtonBounds',
+      'getSettingsButtonBounds',
       'renderBackButton',
       'renderCalibrationOverlay',
+      'renderCalibrationResetButton',
       'renderFeetIndicator',
       'renderFightButton',
       'renderFightMeters',
@@ -267,6 +279,7 @@ describe('TfitRender exports', () => {
       'renderShadowMoveReport',
       'renderShadowResult',
       'renderSpeech',
+      'renderStopButton',
       'syncPageBackground'
     ]);
   });
@@ -279,6 +292,129 @@ describe('TfitRender exports', () => {
     new Script(source, { filename: modulePath }).runInNewContext(sandbox);
 
     expect(Object.keys(sandbox.TfitRender).sort()).toEqual(Object.keys(renderApi).sort());
+  });
+
+  it('reads configured game labels when loaded in a browser context', () => {
+    const modulePath = require.resolve('../../js/game-render');
+    const source = readFileSync(modulePath, 'utf8');
+    const drawCalls = [];
+    const sandbox = {
+      BOLD: 'bold',
+      CENTER: 'center',
+      CORNER: 'corner',
+      GAME_LENGTH: { 1: '30' },
+      gameState: {
+        gameLengthIndex: 1,
+        gameSeries: 1,
+        level: 0
+      },
+      mouseX: 0,
+      mouseY: 0,
+      noFill: () => {},
+      noStroke: () => {},
+      pop: () => {},
+      push: () => {},
+      rect: () => {},
+      rectMode: () => {},
+      stroke: () => {},
+      strokeWeight: () => {},
+      TfitConfig: {
+        GAME_LENGTH: { 1: '45' },
+        GAME_LEVEL: { 0: 'custom' }
+      },
+      TfitLayoutState: {
+        snapshot: () => ({
+          coef: 1,
+          frameRate: 20,
+          height: 480,
+          width: 640
+        })
+      },
+      fill: () => {},
+      text: (...args) => drawCalls.push(args),
+      textAlign: () => {},
+      textSize: () => {},
+      textStyle: () => {}
+    };
+
+    new Script(source, { filename: modulePath }).runInNewContext(sandbox);
+    sandbox.TfitRender.renderSettingsControls();
+
+    expect(drawCalls).toContainEqual(['(L)ENGTH (45s)', 320, 252]);
+    expect(drawCalls).toContainEqual(['(L)EVEL (CUSTOM)', 320, 302]);
+  });
+
+  it('keeps preformatted button labels unchanged in a sandboxed render module', () => {
+    const modulePath = require.resolve('../../js/game-render');
+    const source = readFileSync(modulePath, 'utf8').replace(
+      'root.TfitRender = api;',
+      'api.__drawMenuButtonForTest = drawMenuButton; root.TfitRender = api;'
+    );
+    const drawCalls = [];
+    const sandbox = {
+      BOLD: 'bold',
+      CENTER: 'center',
+      CORNER: 'corner',
+      mouseX: 10,
+      mouseY: 10,
+      module: {
+        exports: {}
+      },
+      noFill: () => {},
+      noStroke: () => {},
+      pop: () => {},
+      push: () => {},
+      rect: () => {},
+      rectMode: () => {},
+      stroke: () => {},
+      strokeWeight: () => {},
+      TfitLayoutState: {
+        snapshot: () => ({
+          coef: 1,
+          height: 480,
+          width: 640
+        })
+      },
+      fill: () => {},
+      text: (...args) => drawCalls.push(args),
+      textAlign: () => {},
+      textSize: () => {},
+      textStyle: () => {}
+    };
+
+    new Script(source, { filename: modulePath }).runInNewContext(sandbox);
+    sandbox.TfitRender.__drawMenuButtonForTest({
+      label: '(A)LREADY',
+      x: 0,
+      y: 0,
+      w: 100,
+      h: 42
+    });
+
+    expect(drawCalls).toContainEqual(['(A)LREADY', 50, 22]);
+    expect(sandbox.module.exports).toBe(sandbox.TfitRender);
+  });
+
+  it('ignores unknown generated move types in sandboxed shadow report counts', () => {
+    const modulePath = require.resolve('../../js/game-render');
+    const source = readFileSync(modulePath, 'utf8').replace(
+      'root.TfitRender = api;',
+      'api.__shadowMoveReportCountsForTest = shadowMoveReportCounts; root.TfitRender = api;'
+    );
+    const sandbox = {
+      gameState: {
+        gameStarted: true,
+        moves: [11],
+        curMoves: []
+      }
+    };
+
+    new Script(source, { filename: modulePath }).runInNewContext(sandbox);
+
+    expect(sandbox.TfitRender.__shadowMoveReportCountsForTest()[1]).toEqual({
+      success: 0,
+      total: 0
+    });
   });
 });
 
@@ -352,8 +488,16 @@ describe('basic render helpers', () => {
       '--app-background-image',
       'url("assets/backgrounds/2.jpg")'
     );
-    expect(calls.image).toContainEqual([asset('shadow'), 640 / 6 + 20, 80, 100, 50]);
-    expect(calls.image).toContainEqual([asset('config'), 640 / 6 + 20, 380, 100, 50]);
+    expect(calls.image).toContainEqual([asset('menu'), 204, 70, 312, 312]);
+    expect(calls.image).toContainEqual([asset('logo'), 580, 425, 50, 50]);
+  });
+
+  it('renders the arena background without menu overlay styling on the main menu', () => {
+    installRenderGlobals({ gameState: { menu: 0 } });
+
+    renderApi.renderSceneBackground();
+
+    expect(calls.textSize).toEqual([]);
   });
 
   it('skips page background sync outside a document context', () => {
@@ -362,18 +506,69 @@ describe('basic render helpers', () => {
     expect(renderApi.syncPageBackground()).toBe(false);
   });
 
+  it('clears the page background image on the main menu', () => {
+    expect(renderApi.syncPageBackground(0)).toBe(true);
+    expect(globalThis.document.body.style.setProperty).toHaveBeenCalledWith(
+      '--app-background-image',
+      'none'
+    );
+  });
+
   it('renders menu and settings buttons at their app coordinates', () => {
     renderApi.renderBackButton();
     renderApi.renderFightButton();
     renderApi.renderSettingsControls();
 
-    expect(calls.image).toContainEqual([asset('back'), 530, 420, 100, 50]);
-    expect(calls.image).toContainEqual([asset('fight'), 270, 330, 120, 60]);
-    expect(calls.image).toContainEqual([asset('series3'), 270, 180, 120, 60]);
-    expect(calls.image).toContainEqual([asset('duration60'), 270, 230, 120, 60]);
-    expect(calls.image).toContainEqual([asset('medium'), 270, 280, 120, 60]);
-    expect(calls.image).toContainEqual([asset('fr20'), 270, 330, 120, 60]);
-    expect(calls.image).toContainEqual([asset('calibrate'), 270, 380, 120, 60]);
+    expect(calls.rect).toEqual(expect.arrayContaining([
+      [530, 420, 100, 42, 16],
+      [260, 330, 120, 42, 16],
+      [245, 180, 150, 42, 16],
+      [245, 230, 150, 42, 16],
+      [245, 280, 150, 42, 16],
+      [245, 330, 150, 42, 16],
+      [245, 380, 150, 42, 16]
+    ]));
+
+    expect(calls.text).toEqual(expect.arrayContaining([
+      ['(B)ACK', 580, 442],
+      ['(F)IGHT', 320, 352],
+      ['(S)ERIES (3/5)', 320, 202],
+      ['(L)ENGTH (60s)', 320, 252],
+      ['(L)EVEL (MEDIUM)', 320, 302],
+      ['(F)RAMERATE (20 FPS)', 320, 352],
+      ['(C)ALIBRATE', 320, 402]
+    ]));
+  });
+
+  it('uses the default level label when the configured index is missing', () => {
+    installRenderGlobals({ gameState: { level: 99 } });
+
+    renderApi.renderSettingsControls();
+
+    expect(calls.text).toContainEqual(['(L)EVEL (MEDIUM)', 320, 302]);
+  });
+
+  it('draws hovered menu button glow and system-style buttons', () => {
+    installRenderGlobals({ mouseX: 580, mouseY: 442 });
+
+    renderApi.renderBackButton();
+    renderApi.renderStopButton();
+    renderApi.renderCalibrationResetButton();
+
+    expect(calls.noFill.length).toBeGreaterThan(0);
+    expect(calls.noStroke.length).toBeGreaterThan(0);
+    expect(calls.text).toContainEqual(['(B)ACK', 580, 442]);
+    expect(calls.text).toContainEqual(['(S)TOP', 580, 442]);
+    expect(calls.text).toContainEqual(['(R)ESET', 320, 402]);
+  });
+
+  it('returns calibration reset button bounds from the current layout', () => {
+    expect(renderApi.getCalibrationResetButtonBounds()).toEqual({
+      left: 260,
+      right: 380,
+      top: 380,
+      bottom: 422
+    });
   });
 
   it('renders guard targets, calibration overlay, and speech', () => {
@@ -417,11 +612,11 @@ describe('hud and meter rendering', () => {
     expect(calls.text).toContainEqual(['29', 640 / 3, 439.16]);
     expect(calls.text).toContainEqual(['POINTS', 2 * 640 / 3, 421.66400000000004]);
     expect(calls.text).toContainEqual(['4', 2 * 640 / 3, 439.16]);
-    expect(calls.rect).toContainEqual([10, 14, 168, 58, 8]);
-    expect(calls.rect).toContainEqual([14, 18, 160, 50, 6]);
+    expect(calls.rect).toContainEqual([10, 14, 168, 72, 8]);
+    expect(calls.rect).toContainEqual([14, 18, 160, 64, 6]);
     expect(calls.text).toContainEqual(['Shadow', 20, 28]);
-    expect(calls.text).toContainEqual(['(T)ype: jab', 20, 47]);
-    expect(calls.text).toContainEqual(['(S)eries: 1 / 3', 20, 63]);
+    expect(calls.text).toContainEqual(['(T)ype: jab', 20, 46]);
+    expect(calls.text).toContainEqual(['(S)eries: 1 / 3', 20, 64]);
     expect(calls.arc[1][5]).toBeCloseTo(54);
   });
 
@@ -454,11 +649,11 @@ describe('hud and meter rendering', () => {
 
   it('renders the active feet indicator image', () => {
     renderApi.renderFeetIndicator();
-    expect(calls.image).toContainEqual([asset('left-foot'), 296, 50, 48, 48]);
+    expect(calls.image).toContainEqual([asset('left-foot'), 303, 419.16, 34, 34]);
 
     installRenderGlobals({ gameState: { feet_position: 1 } });
     renderApi.renderFeetIndicator();
-    expect(calls.image).toContainEqual([asset('right-foot'), 296, 50, 48, 48]);
+    expect(calls.image).toContainEqual([asset('right-foot'), 303, 419.16, 34, 34]);
   });
 });
 
@@ -574,6 +769,21 @@ describe('renderShadowResult', () => {
     expect(calls.text).toContainEqual(['0 / 0', 168, 119]);
     expect(calls.text).toContainEqual(['0 / 0', 168, 155]);
     expect(calls.text).toContainEqual(['0 / 0', 168, 191]);
+  });
+
+  it('ignores generated shadow moves outside the tracked scoring types', () => {
+    installRenderGlobals({
+      gameState: {
+        gameStarted: true,
+        moves: [1, 11, Number.NaN],
+        curMoves: []
+      }
+    });
+
+    renderApi.renderShadowMoveReport();
+
+    expect(calls.text).toContainEqual(['0 / 1', 168, 119]);
+    expect(calls.text).toContainEqual(['0 / 0', 472, 263]);
   });
 
   it('summarizes scoring moves by type and draws result markers', () => {

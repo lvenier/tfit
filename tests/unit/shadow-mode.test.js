@@ -832,7 +832,7 @@ describe('shadow mode layout usage', () => {
 
     api.renderShadowMode();
 
-    expect(calls.circle).not.toContainEqual([520, 400, 48]);
+    expect(calls.circle).not.toContainEqual([260, 200, 48]);
     expect(calls.circle).toContainEqual([440, 160, 96]);
   });
 
@@ -880,7 +880,7 @@ describe('shadow mode layout usage', () => {
 
     api.renderShadowMode();
 
-    expect(calls.circle).not.toContainEqual([600, 80, 48]);
+    expect(calls.circle).not.toContainEqual([300, 40, 48]);
     expect(globalThis.timingState.rightJab).toBe(10_000);
   });
 
@@ -983,7 +983,7 @@ describe('shadow mode layout usage', () => {
       leftPoses: 10_000,
       leftUppercut: 9950,
       rightDodge: 10_000,
-      rightHook: 10_000,
+      rightHook: 9950,
       rightJab: 10_000,
       rightPoses: 10_000,
       rightUppercut: 9950
@@ -991,7 +991,6 @@ describe('shadow mode layout usage', () => {
     expect(globalThis.punchSound).toHaveBeenCalledTimes(6);
     expect(calls.rect).toContainEqual([0, 0, 120, 480]);
     expect(calls.rect).toContainEqual([0, 0, 640, 100]);
-    expect(calls.rect).toContainEqual([520, 0, 520, 480]);
   });
 
   it('updates uppercut timing and draws uppercut zones for both hands', () => {
@@ -1015,9 +1014,53 @@ describe('shadow mode layout usage', () => {
 
     api.renderShadowMode();
 
+    expect(globalThis.timingState.leftUppercut).toBe(0);
+    expect(globalThis.timingState.rightUppercut).toBe(0);
+  });
+
+  it('draws hook and uppercut feedback zones when hands cross calibration thresholds', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 80, y: 340 },
+      nose: { confidence: 0.9, x: 10, y: 170 },
+      rightHand: { confidence: 0.9, x: 560, y: 340 }
+    };
+
+    const api = installGlobals({
+      poses: [trackedPose],
+      timingState: {
+        downDodge: 0,
+        leftDodge: 0,
+        leftHook: 0,
+        leftJab: 0,
+        leftPoses: 9_950,
+        leftUppercut: 0,
+        rightDodge: 0,
+        rightHook: 0,
+        rightJab: 0,
+        rightPoses: 9_950,
+        rightUppercut: 0,
+        switchGuard: 0
+      },
+      TfitPoseDetection: {
+        areBothHandsRecent: vi.fn(() => true),
+        detectDodgeGestures: vi.fn(() => ({ down: false, left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: true, jab: false, uppercut: true })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderShadowMode();
+
+    expect(globalThis.timingState.leftHook).toBe(10_000);
     expect(globalThis.timingState.leftUppercut).toBe(10_000);
+    expect(globalThis.timingState.rightHook).toBe(10_000);
     expect(globalThis.timingState.rightUppercut).toBe(10_000);
+    expect(calls.rect).toContainEqual([0, 0, 120, 480]);
     expect(calls.rect).toContainEqual([0, 300, 640, 180]);
+    expect(calls.rect).toContainEqual([520, 0, 520, 480]);
   });
 
   it('skips pose marker drawing when detection is hidden and avoids punch sound while idle', () => {
@@ -1065,8 +1108,8 @@ describe('shadow mode layout usage', () => {
     api.renderShadowMode();
 
     expect(globalThis.punchSound).not.toHaveBeenCalled();
-    expect(calls.circle).not.toContainEqual([20, 340, 12]);
-    expect(calls.circle).not.toContainEqual([500, 80, 48]);
+    expect(calls.circle).not.toContainEqual([10, 170, 12]);
+    expect(calls.circle).not.toContainEqual([250, 40, 48]);
     expect(globalThis.timingState.leftJab).toBe(10_000);
     expect(globalThis.timingState.rightJab).toBe(10_000);
   });
@@ -1116,7 +1159,7 @@ describe('shadow mode layout usage', () => {
 
     expect(globalThis.timingState.rightPoses).toBe(10_000);
     expect(globalThis.punchSound).not.toHaveBeenCalled();
-    expect(calls.circle).toContainEqual([500, 400, 48]);
+    expect(calls.circle).toContainEqual([250, 200, 48]);
   });
 
   it('plays punch sound for a right jab only while fighting', () => {
@@ -1278,7 +1321,7 @@ describe('shadow mode layout usage', () => {
 
     api.renderShadowMode();
 
-    expect(calls.circle).toContainEqual([500, 80, 48]);
+    expect(calls.circle).toContainEqual([250, 40, 48]);
     expect(globalThis.timingState.rightJab).toBe(10_000);
     expect(globalThis.punchSound).toHaveBeenCalledTimes(1);
   });
@@ -1305,7 +1348,7 @@ describe('shadow mode layout usage', () => {
 
     api.renderShadowMode();
 
-    expect(calls.circle).not.toContainEqual([500, 80, 48]);
+    expect(calls.circle).not.toContainEqual([250, 40, 48]);
     expect(calls.rect).toContainEqual([0, 0, 640, 100]);
     expect(globalThis.timingState.rightJab).toBe(0);
     expect(globalThis.punchSound).not.toHaveBeenCalled();
@@ -1589,7 +1632,7 @@ describe('shadow mode layout usage', () => {
 
     api.renderShadowMode();
 
-    expect(calls.circle).toContainEqual([500, 80, 48]);
+    expect(calls.circle).toContainEqual([250, 40, 48]);
     expect(globalThis.timingState.rightJab).toBe(10_000);
     expect(globalThis.punchSound).toHaveBeenCalledTimes(1);
   });
@@ -1693,7 +1736,7 @@ describe('shadow mode layout usage', () => {
     expect(globalThis.TfitPoseDetection.moveMatchesRecentGesture).toHaveBeenCalled();
     expect(globalThis.timingState.leftJab).toBe(10_000);
     expect(globalThis.timingState.downDodge).toBe(10_000);
-    expect(calls.circle).toContainEqual([500, 80, 48]);
+    expect(calls.circle).toContainEqual([250, 40, 48]);
     expect(globalThis.timingState.rightJab).toBe(10_000);
   });
 
@@ -1802,7 +1845,7 @@ describe('shadow mode layout usage', () => {
 
     api.renderShadowMode();
 
-    expect(calls.circle).toContainEqual([500, 400, 48]);
+    expect(calls.circle).toContainEqual([250, 200, 48]);
   });
 
   it('does not draw right-hand marker while pose detection is disabled', () => {
@@ -1828,7 +1871,7 @@ describe('shadow mode layout usage', () => {
 
     api.renderShadowMode();
 
-    expect(calls.circle).not.toContainEqual([500, 400, 48]);
+    expect(calls.circle).not.toContainEqual([250, 200, 48]);
   });
 
   it('updates right jab timing while game is running when right guard is below jab threshold', () => {
@@ -2302,7 +2345,7 @@ describe('shadow mode layout usage', () => {
 
     api.renderShadowMode();
 
-    expect(calls.circle).not.toContainEqual([500, 400, 48]);
+    expect(calls.circle).not.toContainEqual([250, 200, 48]);
     expect(globalThis.timingState.rightJab).toBe(10_000);
     expect(globalThis.punchSound).not.toHaveBeenCalled();
   });

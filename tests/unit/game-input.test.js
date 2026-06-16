@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 import { Script } from 'node:vm';
@@ -42,7 +42,7 @@ describe('TfitInput exports', () => {
       key: 's',
       menu: 1
     })).toEqual({
-      type: 'stop_calibration'
+      type: 'leave_calibration'
     });
 
     expect(keyAction({
@@ -151,6 +151,35 @@ describe('calibrationDragFlagsFromPointer', () => {
 });
 
 describe('pointerAction', () => {
+  const originalTfitRender = {
+    ...(globalThis.TfitRender || {})
+  };
+
+  const calibrationResetButtonBounds = () => ({
+    left: 240,
+    right: 360,
+    top: 500,
+    bottom: 542
+  });
+  const settingsButtonBounds = () => ({
+    left: 490,
+    right: 590,
+    top: 540,
+    bottom: 582
+  });
+
+  beforeEach(() => {
+    globalThis.TfitRender = {
+      ...originalTfitRender,
+      getCalibrationResetButtonBounds: calibrationResetButtonBounds,
+      getSettingsButtonBounds: settingsButtonBounds
+    };
+  });
+
+  afterEach(() => {
+    globalThis.TfitRender = originalTfitRender;
+  });
+
   const basePointer = {
     coef: 1,
     gameCalibration: false,
@@ -171,6 +200,22 @@ describe('pointerAction', () => {
     right_init_pose_x: 360,
     right_init_pose_y: 160
   };
+
+  it('maps settings and game control actions from shared style buttons', () => {
+    expect(pointerAction({
+      ...basePointer,
+      menu: 1,
+      mouseX: 300,
+      mouseY: 520
+    })).toEqual({ click: true, type: 'start_calibration' });
+
+    expect(pointerAction({
+      ...basePointer,
+      menu: 3,
+      mouseX: 550,
+      mouseY: 560
+    })).toEqual({ click: true, type: 'back_to_menu' });
+  });
 
   it('maps main menu pointer regions to menu actions with click feedback', () => {
     expect(pointerAction({
@@ -254,6 +299,7 @@ describe('pointerAction', () => {
   it('maps the lower-right button to back or stop based on active state', () => {
     expect(pointerAction({
       ...basePointer,
+      gameStarted: false,
       menu: 3,
       mouseX: 550,
       mouseY: 560
@@ -273,7 +319,7 @@ describe('pointerAction', () => {
       menu: 1,
       mouseX: 550,
       mouseY: 560
-    })).toEqual({ click: true, type: 'stop_current' });
+    })).toEqual({ click: true, type: 'leave_calibration' });
   });
 
   it('ignores pointer input while a recent result is visible', () => {
@@ -351,7 +397,7 @@ describe('keyAction', () => {
       type: 'start_calibration'
     });
     expect(keyAction({ gameCalibration: true, gameStarted: false, key: 's', menu: 1 })).toEqual({
-      type: 'stop_calibration'
+      type: 'leave_calibration'
     });
     expect(keyAction({ gameCalibration: true, gameStarted: false, key: 'r', menu: 1 })).toEqual({
       type: 'reset_calibration_defaults'
@@ -376,6 +422,12 @@ describe('keyAction', () => {
     });
     expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'f', menu: 4 })).toEqual({
       type: 'start_fight'
+    });
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'F', menu: 3 })).toEqual({
+      type: 'start_fight'
+    });
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'f', menu: 0 })).toEqual({
+      type: 'none'
     });
   });
 });

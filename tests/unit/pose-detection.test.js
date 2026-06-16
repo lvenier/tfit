@@ -45,6 +45,60 @@ describe('TfitPoseDetection exports', () => {
 
     expect(sandbox.TfitPoseDetection.hasPoseConfidence({ confidence: 0.2 })).toBe(true);
   });
+
+  it('uses the fallback layout when no layout module is available', () => {
+    const modulePath = require.resolve('../../js/pose-detection');
+    const source = readFileSync(modulePath, 'utf8');
+    const sandbox = {};
+
+    new Script(source, { filename: modulePath }).runInNewContext(sandbox);
+
+    expect(sandbox.TfitPoseDetection.isInsideGuard(
+      { confidence: 0.9, x: 320, y: 240 },
+      320,
+      240,
+      24
+    )).toBe(true);
+  });
+
+  it('uses the fallback layout when the layout module has no snapshot helper', () => {
+    const modulePath = require.resolve('../../js/pose-detection');
+    const source = readFileSync(modulePath, 'utf8');
+    const sandbox = {
+      TfitLayoutState: {}
+    };
+
+    new Script(source, { filename: modulePath }).runInNewContext(sandbox);
+
+    expect(sandbox.TfitPoseDetection.isInsideGuard(
+      { confidence: 0.9, x: 320, y: 240 },
+      320,
+      240,
+      24
+    )).toBe(true);
+  });
+
+  it('uses the configured layout snapshot when available in a browser context', () => {
+    const modulePath = require.resolve('../../js/pose-detection');
+    const source = readFileSync(modulePath, 'utf8');
+    const sandbox = {
+      TfitLayoutState: {
+        snapshot: () => ({
+          width: 1280,
+          height: 960
+        })
+      }
+    };
+
+    new Script(source, { filename: modulePath }).runInNewContext(sandbox);
+
+    expect(sandbox.TfitPoseDetection.isInsideGuard(
+      { confidence: 0.9, x: 160, y: 120 },
+      320,
+      240,
+      24
+    )).toBe(true);
+  });
 });
 
 describe('posePartsFromPoses', () => {
@@ -90,8 +144,8 @@ describe('isInsideGuard', () => {
   });
 
   it('keeps guard bounds exclusive like the original comparisons', () => {
-    expect(isInsideGuard({ x: 8, y: 20, confidence: 0.2 }, 20, 40, 4, 2)).toBe(false);
-    expect(isInsideGuard({ x: 8.1, y: 20, confidence: 0.2 }, 20, 40, 4, 2)).toBe(true);
+    expect(isInsideGuard({ x: 16, y: 20, confidence: 0.2 }, 20, 40, 4, 2)).toBe(false);
+    expect(isInsideGuard({ x: 16.1, y: 40, confidence: 0.2 }, 20, 40, 4, 2)).toBe(true);
   });
 });
 
