@@ -95,6 +95,62 @@ describe('TfitCalibrationState exports', () => {
     new Script(source, { filename: modulePath }).runInNewContext(sandbox);
 
     expect(sandbox.TfitCalibrationState).toBe(sandbox.calibrationState);
-    expect(sandbox.calibrationState.left_init_pose_x).toBe(640 / 3);
+    expect(sandbox.calibrationState.left_init_pose_x).toBeCloseTo(640 / 3, 12);
+  });
+
+  it('normalizes values, including zero and ratio inputs, then rescales on set/get', () => {
+    const storageNumber = vi.fn((key, fallback) => {
+      const values = {
+        left_init_hook_x: 0,
+        left_init_pose_x: 0.5,
+        left_init_pose_y: NaN,
+        right_init_hook_x: Infinity,
+        right_init_pose_x: 0.25,
+        right_init_pose_y: 40
+      };
+      return key in values ? values[key] : fallback;
+    });
+
+    const layout = { height: 400, width: 800 };
+    const state = installGlobals({
+      storageNumber,
+      TfitLayoutState: {
+        snapshot: vi.fn(() => ({ ...layout }))
+      }
+    });
+
+    // Initialization normalizes various legacy and ratio-style values
+    expect(state.left_init_hook_x).toBe(0);
+    expect(state.left_init_pose_x).toBe(400);
+    expect(state.left_init_pose_y).toBe(0);
+    expect(state.right_init_hook_x).toBe(0);
+    expect(state.right_init_pose_x).toBe(200);
+    expect(state.right_init_pose_y).toBe(40);
+
+    // Set all responsive coordinates through ratio and pixel paths.
+    state.left_init_hook_x = 0;
+    state.left_init_pose_x = 200;
+    state.left_init_pose_y = 0.5;
+    state.right_init_hook_x = 200;
+    state.right_init_pose_x = 0.25;
+    state.right_init_pose_y = 1;
+
+    // Confirm all getters work (this also covers all responsive property access paths).
+    expect(state.left_init_hook_x).toBe(0);
+    expect(state.left_init_pose_x).toBe(200);
+    expect(state.left_init_pose_y).toBe(200);
+    expect(state.right_init_hook_x).toBe(200);
+    expect(state.right_init_pose_x).toBe(200);
+    expect(state.right_init_pose_y).toBe(400);
+
+    // Resize and confirm ratio-based positions are rescaled.
+    layout.width = 1600;
+    layout.height = 600;
+    expect(state.left_init_hook_x).toBeCloseTo(0, 12);
+    expect(state.left_init_pose_x).toBeCloseTo(400, 12);
+    expect(state.left_init_pose_y).toBeCloseTo(300, 12);
+    expect(state.right_init_hook_x).toBeCloseTo(400, 12);
+    expect(state.right_init_pose_x).toBeCloseTo(400, 12);
+    expect(state.right_init_pose_y).toBeCloseTo(600, 12);
   });
 });

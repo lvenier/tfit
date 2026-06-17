@@ -767,7 +767,7 @@
   function renderGuardTargets() {
     const layout = layoutSnapshot();
 
-    fill(255, 255, 255, 128);
+    fill(255, 255, 255, 56);
     circle(calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, layout.objectPoseSize);
     circle(calibrationState.right_init_pose_x, calibrationState.right_init_pose_y, layout.objectPoseSize);
   }
