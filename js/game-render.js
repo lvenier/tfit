@@ -349,7 +349,7 @@
     const panelX = layout.width * 0.60;
     const panelY = layout.height / 9;
     const panelW = Math.min(layout.width * 0.44, 620);
-    const panelH = layout.height * 0.30;
+    const panelH = layout.height * 0.24;
     const halfW = panelW / 2;
     const halfH = panelH / 2;
     const cx = panelX;
