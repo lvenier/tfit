@@ -1,11 +1,17 @@
 importScripts('./service-worker-version.js', './service-worker-assets.js');
-const CACHE_NAME = `box4fit-v${self.APP_VERSION}`;
+const CACHE_NAME = `${self.APP_VERSION}`;
 
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(self.CORE_ASSETS))
+      .then(async cache => {
+        await cache.addAll(self.CORE_ASSETS);
+      })
       .then(() => self.skipWaiting())
+      .catch(error => {
+        console.error('Service worker install failed:', error);
+        throw error;
+      })
   );
 });
 
@@ -29,13 +35,28 @@ self.addEventListener('fetch', event => {
       if (cachedResponse) {
         return cachedResponse;
       }
+
       return fetch(event.request).then(response => {
         if (!response || response.status !== 200 || response.type === 'opaque') {
           return response;
         }
+
         const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
+
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(event.request, responseToCache);
+        });
+
         return response;
+      }).catch(async () => {
+        if (event.request.mode === 'navigate') {
+          return await caches.match('/') || await caches.match('/index.html');
+        }
+
+        return new Response('Offline and not cached', {
+          status: 503,
+          statusText: 'Offline'
+        });
       });
     })
   );

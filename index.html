@@ -64,11 +64,18 @@
         <div class="loading-count" id="loading-count">0%</div>
       </div>
     </div>
-    <button class="pwa-install-button" id="pwa-install-button" type="button" hidden>Install Box4Fit</button>
+    <button class="pwa-install-button" id="pwa-install-button" type="button">Install Box4Fit</button>
     <noscript>Box4Fit needs JavaScript enabled to run the webcam boxing game.</noscript>
   </main>
+  <footer id="app-footer">
+    <span id="app-version"></span>
+  </footer>
   <script src="js/version.js"></script>
   <script src="js/app.js"></script>
+  <script>
+    const installed = globalThis.matchMedia('(display-mode: standalone)').matches;
+    document.getElementById('app-version').textContent = `${globalThis.APP_VERSION} ${installed ? '📱' : '🌐'}`;
+  </script>
 </body>
 
 </html>

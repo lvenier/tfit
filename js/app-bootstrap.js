@@ -17,8 +17,15 @@
     });
 
     if ('serviceWorker' in appNavigator) {
-      appNavigator.serviceWorker.register('./service-worker.js')
-        .catch(() => {});
+      appNavigator.serviceWorker.register('/service-worker.js', {
+        scope: '/'
+      }).catch(error => {
+        console.error('Service worker registration failed:', error);
+      });
+
+      appNavigator.serviceWorker.addEventListener('controllerchange', () => {
+        appRoot.location.reload();
+      });
     }
 
     Object.assign(appRoot, {

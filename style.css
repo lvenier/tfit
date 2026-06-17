@@ -6,7 +6,6 @@ body {
   min-height: 100vh;
   overflow: hidden;
   background-color: #050505;
-  background-image: var(--app-background-image);
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
@@ -16,16 +15,27 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+#app-footer {
+  position: fixed;
+  bottom: 8px;
+  right: 12px;
+  z-index: 9999;
+  font-size: 12px;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
 canvas {
   display: block;
+  z-index: 1;
   background: transparent;
 }
 
 .pwa-install-button {
   position: fixed;
   right: max(14px, env(safe-area-inset-right));
-  bottom: max(14px, env(safe-area-inset-bottom));
-  z-index: 1000;
+  top: max(14px, env(safe-area-inset-bottom));
+  z-index: 99999;
   min-width: 132px;
   min-height: 44px;
   padding: 0 18px;
