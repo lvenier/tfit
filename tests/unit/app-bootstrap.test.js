@@ -44,11 +44,16 @@ function createDependencies(overrides = {}) {
     lifecycle,
     navigator: {
       serviceWorker: {
+        addEventListener: vi.fn(),
         register: vi.fn(() => Promise.resolve())
       }
     },
     p5: {},
-    root: {},
+    root: {
+      location: {
+        reload: vi.fn()
+      }
+    },
     ...overrides
   };
 }
@@ -108,7 +113,13 @@ describe('registerAppHandlers', () => {
       dependencies.events.handleKeyboardInput,
       true
     );
-    expect(dependencies.navigator.serviceWorker.register).toHaveBeenCalledWith('./service-worker.js');
+    expect(dependencies.navigator.serviceWorker.register).toHaveBeenCalledWith('/service-worker.js', { scope: '/' });
+    expect(dependencies.navigator.serviceWorker.addEventListener).toHaveBeenCalledWith(
+      'controllerchange',
+      expect.any(Function)
+    );
+    dependencies.navigator.serviceWorker.addEventListener.mock.calls[0][1]();
+    expect(dependencies.root.location.reload).toHaveBeenCalledTimes(1);
     expect(dependencies.root).toMatchObject({
       draw: dependencies.lifecycle.draw,
       keyPressed: dependencies.events.handleKeyboardInput,
@@ -132,11 +143,29 @@ describe('registerAppHandlers', () => {
     expect(dependencies.root.setup).toBe(dependencies.lifecycle.setup);
   });
 
+  it('does not reload on controller changes when e2e disables service worker reloads', () => {
+    const api = installGlobals();
+    const dependencies = createDependencies({
+      root: {
+        __TFIT_DISABLE_SW_RELOAD_FOR_E2E: true,
+        location: {
+          reload: vi.fn()
+        }
+      }
+    });
+
+    api.registerAppHandlers(dependencies);
+    dependencies.navigator.serviceWorker.addEventListener.mock.calls[0][1]();
+
+    expect(dependencies.root.location.reload).not.toHaveBeenCalled();
+  });
+
   it('absorbs service worker registration failures', async () => {
     const api = installGlobals();
     const dependencies = createDependencies({
       navigator: {
         serviceWorker: {
+          addEventListener: vi.fn(),
           register: vi.fn(() => Promise.reject(new Error('offline')))
         }
       }
@@ -146,7 +175,7 @@ describe('registerAppHandlers', () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(dependencies.navigator.serviceWorker.register).toHaveBeenCalledWith('./service-worker.js');
+    expect(dependencies.navigator.serviceWorker.register).toHaveBeenCalledWith('/service-worker.js', { scope: '/' });
   });
 
   it('shows and uses the install button when the browser offers PWA installation', async () => {

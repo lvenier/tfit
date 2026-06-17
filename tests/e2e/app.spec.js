@@ -1,6 +1,9 @@
 const { expect, test } = require('@playwright/test');
 
 async function gotoApp(page) {
+  await page.addInitScript(() => {
+    window.__TFIT_DISABLE_SW_RELOAD_FOR_E2E = true;
+  });
   await page.goto('/');
 }
 
@@ -25,17 +28,20 @@ async function waitForGameCanvas(page) {
 
 async function pressAppKey(page, key) {
   await page.evaluate(pressedKey => {
-    document.dispatchEvent(new KeyboardEvent('keydown', {
-      bubbles: true,
-      code: `Key${pressedKey.toUpperCase()}`,
-      key: pressedKey
-    }));
+    window.TfitAppInputActions?.applyKeyInputAction(pressedKey);
   }, key);
 }
 
 async function flushPendingMenuTransition(page) {
   await page.evaluate(() => {
-    window.TfitAppInputActions?.applyPendingMenuButtonTransition();
+    const applied = window.TfitAppInputActions?.applyPendingMenuButtonTransition();
+    if (applied && window.gameState?.menuButtonAnimation) {
+      clearTimeout(window.gameState.menuButtonAnimation.transitionTimeout);
+      window.gameState.menuButtonAnimation.active = false;
+      window.gameState.menuButtonAnimation.pendingTransition = null;
+      window.gameState.menuButtonAnimation.progress = 0;
+      window.gameState.menuButtonAnimation.transitionTimeout = null;
+    }
   });
 }
 

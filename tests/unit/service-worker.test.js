@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { Script } from 'node:vm';
 
 const packageJson = JSON.parse(readFileSync(resolve('package.json'), 'utf8'));
-const cacheName = `box4fit-v${packageJson.version}`;
+const cacheName = `${packageJson.version}`;
 
 function createCacheStore(existingCaches = {}) {
   const stores = new Map(

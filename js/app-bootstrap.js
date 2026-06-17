@@ -24,6 +24,9 @@
       });
 
       appNavigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (appRoot.__TFIT_DISABLE_SW_RELOAD_FOR_E2E) {
+          return;
+        }
         appRoot.location.reload();
       });
     }

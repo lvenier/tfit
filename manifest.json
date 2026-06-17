@@ -7,6 +7,11 @@
     "display": "standalone",
     "theme_color": "#050505",
     "background_color": "#050505",
+    "display_override": [
+        "window-controls-overlay",
+        "standalone",
+        "minimal-ui"
+    ],
     "description": "A webcam boxing fitness game with motion detection",
     "lang": "en",
     "orientation": "landscape",
