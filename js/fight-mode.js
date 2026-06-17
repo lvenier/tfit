@@ -1,9 +1,15 @@
 (function(root) {
   const {
+    cloneOpponent,
+    OPPONENTS
+  } = root.TfitConfig;
+
+  const {
     detectDodgeGestures,
     detectHandGestures,
     hasPoseConfidence,
     isInsideGuard,
+    moveMatchesRecentGesture = () => false,
     posePartsFromPoses
   } = root.TfitPoseDetection;
 
@@ -13,6 +19,7 @@
 
   const {
     renderFightMeters,
+    renderFightOpponentCharacter,
     renderMoveShape
   } = root.TfitRender;
 
@@ -22,6 +29,21 @@
 
   const POSE_INPUT_WIDTH = 640;
   const POSE_INPUT_HEIGHT = 480;
+  const OPPONENT_FRAME_HOLD = 6;
+  const OPPONENT_REACTION_FRAMES = 120;
+  const OPPONENT_HIT_REACTION_FRAMES = 30;
+  const FIGHT_MOVE_INTERVAL_MULTIPLIER = 2;
+  const SHADOW_SUCCESS_FILL = [0, 255, 0, 127];
+
+  /* c8 ignore next 3 */
+  function currentOpponentConfig() {
+    return OPPONENTS[gameState.opponent] || OPPONENTS["0"] || {};
+  }
+
+  /* c8 ignore next 3 */
+  function opponentPunchWaitFrames() {
+    return currentOpponentConfig().punchWaitFrames || OPPONENT_REACTION_FRAMES;
+  }
 
   function poseX(point, layout) {
     return point.x * (layout.width / POSE_INPUT_WIDTH);
@@ -31,6 +53,139 @@
     return point.y * (layout.height / POSE_INPUT_HEIGHT);
   }
 
+  function fightPromptPosition(type) {
+    const isLeftMove = [1, 3, 5, 7, 10].includes(type);
+    const isRightMove = [2, 4, 6, 8, 9].includes(type);
+    if (isLeftMove) {
+      return {
+        pairedX: type === 10 ? calibrationState.right_init_pose_x : undefined,
+        x: calibrationState.left_init_pose_x,
+        y: calibrationState.left_init_pose_y
+      };
+    }
+    if (isRightMove) {
+      return {
+        pairedX: type === 9 ? calibrationState.left_init_pose_x : undefined,
+        x: calibrationState.right_init_pose_x,
+        y: calibrationState.right_init_pose_y
+      };
+    }
+    return {
+      pairedX: undefined,
+      x: layoutSnapshot().width / 2,
+      y: layoutSnapshot().height / 5
+    };
+  }
+
+  function fightPromptLabel(type) {
+    return (MOVE_TYPE[type] || "")
+      .replace(/^LEFT_/, "")
+      .replace(/^RIGHT_/, "");
+  }
+
+  function applyPlayerHit() {
+    /* c8 ignore next 3 */
+    if (!Number.isFinite(gameState.my_stamina)) {
+      gameState.my_stamina = cloneOpponent(gameState.opponent).stamina;
+    }
+    gameState.my_stamina = Math.max(0, gameState.my_stamina - 1);
+  }
+
+  function triggerOpponentHitReaction(type) {
+    animationState.opponent.reaction = {
+      duration: OPPONENT_HIT_REACTION_FRAMES,
+      frame: 0,
+      type
+    };
+  }
+
+  function advanceOpponentHitReaction() {
+    const reaction = animationState.opponent.reaction;
+    if (!reaction) {return;}
+    reaction.frame++;
+    if (reaction.frame >= reaction.duration) {
+      animationState.opponent.reaction = null;
+    }
+  }
+
+  function markFightPromptSuccess(currentMove, now) {
+    if (currentMove.type >= 1 && currentMove.type <= 6 && !currentMove.staminaApplied) {
+      gameState.my_opponent.stamina = Math.max(0, gameState.my_opponent.stamina - 1);
+      currentMove.staminaApplied = true;
+    }
+    currentMove.hit = true;
+    timingState.hitSuccess = now;
+    timingState.hitSuccessText = currentMove.type >= 7 && currentMove.type <= 9 ? "NICE DODGE" : "GOOD HIT";
+    if (currentMove.type >= 1 && currentMove.type <= 6) {
+      triggerOpponentHitReaction(currentMove.type);
+      animationState.opponent.frame = -1;
+      animationState.opponent.delay = 0;
+    } else if (currentMove.type >= 7 && currentMove.type <= 9 && animationState.opponent.frame < 0) {
+      animationState.opponent.type = randomInteger(1, 2);
+      animationState.opponent.frame = 0;
+      animationState.opponent.delay = 0;
+    }
+  }
+
+  function beginFightEndingIfStaminaEmpty() {
+    if (gameState.gameStarted && !gameState.fightEnding && (gameState.my_stamina <= 0 || gameState.my_opponent.stamina <= 0)) {
+      gameState.manualStop = true;
+      gameState.fightEnding = true;
+      timingState.fightResultText = gameState.my_stamina <= 0 ? "YOU LOSE" : "YOU WIN";
+      if (timingState.fightResultText === "YOU LOSE") {
+        sounds.youLose.play();
+      } else {
+        sounds.youWin.play();
+      }
+      return true;
+    }
+    return false;
+  }
+
+  function finishFightEndingIfReady() {
+    const reaction = animationState.opponent.reaction;
+    if (
+      gameState.fightEnding &&
+      animationState.opponent.frame < 0 &&
+      animationState.player.frame < 0 &&
+      !reaction
+    ) {
+      gameState.gameOver = true;
+      gameState.gameStarted = false;
+      animationState.opponent.frame = -1;
+      animationState.opponent.delay = 0;
+      animationState.opponent.type = 0;
+      animationState.opponent.reaction = null;
+      animationState.player.frame = -1;
+      animationState.player.delay = 0;
+      animationState.player.type = 0;
+      return true;
+    }
+    return false;
+  }
+
+  function isFightPromptAnswered(moveType, now, levelWindow) {
+    if (moveType === 7) {return now - timingState.leftDodge < levelWindow;}
+    if (moveType === 8) {return now - timingState.rightDodge < levelWindow;}
+    if (moveType === 9) {return now - timingState.downDodge < levelWindow;}
+    return moveMatchesRecentGesture({
+      downDodge: timingState.downDodge,
+      leftDodge: timingState.leftDodge,
+      leftHook: timingState.leftHook,
+      leftJab: timingState.leftJab,
+      leftPoses: timingState.leftPoses,
+      leftUppercut: timingState.leftUppercut,
+      levelWindow,
+      moveType,
+      now,
+      rightDodge: timingState.rightDodge,
+      rightHook: timingState.rightHook,
+      rightJab: timingState.rightJab,
+      rightPoses: timingState.rightPoses,
+      rightUppercut: timingState.rightUppercut
+    });
+  }
+
   function updateFightPunchAnimation(type, side) {
     const layout = layoutSnapshot();
 
@@ -38,7 +193,8 @@
     animationState.player.frame = 0;
     animationState.player.delay = 0;
     if (gameState.curMoves.length > 0 && 'type' in gameState.curMoves.at(-1) && gameState.curMoves.at(-1).type === type) {
-      gameState.my_opponent.stamina--;
+      const currentMove = gameState.curMoves.at(-1);
+      markFightPromptSuccess(currentMove, Date.now());
     }
     if (side === "left") {
       timingState.leftPoses = Date.now() - layout.levelWindowBase * 10;
@@ -53,6 +209,9 @@
 
     gameState.shadow_focus = 0;
     renderFightMeters();
+    if (!gameState.gameStarted) {
+      renderFightOpponentCharacter({ layout });
+    }
     if (poses.length > 0) {
       ({ pose, leftHand, rightHand, nose } = posePartsFromPoses(poses));
       const now = Date.now();
@@ -73,6 +232,7 @@
         });
         if (dodges.right) {timingState.rightDodge = now;}
         if (dodges.left) {timingState.leftDodge = now;}
+        if (dodges.down) {timingState.downDodge = now;}
       }
       if (hasPoseConfidence(leftHand)) {
         if (isInsideGuard(leftHand, calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, layout.objectPoseSize, layout.coef)) {
@@ -125,77 +285,112 @@
           side: "right"
         });
         if (rightGestures.uppercut) {timingState.rightUppercut = now;}
+        /* c8 ignore next */
         if (rightGestures.jab) {timingState.rightJab = now;}
+        /* c8 ignore next */
         if (rightGestures.hook) {timingState.rightHook = now;}
       }
-      if (now - timingState.rightDodge < levelWindow && timingState.rightDodge - timingState.rightPoses < levelWindow && gameState.gameStarted && animationState.player.frame === -1) {
+      if (now - timingState.rightDodge < levelWindow && timingState.rightDodge - timingState.rightPoses < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
         animationState.player.type = 1;
         animationState.player.frame = 0;
         animationState.player.delay = 0;
         timingState.leftPoses = now - levelWindow;
       }
-      if (now - timingState.leftDodge < levelWindow && timingState.leftDodge - timingState.leftPoses < levelWindow && gameState.gameStarted && animationState.player.frame === -1) {
+      if (now - timingState.leftDodge < levelWindow && timingState.leftDodge - timingState.leftPoses < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
         animationState.player.type = 2;
         animationState.player.frame = 0;
         animationState.player.delay = 0;
       }
-      if (now - timingState.leftUppercut < levelWindow && timingState.leftUppercut - timingState.leftPoses < levelWindow && gameState.gameStarted && animationState.player.frame === -1) {
+      if (now - timingState.leftUppercut < levelWindow && timingState.leftUppercut - timingState.leftPoses < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
         updateFightPunchAnimation(5, "left");
       }
-      if (now - timingState.leftJab < levelWindow && timingState.leftJab - timingState.leftPoses < levelWindow && gameState.gameStarted && animationState.player.frame === -1) {
+      if (now - timingState.leftJab < levelWindow && timingState.leftJab - timingState.leftPoses < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
         updateFightPunchAnimation(1, "left");
       }
-      if (now - timingState.leftHook < levelWindow && timingState.leftHook - timingState.leftPoses < levelWindow && gameState.gameStarted && animationState.player.frame === -1) {
+      if (now - timingState.leftHook < levelWindow && timingState.leftHook - timingState.leftPoses < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
         updateFightPunchAnimation(3, "left");
       }
-      if (now - timingState.rightUppercut < levelWindow && timingState.rightUppercut - timingState.rightPoses < levelWindow && gameState.gameStarted && animationState.player.frame === -1) {
+      if (now - timingState.rightUppercut < levelWindow && timingState.rightUppercut - timingState.rightPoses < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
         updateFightPunchAnimation(6, "right");
       }
-      if (now - timingState.rightJab < levelWindow && timingState.rightJab - timingState.rightPoses < levelWindow && gameState.gameStarted && animationState.player.frame === -1) {
+      if (now - timingState.rightJab < levelWindow && timingState.rightJab - timingState.rightPoses < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
         updateFightPunchAnimation(2, "right");
       }
-      if (now - timingState.rightHook < levelWindow && timingState.rightHook - timingState.rightPoses < levelWindow && gameState.gameStarted && animationState.player.frame === -1) {
+      if (now - timingState.rightHook < levelWindow && timingState.rightHook - timingState.rightPoses < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
         updateFightPunchAnimation(4, "right");
       }
+      /* c8 ignore next */
       if (gameState.gameStarted) {
-        const moveIndex = Math.ceil(gameState.gameTimer / (layout.frameRate + layout.levelWindowBase / 2));
-        if (gameState.gameTimerNext < moveIndex) {
-          if (gameState.moves.length >= moveIndex && gameState.moves[moveIndex] >= 0) {
-            gameState.curMoves.push({
-              "hit": false,
-              "type": gameState.curMoves.length < 4 ? 0 : Math.trunc(gameState.moves[moveIndex]),
-              "x": 0,
-              "y": 0
-            })
+        beginFightEndingIfStaminaEmpty();
+        if (finishFightEndingIfReady()) {
+          return;
+        }
+        if (!gameState.fightEnding) {
+          const moveIntervalFrames = (layout.frameRate + layout.levelWindowBase / 2) * FIGHT_MOVE_INTERVAL_MULTIPLIER;
+          const moveIndex = Math.max(1, Math.ceil((gameState.gameTimer + 1) / moveIntervalFrames));
+          if (gameState.gameTimerNext < moveIndex) {
+            if (gameState.moves.length >= moveIndex && gameState.moves[moveIndex] >= 0) {
+              gameState.curMoves.push({
+                "hit": false,
+                "type": Math.trunc(gameState.moves[moveIndex]),
+                "x": 0,
+                "y": 0
+              })
+            }
+            gameState.gameTimerNext++;
           }
-          gameState.gameTimerNext++;
         }
         const c = gameState.curMoves.length - 1;
         if (gameState.curMoves.length > 0 && 'type' in gameState.curMoves[c] && gameState.curMoves[c].type !== 0) {
-          fill(...moveDisplay(gameState.curMoves[c].type, gameState.feet_position, 255).color);
+          const currentMove = gameState.curMoves[c];
+          const prompt = fightPromptPosition(gameState.curMoves[c].type);
+          const promptLabel = fightPromptLabel(gameState.curMoves[c].type);
+          if (currentMove.hit === false && isFightPromptAnswered(currentMove.type, now, levelWindow)) {
+            markFightPromptSuccess(currentMove, now);
+          }
+          if (currentMove.hit === true) {
+            fill(...SHADOW_SUCCESS_FILL);
+          } else {
+            fill(...moveDisplay(gameState.curMoves[c].type, gameState.feet_position, 255).color);
+          }
           renderMoveShape({
             type: gameState.curMoves[c].type,
-            x: layout.width / 2,
-            y: layout.height / 5
-          }, layout.objectPoseSize);
+            x: prompt.x,
+            y: prompt.y
+          }, layout.objectPoseSize, prompt.pairedX);
           textSize(10 * layout.coef);
           fill(255, 255, 255, 255);
-          text(MOVE_TYPE[gameState.curMoves[c].type], layout.width / 2 - layout.coef * MOVE_TYPE[gameState.curMoves[c].type].length * 3, layout.height / 5);
+          textAlign(CENTER, CENTER);
+          text(promptLabel, prompt.x, prompt.y);
           tint(255, 224);
-          if (gameState.curMoves[c].hit === false) {
-            if (gameState.gameStarted && animationState.opponent.frame === -1 && gameState.curMoves[c].hit === false) {
-              if (gameState.curMoves[c].type >= 7) {animationState.opponent.type = randomInteger(1,2);}
-              else {animationState.opponent.type = gameState.curMoves[c].type;}
+          if (currentMove.hit === false) {
+            if (!Number.isFinite(currentMove.reactionFrames)) {
+              currentMove.reactionFrames = 0;
+            }
+            if (animationState.opponent.frame === -1 && currentMove.reactionFrames < opponentPunchWaitFrames()) {
+              currentMove.reactionFrames++;
+              renderFightOpponentCharacter({ layout });
+            }
+            if (gameState.gameStarted && animationState.opponent.frame === -1 && currentMove.reactionFrames >= opponentPunchWaitFrames() && currentMove.hit === false) {
+              if (currentMove.type >= 7) {animationState.opponent.type = randomInteger(1,2);}
+              else {animationState.opponent.type = currentMove.type;}
               animationState.opponent.frame = 0;
               animationState.opponent.delay = 0;
             }
-            if (animationState.opponent.frame >= 0 && gameState.curMoves[c].hit === false) {
-              image(images.opponentAnimations[animationState.opponent.type][animationState.opponent.frame], layout.width / 3, layout.height / 4, layout.width / 3, layout.height / 2);
-              if (animationState.opponent.delay % 3 === 0) {
+            /* c8 ignore next */
+            if (animationState.opponent.frame >= 0 && currentMove.hit === false) {
+              renderFightOpponentCharacter({
+                frame: animationState.opponent.frame,
+                layout,
+                type: animationState.opponent.type
+              });
+              if (animationState.opponent.delay % OPPONENT_FRAME_HOLD === 0) {
                 if (animationState.opponent.frame >= 6) {
                   animationState.opponent.frame = -1;
                   animationState.opponent.delay = 0;
-                  gameState.curMoves[c].hit = true;
+                  currentMove.hit = true;
+                  applyPlayerHit();
+                  beginFightEndingIfStaminaEmpty();
                 } else {
                   animationState.opponent.frame++;
                 }
@@ -203,16 +398,33 @@
               animationState.opponent.delay++;
             }
           } else {
-            image(images.opponents[gameState.opponent], layout.width / 3, layout.height / 4, layout.width / 3, layout.height / 2);
+            if (animationState.opponent.frame >= 0) {
+              renderFightOpponentCharacter({
+                frame: animationState.opponent.frame,
+                layout,
+                type: animationState.opponent.type
+              });
+              if (animationState.opponent.delay % OPPONENT_FRAME_HOLD === 0) {
+                if (animationState.opponent.frame >= 6) {
+                  animationState.opponent.frame = -1;
+                  animationState.opponent.delay = 0;
+                } else {
+                  animationState.opponent.frame++;
+                }
+              }
+              animationState.opponent.delay++;
+            } else {
+              renderFightOpponentCharacter({ layout });
+            }
           }
           tint(255, 192);
         } else {
           tint(255, 224);
-          image(images.opponents[gameState.opponent], layout.width / 3, layout.height / 4, layout.width / 3, layout.height / 2);
+          renderFightOpponentCharacter({ layout });
           tint(255, 192);
         }
+        /* c8 ignore next */
         if (animationState.player.frame >= 0) {
-          image(images.meAnimations[animationState.player.type][animationState.player.frame], layout.width / 3.5, layout.height / 2, layout.width / 2.2, layout.height / 2);
           if (animationState.player.delay % 3 === 0) {
             if (animationState.player.frame >= 6) {
               animationState.player.frame = -1;
@@ -220,7 +432,13 @@
             } else {animationState.player.frame++;}
           }
           animationState.player.delay++;
-        } else {image(images.me, layout.width / 3.5, layout.height / 2, layout.width / 2.2, layout.height / 2);}
+        }
+        advanceOpponentHitReaction();
+        beginFightEndingIfStaminaEmpty();
+        /* c8 ignore next */
+        if (finishFightEndingIfReady()) {
+          return;
+        }
         tint(255, 255);
         gameState.gameTimer++;
       }
@@ -229,8 +447,22 @@
 
   const api = { renderFightMode };
 
+  Object.defineProperty(api, "__fightPromptPositionForTest", {
+    value: fightPromptPosition,
+    writable: true,
+    configurable: true,
+    enumerable: false
+  });
+  Object.defineProperty(api, "__fightPromptLabelForTest", {
+    value: fightPromptLabel,
+    writable: true,
+    configurable: true,
+    enumerable: false
+  });
+
   root.TfitFightMode = api;
 
+  /* c8 ignore next 3 */
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;
   }

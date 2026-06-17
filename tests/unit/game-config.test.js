@@ -26,7 +26,16 @@ describe('TfitConfig browser export', () => {
     expect(sandbox.MENUTYPE["4"]).toBe('fight');
     expect(sandbox.GAME_LENGTH["3"]).toBe('120');
     expect(sandbox.MOVE_TYPE["10"]).toBe('SWITCH_GUARD');
-    expect(sandbox.TfitConfig.cloneOpponent("0")).toEqual({ name: 'Raja', stamina: 6 });
+    expect(sandbox.TfitConfig.cloneOpponent("0")).toEqual({
+      name: 'Raja',
+      punchWaitFrames: 120,
+      recovery: 2,
+      renderer: 'raja',
+      scale: 0.7,
+      stamina: 6,
+      xRatio: 0.5,
+      yRatio: 0.56
+    });
     expect(sandbox.module.exports).toBe(sandbox.TfitConfig);
   });
 

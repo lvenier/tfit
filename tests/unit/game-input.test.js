@@ -372,6 +372,9 @@ describe('keyAction', () => {
     expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'i', menu: 0 })).toEqual({
       type: 'open_fight'
     });
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'f', menu: 0 })).toEqual({
+      type: 'open_fight'
+    });
   });
 
   it('maps settings shortcuts', () => {
@@ -426,7 +429,13 @@ describe('keyAction', () => {
     expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'F', menu: 3 })).toEqual({
       type: 'start_fight'
     });
-    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'f', menu: 0 })).toEqual({
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'f', menu: 2 })).toEqual({
+      type: 'start_fight'
+    });
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'F', menu: 0 })).toEqual({
+      type: 'open_fight'
+    });
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'f', menu: 5 })).toEqual({
       type: 'none'
     });
   });

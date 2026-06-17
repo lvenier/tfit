@@ -30,6 +30,9 @@ const STUBBED_GLOBALS = [
   'textSize',
   'timingState',
   'rect',
+  'text',
+  'textAlign',
+  'textStyle',
   'TfitAppInputActions',
   'TfitCameraRuntime',
   'TfitFightMode',
@@ -76,7 +79,7 @@ function installGlobals(overrides = {}) {
     }
   }
 
-  for (const name of ['background', 'clear', 'fill', 'image', 'noStroke', 'pop', 'push', 'rect', 'textSize']) {
+  for (const name of ['background', 'clear', 'fill', 'image', 'noStroke', 'pop', 'push', 'rect', 'text', 'textAlign', 'textSize', 'textStyle']) {
     calls[name] = [];
     globalThis[name] = record(name);
   }
@@ -217,6 +220,7 @@ describe('TfitScreenRouter exports', () => {
       'renderActiveMode',
       'renderAppFrame',
       'renderBackNavigation',
+      'renderForegroundControls',
       'renderGameScreen',
       'renderMenuScreen',
       'renderRoundFeedback',
@@ -791,6 +795,7 @@ describe('menu routing', () => {
 
     expect(globalThis.TfitRender.renderGuardTargets).toHaveBeenCalledTimes(1);
     expect(globalThis.TfitFightMode.renderFightMode).toHaveBeenCalledTimes(1);
+    expect(globalThis.TfitRender.renderFightButton).toHaveBeenCalledTimes(2);
     expect(globalThis.TfitRender.renderRoundHud).toHaveBeenCalledWith(0);
   });
 
@@ -926,11 +931,94 @@ describe('round routing', () => {
     expect(globalThis.sounds.keepTrying.play).toHaveBeenCalledTimes(1);
     expect(globalThis.sounds.yourGuard.play).toHaveBeenCalledTimes(1);
     expect(globalThis.TfitRender.renderStopButton).toHaveBeenCalledTimes(1);
-    expect(calls.image).toEqual([
-      [globalThis.images.goodHit, 200, 96, 240],
-      [globalThis.images.keepTrying, 200, 96, 240],
-      [globalThis.images.yourGuard, 200, 96, 240]
-    ]);
+    expect(calls.text).toEqual(expect.arrayContaining([
+      ["GOOD HIT", expect.any(Number), expect.any(Number)],
+      ["KEEP TRYING", expect.any(Number), expect.any(Number)],
+      ["YOUR GUARD", expect.any(Number), expect.any(Number)]
+    ]));
+  });
+
+  it('uses the custom hit success feedback text when provided', () => {
+    const api = installGlobals({
+      gameState: defaultGameState({ gameStarted: true, gameTimer: 2, menu: 4 }),
+      timingState: {
+        gameResult: 0,
+        guardWarning: 0,
+        hitSuccess: 9999,
+        hitSuccessText: 'NICE DODGE',
+        leftPoses: 0,
+        rightPoses: 0
+      },
+      TfitRound: {
+        guardFeedback: vi.fn(() => ({
+          guardWarningTime: 123,
+          playSound: false,
+          show: false
+        })),
+        initialRoundMoveState: vi.fn(() => ({
+          arrayScore: [],
+          curMoves: [],
+          gameTimerNext: 0
+        })),
+        isRoundExpired: vi.fn(() => false),
+        keepTryingFeedback: vi.fn(() => ({
+          playSound: false,
+          show: false
+        })),
+        remainingRoundSeconds: vi.fn(() => 12),
+        scoreTotal: vi.fn(() => 0),
+        shouldShowHitFeedback: vi.fn(() => true)
+      }
+    });
+
+    api.renderRoundFeedback();
+
+    expect(calls.text).toEqual(expect.arrayContaining([
+      ['NICE DODGE', expect.any(Number), expect.any(Number)]
+    ]));
+    expect(calls.text.some(([message]) => message === 'GOOD HIT')).toBe(false);
+  });
+
+  it('shows fight result feedback before transient round feedback', () => {
+    const api = installGlobals({
+      gameState: defaultGameState({ gameStarted: true, gameTimer: 2, menu: 4 }),
+      timingState: {
+        gameResult: 0,
+        guardWarning: 0,
+        fightResultText: 'YOU WIN',
+        hitSuccess: 9999,
+        hitSuccessText: 'GOOD HIT',
+        leftPoses: 0,
+        rightPoses: 0
+      },
+      TfitRound: {
+        guardFeedback: vi.fn(() => ({
+          guardWarningTime: 123,
+          playSound: false,
+          show: false
+        })),
+        initialRoundMoveState: vi.fn(() => ({
+          arrayScore: [],
+          curMoves: [],
+          gameTimerNext: 0
+        })),
+        isRoundExpired: vi.fn(() => false),
+        keepTryingFeedback: vi.fn(() => ({
+          playSound: false,
+          show: false
+        })),
+        remainingRoundSeconds: vi.fn(() => 12),
+        scoreTotal: vi.fn(() => 0),
+        shouldShowHitFeedback: vi.fn(() => true)
+      }
+    });
+
+    api.renderRoundFeedback();
+
+    expect(calls.text).toEqual(expect.arrayContaining([
+      ['YOU WIN', expect.any(Number), expect.any(Number)]
+    ]));
+    expect(calls.text.some(([message]) => message === 'GOOD HIT')).toBe(false);
   });
 
   it('keeps quiet when round feedback helpers do not request UI or sounds', () => {
@@ -950,7 +1038,7 @@ describe('round routing', () => {
     expect(globalThis.timingState.guardWarning).toBe(123);
     expect(globalThis.sounds.keepTrying.play).not.toHaveBeenCalled();
     expect(globalThis.sounds.yourGuard.play).not.toHaveBeenCalled();
-    expect(calls.image).toEqual([]);
+    expect(calls.text).toEqual([]);
   });
 
   it('can show keep-trying feedback without replaying the sound', () => {
@@ -979,7 +1067,7 @@ describe('round routing', () => {
 
     api.renderRoundFeedback();
 
-    expect(calls.image).toContainEqual([globalThis.images.keepTrying, 200, 96, 240]);
+    expect(calls.text.some(([msg]) => msg === "KEEP TRYING")).toBe(true);
     expect(globalThis.sounds.keepTrying.play).not.toHaveBeenCalled();
   });
 });

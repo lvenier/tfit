@@ -49,15 +49,23 @@
   const OPPONENTS = {
     "0": {
       "name": "Raja",
-      "stamina": 6
+      "punchWaitFrames": 120,
+      "renderer": "raja",
+      "scale": 0.7,
+      "xRatio": 0.5,
+      "yRatio": 0.56,
+      "stamina": 6,
+      "recovery": 2
     },
     "1": {
       "name": "Theo",
-      "stamina": 8
+      "stamina": 8,
+      "recovery": 3
     },
     "2": {
       "name": "Vehbo",
-      "stamina": 10
+      "stamina": 10,
+      "recovery": 2
     }
   };
 

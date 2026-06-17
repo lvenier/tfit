@@ -19,17 +19,21 @@ const STUBBED_GLOBALS = [
   'LEFT',
   'NORMAL',
   'nose',
+  'frameCount',
   'padState',
   'pose',
   'poses',
+  'push',
   'randomInteger',
   'rect',
+  'scale',
   'text',
   'textAlign',
   'textSize',
   'textStyle',
   'timingState',
   'TfitLayoutState',
+  'TfitRender',
   'TfitPadMode',
   'TfitPoseDetection'
 ];
@@ -65,6 +69,10 @@ function installGlobals(overrides = {}) {
     calls[name] = [];
     globalThis[name] = record(name);
   }
+  for (const name of ['push', 'scale']) {
+    calls[name] = [];
+    globalThis[name] = vi.fn();
+  }
 
   Object.assign(globalThis, {
     BOLD: 'bold',
@@ -85,6 +93,7 @@ function installGlobals(overrides = {}) {
     hitSuccess: vi.fn(),
     isDetecting: true,
     LEFT: 'left',
+    frameCount: 20,
     NORMAL: 'normal',
     nose: undefined,
     padState: {
@@ -104,6 +113,9 @@ function installGlobals(overrides = {}) {
     },
     TfitLayoutState: {
       snapshot: vi.fn(() => layout())
+    },
+    TfitRender: {
+      __drawUpperWireBoxerForTest: undefined
     },
     TfitPoseDetection: {
       hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
@@ -245,6 +257,177 @@ describe('pad mode rendering', () => {
     expect(globalThis.TfitPoseDetection.posePartsFromPoses).not.toHaveBeenCalled();
     expect(calls.circle).toEqual([]);
     expect(globalThis.gameState.gameTimer).toBe(0);
+  });
+
+  it('renders the pad character when the shared renderer is available', () => {
+    const drawUpperWireBoxer = vi.fn();
+    const api = installGlobals({
+      TfitRender: { __drawUpperWireBoxerForTest: drawUpperWireBoxer },
+      frameCount: 42
+    });
+
+    api.renderPadMode();
+
+    expect(drawUpperWireBoxer).toHaveBeenCalledWith(
+      320,
+      240,
+      0.9,
+      42 * 0.045,
+      false,
+      false,
+      null,
+      false,
+      null
+    );
+  });
+
+  it('drives punch animation toward the active pad target on the active side', () => {
+    const drawUpperWireBoxer = vi.fn();
+    const api = installGlobals({
+      TfitRender: { __drawUpperWireBoxerForTest: drawUpperWireBoxer },
+      frameCount: 42,
+      gameState: {
+        curMoves: [],
+        gameStarted: true,
+        gameTimer: 0
+      },
+      padState: {
+        type: 1,
+        x: 500,
+        y: 360
+      }
+    });
+
+    api.renderPadMode();
+
+    expect(drawUpperWireBoxer).toHaveBeenCalledWith(
+      expect.any(Number),
+      expect.any(Number),
+      0.9,
+      42 * 0.045,
+      true,
+      false,
+      expect.objectContaining({
+        x: expect.any(Number),
+        y: expect.any(Number),
+        side: 'right',
+        blinkSide: 'left',
+        reach: expect.any(Number)
+      }),
+      true,
+      'left'
+    );
+  });
+
+  it('uses left side target metadata when the target is left of center while game is running', () => {
+    const drawUpperWireBoxer = vi.fn();
+    const api = installGlobals({
+      TfitRender: { __drawUpperWireBoxerForTest: drawUpperWireBoxer },
+      frameCount: 15,
+      gameState: {
+        curMoves: [],
+        gameStarted: true,
+        gameTimer: 0
+      },
+      padState: {
+        type: 1,
+        x: 100,
+        y: 250
+      }
+    });
+
+    api.renderPadMode();
+
+    expect(drawUpperWireBoxer).toHaveBeenCalledWith(
+      expect.any(Number),
+      expect.any(Number),
+      0.9,
+      15 * 0.045,
+      true,
+      false,
+      expect.objectContaining({
+        x: expect.any(Number),
+        y: expect.any(Number),
+        side: 'left',
+        blinkSide: 'right',
+        reach: expect.any(Number)
+      }),
+      true,
+      'right'
+    );
+  });
+
+  it('uses guard stance for dodge targets', () => {
+    const drawUpperWireBoxer = vi.fn();
+    const api = installGlobals({
+      TfitRender: { __drawUpperWireBoxerForTest: drawUpperWireBoxer },
+      frameCount: 50,
+      gameState: {
+        curMoves: [],
+        gameStarted: true,
+        gameTimer: 0
+      },
+      padState: {
+        type: 2,
+        x: 320,
+        y: 300
+      },
+      randomInteger: vi.fn(() => 250),
+      TfitPoseDetection: {
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        isPadPunchHit: vi.fn(() => false),
+        nextDownDodgeState: vi.fn(() => ({
+          done: false,
+          switched: false,
+          touchedDown: false
+        })),
+        posePartsFromPoses: vi.fn(() => ({
+          leftHand: { confidence: 0.9, x: 20, y: 30 },
+          nose: { confidence: 0.9, x: 10, y: 200 },
+          rightHand: { confidence: 0.9, x: 40, y: 50 }
+        }))
+      }
+    });
+
+    api.renderPadMode();
+
+    expect(drawUpperWireBoxer).toHaveBeenCalledWith(
+      320,
+      240,
+      0.9,
+      50 * 0.045,
+      false,
+      true,
+      null,
+      false,
+      null
+    );
+  });
+
+  it('skips rendering the pad character when the shared renderer is missing', () => {
+    const api = installGlobals({
+      TfitRender: undefined,
+      frameCount: 42
+    });
+
+    api.renderPadMode();
+
+    expect(calls.circle).toEqual([]);
+  });
+
+  it('skips rendering the pad character when canvas helper functions are unavailable', () => {
+    const drawUpperWireBoxer = vi.fn();
+    const api = installGlobals({
+      TfitRender: { __drawUpperWireBoxerForTest: drawUpperWireBoxer },
+      frameCount: 42,
+      push: undefined,
+      scale: undefined
+    });
+
+    api.renderPadMode();
+
+    expect(drawUpperWireBoxer).not.toHaveBeenCalled();
   });
 
   it('skips marker and hand drawing for hidden or low-confidence pose parts', () => {
@@ -522,8 +705,8 @@ describe('pad mode rendering', () => {
 
     api.renderPadMode();
 
-    expect(calls.rect).toContainEqual([48, 276, 544, 48, 20]);
-    expect(calls.text).toContainEqual(['D', 320, 300]);
+    expect(calls.rect).toContainEqual([176, 324, 288, 48, 20]);
+    expect(calls.text).toContainEqual(['D', 320, 348]);
     expect(globalThis.timingState.downDodge).toBe(9500);
     expect(globalThis.timingState.downDodgeDone).toBe(false);
     expect(globalThis.timingState.downDodgeSwitch).toBe(false);
@@ -685,7 +868,7 @@ describe('pad mode rendering', () => {
 
     api.renderPadMode();
 
-    expect(calls.text).toContainEqual(['D', 320, 300]);
+    expect(calls.text).toContainEqual(['D', 320, 348]);
     expect(globalThis.TfitPoseDetection.nextDownDodgeState).toHaveBeenCalledTimes(1);
   });
 
@@ -770,7 +953,7 @@ describe('pad mode rendering', () => {
 
     api.renderPadMode();
 
-    expect(calls.text).toContainEqual(['D', 320, 300]);
+    expect(calls.text).toContainEqual(['D', 320, 348]);
     expect(globalThis.TfitPoseDetection.nextDownDodgeState).toHaveBeenCalledTimes(1);
     expect(globalThis.timingState.downDodge).toBe(9_500);
     expect(globalThis.hitSuccess).toHaveBeenCalledTimes(1);
@@ -816,7 +999,7 @@ describe('pad mode rendering', () => {
     api.renderPadMode();
 
     expect(globalThis.TfitPoseDetection.nextDownDodgeState).toHaveBeenCalledTimes(1);
-    expect(calls.text).toContainEqual(['D', 320, 300]);
+    expect(calls.text).toContainEqual(['D', 320, 348]);
     expect(globalThis.padState.type).toBe(2);
     expect(globalThis.gameState.curMoves.at(-1).type).toBe(2);
   });

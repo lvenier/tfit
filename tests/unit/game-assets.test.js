@@ -33,7 +33,7 @@ describe('TfitAssets exports', () => {
       'loadAssetsIntoState',
       'loadGameAssets'
     ]);
-    expect(sandbox.images).toMatchObject({ backButton: null, backgrounds: [] });
+    expect(sandbox.images).toMatchObject({ backgrounds: [] });
     expect(sandbox.sounds).toMatchObject({ click: null, punch: null });
   });
 });
@@ -44,10 +44,10 @@ describe('asset state factories', () => {
     const sounds = globalThis.TfitAssets.createSoundAssets();
 
     expect(images).toMatchObject({
-      backButton: null,
       backgrounds: [],
-      fightButton: null,
-      stopButton: null
+      leftFoot: null,
+      logo: null,
+      rightFoot: null
     });
     expect(sounds).toMatchObject({
       click: null,
@@ -55,6 +55,8 @@ describe('asset state factories', () => {
       keepTrying: null,
       punch: null,
       doorOpen: null,
+      youLose: null,
+      youWin: null,
       yourGuard: null
     });
   });
@@ -92,16 +94,13 @@ describe('loadGameAssets', () => {
 
     expect(assets.images.backgrounds[0]).toEqual({ image: 'assets/backgrounds/0.jpg' });
     expect(assets.images.backgrounds[1]).toEqual({ image: 'assets/backgrounds/1.jpg' });
-    expect(assets.images.framerateButtons[6]).toEqual({ image: 'assets/images/fr120.png' });
-    expect(assets.images.levelButtons[1]).toEqual({ image: 'assets/images/hard.png' });
-    expect(assets.images.durationButtons[2]).toEqual({ image: 'assets/images/60.png' });
-    expect(assets.images.seriesButtons[5]).toEqual({ image: 'assets/images/s5.png' });
     expect(assets.images.meAnimations[6][6]).toEqual({ image: 'assets/images/boxers/6-me-6.png' });
     expect(assets.images.opponentAnimations[6][6]).toEqual({ image: 'assets/images/opponents/0/6-6.png' });
     expect(assets.sounds.thatsIt).toEqual({ sound: 'assets/sounds/thats_it.mp3' });
 
-    expect(imagePaths).toContain('assets/images/fight.png');
     expect(imagePaths).toContain('assets/logos/logo.512.rounded.png');
+    expect(imagePaths).toContain('assets/images/LFoot.png');
+    expect(imagePaths).toContain('assets/images/RFoot.png');
     expect(soundPaths).toEqual([
       'assets/sounds/awesome.mp3',
       'assets/sounds/click.mp3',
@@ -116,17 +115,19 @@ describe('loadGameAssets', () => {
       'assets/sounds/punch.mp3',
       'assets/sounds/thats_it.mp3',
       'assets/sounds/well_done.mp3',
+      'assets/sounds/you_lose.mp3',
+      'assets/sounds/you_win.mp3',
       'assets/sounds/your_guard.mp3'
     ]);
     expect(progressEvents[0]).toEqual({
       label: 'Loading assets',
       loaded: 0,
-      total: 134
+      total: 107
     });
     expect(progressEvents.at(-1)).toEqual({
       label: 'Loading assets',
-      loaded: 134,
-      total: 134
+      loaded: 107,
+      total: 107
     });
   });
 
@@ -139,8 +140,8 @@ describe('loadGameAssets', () => {
       menuTypes: { "0": "main" }
     });
 
-    expect(globalThis.images.backButton).toEqual({ image: 'assets/images/back.png' });
+    expect(globalThis.images.logo).toEqual({ image: 'assets/logos/logo.512.rounded.png' });
     expect(globalThis.sounds.click).toEqual({ sound: 'assets/sounds/click.mp3' });
-    expect(assets.images.backButton).toBe(globalThis.images.backButton);
+    expect(assets.images.logo).toBe(globalThis.images.logo);
   });
 });

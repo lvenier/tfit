@@ -36,6 +36,7 @@ const STUBBED_GLOBALS = [
   'MOVE_TYPE',
   'mouseX',
   'mouseY',
+  'max',
   'noFill',
   'NORMAL',
   'noStroke',
@@ -50,19 +51,28 @@ const STUBBED_GLOBALS = [
   'rectMode',
   'resetMatrix',
   'RIGHT',
+  'rotate',
+  'ROUND',
+  'scale',
   'SHADOW_SPECIFIC',
+  'strokeCap',
+  'strokeJoin',
   'sin',
   'speechString',
   'stroke',
   'strokeWeight',
-  'text',
   'textAlign',
   'textSize',
   'textStyle',
+  'text',
+  'frameCount',
+  'triangle',
   'tint',
   'TfitGameLogic',
   'TfitLayoutState',
+  'TfitOpponentRenderers',
   'translate',
+  'TOP',
   'width',
   'height'
 ];
@@ -116,6 +126,7 @@ function installRenderGlobals(overrides = {}) {
     'ellipse',
     'fill',
     'image',
+    'triangle',
     'noFill',
     'noStroke',
     'pop',
@@ -125,6 +136,10 @@ function installRenderGlobals(overrides = {}) {
     'rect',
     'rectMode',
     'resetMatrix',
+    'rotate',
+    'scale',
+    'strokeCap',
+    'strokeJoin',
     'stroke',
     'strokeWeight',
     'text',
@@ -195,14 +210,18 @@ function installRenderGlobals(overrides = {}) {
     loading_k: 0,
     loading_m: 0,
     map: (value, start1, stop1, start2, stop2) => start2 + ((value - start1) / (stop1 - start1)) * (stop2 - start2),
+    max: Math.max,
     myWindowHeight: 480,
     myWindowWidth: 640,
     NORMAL: 'normal',
     OBJECT_POSE_SIZE: 48,
-    OPPONENTS: { 0: { stamina: 6 } },
+    OPPONENTS: { 0: { name: 'Raja', stamina: 6 } },
     PI: Math.PI,
+    frameCount: 123,
     radians: degrees => degrees * Math.PI / 180,
     RIGHT: 'right',
+    ROUND: 'round',
+    TOP: 'top',
     CORNER: 'CORNER',
     mouseX: 0,
     mouseY: 0,
@@ -269,10 +288,12 @@ describe('TfitRender exports', () => {
       'renderFeetIndicator',
       'renderFightButton',
       'renderFightMeters',
+      'renderFightOpponentCharacter',
       'renderGuardTargets',
       'renderLoadingScreen',
       'renderMainMenu',
       'renderMoveShape',
+      'renderRajaOpponentCharacter',
       'renderRoundHud',
       'renderSceneBackground',
       'renderSettingsControls',
@@ -395,6 +416,382 @@ describe('TfitRender exports', () => {
     expect(sandbox.module.exports).toBe(sandbox.TfitRender);
   });
 
+  it('renders the upper wire boxer punch effect in a sandboxed render module', () => {
+    const modulePath = require.resolve('../../js/game-render');
+    const source = readFileSync(modulePath, 'utf8').replace(
+      'root.TfitRender = api;',
+      'api.__drawUpperWireBoxerForTest = drawUpperWireBoxer; root.TfitRender = api;'
+    );
+    const drawCalls = [];
+    const sandbox = {
+      BOLD: 'bold',
+      frameCount: 20,
+      ROUND: 'round',
+      arc: () => {},
+      ellipse: () => {},
+      fill: () => {},
+      line: () => {},
+      noFill: () => {},
+      noStroke: () => {},
+      pop: () => {},
+      push: () => {},
+      scale: () => {},
+      stroke: () => {},
+      strokeCap: () => {},
+      strokeJoin: () => {},
+      strokeWeight: () => {},
+      text: (...args) => drawCalls.push(args),
+      textSize: () => {},
+      textStyle: () => {},
+      translate: () => {}
+    };
+
+    new Script(source, { filename: modulePath }).runInNewContext(sandbox);
+    sandbox.TfitRender.__drawUpperWireBoxerForTest(100, 200, 1.35, 1, true, true);
+
+    expect(drawCalls).toContainEqual(['JAB!', 190, -230]);
+    expect(drawCalls).not.toContainEqual(['GUARD', 0, -285]);
+  });
+
+  it('renders upper wire boxer effects in the shared render module for coverage', () => {
+    const drawCalls = [];
+    vi.spyOn(globalThis, 'text').mockImplementation((...args) => {
+      drawCalls.push(args);
+    });
+
+    renderApi.__drawUpperWireBoxerForTest(100, 200, 1.35, 1, true, true);
+
+    expect(drawCalls).toContainEqual(['JAB!', 190, -230]);
+    expect(drawCalls).not.toContainEqual(['GUARD', 0, -285]);
+  });
+
+  it('supports upper wire boxer rendering without optional p5 helpers', () => {
+    const modulePath = require.resolve('../../js/game-render');
+    const source = readFileSync(modulePath, 'utf8').replace(
+      'root.TfitRender = api;',
+      'api.__drawUpperWireBoxerForTest = drawUpperWireBoxer; root.TfitRender = api;'
+    );
+    const drawCalls = [];
+    const sandbox = {
+      BOLD: 'bold',
+      frameCount: 20,
+      ROUND: 'round',
+      arc: () => {},
+      ellipse: () => {},
+      fill: () => {},
+      line: () => {},
+      noFill: () => {},
+      noStroke: () => {},
+      pop: () => {},
+      push: () => {},
+      stroke: () => {},
+      strokeWeight: () => {},
+      text: (...args) => drawCalls.push(args),
+      textSize: () => {},
+      textStyle: () => {},
+      translate: () => {}
+    };
+
+    new Script(source, { filename: modulePath }).runInNewContext(sandbox);
+    sandbox.TfitRender.__drawUpperWireBoxerForTest(120, 220, 1.35, 1, true, true);
+
+    expect(drawCalls).toContainEqual(['JAB!', 190, -230]);
+    expect(drawCalls).not.toContainEqual(['GUARD', 0, -285]);
+  });
+
+  it('builds shadow results while skipping silent placeholder moves', () => {
+    const modulePath = require.resolve('../../js/game-render');
+    const source = readFileSync(modulePath, 'utf8').replace(
+      'root.TfitRender = api;',
+      'api.__buildShadowResultForTest = buildShadowResult; root.TfitRender = api;'
+    );
+    const sandbox = {
+      gameState: {
+        arrayScore: [],
+        curMoves: [
+          { type: 0, text: 'X', hit: true },
+          { type: 5, text: 'U', hit: false },
+          { type: 5, text: 'U', hit: true }
+        ],
+        score_max_prev: 4
+      }
+    };
+
+    new Script(source, { filename: modulePath }).runInNewContext(sandbox);
+
+    const results = sandbox.TfitRender.__buildShadowResultForTest();
+    expect(sandbox.gameState.score).toBe(0);
+    expect(results).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: 5, text: 'U', success: 1, total: 2 })
+      ])
+    );
+    expect(sandbox.gameState.song_result['0']).toBeUndefined();
+  });
+
+  it('builds shadow results in the shared render module', () => {
+    globalThis.gameState.arrayScore = [3, 2, 0];
+    globalThis.gameState.curMoves = [
+      { type: 0, text: 'X', hit: true },
+      { type: 5, text: 'U', hit: false },
+      { type: 5, text: 'U', hit: true },
+      { type: 6, text: 'O', hit: true }
+    ];
+
+    const results = renderApi.__buildShadowResultForTest();
+
+    expect(globalThis.gameState.score).toBe(5);
+    expect(globalThis.gameState.song_result.score).toBe(5);
+    expect(globalThis.gameState.song_result.length).toBe(4);
+    expect(results).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: 5, text: 'U', success: 1, total: 2 }),
+        expect.objectContaining({ type: 6, text: 'O', success: 1, total: 1 })
+      ])
+    );
+    expect(globalThis.gameState.song_result['0']).toBeUndefined();
+  });
+
+  it('builds shadow results in the shared render module for miss and non-placeholder branches', () => {
+    globalThis.gameState.arrayScore = [1];
+    globalThis.gameState.curMoves = [
+      { type: 5, text: 'U', hit: false },
+      { type: 6, text: 'O', hit: false }
+    ];
+
+    const results = renderApi.__buildShadowResultForTest();
+
+    expect(globalThis.gameState.score).toBe(1);
+    expect(results).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: 5, text: 'U', success: 0, total: 1 }),
+        expect.objectContaining({ type: 6, text: 'O', success: 0, total: 1 })
+      ])
+    );
+    expect(globalThis.gameState.song_result['0']).toBeUndefined();
+  });
+
+  it('renders upper wire boxer idle state in shared module for attack/guard false branches', () => {
+    const drawCalls = [];
+    vi.spyOn(globalThis, 'text').mockImplementation((...args) => {
+      drawCalls.push(args);
+    });
+
+    renderApi.__drawUpperWireBoxerForTest(100, 200, 1.35, 1, false, false);
+
+    expect(drawCalls).toHaveLength(0);
+  });
+
+  it('resolves joint target defaults when no target is provided', () => {
+    const points = renderApi.__getJointPointsForTest(0, 0, 0, 0, 0, null);
+
+    expect(points).toHaveLength(12);
+    expect(points[6]).toEqual([-118, -62, 7]);
+    expect(points[7]).toEqual([0, 0, 11]);
+    expect(points[8]).toEqual([116, -70, 7]);
+    expect(points[9]).toEqual([0, 0, 12]);
+  });
+
+  it('resolves joint target defaults when target coordinates are not finite', () => {
+    const points = renderApi.__getJointPointsForTest(0, 0, 0, 0, 0, { x: Number.NaN, y: Infinity, side: 'left', reach: 0.5 });
+
+    expect(points[6]).toEqual([-118, -62, 7]);
+    expect(points[7]).toEqual([0, 0, 11]);
+    expect(points[8]).toEqual([116, -70, 7]);
+    expect(points[9]).toEqual([0, 0, 12]);
+  });
+
+  it('resolves left-target joints with positive target reach', () => {
+    const points = renderApi.__getJointPointsForTest(0, 0, 0, 0, 0, { x: 40, y: 22, side: 'left', reach: 0.75 });
+
+    expect(points[6]).toEqual([0.5, 1, 7]);
+    expect(points[7]).toEqual([40, 22, 11]);
+    expect(points[8]).toEqual([116, -70, 7]);
+    expect(points[9]).toEqual([40, 22, 12]);
+  });
+
+  it('resolves right-target joints with clamped target reach', () => {
+    const points = renderApi.__getJointPointsForTest(0, 0, 0, 0, 0, { x: 190, y: -30, side: 'right', reach: 1.8 });
+
+    expect(points[6]).toEqual([-118, -62, 7]);
+    expect(points[7]).toEqual([190, -30, 11]);
+    expect(points[8]).toEqual([190, -30, 7]);
+    expect(points[9]).toEqual([190, -30, 12]);
+  });
+
+  it('resolves left-target joints via x-based fallback side when side is absent', () => {
+    const points = renderApi.__getJointPointsForTest(0, 0, 0, 0, 0, { x: -160, y: 30, reach: 1 });
+
+    expect(points[6]).toEqual([-160, 30, 7]);
+    expect(points[7]).toEqual([-160, 30, 11]);
+    expect(points[8]).toEqual([116, -70, 7]);
+    expect(points[9]).toEqual([-160, 30, 12]);
+  });
+
+  it('resolves right-target joints via x-based fallback side when side is absent', () => {
+    const points = renderApi.__getJointPointsForTest(0, 0, 0, 0, 0, { x: 160, y: 28, reach: 1 });
+
+    expect(points[6]).toEqual([-118, -62, 7]);
+    expect(points[7]).toEqual([160, 28, 11]);
+    expect(points[8]).toEqual([160, 28, 7]);
+    expect(points[9]).toEqual([160, 28, 12]);
+  });
+
+  it('reaches left target in skeleton motion calculations', () => {
+    const calls = [];
+    vi.spyOn(globalThis, 'line').mockImplementation((...args) => {
+      calls.push(args);
+    });
+
+    renderApi.__drawUpperSkeletonForTest(0, 0, 0, 0.4, 0, true, { x: 40, y: 22, side: 'left', reach: 1 });
+
+    expect(calls).toContainEqual([40, 22, 40, 22]);
+  });
+
+  it('reaches fallback-left target in skeleton motion calculations', () => {
+    const calls = [];
+    vi.spyOn(globalThis, 'line').mockImplementation((...args) => {
+      calls.push(args);
+    });
+
+    renderApi.__drawUpperSkeletonForTest(0, 0, 0, 0.4, 0, true, { x: -170, y: 10, reach: 1 });
+
+    expect(calls).toContainEqual([-170, 10, -170, 10]);
+  });
+
+  it('reaches fallback-right target in skeleton motion calculations', () => {
+    const calls = [];
+    vi.spyOn(globalThis, 'line').mockImplementation((...args) => {
+      calls.push(args);
+    });
+
+    renderApi.__drawUpperSkeletonForTest(0, 0, 0, 0.4, 0, true, { x: 190, y: 32, reach: 1 });
+
+    expect(calls).toContainEqual([190, 32, 190, 32]);
+  });
+
+  it('reaches right target in skeleton motion calculations', () => {
+    const calls = [];
+    vi.spyOn(globalThis, 'line').mockImplementation((...args) => {
+      calls.push(args);
+    });
+
+    renderApi.__drawUpperSkeletonForTest(0, 0, 0, 0.4, 0, true, { x: 190, y: -30, side: 'right', reach: 1 });
+
+    expect(calls).toContainEqual([190, -30, 190, -30]);
+  });
+
+  it('calls upper wire skeleton helper with both glow states for complete branch coverage', () => {
+    renderApi.__drawUpperSkeletonForTest(0, 0, 0, 0, 1, true);
+    renderApi.__drawUpperSkeletonForTest(0, 0, 0, 0, 1, false);
+  });
+
+  it('renders the procedural fight opponent across idle and punch actions', () => {
+    renderApi.renderFightOpponentCharacter();
+    for (const type of [1, 2, 3, 4, 5, 6]) {
+      renderApi.renderFightOpponentCharacter({
+        frame: 1,
+        layout: { height: 480, width: 640 },
+        type
+      });
+      renderApi.renderFightOpponentCharacter({
+        frame: 4,
+        layout: { height: 480, width: 640 },
+        type
+      });
+    }
+
+    expect(calls.translate).toContainEqual([640 * 0.5, expect.any(Number)]);
+    expect(calls.scale).toContainEqual([(480 / 780) * 0.7]);
+    expect(calls.rotate.length).toBeGreaterThan(0);
+    expect(calls.text).not.toEqual(expect.arrayContaining([
+      ['LEFT JAB!', expect.any(Number), expect.any(Number)],
+      ['RIGHT UPPERCUT!', expect.any(Number), expect.any(Number)]
+    ]));
+  });
+
+  it('dispatches fight opponent rendering through the configured opponent renderer', () => {
+    const render = vi.fn();
+    installRenderGlobals({
+      gameState: { opponent: 0 },
+      OPPONENTS: {
+        0: {
+          renderer: 'raja',
+          scale: 0.5,
+          xRatio: 0.42,
+          yRatio: 0.61
+        }
+      },
+      TfitOpponentRenderers: {
+        raja: { render }
+      }
+    });
+
+    renderApi.renderFightOpponentCharacter({
+      frame: 2,
+      layout: { height: 480, width: 640 },
+      type: 1
+    });
+
+    expect(render).toHaveBeenCalledWith({
+      frame: 2,
+      layout: { height: 480, width: 640 },
+      opponent: {
+        renderer: 'raja',
+        scale: 0.5,
+        xRatio: 0.42,
+        yRatio: 0.61
+      },
+      type: 1
+    });
+  });
+
+  it('uses Raja opponent size and position config in the fallback renderer', () => {
+    renderApi.renderRajaOpponentCharacter({
+      layout: { height: 480, width: 640 },
+      opponent: {
+        scale: 0.5,
+        xRatio: 0.42,
+        yRatio: 0.61
+      }
+    });
+
+    expect(calls.translate).toContainEqual([640 * 0.42, expect.any(Number)]);
+    expect(calls.scale).toContainEqual([(480 / 780) * 0.5]);
+  });
+
+  it('renders procedural fight opponent hit reactions', () => {
+    renderApi.renderFightOpponentCharacter({
+      layout: { height: 480, width: 640 },
+      reaction: { duration: 30, frame: 0, type: 2 }
+    });
+    renderApi.renderFightOpponentCharacter({
+      layout: { height: 480, width: 640 },
+      reaction: { duration: 30, frame: 0, type: 3 }
+    });
+    renderApi.renderFightOpponentCharacter({
+      layout: { height: 480, width: 640 },
+      reaction: { duration: 0, frame: 0, type: 1 }
+    });
+    renderApi.renderFightOpponentCharacter({
+      layout: { height: 480, width: 640 },
+      reaction: { duration: 30, frame: Number.NaN, type: 1 }
+    });
+    renderApi.renderFightOpponentCharacter({
+      layout: { height: 480, width: 640 },
+      reaction: { duration: Number.NaN, frame: 0, type: 1 }
+    });
+
+    expect(calls.ellipse).toEqual(expect.arrayContaining([
+      [0, -170, 300, 212],
+      [-34, -205, 134, 78]
+    ]));
+    expect(calls.translate).toEqual(expect.arrayContaining([
+      [320 - 18, expect.any(Number)],
+      [320 + 70, expect.any(Number)]
+    ]));
+  });
+
   it('ignores unknown generated move types in sandboxed shadow report counts', () => {
     const modulePath = require.resolve('../../js/game-render');
     const source = readFileSync(modulePath, 'utf8').replace(
@@ -415,6 +812,95 @@ describe('TfitRender exports', () => {
       success: 0,
       total: 0
     });
+  });
+
+  it('maps down-dodge and switch-guard to dedicated move-legend labels', () => {
+    const modulePath = require.resolve('../../js/game-render');
+    const source = readFileSync(modulePath, 'utf8').replace(
+      'root.TfitRender = api;',
+      'api.__shadowMoveLegendLabelForTest = shadowMoveLegendLabel; root.TfitRender = api;'
+    );
+    const sandbox = {
+      BOLD: 'bold',
+      CENTER: 'center',
+      CORNER: 'corner',
+      MOVE_TYPE: { 9: 'DOWN_DODGE', 10: 'SWITCH_GUARD' },
+      FRAME_RATE: 20,
+      loading_k: 0,
+      loading_m: 0,
+      errorTimer: 0,
+      hide_sensor: 128,
+      myWindowWidth: 640,
+      myWindowHeight: 480,
+      document: { body: { style: { setProperty: () => {} } } },
+      TfitConfig: { GAME_LENGTH: {}, GAME_LEVEL: {} },
+      images: {},
+      OPPONENTS: { 0: { stamina: 6 } },
+      gameState: { menu: 2, opponent: 0, gameStarted: true, moves: [], curMoves: [] },
+      TfitLayoutState: {
+        snapshot: () => ({
+          coef: 1,
+          frameRate: 20,
+          height: 480,
+          width: 640,
+          objectPoseSize: 48,
+          levelWindowBase: 0
+        })
+      },
+      TfitGameLogic: {
+        detectStartCountdown: vi.fn(),
+        moveDisplay: () => ({ color: [0, 0, 0, 200], text: 'X' })
+      },
+      SHADOW_SPECIFIC: { 1: 'JAB' },
+      moveDisplay: () => ({ color: [0, 0, 0, 200], text: 'X' }),
+      RIGHT: 'right',
+      LEFT: 'left',
+      PI: Math.PI,
+      TOP: 'top',
+      BETA: 0,
+      strokeCap: () => {},
+      background: () => {},
+      noStroke: () => {},
+      fill: () => {},
+      noFill: () => {},
+      rect: () => {},
+      rectMode: () => {},
+      stroke: () => {},
+      strokeWeight: () => {},
+      line: () => {},
+      quad: () => {},
+      circle: () => {},
+      image: () => {},
+      text: () => {},
+      textAlign: () => {},
+      textSize: () => {},
+      textStyle: () => {},
+      map: (value, start1, stop1, start2, stop2) => start2 + ((value - start1) / (stop1 - start1)) * (stop2 - start2),
+      sin: Math.sin,
+      cos: Math.cos,
+      tan: Math.tan,
+      min: Math.min,
+      max: Math.max,
+      abs: Math.abs,
+      floor: Math.floor,
+      ceil: Math.ceil,
+      round: Math.round,
+      sqrt: Math.sqrt,
+      TWO_PI: Math.PI * 2,
+      NO_FILL: 'noFill',
+      NORMAL: 'normal',
+      CORNERS: 'corners',
+      ROUND: 'round',
+      module: { exports: {} },
+      width: 640,
+      height: 480
+    };
+
+    new Script(source, { filename: modulePath }).runInNewContext(sandbox);
+
+    expect(sandbox.TfitRender.__shadowMoveLegendLabelForTest(9)).toBe('B');
+    expect(sandbox.TfitRender.__shadowMoveLegendLabelForTest(10)).toBe('S');
+    expect(sandbox.TfitRender.__shadowMoveLegendLabelForTest(1)).toBe('L');
   });
 });
 
@@ -479,6 +965,8 @@ describe('basic render helpers', () => {
   });
 
   it('renders the scene background and main menu assets', () => {
+    installRenderGlobals({ frameCount: 20 });
+
     renderApi.renderSceneBackground();
     renderApi.renderMainMenu();
 
@@ -488,8 +976,79 @@ describe('basic render helpers', () => {
       '--app-background-image',
       'url("assets/backgrounds/2.jpg")'
     );
-    expect(calls.image).toContainEqual([asset('menu'), 204, 70, 312, 312]);
+    expect(calls.image).not.toContainEqual([asset('menu'), 204, 70, 312, 312]);
     expect(calls.image).toContainEqual([asset('logo'), 580, 425, 50, 50]);
+    const layout = { width: 640, height: 480, coef: 1 };
+    const panelX = layout.width * 0.6;
+    const panelY = layout.height / 12;
+    const panelW = Math.min(layout.width * 0.44, 620);
+    const panelH = layout.height * 0.24;
+    const titleY = panelY + 22 * layout.coef;
+    const descX = panelX - panelW / 2 + 28;
+    const descY = panelY + 60 * layout.coef;
+    const description =
+      'A boxing game about rhythm, movement, and endurance.';
+    const hasPanel = calls.rect.some((entry) => {
+      const [x, y, w, h] = entry;
+      return (
+        Math.abs(x - (panelX - panelW / 2)) < 0.001 &&
+        Math.abs(y - (panelY + panelH / 2 - panelH / 2)) < 0.001 &&
+        Math.abs(w - panelW) < 0.001 &&
+        Math.abs(h - panelH) < 0.001
+      );
+    });
+    expect(hasPanel).toBe(true);
+    const hasTitle = calls.text.some((entry) => (
+      entry[0] === 'BOX4FIT' &&
+      Math.abs(entry[1] - panelX) < 0.001 &&
+      Math.abs(entry[2] - titleY) < 0.001
+    ));
+    const hasDescription = calls.text.some((entry) => (
+      entry[0] === description &&
+      Math.abs(entry[1] - descX) < 0.001 &&
+      Math.abs(entry[2] - descY) < 0.001
+    ));
+    expect(hasTitle).toBe(true);
+    expect(hasDescription).toBe(true);
+    expect(calls.scale).toContainEqual([1.35]);
+    expect(calls.text).not.toContainEqual(['JAB!', 190, -230]);
+    expect(calls.text).not.toContainEqual(['GUARD', 0, -285]);
+  });
+
+  it('renders the arena for game 3 in scene background', () => {
+    installRenderGlobals({ gameState: { menu: 3 } });
+    renderApi.renderSceneBackground();
+
+    expect(calls.quad).toHaveLength(3);
+    expect(calls.line).toHaveLength(35);
+    const hasGame3PerspectiveLine = calls.line.some(([x1, y1, x2, y2]) => (
+      Math.abs(y1 - (480 * 0.64)) < 0.001 &&
+      Math.abs(x2 - (640 * 0.86 + 0 * 28)) < 0.001 &&
+      Math.abs(x1 - (640 * 0.16)) < 0.001
+    ));
+    expect(hasGame3PerspectiveLine).toBe(true);
+  });
+
+  it('renders the fight arena for game 4 in scene background', () => {
+    installRenderGlobals({ gameState: { menu: 4 } });
+    renderApi.renderSceneBackground();
+
+    expect(calls.triangle).toHaveLength(5);
+    expect(calls.ellipse.length).toBeGreaterThan(50);
+    const hasFightBanner = calls.ellipse.some((entry) => (
+      Math.abs(entry[0] - (640 * 0.13)) < 0.001 &&
+      Math.abs(entry[1] - 22) < 0.001 &&
+      entry[2] === 38 &&
+      entry[3] === 13
+    ));
+    expect(hasFightBanner).toBe(true);
+    const hasFightPostFloor = calls.rect.some((entry) => (
+      entry[0] === 320 &&
+      Math.abs(entry[1] - 379.2) < 0.01 &&
+      entry[2] === 640 &&
+      Math.abs(entry[3] - 201.6) < 0.01
+    ));
+    expect(hasFightPostFloor).toBe(true);
   });
 
   it('renders the arena background without menu overlay styling on the main menu', () => {
@@ -633,18 +1192,53 @@ describe('hud and meter rendering', () => {
   it('renders fight meters with reduced opponent stamina', () => {
     renderApi.renderFightMeters();
 
-    expect(calls.rect).toContainEqual([245, 15, 150, 20]);
-    expect(calls.rect).toContainEqual([247, 17, 100, 16]);
-    expect(calls.rect).toContainEqual([247, 45, 148, 16]);
+    const opponentY = 18;
+    const playerY = 480 - 38;
+
+    expect(calls.rect).toContainEqual([245, opponentY, 150, 20]);
+    expect(calls.rect).toContainEqual([247, opponentY + 2, 98.66666666666666, 16]);
+    expect(calls.rect).toContainEqual([247, playerY + 2, 148, 16]);
+    expect(calls.fill).toEqual(expect.arrayContaining([
+      [94, 22, 34, 185],
+      [245, 238, 214, 224]
+    ]));
+    expect(calls.text).toContainEqual(['RAJA', 320, opponentY - 9]);
+    expect(calls.text).toContainEqual(['YOU', 320, playerY - 9]);
   });
 
-  it('skips the opponent stamina refill when stamina is depleted', () => {
+  it('renders the points gauge when the score max is unset', () => {
+    installRenderGlobals({ gameState: { score_max: 0 } });
+
+    renderApi.renderRoundHud(7);
+
+    expect(calls.text).toContainEqual(['7', 2 * 640 / 3, 439.16]);
+  });
+
+  it('renders an empty opponent stamina bar when stamina is depleted', () => {
     installRenderGlobals({ gameState: { my_opponent: { stamina: 0 } } });
 
     renderApi.renderFightMeters();
 
-    expect(calls.rect).not.toContainEqual([247, 17, 4, 16]);
-    expect(calls.rect.filter(args => args[1] === 17)).toHaveLength(1);
+    const opponentY = 18;
+    expect(calls.rect).toContainEqual([247, opponentY + 2, 0, 16]);
+  });
+
+  it('renders reduced player stamina in fight meters', () => {
+    installRenderGlobals({ gameState: { gameStarted: true, my_stamina: 3 } });
+
+    renderApi.renderFightMeters();
+
+    const playerY = 480 - 38;
+    expect(calls.rect).toContainEqual([247, playerY + 2, 74, 16]);
+  });
+
+  it('renders full player stamina before the fight round starts', () => {
+    installRenderGlobals({ gameState: { gameStarted: false, my_stamina: 0 } });
+
+    renderApi.renderFightMeters();
+
+    const playerY = 480 - 38;
+    expect(calls.rect).toContainEqual([247, playerY + 2, 148, 16]);
   });
 
   it('renders the active feet indicator image', () => {

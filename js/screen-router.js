@@ -64,6 +64,40 @@
     }
   }
 
+  function drawRoundFeedbackText(message, layout, pulse = 1) {
+    const x = layout.width / 2;
+    const y = layout.height * 0.2;
+    const baseSize = layout.objectPoseSize * 0.9;
+    const alpha = Math.round(150 + 45 * pulse);
+    const pulseScale = 0.94 + 0.06 * Math.sin(Date.now() * 0.004);
+    const textAlignX = root.CENTER;
+    const textAlignY = root.CENTER;
+    const bold = root.BOLD;
+    const isSuccess = message === "GOOD HIT" || message === "NICE DODGE";
+    const glowColor = isSuccess
+      ? [90, 255, 120]
+      : [255, 186, 60];
+    const textColor = isSuccess
+      ? [220, 255, 220]
+      : [255, 245, 210];
+
+    noStroke();
+    fill(isSuccess ? 20 : 24, isSuccess ? 40 : 22, isSuccess ? 20 : 10, 172);
+    rect(x - 162, y - baseSize * 0.7, 324, baseSize * 1.45, 10);
+
+    textAlign(textAlignX, textAlignY);
+    textStyle(bold);
+    textSize(baseSize * 1.15 * pulseScale);
+    fill(0, 0, 0, Math.max(90, alpha));
+    text(message, x + 1, y + 1);
+
+    fill(glowColor[0], glowColor[1], glowColor[2], Math.max(80, alpha * 0.56));
+    text(message, x - 1, y);
+
+    fill(textColor[0], textColor[1], textColor[2], Math.max(190, alpha * 0.88));
+    text(message, x - 0.4, y - 0.4);
+  }
+
   function renderMenuScreen() {
     stopPoseDetection();
     timingState.gameResult = Date.now() - 5001;
@@ -78,9 +112,15 @@
       gameDuration: gameState.gameDuration,
       gameTimer: gameState.gameTimer
     });
+    const feedbackPulse = 1 + Math.sin(now * 0.008) * 0.06;
+
+    if (timingState.fightResultText) {
+      drawRoundFeedbackText(timingState.fightResultText, layout, feedbackPulse);
+      return;
+    }
 
     if (shouldShowHitFeedback({ hitSuccessTime: timingState.hitSuccess, now })) {
-      image(images.goodHit, layout.width / 2 - 2.5 * layout.objectPoseSize, layout.height / 5, 5 * layout.objectPoseSize);
+      drawRoundFeedbackText(timingState.hitSuccessText || "GOOD HIT", layout, feedbackPulse);
     }
 
     const keepTrying = keepTryingFeedback({
@@ -91,7 +131,7 @@
       remainingSeconds
     });
     if (keepTrying.show) {
-      image(images.keepTrying, layout.width / 2 - 2.5 * layout.objectPoseSize, layout.height / 5, 5 * layout.objectPoseSize);
+      drawRoundFeedbackText("KEEP TRYING", layout, feedbackPulse);
       if (keepTrying.playSound) {
         sounds.keepTrying.play();
       }
@@ -110,7 +150,7 @@
       sounds.yourGuard.play();
     }
     if (guard.show) {
-      image(images.yourGuard, layout.width / 2 - 2.5 * layout.objectPoseSize, layout.height / 5, 5 * layout.objectPoseSize);
+      drawRoundFeedbackText("YOUR GUARD", layout, feedbackPulse);
     }
   }
 
@@ -297,6 +337,12 @@
     }
   }
 
+  function renderForegroundControls() {
+    if (gameState.menu === 4 && !gameState.gameStarted && !gameState.gameCalibration && !gameResultBool()) {
+      renderFightButton();
+    }
+  }
+
   function renderGameScreen() {
     renderSceneBackground();
     if (gameState.menu === 0) {
@@ -316,6 +362,7 @@
     }
 
     renderActiveMode();
+    renderForegroundControls();
     renderMenuButtonDoorAnimation();
   }
 
@@ -347,6 +394,7 @@
     renderActiveMode,
     renderAppFrame,
     renderBackNavigation,
+    renderForegroundControls,
     renderGameScreen,
     renderMenuScreen,
     renderRoundFeedback,

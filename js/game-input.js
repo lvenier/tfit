@@ -184,7 +184,7 @@
     if (['p', 'P'].includes(key) && menu === 0) {
       return { type: "open_pad" };
     }
-    if (['i', 'I'].includes(key) && menu === 0) {
+    if (['f', 'F', 'i', 'I'].includes(key) && menu === 0) {
       return { type: "open_fight" };
     }
     if (['r', 'R'].includes(key) && menu === 1 && gameCalibration) {
