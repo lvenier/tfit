@@ -1,5 +1,6 @@
 {
     "name": "box4fit",
+    "desktopName": "Box4Fit",
     "main": "main.js",
     "version": "1.16.0",
     "description": "A webcam boxing fitness game with motion detection",
@@ -28,8 +29,8 @@
         "test:unit": "vitest run --config vitest.unit.config.mjs",
         "test:e2e": "node ./node_modules/@playwright/test/cli.js test",
         "test:e2e:headed": "node ./node_modules/@playwright/test/cli.js test --headed",
-        "build-linux": "npx electron-builder --linux",
-        "build-win": "npx electron-builder --win"
+        "build-linux": "npx electron-builder --linux --publish never",
+        "build-win": "npx electron-builder --win --publish never"
     },
     "build": {
         "appId": "app.box4.fit",
@@ -40,7 +41,8 @@
                 "AppImage",
                 "deb"
             ],
-            "category": "Game"
+            "category": "Game",
+            "syncDesktopName": true
         },
         "win": {
             "target": "nsis",
