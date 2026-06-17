@@ -55,6 +55,8 @@ describe('asset state factories', () => {
       keepTrying: null,
       punch: null,
       doorOpen: null,
+      youLose: null,
+      youWin: null,
       yourGuard: null
     });
   });
@@ -113,17 +115,19 @@ describe('loadGameAssets', () => {
       'assets/sounds/punch.mp3',
       'assets/sounds/thats_it.mp3',
       'assets/sounds/well_done.mp3',
+      'assets/sounds/you_lose.mp3',
+      'assets/sounds/you_win.mp3',
       'assets/sounds/your_guard.mp3'
     ]);
     expect(progressEvents[0]).toEqual({
       label: 'Loading assets',
       loaded: 0,
-      total: 105
+      total: 107
     });
     expect(progressEvents.at(-1)).toEqual({
       label: 'Loading assets',
-      loaded: 105,
-      total: 105
+      loaded: 107,
+      total: 107
     });
   });
 

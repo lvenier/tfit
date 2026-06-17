@@ -932,20 +932,21 @@
     const playerY = layout.height - 38 * layout.coef;
     const opponentMaxStamina = Math.max(OPPONENTS[gameState.opponent].stamina, 1);
     const opponentProgress = Math.max(0, Math.min(gameState.my_opponent.stamina, opponentMaxStamina)) / opponentMaxStamina;
-    const playerStamina = Number.isFinite(gameState.my_stamina) ? gameState.my_stamina : opponentMaxStamina;
+    const playerStamina = gameState.gameStarted && Number.isFinite(gameState.my_stamina) ? gameState.my_stamina : opponentMaxStamina;
     const playerProgress = Math.max(0, Math.min(playerStamina, opponentMaxStamina)) / opponentMaxStamina;
+    const opponentName = OPPONENTS[gameState.opponent].name || "OPPONENT";
 
     function drawFightBar({ x, y, progress, label }) {
-      stroke(0);
-      strokeWeight(4);
+      stroke(255, 255, 255, 42);
+      strokeWeight(3);
       noFill();
       rect(x, y, barWidth, barHeight);
       noStroke();
-      fill(255, 0, 0);
+      fill(94, 22, 34, 185);
       rect(x + 2, y + 2, barWidth - 2 * layout.coef, 16);
-      fill(255);
+      fill(245, 238, 214, 224);
       rect(x + 2, y + 2, (barWidth - 2 * layout.coef) * progress, 16);
-      fill(255, 255, 255, 210);
+      fill(245, 238, 214, 218);
       textAlign(CENTER, CENTER);
       textStyle(BOLD);
       textSize(8 * layout.coef);
@@ -956,7 +957,7 @@
       x: opponentX,
       y: opponentY,
       progress: opponentProgress,
-      label: "OPPONENT"
+      label: opponentName.toUpperCase()
     });
     drawFightBar({
       x: playerX,
@@ -1523,9 +1524,10 @@
     return Math.sin((x * Math.PI) / 2);
   }
 
-  function renderFightOpponentCharacter({
+  function renderRajaOpponentCharacter({
     frame = -1,
     layout = layoutSnapshot(),
+    opponent = {},
     reaction = root.animationState && root.animationState.opponent ? root.animationState.opponent.reaction : null,
     type = 0
   } = {}) {
@@ -1533,9 +1535,9 @@
     const phase = frame >= 0 ? Math.min(frame, 6) / 6 : 0;
     const move = fightOpponentMoveParams(action, phase);
     const hitReaction = fightOpponentHitReactionParams(reaction);
-    const scaleValue = (Math.min(layout.width, layout.height) / 780) * 0.7;
-    const cx = layout.width * 0.5;
-    const cy = layout.height * 0.56;
+    const scaleValue = (Math.min(layout.width, layout.height) / 780) * (opponent.scale || 0.7);
+    const cx = layout.width * (opponent.xRatio || 0.5);
+    const cy = layout.height * (opponent.yRatio || 0.56);
     const t = frameCount || 0;
     const sway = Math.sin(t * 0.035) * 5;
 
@@ -1662,10 +1664,28 @@
     pop();
   }
 
+  function renderFightOpponentCharacter(options = {}) {
+    const opponent = (root.OPPONENTS && root.OPPONENTS[gameState.opponent]) || (root.OPPONENTS && root.OPPONENTS["0"]) || {};
+    const renderer = opponent.renderer && root.TfitOpponentRenderers
+      ? root.TfitOpponentRenderers[opponent.renderer]
+      : null;
+    if (renderer && typeof renderer.render === "function") {
+      return renderer.render({
+        ...options,
+        opponent
+      });
+    }
+    return renderRajaOpponentCharacter({
+      ...options,
+      opponent
+    });
+  }
+
   const api = {
     drawMessagePanel,
     drawDetectionProgress,
     renderFightOpponentCharacter,
+    renderRajaOpponentCharacter,
     renderMoveShape,
     renderBackButton,
     renderCalibrationOverlay,

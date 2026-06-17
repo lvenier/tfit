@@ -70,6 +70,7 @@ const STUBBED_GLOBALS = [
   'tint',
   'TfitGameLogic',
   'TfitLayoutState',
+  'TfitOpponentRenderers',
   'translate',
   'TOP',
   'width',
@@ -214,7 +215,7 @@ function installRenderGlobals(overrides = {}) {
     myWindowWidth: 640,
     NORMAL: 'normal',
     OBJECT_POSE_SIZE: 48,
-    OPPONENTS: { 0: { stamina: 6 } },
+    OPPONENTS: { 0: { name: 'Raja', stamina: 6 } },
     PI: Math.PI,
     frameCount: 123,
     radians: degrees => degrees * Math.PI / 180,
@@ -292,6 +293,7 @@ describe('TfitRender exports', () => {
       'renderLoadingScreen',
       'renderMainMenu',
       'renderMoveShape',
+      'renderRajaOpponentCharacter',
       'renderRoundHud',
       'renderSceneBackground',
       'renderSettingsControls',
@@ -706,6 +708,56 @@ describe('TfitRender exports', () => {
       ['LEFT JAB!', expect.any(Number), expect.any(Number)],
       ['RIGHT UPPERCUT!', expect.any(Number), expect.any(Number)]
     ]));
+  });
+
+  it('dispatches fight opponent rendering through the configured opponent renderer', () => {
+    const render = vi.fn();
+    installRenderGlobals({
+      gameState: { opponent: 0 },
+      OPPONENTS: {
+        0: {
+          renderer: 'raja',
+          scale: 0.5,
+          xRatio: 0.42,
+          yRatio: 0.61
+        }
+      },
+      TfitOpponentRenderers: {
+        raja: { render }
+      }
+    });
+
+    renderApi.renderFightOpponentCharacter({
+      frame: 2,
+      layout: { height: 480, width: 640 },
+      type: 1
+    });
+
+    expect(render).toHaveBeenCalledWith({
+      frame: 2,
+      layout: { height: 480, width: 640 },
+      opponent: {
+        renderer: 'raja',
+        scale: 0.5,
+        xRatio: 0.42,
+        yRatio: 0.61
+      },
+      type: 1
+    });
+  });
+
+  it('uses Raja opponent size and position config in the fallback renderer', () => {
+    renderApi.renderRajaOpponentCharacter({
+      layout: { height: 480, width: 640 },
+      opponent: {
+        scale: 0.5,
+        xRatio: 0.42,
+        yRatio: 0.61
+      }
+    });
+
+    expect(calls.translate).toContainEqual([640 * 0.42, expect.any(Number)]);
+    expect(calls.scale).toContainEqual([(480 / 780) * 0.5]);
   });
 
   it('renders procedural fight opponent hit reactions', () => {
@@ -1146,7 +1198,11 @@ describe('hud and meter rendering', () => {
     expect(calls.rect).toContainEqual([245, opponentY, 150, 20]);
     expect(calls.rect).toContainEqual([247, opponentY + 2, 98.66666666666666, 16]);
     expect(calls.rect).toContainEqual([247, playerY + 2, 148, 16]);
-    expect(calls.text).toContainEqual(['OPPONENT', 320, opponentY - 9]);
+    expect(calls.fill).toEqual(expect.arrayContaining([
+      [94, 22, 34, 185],
+      [245, 238, 214, 224]
+    ]));
+    expect(calls.text).toContainEqual(['RAJA', 320, opponentY - 9]);
     expect(calls.text).toContainEqual(['YOU', 320, playerY - 9]);
   });
 
@@ -1168,12 +1224,21 @@ describe('hud and meter rendering', () => {
   });
 
   it('renders reduced player stamina in fight meters', () => {
-    installRenderGlobals({ gameState: { my_stamina: 3 } });
+    installRenderGlobals({ gameState: { gameStarted: true, my_stamina: 3 } });
 
     renderApi.renderFightMeters();
 
     const playerY = 480 - 38;
     expect(calls.rect).toContainEqual([247, playerY + 2, 74, 16]);
+  });
+
+  it('renders full player stamina before the fight round starts', () => {
+    installRenderGlobals({ gameState: { gameStarted: false, my_stamina: 0 } });
+
+    renderApi.renderFightMeters();
+
+    const playerY = 480 - 38;
+    expect(calls.rect).toContainEqual([247, playerY + 2, 148, 16]);
   });
 
   it('renders the active feet indicator image', () => {

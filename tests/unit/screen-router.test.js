@@ -979,6 +979,48 @@ describe('round routing', () => {
     expect(calls.text.some(([message]) => message === 'GOOD HIT')).toBe(false);
   });
 
+  it('shows fight result feedback before transient round feedback', () => {
+    const api = installGlobals({
+      gameState: defaultGameState({ gameStarted: true, gameTimer: 2, menu: 4 }),
+      timingState: {
+        gameResult: 0,
+        guardWarning: 0,
+        fightResultText: 'YOU WIN',
+        hitSuccess: 9999,
+        hitSuccessText: 'GOOD HIT',
+        leftPoses: 0,
+        rightPoses: 0
+      },
+      TfitRound: {
+        guardFeedback: vi.fn(() => ({
+          guardWarningTime: 123,
+          playSound: false,
+          show: false
+        })),
+        initialRoundMoveState: vi.fn(() => ({
+          arrayScore: [],
+          curMoves: [],
+          gameTimerNext: 0
+        })),
+        isRoundExpired: vi.fn(() => false),
+        keepTryingFeedback: vi.fn(() => ({
+          playSound: false,
+          show: false
+        })),
+        remainingRoundSeconds: vi.fn(() => 12),
+        scoreTotal: vi.fn(() => 0),
+        shouldShowHitFeedback: vi.fn(() => true)
+      }
+    });
+
+    api.renderRoundFeedback();
+
+    expect(calls.text).toEqual(expect.arrayContaining([
+      ['YOU WIN', expect.any(Number), expect.any(Number)]
+    ]));
+    expect(calls.text.some(([message]) => message === 'GOOD HIT')).toBe(false);
+  });
+
   it('keeps quiet when round feedback helpers do not request UI or sounds', () => {
     const api = installGlobals({
       gameState: defaultGameState({ gameStarted: true, gameTimer: 2, menu: 2 })

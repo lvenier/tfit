@@ -24,6 +24,7 @@ const STUBBED_GLOBALS = [
   'poses',
   'randomInteger',
   'rightHand',
+  'sounds',
   'text',
   'textSize',
   'timingState',
@@ -121,6 +122,10 @@ function installGlobals(overrides = {}) {
     pose: {},
     poses: [],
     randomInteger: vi.fn(() => 1),
+    sounds: {
+      youLose: { play: vi.fn() },
+      youWin: { play: vi.fn() }
+    },
     timingState: {
       leftDodge: 0,
       leftHook: 0,
@@ -137,7 +142,8 @@ function installGlobals(overrides = {}) {
       moveDisplay: vi.fn(() => ({ color: [1, 2, 3] }))
     },
     TfitConfig: {
-      cloneOpponent: vi.fn(() => ({ stamina: 6 }))
+      cloneOpponent: vi.fn(() => ({ stamina: 6 })),
+      OPPONENTS: { 0: { punchWaitFrames: 120, stamina: 6 } }
     },
     TfitLayoutState: {
       snapshot: vi.fn(() => layout())
@@ -191,7 +197,7 @@ describe('TfitFightMode exports', () => {
     const source = readFileSync(modulePath, 'utf8');
     const sandbox = {
       globalThis: null,
-      TfitConfig: { cloneOpponent: () => ({ stamina: 6 }) },
+      TfitConfig: { cloneOpponent: () => ({ stamina: 6 }), OPPONENTS: { 0: { punchWaitFrames: 120, stamina: 6 } } },
       TfitGameLogic: { moveDisplay: () => ({ color: [] }) },
       TfitLayoutState: { snapshot: () => layout() },
       TfitPoseDetection: {
@@ -220,7 +226,7 @@ describe('TfitFightMode exports', () => {
     const sandbox = {
       globalThis: null,
       module: {},
-      TfitConfig: { cloneOpponent: () => ({ stamina: 6 }) },
+      TfitConfig: { cloneOpponent: () => ({ stamina: 6 }), OPPONENTS: { 0: { punchWaitFrames: 120, stamina: 6 } } },
       TfitGameLogic: { moveDisplay: () => ({ color: [] }) },
       TfitLayoutState: { snapshot: () => layout() },
       TfitPoseDetection: {
@@ -1410,6 +1416,9 @@ describe('fight mode rendering', () => {
     expect(globalThis.gameState.gameOver).toBe(false);
     expect(globalThis.gameState.gameStarted).toBe(true);
     expect(globalThis.gameState.manualStop).toBe(true);
+    expect(globalThis.timingState.fightResultText).toBe('YOU WIN');
+    expect(globalThis.sounds.youWin.play).toHaveBeenCalledTimes(1);
+    expect(globalThis.sounds.youLose.play).not.toHaveBeenCalled();
 
     globalThis.animationState.player.frame = -1;
     globalThis.animationState.opponent.reaction = null;
@@ -1419,6 +1428,8 @@ describe('fight mode rendering', () => {
     expect(globalThis.gameState.gameOver).toBe(true);
     expect(globalThis.gameState.gameStarted).toBe(false);
     expect(globalThis.gameState.manualStop).toBe(true);
+    expect(globalThis.timingState.fightResultText).toBe('YOU WIN');
+    expect(globalThis.sounds.youWin.play).toHaveBeenCalledTimes(1);
     expect(globalThis.animationState.opponent.frame).toBe(-1);
   });
 
@@ -1462,6 +1473,9 @@ describe('fight mode rendering', () => {
     expect(globalThis.gameState.gameOver).toBe(true);
     expect(globalThis.gameState.gameStarted).toBe(false);
     expect(globalThis.gameState.manualStop).toBe(true);
+    expect(globalThis.timingState.fightResultText).toBe('YOU LOSE');
+    expect(globalThis.sounds.youLose.play).toHaveBeenCalledTimes(1);
+    expect(globalThis.sounds.youWin.play).not.toHaveBeenCalled();
     expect(globalThis.animationState.opponent).toMatchObject({
       delay: 0,
       frame: -1,

@@ -27,6 +27,8 @@
       punch: null,
       thatsIt: null,
       wellDone: null,
+      youLose: null,
+      youWin: null,
       yourGuard: null
     };
   }
@@ -121,7 +123,7 @@
       1 +
       42 +
       4 +
-      14;
+      16;
   }
 
   async function loadGameAssets({
@@ -192,6 +194,8 @@
         punch: 'assets/sounds/punch.mp3',
         thatsIt: 'assets/sounds/thats_it.mp3',
         wellDone: 'assets/sounds/well_done.mp3',
+        youLose: 'assets/sounds/you_lose.mp3',
+        youWin: 'assets/sounds/you_win.mp3',
         yourGuard: 'assets/sounds/your_guard.mp3'
       }, loadSoundLimited)
     ]);

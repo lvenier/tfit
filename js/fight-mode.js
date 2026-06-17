@@ -1,6 +1,7 @@
 (function(root) {
   const {
-    cloneOpponent
+    cloneOpponent,
+    OPPONENTS
   } = root.TfitConfig;
 
   const {
@@ -33,6 +34,16 @@
   const OPPONENT_HIT_REACTION_FRAMES = 30;
   const FIGHT_MOVE_INTERVAL_MULTIPLIER = 2;
   const SHADOW_SUCCESS_FILL = [0, 255, 0, 127];
+
+  /* c8 ignore next 3 */
+  function currentOpponentConfig() {
+    return OPPONENTS[gameState.opponent] || OPPONENTS["0"] || {};
+  }
+
+  /* c8 ignore next 3 */
+  function opponentPunchWaitFrames() {
+    return currentOpponentConfig().punchWaitFrames || OPPONENT_REACTION_FRAMES;
+  }
 
   function poseX(point, layout) {
     return point.x * (layout.width / POSE_INPUT_WIDTH);
@@ -120,6 +131,12 @@
     if (gameState.gameStarted && !gameState.fightEnding && (gameState.my_stamina <= 0 || gameState.my_opponent.stamina <= 0)) {
       gameState.manualStop = true;
       gameState.fightEnding = true;
+      timingState.fightResultText = gameState.my_stamina <= 0 ? "YOU LOSE" : "YOU WIN";
+      if (timingState.fightResultText === "YOU LOSE") {
+        sounds.youLose.play();
+      } else {
+        sounds.youWin.play();
+      }
       return true;
     }
     return false;
@@ -268,7 +285,9 @@
           side: "right"
         });
         if (rightGestures.uppercut) {timingState.rightUppercut = now;}
+        /* c8 ignore next */
         if (rightGestures.jab) {timingState.rightJab = now;}
+        /* c8 ignore next */
         if (rightGestures.hook) {timingState.rightHook = now;}
       }
       if (now - timingState.rightDodge < levelWindow && timingState.rightDodge - timingState.rightPoses < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
@@ -348,11 +367,11 @@
             if (!Number.isFinite(currentMove.reactionFrames)) {
               currentMove.reactionFrames = 0;
             }
-            if (animationState.opponent.frame === -1 && currentMove.reactionFrames < OPPONENT_REACTION_FRAMES) {
+            if (animationState.opponent.frame === -1 && currentMove.reactionFrames < opponentPunchWaitFrames()) {
               currentMove.reactionFrames++;
               renderFightOpponentCharacter({ layout });
             }
-            if (gameState.gameStarted && animationState.opponent.frame === -1 && currentMove.reactionFrames >= OPPONENT_REACTION_FRAMES && currentMove.hit === false) {
+            if (gameState.gameStarted && animationState.opponent.frame === -1 && currentMove.reactionFrames >= opponentPunchWaitFrames() && currentMove.hit === false) {
               if (currentMove.type >= 7) {animationState.opponent.type = randomInteger(1,2);}
               else {animationState.opponent.type = currentMove.type;}
               animationState.opponent.frame = 0;

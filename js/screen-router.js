@@ -114,6 +114,11 @@
     });
     const feedbackPulse = 1 + Math.sin(now * 0.008) * 0.06;
 
+    if (timingState.fightResultText) {
+      drawRoundFeedbackText(timingState.fightResultText, layout, feedbackPulse);
+      return;
+    }
+
     if (shouldShowHitFeedback({ hitSuccessTime: timingState.hitSuccess, now })) {
       drawRoundFeedbackText(timingState.hitSuccessText || "GOOD HIT", layout, feedbackPulse);
     }
