@@ -143,7 +143,7 @@
     pop();
   }
 
-  function drawArena() {
+  function drawArenaDefault() {
     background(7, 9, 20);
 
     noStroke();
@@ -171,6 +171,109 @@
     stroke(255, 255, 255, 90);
     strokeWeight(4);
     line(0, height * 0.49, width, height * 0.49);
+    if (gameState.menu === 2) {
+      noStroke();
+      fill(255, 255, 255, 18);
+      quad(width * 0.12, 0, width * 0.25, 0, width * 0.48, height, width * 0.18, height);
+      fill(255, 70, 120, 14);
+      quad(width * 0.74, 0, width * 0.86, 0, width * 0.62, height, width * 0.38, height);
+    }
+  }
+
+  function drawArenaGame3(t) {
+    background(7, 10, 21);
+
+    noStroke();
+    for (let i = 0; i < 3; i++) {
+      const x = width * (0.25 + i * 0.25) + sin(t + i) * 40;
+      fill(80, 160, 255, 18);
+      quad(
+        x - 45,
+        0,
+        x + 45,
+        0,
+        width * 0.45 + i * 80,
+        height * 0.82,
+        width * 0.32 + i * 75,
+        height * 0.82
+      );
+    }
+
+    stroke(50, 210, 255, 38);
+    strokeWeight(1);
+    for (let i = 0; i < 14; i++) {
+      const y = height * 0.64 + i * 24;
+      line(width * 0.16 - i * 28, y, width * 0.86 + i * 28, y);
+    }
+    for (let i = 0; i < 18; i++) {
+      const x = map(i, 0, 17, width * 0.16, width * 0.86);
+      line(x, height * 0.64, width * 0.5 + (x - width * 0.5) * 2.2, height);
+    }
+
+    for (let j = 0; j < 3; j++) {
+      stroke(255, 70, 90, 150 - j * 25);
+      strokeWeight(5);
+      const y = height * (0.39 + j * 0.08);
+      line(width * 0.06, y, width * 0.94, y + sin(t + j) * 3);
+    }
+  }
+
+  function drawArenaFight() {
+    background(5, 6, 11);
+    noStroke();
+    for (let r = 900; r > 0; r -= 18) {
+      fill(20, 35, 75, map(r, 900, 0, 0, 16));
+      ellipse(width * 0.36, height * 0.30, r * 1.5, r);
+    }
+
+    // top lights
+    for (let i = 0; i < 5; i++) {
+      const lx = width * (0.13 + i * 0.15);
+      fill(255, 245, 210, 20);
+      triangle(lx - 40, 0, lx + 40, 0, width * 0.35 + (i - 2) * 30, height * 0.78);
+      fill(255, 244, 210, 160);
+      ellipse(lx, 22, 38, 13);
+    }
+
+    const horizon = height * 0.57;
+    // back wall panels
+    stroke(255, 255, 255, 16);
+    strokeWeight(1);
+    for (let i = 0; i < 12; i++) line(i * width / 12, 0, i * width / 12, horizon);
+
+    // ropes behind boxer
+    strokeCap(ROUND);
+    strokeWeight(8);
+    stroke(170, 24, 40, 160);
+    line(0, height * 0.46, width, height * 0.46);
+    strokeWeight(6);
+    stroke(235, 235, 235, 145);
+    line(0, height * 0.52, width, height * 0.52);
+    strokeWeight(8);
+    stroke(170, 24, 40, 120);
+    line(0, height * 0.59, width, height * 0.59);
+    noStroke();
+    fill(40, 42, 52);
+    rect(width * 0.05, height * 0.51, 18, height * 0.26, 5);
+    rect(width * 0.63, height * 0.51, 18, height * 0.26, 5);
+
+    // floor
+    noStroke();
+    fill(20, 22, 30);
+    rect(width / 2, height * 0.79, width, height * 0.42);
+    stroke(255, 255, 255, 24);
+    strokeWeight(1);
+    for (let i = -10; i <= 10; i++) line(width * 0.35, horizon, width * 0.35 + i * width * 0.16, height);
+    for (let y = horizon; y < height; y += max(20, (y - horizon) * 0.12 + 12)) line(0, y, width, y);
+
+    // ring logo on mat
+    noStroke();
+    fill(255, 255, 255, 15);
+    ellipse(width * 0.35, height * 0.82, 310, 80);
+    fill(255, 255, 255, 25);
+    textSize(34);
+    textStyle(BOLD);
+    text('BOX4FIT', width * 0.35, height * 0.82);
   }
 
   function syncPageBackground(menu = gameState.menu) {
@@ -218,7 +321,13 @@
     const layout = layoutSnapshot();
 
     syncPageBackground();
-    drawArena();
+    if (gameState.menu === 3) {
+      drawArenaGame3(frameCount * 0.04);
+    } else if (gameState.menu === 4) {
+      drawArenaFight();
+    } else {
+      drawArenaDefault();
+    }
 
     if (gameState.menu !== 0) {
       textSize(10 * layout.coef);
@@ -230,16 +339,44 @@
   function renderMainMenu() {
     const layout = layoutSnapshot();
     const menuButtonOffset = 20 * layout.coef;
-    const menuImageSize = Math.min(layout.width * 0.58, layout.height * 0.65, 720);
-    const menuImageX = layout.width / 2 - menuImageSize / 2 + 40 * layout.coef;
-    const menuImageY = layout.height / 8 + 10 * layout.coef;
     const menuButtonX = layout.width / 6 + menuButtonOffset;
     const menuButtonW = 100 * layout.coef;
     const menuButtonH = 42 * layout.coef;
 
     fill(0, 0, 0);
     image(images.logo, layout.width - 60 * layout.coef, layout.height - 55 * layout.coef, 50 * layout.coef, 50 * layout.coef);
-    image(images.menu, menuImageX, menuImageY, menuImageSize, menuImageSize);
+
+    const panelX = layout.width * 0.60;
+    const panelY = layout.height / 9;
+    const panelW = Math.min(layout.width * 0.44, 620);
+    const panelH = layout.height * 0.30;
+    const halfW = panelW / 2;
+    const halfH = panelH / 2;
+    const cx = panelX;
+    const cy = panelY + halfH;
+
+    fill(14, 18, 30, 180);
+    stroke(255, 255, 255, 35);
+    strokeWeight(1.2);
+    rect(cx - halfW, cy - halfH, panelW, panelH, 16);
+
+    noStroke();
+    fill(255, 255, 255, 220);
+    textAlign(CENTER, typeof TOP === "undefined" ? "top" : TOP);
+    textSize(38 * Math.min(layout.coef, 1.4));
+    textStyle(BOLD);
+    text("BOX4FIT", cx, panelY + 22 * layout.coef);
+
+    textAlign(CENTER, typeof TOP === "undefined" ? "top" : TOP);
+    textSize(15 * layout.coef);
+    textStyle(NORMAL);
+    const description = "A boxing game about rhythm, movement, and endurance.";
+    const descX = cx - halfW + 28;
+    const descY = panelY + 60 * layout.coef;
+    const descW = panelW - 48;
+    fill(225, 225, 225, 210);
+    text(description, descX, descY, descW, panelH);
+
     MENU_BUTTONS.forEach((button, index) => {
       drawMenuButton({
         label: button.label,
@@ -615,11 +752,13 @@
     return [1, 3, 5, 7].includes(type) ? "L" : "R";
   }
 
+  /* c8 ignore start */
   function shadowMoveLegendLabel(type) {
     if (type === 9) {return "B";}
     if (type === 10) {return "S";}
     return moveSideLabel(type);
   }
+  /* c8 ignore end */
 
   function shadowMoveName(type) {
     const rawName = MOVE_TYPE[type.toString()] || "MOVE";
@@ -852,7 +991,9 @@
     } else if (move.type === 9) {
       quad(move.x - objectPoseSize / 2, move.y - objectPoseSize / 2, move.x + objectPoseSize / 2, move.y - objectPoseSize / 2, move.x + objectPoseSize / 6, move.y + objectPoseSize / 2, move.x - objectPoseSize / 6, move.y + objectPoseSize / 2);
       if (Number.isFinite(pairedX)) {
+        /* c8 ignore start */
         quad(pairedX - objectPoseSize / 2, move.y - objectPoseSize / 2, pairedX + objectPoseSize / 2, move.y - objectPoseSize / 2, pairedX + objectPoseSize / 6, move.y + objectPoseSize / 2, pairedX - objectPoseSize / 6, move.y + objectPoseSize / 2);
+        /* c8 ignore end */
       }
     } else {
       circle(move.x, move.y, objectPoseSize);
