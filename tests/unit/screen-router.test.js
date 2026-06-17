@@ -30,6 +30,9 @@ const STUBBED_GLOBALS = [
   'textSize',
   'timingState',
   'rect',
+  'text',
+  'textAlign',
+  'textStyle',
   'TfitAppInputActions',
   'TfitCameraRuntime',
   'TfitFightMode',
@@ -76,7 +79,7 @@ function installGlobals(overrides = {}) {
     }
   }
 
-  for (const name of ['background', 'clear', 'fill', 'image', 'noStroke', 'pop', 'push', 'rect', 'textSize']) {
+  for (const name of ['background', 'clear', 'fill', 'image', 'noStroke', 'pop', 'push', 'rect', 'text', 'textAlign', 'textSize', 'textStyle']) {
     calls[name] = [];
     globalThis[name] = record(name);
   }
@@ -926,11 +929,11 @@ describe('round routing', () => {
     expect(globalThis.sounds.keepTrying.play).toHaveBeenCalledTimes(1);
     expect(globalThis.sounds.yourGuard.play).toHaveBeenCalledTimes(1);
     expect(globalThis.TfitRender.renderStopButton).toHaveBeenCalledTimes(1);
-    expect(calls.image).toEqual([
-      [globalThis.images.goodHit, 200, 96, 240],
-      [globalThis.images.keepTrying, 200, 96, 240],
-      [globalThis.images.yourGuard, 200, 96, 240]
-    ]);
+    expect(calls.text).toEqual(expect.arrayContaining([
+      ["GOOD HIT", expect.any(Number), expect.any(Number)],
+      ["KEEP TRYING", expect.any(Number), expect.any(Number)],
+      ["YOUR GUARD", expect.any(Number), expect.any(Number)]
+    ]));
   });
 
   it('keeps quiet when round feedback helpers do not request UI or sounds', () => {
@@ -950,7 +953,7 @@ describe('round routing', () => {
     expect(globalThis.timingState.guardWarning).toBe(123);
     expect(globalThis.sounds.keepTrying.play).not.toHaveBeenCalled();
     expect(globalThis.sounds.yourGuard.play).not.toHaveBeenCalled();
-    expect(calls.image).toEqual([]);
+    expect(calls.text).toEqual([]);
   });
 
   it('can show keep-trying feedback without replaying the sound', () => {
@@ -979,7 +982,7 @@ describe('round routing', () => {
 
     api.renderRoundFeedback();
 
-    expect(calls.image).toContainEqual([globalThis.images.keepTrying, 200, 96, 240]);
+    expect(calls.text.some(([msg]) => msg === "KEEP TRYING")).toBe(true);
     expect(globalThis.sounds.keepTrying.play).not.toHaveBeenCalled();
   });
 });
