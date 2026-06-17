@@ -1,31 +1,14 @@
 (function(root) {
   function createImageAssets() {
     return {
-      backButton: null,
       backgrounds: [],
-      calibrateButton: null,
-      configMenuButton: null,
-      durationButtons: [],
-      fightButton: null,
-      fightMenuButton: null,
-      framerateButtons: [],
-      goodHit: null,
-      keepTrying: null,
       leftFoot: null,
-      levelButtons: [],
       logo: null,
       me: null,
       meAnimations: [],
-      menu: null,
       opponentAnimations: [],
       opponents: [],
-      padButton: null,
-      resetButton: null,
       rightFoot: null,
-      seriesButtons: [],
-      shadowButton: null,
-      stopButton: null,
-      yourGuard: null
     };
   }
 
@@ -134,14 +117,10 @@
 
   function countGameAssets({ gameLength, gameLevel, menuTypes }) {
     return Object.keys(menuTypes).length +
-      7 +
-      Object.keys(gameLevel).length +
-      Object.keys(gameLength).length +
-      5 +
       42 +
       1 +
       42 +
-      17 +
+      4 +
       14;
   }
 
@@ -169,10 +148,6 @@
     const loadSoundLimited = createTrackedLoader(createConcurrentLoader(loadSound, 4), progress);
     const [
       backgroundImages,
-      framerateButtonImage,
-      levelButtonImage,
-      durationButtonImage,
-      seriesButtonImage,
       meImages,
       opponentZero,
       opponentsImages,
@@ -183,28 +158,6 @@
         count: Object.keys(menuTypes).length,
         loadAsset: loadImageLimited,
         pathFor: index => 'assets/backgrounds/' + index + '.jpg'
-      }),
-      loadNumberedAssets({
-        count: 7,
-        loadAsset: loadImageLimited,
-        pathFor: index => 'assets/images/fr' + (index * 20) + '.png'
-      }),
-      loadNumberedAssets({
-        count: Object.keys(gameLevel).length,
-        loadAsset: loadImageLimited,
-        pathFor: index => 'assets/images/' + gameLevel[index.toString()] + '.png'
-      }),
-      loadNumberedAssets({
-        count: Object.keys(gameLength).length,
-        loadAsset: loadImageLimited,
-        pathFor: index => 'assets/images/' + gameLength[index.toString()] + '.png',
-        start: 1
-      }),
-      loadNumberedAssets({
-        count: 5,
-        loadAsset: loadImageLimited,
-        pathFor: index => 'assets/images/s' + index + '.png',
-        start: 1
       }),
       loadAnimationGrid({
         columns: 7,
@@ -220,23 +173,10 @@
         rows: 6
       }),
       loadAssetMap({
-        backButton: 'assets/images/back.png',
-        calibrateButton: 'assets/images/calibrate.png',
-        configMenuButton: 'assets/images/config.png',
-        fightButton: 'assets/images/fight.png',
-        fightMenuButton: 'assets/images/fightmenu.png',
-        goodHit: 'assets/images/good_hit.png',
-        keepTrying: 'assets/images/keep_trying.png',
         leftFoot: 'assets/images/LFoot.png',
         logo: 'assets/logos/logo.512.rounded.png',
         me: 'assets/images/boxers/0-me.png',
-        menu: 'assets/images/menu_image.png',
-        padButton: 'assets/images/pad.png',
-        resetButton: 'assets/images/reset.png',
-        rightFoot: 'assets/images/RFoot.png',
-        shadowButton: 'assets/images/shadow.png',
-        stopButton: 'assets/images/stop.png',
-        yourGuard: 'assets/images/your_guard.png'
+        rightFoot: 'assets/images/RFoot.png'
       }, loadImageLimited),
       loadAssetMap({
         awesome: 'assets/sounds/awesome.mp3',
@@ -261,31 +201,14 @@
 
     return {
       images: {
-        backButton: fixedImages.backButton,
         backgrounds: backgroundImages,
-        calibrateButton: fixedImages.calibrateButton,
-        configMenuButton: fixedImages.configMenuButton,
-        durationButtons: durationButtonImage,
-        fightButton: fixedImages.fightButton,
-        fightMenuButton: fixedImages.fightMenuButton,
-        framerateButtons: framerateButtonImage,
-        goodHit: fixedImages.goodHit,
-        keepTrying: fixedImages.keepTrying,
         leftFoot: fixedImages.leftFoot,
-        levelButtons: levelButtonImage,
         logo: fixedImages.logo,
         me: fixedImages.me,
         meAnimations: meImages,
-        menu: fixedImages.menu,
         opponentAnimations: opponentsImages,
         opponents: opponentImage,
-        padButton: fixedImages.padButton,
-        resetButton: fixedImages.resetButton,
         rightFoot: fixedImages.rightFoot,
-        seriesButtons: seriesButtonImage,
-        shadowButton: fixedImages.shadowButton,
-        stopButton: fixedImages.stopButton,
-        yourGuard: fixedImages.yourGuard
       },
       sounds: soundAssets
     };
