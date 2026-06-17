@@ -19,17 +19,21 @@ const STUBBED_GLOBALS = [
   'LEFT',
   'NORMAL',
   'nose',
+  'frameCount',
   'padState',
   'pose',
   'poses',
+  'push',
   'randomInteger',
   'rect',
+  'scale',
   'text',
   'textAlign',
   'textSize',
   'textStyle',
   'timingState',
   'TfitLayoutState',
+  'TfitRender',
   'TfitPadMode',
   'TfitPoseDetection'
 ];
@@ -65,6 +69,10 @@ function installGlobals(overrides = {}) {
     calls[name] = [];
     globalThis[name] = record(name);
   }
+  for (const name of ['push', 'scale']) {
+    calls[name] = [];
+    globalThis[name] = vi.fn();
+  }
 
   Object.assign(globalThis, {
     BOLD: 'bold',
@@ -85,6 +93,7 @@ function installGlobals(overrides = {}) {
     hitSuccess: vi.fn(),
     isDetecting: true,
     LEFT: 'left',
+    frameCount: 20,
     NORMAL: 'normal',
     nose: undefined,
     padState: {
@@ -104,6 +113,9 @@ function installGlobals(overrides = {}) {
     },
     TfitLayoutState: {
       snapshot: vi.fn(() => layout())
+    },
+    TfitRender: {
+      __drawUpperWireBoxerForTest: undefined
     },
     TfitPoseDetection: {
       hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
@@ -245,6 +257,50 @@ describe('pad mode rendering', () => {
     expect(globalThis.TfitPoseDetection.posePartsFromPoses).not.toHaveBeenCalled();
     expect(calls.circle).toEqual([]);
     expect(globalThis.gameState.gameTimer).toBe(0);
+  });
+
+  it('renders the pad character when the shared renderer is available', () => {
+    const drawUpperWireBoxer = vi.fn();
+    const api = installGlobals({
+      TfitRender: { __drawUpperWireBoxerForTest: drawUpperWireBoxer },
+      frameCount: 42
+    });
+
+    api.renderPadMode();
+
+    expect(drawUpperWireBoxer).toHaveBeenCalledWith(
+      320,
+      240,
+      0.9,
+      42 * 0.045,
+      false,
+      false
+    );
+  });
+
+  it('skips rendering the pad character when the shared renderer is missing', () => {
+    const api = installGlobals({
+      TfitRender: undefined,
+      frameCount: 42
+    });
+
+    api.renderPadMode();
+
+    expect(calls.circle).toEqual([]);
+  });
+
+  it('skips rendering the pad character when canvas helper functions are unavailable', () => {
+    const drawUpperWireBoxer = vi.fn();
+    const api = installGlobals({
+      TfitRender: { __drawUpperWireBoxerForTest: drawUpperWireBoxer },
+      frameCount: 42,
+      push: undefined,
+      scale: undefined
+    });
+
+    api.renderPadMode();
+
+    expect(drawUpperWireBoxer).not.toHaveBeenCalled();
   });
 
   it('skips marker and hand drawing for hidden or low-confidence pose parts', () => {

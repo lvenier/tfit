@@ -42,6 +42,26 @@
     padState.type = target.type;
   }
 
+  function renderPadCharacter(layout) {
+    const drawUpperWireBoxer = root.TfitRender && root.TfitRender.__drawUpperWireBoxerForTest;
+    if (typeof drawUpperWireBoxer !== "function") {
+      return;
+    }
+    if (typeof root.push !== "function" || typeof root.scale !== "function" || typeof frameCount !== "number") {
+      return;
+    }
+
+    const anim = frameCount * 0.045;
+    drawUpperWireBoxer(
+      layout.width * 0.5,
+      layout.height * 0.5,
+      0.9,
+      anim,
+      false,
+      false
+    );
+  }
+
   function pushPadMove() {
     gameState.curMoves.push({
       "hit": false,
@@ -52,8 +72,10 @@
   }
 
   function renderPadMode() {
+    const layout = layoutSnapshot();
+    renderPadCharacter(layout);
+
     if (poses.length > 0) {
-      const layout = layoutSnapshot();
       ({ pose, leftHand, rightHand, nose } = posePartsFromPoses(poses));
       if (hasPoseConfidence(nose) && isDetecting) {
         fill(0, 255, 0, 128);

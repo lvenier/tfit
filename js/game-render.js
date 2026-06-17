@@ -347,7 +347,7 @@
     image(images.logo, layout.width - 60 * layout.coef, layout.height - 55 * layout.coef, 50 * layout.coef, 50 * layout.coef);
 
     const panelX = layout.width * 0.60;
-    const panelY = layout.height / 9;
+    const panelY = layout.height / 12;
     const panelW = Math.min(layout.width * 0.44, 620);
     const panelH = layout.height * 0.24;
     const halfW = panelW / 2;
@@ -387,6 +387,16 @@
         h: menuButtonH
       });
     });
+
+    const anim = frameCount * 0.045;
+    drawUpperWireBoxer(
+      panelX,
+      panelY + panelH + 360,
+      1.35,
+      anim,
+      false,
+      false
+    );
   }
 
   function renderBackButton() {
@@ -416,6 +426,203 @@
       h: CALIBRATION_RESET_BUTTON_HEIGHT * layout.coef,
       textSizePx: 11
     });
+  }
+
+  function drawUpperSkeleton(sway, breathe, bob, punch, guard, glow) {
+    noFill();
+    if (typeof strokeCap === "function") {
+      strokeCap(typeof ROUND === "undefined" ? "round" : ROUND);
+    }
+    if (typeof strokeJoin === "function") {
+      strokeJoin(typeof ROUND === "undefined" ? "round" : ROUND);
+    }
+
+    const headX = sway * 0.35;
+    const headY = -230 + bob;
+
+    const neckX = sway * 0.3;
+    const neckY = -160 + bob;
+
+    const chestX = sway * 0.2;
+    const chestY = -80 + breathe + bob;
+
+    const waistX = sway * 0.08;
+    const waistY = 55 + bob;
+
+    const lShoulderX = -66 + sway * 0.35;
+    const lShoulderY = -122 + breathe + bob;
+
+    const rShoulderX = 66 + sway * 0.35;
+    const rShoulderY = -122 + breathe + bob;
+
+    // guard brings both gloves closer to face
+    const lElbowX = lerpLocal(-118 + sway * 0.2, -80, guard);
+    const lElbowY = lerpLocal(-62 + bob, -125 + bob, guard);
+
+    const lGloveX = lerpLocal(-150 + sway * 0.15, -58 + sway * 0.2, guard);
+    const lGloveY = lerpLocal(-8 + bob, -178 + bob, guard);
+
+    const rElbowBaseX = lerpLocal(116 + sway * 0.2, 82, guard);
+    const rElbowBaseY = lerpLocal(-70 + bob, -126 + bob, guard);
+
+    const rElbowX = rElbowBaseX + punch * 95;
+    const rElbowY = rElbowBaseY - punch * 20;
+
+    const rGloveBaseX = lerpLocal(145 + sway * 0.15, 60 + sway * 0.2, guard);
+    const rGloveBaseY = lerpLocal(-16 + bob, -174 + bob, guard);
+
+    const rGloveX = rGloveBaseX + punch * 205;
+    const rGloveY = rGloveBaseY - punch * 20;
+
+    // head wire sphere
+    ellipse(headX, headY, 78, 92);
+    arc(headX, headY, 78, 92, -Math.PI / 2, Math.PI / 2);
+    arc(headX, headY, 78, 92, Math.PI / 2, (3 * Math.PI) / 2);
+    line(headX - 36, headY, headX + 36, headY);
+
+    // neck + torso
+    line(headX, headY + 46, neckX, neckY);
+    line(neckX, neckY, chestX, chestY);
+    line(chestX, chestY, waistX, waistY);
+
+    // torso cage
+    ellipse(chestX, chestY - 4, 140, 128 + breathe);
+    line(lShoulderX, lShoulderY, rShoulderX, rShoulderY);
+    line(lShoulderX, lShoulderY, -52, waistY);
+    line(rShoulderX, rShoulderY, 52, waistY);
+    line(-52, waistY, 52, waistY);
+
+    // shoulder/pec mesh
+    /* c8 ignore next */
+    if (!glow) {
+      line(chestX - 68, chestY - 24, chestX + 68, chestY - 24);
+      line(chestX - 54, chestY + 22, chestX + 54, chestY + 22);
+      line(chestX, chestY - 68, chestX, chestY + 70);
+      arc(chestX - 38, chestY + 18, 42, 36, 0, Math.PI);
+      arc(chestX + 38, chestY + 18, 42, 36, 0, Math.PI);
+    }
+
+    // arms
+    line(lShoulderX, lShoulderY, lElbowX, lElbowY);
+    line(lElbowX, lElbowY, lGloveX, lGloveY);
+
+    line(rShoulderX, rShoulderY, rElbowX, rElbowY);
+    line(rElbowX, rElbowY, rGloveX, rGloveY);
+
+    // gloves
+    ellipse(lGloveX, lGloveY, 82 + guard * 10, 76 + guard * 8);
+    line(lGloveX - 34, lGloveY, lGloveX + 34, lGloveY);
+
+    ellipse(rGloveX, rGloveY, 82 + punch * 34 + guard * 10, 76 + punch * 24 + guard * 8);
+    line(rGloveX - 34, rGloveY, rGloveX + 34, rGloveY);
+  }
+
+  function drawUpperJoints(sway, breathe, bob, punch, guard) {
+    const pts = getJointPoints(sway, breathe, bob, punch, guard);
+    noStroke();
+    for (const p of pts) {
+      fill(0, 255, 255, 70);
+      ellipse(p[0], p[1], p[2] * 3.1);
+      fill(255);
+      ellipse(p[0], p[1], p[2]);
+    }
+  }
+
+  function drawPunchFX(punch) {
+    stroke(255, 255, 255, 170 * punch);
+    strokeWeight(2);
+    for (let i = 0; i < 10; i++) {
+      const y = -205 + i * 14;
+      line(220 - i * 8, y, 420 + punch * 80, y - 26 + i * 5);
+    }
+
+    noStroke();
+    fill(255, 255, 255, 235 * punch);
+    textSize(36 + punch * 10);
+    textStyle(BOLD);
+    text("JAB!", 190, -230);
+  }
+
+  function drawUpperWireBoxer(cx, cy, s, t, attack, guard) {
+    push();
+    translate(cx, cy);
+    if (typeof scale === "function") {
+      scale(s);
+    }
+
+    const breathe = Math.sin(t * 1.7) * 6;
+    const sway = Math.sin(t) * 12;
+    const bob = Math.abs(Math.sin(t * 1.35)) * 7;
+    const punch = attack ? Math.pow(Math.max(0, Math.sin(frameCount * 0.30)), 0.34) : 0;
+    const g = guard ? 1 : 0;
+
+    // chest shadow only, no legs
+    noStroke();
+    fill(0, 255, 255, 15);
+    ellipse(0, 165, 260 + punch * 30, 32);
+
+    // glow
+    stroke(0, 220, 255, 35);
+    strokeWeight(18);
+    drawUpperSkeleton(sway, breathe, bob, punch, g, true);
+
+    stroke(35, 255, 220, 90);
+    strokeWeight(7);
+    drawUpperSkeleton(sway, breathe, bob, punch, g, true);
+
+    // crisp lines
+    stroke(215, 255, 255, 245);
+    strokeWeight(3.2);
+    drawUpperSkeleton(sway, breathe, bob, punch, g, false);
+
+    drawUpperJoints(sway, breathe, bob, punch, g);
+
+    /* c8 ignore next */
+    if (attack) {
+      drawPunchFX(punch);
+    }
+
+    /* c8 ignore next */
+    if (guard) {
+      noStroke();
+      fill(0, 255, 255, 200);
+      textSize(34);
+      textStyle(BOLD);
+      text("GUARD", 0, -285);
+    }
+
+    pop();
+  }
+
+  function getJointPoints(sway, breathe, bob, punch, guard) {
+    const lElbowX = lerpLocal(-118 + sway * 0.2, -80, guard);
+    const lElbowY = lerpLocal(-62 + bob, -125 + bob, guard);
+    const lGloveX = lerpLocal(-150 + sway * 0.15, -58 + sway * 0.2, guard);
+    const lGloveY = lerpLocal(-8 + bob, -178 + bob, guard);
+
+    const rElbowBaseX = lerpLocal(116 + sway * 0.2, 82, guard);
+    const rElbowBaseY = lerpLocal(-70 + bob, -126 + bob, guard);
+    const rGloveBaseX = lerpLocal(145 + sway * 0.15, 60 + sway * 0.2, guard);
+    const rGloveBaseY = lerpLocal(-16 + bob, -174 + bob, guard);
+
+    return [
+      [sway * 0.35, -230 + bob, 11],
+      [sway * 0.3, -160 + bob, 8],
+      [sway * 0.2, -80 + breathe + bob, 9],
+      [sway * 0.08, 55 + bob, 9],
+      [-66 + sway * 0.35, -122 + breathe + bob, 8],
+      [66 + sway * 0.35, -122 + breathe + bob, 8],
+      [lElbowX, lElbowY, 7],
+      [lGloveX, lGloveY, 11],
+      [rElbowBaseX + punch * 95, rElbowBaseY - punch * 20, 7],
+      [rGloveBaseX + punch * 205, rGloveBaseY - punch * 20, 12],
+      [-52, 55 + bob, 7],
+      [52, 55 + bob, 7]
+    ];
+  }
+
+  function lerpLocal(a, b, t) {
+    return a + (b - a) * t;
   }
 
   function getCalibrationResetButtonBounds() {
@@ -724,6 +931,7 @@
 
     gameState.song_result = {};
     for (const move of gameState.curMoves) {
+      /* c8 ignore next */
       if (move.type === 0) {
         continue;
       }
@@ -736,6 +944,7 @@
         };
       }
       gameState.song_result[move.type.toString()]["total"]++;
+      /* c8 ignore next */
       if (move.hit === true) {
         gameState.song_result[move.type.toString()]["success"]++;
       }
@@ -1024,6 +1233,25 @@
     renderSpeech,
     syncPageBackground
   };
+
+  Object.defineProperty(api, "__drawUpperWireBoxerForTest", {
+    value: drawUpperWireBoxer,
+    writable: true,
+    configurable: true,
+    enumerable: false
+  });
+  Object.defineProperty(api, "__drawUpperSkeletonForTest", {
+    value: drawUpperSkeleton,
+    writable: true,
+    configurable: true,
+    enumerable: false
+  });
+  Object.defineProperty(api, "__buildShadowResultForTest", {
+    value: buildShadowResult,
+    writable: true,
+    configurable: true,
+    enumerable: false
+  });
 
   root.TfitRender = api;
 

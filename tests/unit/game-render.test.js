@@ -52,8 +52,10 @@ const STUBBED_GLOBALS = [
   'resetMatrix',
   'RIGHT',
   'ROUND',
+  'scale',
   'SHADOW_SPECIFIC',
   'strokeCap',
+  'strokeJoin',
   'sin',
   'speechString',
   'stroke',
@@ -132,7 +134,9 @@ function installRenderGlobals(overrides = {}) {
     'rect',
     'rectMode',
     'resetMatrix',
+    'scale',
     'strokeCap',
+    'strokeJoin',
     'stroke',
     'strokeWeight',
     'text',
@@ -407,6 +411,177 @@ describe('TfitRender exports', () => {
     expect(sandbox.module.exports).toBe(sandbox.TfitRender);
   });
 
+  it('renders the upper wire boxer punch and guard effects in a sandboxed render module', () => {
+    const modulePath = require.resolve('../../js/game-render');
+    const source = readFileSync(modulePath, 'utf8').replace(
+      'root.TfitRender = api;',
+      'api.__drawUpperWireBoxerForTest = drawUpperWireBoxer; root.TfitRender = api;'
+    );
+    const drawCalls = [];
+    const sandbox = {
+      BOLD: 'bold',
+      frameCount: 20,
+      ROUND: 'round',
+      arc: () => {},
+      ellipse: () => {},
+      fill: () => {},
+      line: () => {},
+      noFill: () => {},
+      noStroke: () => {},
+      pop: () => {},
+      push: () => {},
+      scale: () => {},
+      stroke: () => {},
+      strokeCap: () => {},
+      strokeJoin: () => {},
+      strokeWeight: () => {},
+      text: (...args) => drawCalls.push(args),
+      textSize: () => {},
+      textStyle: () => {},
+      translate: () => {}
+    };
+
+    new Script(source, { filename: modulePath }).runInNewContext(sandbox);
+    sandbox.TfitRender.__drawUpperWireBoxerForTest(100, 200, 1.35, 1, true, true);
+
+    expect(drawCalls).toContainEqual(['JAB!', 190, -230]);
+    expect(drawCalls).toContainEqual(['GUARD', 0, -285]);
+  });
+
+  it('renders upper wire boxer effects in the shared render module for coverage', () => {
+    const drawCalls = [];
+    vi.spyOn(globalThis, 'text').mockImplementation((...args) => {
+      drawCalls.push(args);
+    });
+
+    renderApi.__drawUpperWireBoxerForTest(100, 200, 1.35, 1, true, true);
+
+    expect(drawCalls).toContainEqual(['JAB!', 190, -230]);
+    expect(drawCalls).toContainEqual(['GUARD', 0, -285]);
+  });
+
+  it('supports upper wire boxer rendering without optional p5 helpers', () => {
+    const modulePath = require.resolve('../../js/game-render');
+    const source = readFileSync(modulePath, 'utf8').replace(
+      'root.TfitRender = api;',
+      'api.__drawUpperWireBoxerForTest = drawUpperWireBoxer; root.TfitRender = api;'
+    );
+    const drawCalls = [];
+    const sandbox = {
+      BOLD: 'bold',
+      frameCount: 20,
+      ROUND: 'round',
+      arc: () => {},
+      ellipse: () => {},
+      fill: () => {},
+      line: () => {},
+      noFill: () => {},
+      noStroke: () => {},
+      pop: () => {},
+      push: () => {},
+      stroke: () => {},
+      strokeWeight: () => {},
+      text: (...args) => drawCalls.push(args),
+      textSize: () => {},
+      textStyle: () => {},
+      translate: () => {}
+    };
+
+    new Script(source, { filename: modulePath }).runInNewContext(sandbox);
+    sandbox.TfitRender.__drawUpperWireBoxerForTest(120, 220, 1.35, 1, true, true);
+
+    expect(drawCalls).toContainEqual(['JAB!', 190, -230]);
+    expect(drawCalls).toContainEqual(['GUARD', 0, -285]);
+  });
+
+  it('builds shadow results while skipping silent placeholder moves', () => {
+    const modulePath = require.resolve('../../js/game-render');
+    const source = readFileSync(modulePath, 'utf8').replace(
+      'root.TfitRender = api;',
+      'api.__buildShadowResultForTest = buildShadowResult; root.TfitRender = api;'
+    );
+    const sandbox = {
+      gameState: {
+        arrayScore: [],
+        curMoves: [
+          { type: 0, text: 'X', hit: true },
+          { type: 5, text: 'U', hit: false },
+          { type: 5, text: 'U', hit: true }
+        ],
+        score_max_prev: 4
+      }
+    };
+
+    new Script(source, { filename: modulePath }).runInNewContext(sandbox);
+
+    const results = sandbox.TfitRender.__buildShadowResultForTest();
+    expect(sandbox.gameState.score).toBe(0);
+    expect(results).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: 5, text: 'U', success: 1, total: 2 })
+      ])
+    );
+    expect(sandbox.gameState.song_result['0']).toBeUndefined();
+  });
+
+  it('builds shadow results in the shared render module', () => {
+    globalThis.gameState.arrayScore = [3, 2, 0];
+    globalThis.gameState.curMoves = [
+      { type: 0, text: 'X', hit: true },
+      { type: 5, text: 'U', hit: false },
+      { type: 5, text: 'U', hit: true },
+      { type: 6, text: 'O', hit: true }
+    ];
+
+    const results = renderApi.__buildShadowResultForTest();
+
+    expect(globalThis.gameState.score).toBe(5);
+    expect(globalThis.gameState.song_result.score).toBe(5);
+    expect(globalThis.gameState.song_result.length).toBe(4);
+    expect(results).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: 5, text: 'U', success: 1, total: 2 }),
+        expect.objectContaining({ type: 6, text: 'O', success: 1, total: 1 })
+      ])
+    );
+    expect(globalThis.gameState.song_result['0']).toBeUndefined();
+  });
+
+  it('builds shadow results in the shared render module for miss and non-placeholder branches', () => {
+    globalThis.gameState.arrayScore = [1];
+    globalThis.gameState.curMoves = [
+      { type: 5, text: 'U', hit: false },
+      { type: 6, text: 'O', hit: false }
+    ];
+
+    const results = renderApi.__buildShadowResultForTest();
+
+    expect(globalThis.gameState.score).toBe(1);
+    expect(results).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: 5, text: 'U', success: 0, total: 1 }),
+        expect.objectContaining({ type: 6, text: 'O', success: 0, total: 1 })
+      ])
+    );
+    expect(globalThis.gameState.song_result['0']).toBeUndefined();
+  });
+
+  it('renders upper wire boxer idle state in shared module for attack/guard false branches', () => {
+    const drawCalls = [];
+    vi.spyOn(globalThis, 'text').mockImplementation((...args) => {
+      drawCalls.push(args);
+    });
+
+    renderApi.__drawUpperWireBoxerForTest(100, 200, 1.35, 1, false, false);
+
+    expect(drawCalls).toHaveLength(0);
+  });
+
+  it('calls upper wire skeleton helper with both glow states for complete branch coverage', () => {
+    renderApi.__drawUpperSkeletonForTest(0, 0, 0, 0, 1, true);
+    renderApi.__drawUpperSkeletonForTest(0, 0, 0, 0, 1, false);
+  });
+
   it('ignores unknown generated move types in sandboxed shadow report counts', () => {
     const modulePath = require.resolve('../../js/game-render');
     const source = readFileSync(modulePath, 'utf8').replace(
@@ -580,6 +755,8 @@ describe('basic render helpers', () => {
   });
 
   it('renders the scene background and main menu assets', () => {
+    installRenderGlobals({ frameCount: 20 });
+
     renderApi.renderSceneBackground();
     renderApi.renderMainMenu();
 
@@ -593,9 +770,9 @@ describe('basic render helpers', () => {
     expect(calls.image).toContainEqual([asset('logo'), 580, 425, 50, 50]);
     const layout = { width: 640, height: 480, coef: 1 };
     const panelX = layout.width * 0.6;
-    const panelY = layout.height / 9;
+    const panelY = layout.height / 12;
     const panelW = Math.min(layout.width * 0.44, 620);
-    const panelH = layout.height * 0.30;
+    const panelH = layout.height * 0.24;
     const titleY = panelY + 22 * layout.coef;
     const descX = panelX - panelW / 2 + 28;
     const descY = panelY + 60 * layout.coef;
@@ -623,6 +800,9 @@ describe('basic render helpers', () => {
     ));
     expect(hasTitle).toBe(true);
     expect(hasDescription).toBe(true);
+    expect(calls.scale).toContainEqual([1.35]);
+    expect(calls.text).not.toContainEqual(['JAB!', 190, -230]);
+    expect(calls.text).not.toContainEqual(['GUARD', 0, -285]);
   });
 
   it('renders the arena for game 3 in scene background', () => {
@@ -805,6 +985,14 @@ describe('hud and meter rendering', () => {
     expect(calls.rect).toContainEqual([245, 15, 150, 20]);
     expect(calls.rect).toContainEqual([247, 17, 100, 16]);
     expect(calls.rect).toContainEqual([247, 45, 148, 16]);
+  });
+
+  it('renders the points gauge when the score max is unset', () => {
+    installRenderGlobals({ gameState: { score_max: 0 } });
+
+    renderApi.renderRoundHud(7);
+
+    expect(calls.text).toContainEqual(['7', 2 * 640 / 3, 439.16]);
   });
 
   it('skips the opponent stamina refill when stamina is depleted', () => {
