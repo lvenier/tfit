@@ -33,6 +33,7 @@
     menu: 0,
     moves: [],
     my_opponent: null,
+    my_stamina: 0,
     opponent: 0,
     score: 0,
     score_max: 0,

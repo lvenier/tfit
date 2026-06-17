@@ -220,6 +220,7 @@ describe('TfitScreenRouter exports', () => {
       'renderActiveMode',
       'renderAppFrame',
       'renderBackNavigation',
+      'renderForegroundControls',
       'renderGameScreen',
       'renderMenuScreen',
       'renderRoundFeedback',
@@ -794,6 +795,7 @@ describe('menu routing', () => {
 
     expect(globalThis.TfitRender.renderGuardTargets).toHaveBeenCalledTimes(1);
     expect(globalThis.TfitFightMode.renderFightMode).toHaveBeenCalledTimes(1);
+    expect(globalThis.TfitRender.renderFightButton).toHaveBeenCalledTimes(2);
     expect(globalThis.TfitRender.renderRoundHud).toHaveBeenCalledWith(0);
   });
 
@@ -934,6 +936,47 @@ describe('round routing', () => {
       ["KEEP TRYING", expect.any(Number), expect.any(Number)],
       ["YOUR GUARD", expect.any(Number), expect.any(Number)]
     ]));
+  });
+
+  it('uses the custom hit success feedback text when provided', () => {
+    const api = installGlobals({
+      gameState: defaultGameState({ gameStarted: true, gameTimer: 2, menu: 4 }),
+      timingState: {
+        gameResult: 0,
+        guardWarning: 0,
+        hitSuccess: 9999,
+        hitSuccessText: 'NICE DODGE',
+        leftPoses: 0,
+        rightPoses: 0
+      },
+      TfitRound: {
+        guardFeedback: vi.fn(() => ({
+          guardWarningTime: 123,
+          playSound: false,
+          show: false
+        })),
+        initialRoundMoveState: vi.fn(() => ({
+          arrayScore: [],
+          curMoves: [],
+          gameTimerNext: 0
+        })),
+        isRoundExpired: vi.fn(() => false),
+        keepTryingFeedback: vi.fn(() => ({
+          playSound: false,
+          show: false
+        })),
+        remainingRoundSeconds: vi.fn(() => 12),
+        scoreTotal: vi.fn(() => 0),
+        shouldShowHitFeedback: vi.fn(() => true)
+      }
+    });
+
+    api.renderRoundFeedback();
+
+    expect(calls.text).toEqual(expect.arrayContaining([
+      ['NICE DODGE', expect.any(Number), expect.any(Number)]
+    ]));
+    expect(calls.text.some(([message]) => message === 'GOOD HIT')).toBe(false);
   });
 
   it('keeps quiet when round feedback helpers do not request UI or sounds', () => {

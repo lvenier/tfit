@@ -335,6 +335,10 @@ describe('round flow helpers', () => {
 
   it('finishes a round, resets runtime state, and records result timing', () => {
     installFlowGlobals({
+      animationState: {
+        opponent: { delay: 3, frame: 4, reaction: { duration: 30, frame: 2, type: 3 }, type: 3 },
+        player: { delay: 2, frame: 5, type: 5 }
+      },
       gameState: {
         curMoves: [{ hit: true }],
         feet_position: 1,
@@ -375,6 +379,10 @@ describe('round flow helpers', () => {
       my_opponent: { id: 0, stamina: 6 }
     });
     expect(globalThis.hide_sensor).toBe(0);
+    expect(globalThis.animationState).toEqual({
+      opponent: { delay: 0, frame: -1, reaction: null, type: 0 },
+      player: { delay: 0, frame: -1, type: 0 }
+    });
     expect(globalThis.timingState.gameResult).toBe(9000);
     expect(globalThis.calibrationState.left_init_pose_y).toBe(123);
     expect(globalThis.calibrationState.right_init_pose_y).toBe(480 / 3);
@@ -412,6 +420,34 @@ describe('round flow helpers', () => {
     expect(globalThis.sounds.click.play).toHaveBeenCalledTimes(1);
     expect(globalThis.sounds.letsFight.play).toHaveBeenCalledTimes(1);
     expect(globalThis.gameState.gameStarted).toBe(true);
+  });
+
+  it('does not schedule another series after a fight round ends', () => {
+    installFlowGlobals({
+      gameState: {
+        curMoves: [{ hit: true }],
+        gameCurrentSeries: 1,
+        gameSeries: 3,
+        menu: 4,
+        opponent: 0,
+        score: 2
+      },
+      TfitRound: {
+        roundEndState: vi.fn(() => ({
+          gameResultNow: false,
+          gameSeries: 2,
+          shouldStartNextSeries: true
+        }))
+      }
+    });
+    const scheduleNextSeries = vi.fn();
+
+    const roundEnd = flowApi.finishRound({ now: 9000, scheduleNextSeries });
+
+    expect(roundEnd.shouldStartNextSeries).toBe(true);
+    expect(globalThis.gameState.gameCurrentSeries).toBe(1);
+    expect(globalThis.gameState.gameStarted).toBe(false);
+    expect(scheduleNextSeries).not.toHaveBeenCalled();
   });
 
   it('uses a delayed restart when no scheduler override is provided', () => {

@@ -51,6 +51,7 @@ const STUBBED_GLOBALS = [
   'rectMode',
   'resetMatrix',
   'RIGHT',
+  'rotate',
   'ROUND',
   'scale',
   'SHADOW_SPECIFIC',
@@ -134,6 +135,7 @@ function installRenderGlobals(overrides = {}) {
     'rect',
     'rectMode',
     'resetMatrix',
+    'rotate',
     'scale',
     'strokeCap',
     'strokeJoin',
@@ -285,6 +287,7 @@ describe('TfitRender exports', () => {
       'renderFeetIndicator',
       'renderFightButton',
       'renderFightMeters',
+      'renderFightOpponentCharacter',
       'renderGuardTargets',
       'renderLoadingScreen',
       'renderMainMenu',
@@ -679,6 +682,62 @@ describe('TfitRender exports', () => {
   it('calls upper wire skeleton helper with both glow states for complete branch coverage', () => {
     renderApi.__drawUpperSkeletonForTest(0, 0, 0, 0, 1, true);
     renderApi.__drawUpperSkeletonForTest(0, 0, 0, 0, 1, false);
+  });
+
+  it('renders the procedural fight opponent across idle and punch actions', () => {
+    renderApi.renderFightOpponentCharacter();
+    for (const type of [1, 2, 3, 4, 5, 6]) {
+      renderApi.renderFightOpponentCharacter({
+        frame: 1,
+        layout: { height: 480, width: 640 },
+        type
+      });
+      renderApi.renderFightOpponentCharacter({
+        frame: 4,
+        layout: { height: 480, width: 640 },
+        type
+      });
+    }
+
+    expect(calls.translate).toContainEqual([640 * 0.5, expect.any(Number)]);
+    expect(calls.scale).toContainEqual([(480 / 780) * 0.7]);
+    expect(calls.rotate.length).toBeGreaterThan(0);
+    expect(calls.text).not.toEqual(expect.arrayContaining([
+      ['LEFT JAB!', expect.any(Number), expect.any(Number)],
+      ['RIGHT UPPERCUT!', expect.any(Number), expect.any(Number)]
+    ]));
+  });
+
+  it('renders procedural fight opponent hit reactions', () => {
+    renderApi.renderFightOpponentCharacter({
+      layout: { height: 480, width: 640 },
+      reaction: { duration: 30, frame: 0, type: 2 }
+    });
+    renderApi.renderFightOpponentCharacter({
+      layout: { height: 480, width: 640 },
+      reaction: { duration: 30, frame: 0, type: 3 }
+    });
+    renderApi.renderFightOpponentCharacter({
+      layout: { height: 480, width: 640 },
+      reaction: { duration: 0, frame: 0, type: 1 }
+    });
+    renderApi.renderFightOpponentCharacter({
+      layout: { height: 480, width: 640 },
+      reaction: { duration: 30, frame: Number.NaN, type: 1 }
+    });
+    renderApi.renderFightOpponentCharacter({
+      layout: { height: 480, width: 640 },
+      reaction: { duration: Number.NaN, frame: 0, type: 1 }
+    });
+
+    expect(calls.ellipse).toEqual(expect.arrayContaining([
+      [0, -170, 300, 212],
+      [-34, -205, 134, 78]
+    ]));
+    expect(calls.translate).toEqual(expect.arrayContaining([
+      [320 - 18, expect.any(Number)],
+      [320 + 70, expect.any(Number)]
+    ]));
   });
 
   it('ignores unknown generated move types in sandboxed shadow report counts', () => {
@@ -1081,9 +1140,14 @@ describe('hud and meter rendering', () => {
   it('renders fight meters with reduced opponent stamina', () => {
     renderApi.renderFightMeters();
 
-    expect(calls.rect).toContainEqual([245, 15, 150, 20]);
-    expect(calls.rect).toContainEqual([247, 17, 100, 16]);
-    expect(calls.rect).toContainEqual([247, 45, 148, 16]);
+    const opponentY = 18;
+    const playerY = 480 - 38;
+
+    expect(calls.rect).toContainEqual([245, opponentY, 150, 20]);
+    expect(calls.rect).toContainEqual([247, opponentY + 2, 98.66666666666666, 16]);
+    expect(calls.rect).toContainEqual([247, playerY + 2, 148, 16]);
+    expect(calls.text).toContainEqual(['OPPONENT', 320, opponentY - 9]);
+    expect(calls.text).toContainEqual(['YOU', 320, playerY - 9]);
   });
 
   it('renders the points gauge when the score max is unset', () => {
@@ -1094,13 +1158,22 @@ describe('hud and meter rendering', () => {
     expect(calls.text).toContainEqual(['7', 2 * 640 / 3, 439.16]);
   });
 
-  it('skips the opponent stamina refill when stamina is depleted', () => {
+  it('renders an empty opponent stamina bar when stamina is depleted', () => {
     installRenderGlobals({ gameState: { my_opponent: { stamina: 0 } } });
 
     renderApi.renderFightMeters();
 
-    expect(calls.rect).not.toContainEqual([247, 17, 4, 16]);
-    expect(calls.rect.filter(args => args[1] === 17)).toHaveLength(1);
+    const opponentY = 18;
+    expect(calls.rect).toContainEqual([247, opponentY + 2, 0, 16]);
+  });
+
+  it('renders reduced player stamina in fight meters', () => {
+    installRenderGlobals({ gameState: { my_stamina: 3 } });
+
+    renderApi.renderFightMeters();
+
+    const playerY = 480 - 38;
+    expect(calls.rect).toContainEqual([247, playerY + 2, 74, 16]);
   });
 
   it('renders the active feet indicator image', () => {

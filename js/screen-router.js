@@ -73,16 +73,16 @@
     const textAlignX = root.CENTER;
     const textAlignY = root.CENTER;
     const bold = root.BOLD;
-    const isGoodHit = message === "GOOD HIT";
-    const glowColor = isGoodHit
+    const isSuccess = message === "GOOD HIT" || message === "NICE DODGE";
+    const glowColor = isSuccess
       ? [90, 255, 120]
       : [255, 186, 60];
-    const textColor = isGoodHit
+    const textColor = isSuccess
       ? [220, 255, 220]
       : [255, 245, 210];
 
     noStroke();
-    fill(isGoodHit ? 20 : 24, isGoodHit ? 40 : 22, isGoodHit ? 20 : 10, 172);
+    fill(isSuccess ? 20 : 24, isSuccess ? 40 : 22, isSuccess ? 20 : 10, 172);
     rect(x - 162, y - baseSize * 0.7, 324, baseSize * 1.45, 10);
 
     textAlign(textAlignX, textAlignY);
@@ -115,7 +115,7 @@
     const feedbackPulse = 1 + Math.sin(now * 0.008) * 0.06;
 
     if (shouldShowHitFeedback({ hitSuccessTime: timingState.hitSuccess, now })) {
-      drawRoundFeedbackText("GOOD HIT", layout, feedbackPulse);
+      drawRoundFeedbackText(timingState.hitSuccessText || "GOOD HIT", layout, feedbackPulse);
     }
 
     const keepTrying = keepTryingFeedback({
@@ -332,6 +332,12 @@
     }
   }
 
+  function renderForegroundControls() {
+    if (gameState.menu === 4 && !gameState.gameStarted && !gameState.gameCalibration && !gameResultBool()) {
+      renderFightButton();
+    }
+  }
+
   function renderGameScreen() {
     renderSceneBackground();
     if (gameState.menu === 0) {
@@ -351,6 +357,7 @@
     }
 
     renderActiveMode();
+    renderForegroundControls();
     renderMenuButtonDoorAnimation();
   }
 
@@ -382,6 +389,7 @@
     renderActiveMode,
     renderAppFrame,
     renderBackNavigation,
+    renderForegroundControls,
     renderGameScreen,
     renderMenuScreen,
     renderRoundFeedback,

@@ -50,9 +50,11 @@
     calibrationState.right_init_pose_y = storageNumber("right_init_pose_y", root.TfitLayoutState.snapshot().height / 3);
     sounds.letsFight.play();
     gameState.gameStarted = true;
+    gameState.fightEnding = false;
     timingState.gameResult = now - 5001;
     timingState.guardWarning = now;
     gameState.my_opponent = cloneOpponent(gameState.opponent);
+    gameState.my_stamina = cloneOpponent(gameState.opponent).stamina;
     gameState.curMoves = [];
     gameState.gameCalibration = false;
     hide_sensor = 0;
@@ -98,7 +100,16 @@
   } = {}) {
     gameState.gameCalibration = false;
     gameState.my_opponent = cloneOpponent(gameState.opponent);
+    gameState.my_stamina = cloneOpponent(gameState.opponent).stamina;
     gameState.gameStarted = false;
+    gameState.fightEnding = false;
+    animationState.opponent.delay = 0;
+    animationState.opponent.frame = -1;
+    animationState.opponent.type = 0;
+    animationState.opponent.reaction = null;
+    animationState.player.delay = 0;
+    animationState.player.frame = -1;
+    animationState.player.type = 0;
     hide_sensor = 0;
     gameState.gameTimer = -1;
     gameState.gameOver = false;
@@ -116,13 +127,13 @@
       timingState.gameResult = now;
     }
 
-    if (!manualStop && roundEnd.shouldStartNextSeries) {
+    if (!manualStop && gameState.menu !== 4 && roundEnd.shouldStartNextSeries) {
       scheduleNextSeries(() => {
         letsfight();
       });
     }
 
-    gameState.gameCurrentSeries = manualStop ? 1 : roundEnd.gameSeries;
+    gameState.gameCurrentSeries = manualStop || gameState.menu === 4 ? 1 : roundEnd.gameSeries;
     gameState.feet_position = 0;
     calibrationState.left_init_pose_y = storageNumber("left_init_pose_y", root.TfitLayoutState.snapshot().height / 3);
     calibrationState.right_init_pose_y = storageNumber("right_init_pose_y", root.TfitLayoutState.snapshot().height / 3);
