@@ -274,7 +274,134 @@ describe('pad mode rendering', () => {
       0.9,
       42 * 0.045,
       false,
-      false
+      false,
+      null,
+      false,
+      null
+    );
+  });
+
+  it('drives punch animation toward the active pad target on the active side', () => {
+    const drawUpperWireBoxer = vi.fn();
+    const api = installGlobals({
+      TfitRender: { __drawUpperWireBoxerForTest: drawUpperWireBoxer },
+      frameCount: 42,
+      gameState: {
+        curMoves: [],
+        gameStarted: true,
+        gameTimer: 0
+      },
+      padState: {
+        type: 1,
+        x: 500,
+        y: 360
+      }
+    });
+
+    api.renderPadMode();
+
+    expect(drawUpperWireBoxer).toHaveBeenCalledWith(
+      expect.any(Number),
+      expect.any(Number),
+      0.9,
+      42 * 0.045,
+      true,
+      false,
+      expect.objectContaining({
+        x: expect.any(Number),
+        y: expect.any(Number),
+        side: 'right',
+        blinkSide: 'left',
+        reach: expect.any(Number)
+      }),
+      true,
+      'left'
+    );
+  });
+
+  it('uses left side target metadata when the target is left of center while game is running', () => {
+    const drawUpperWireBoxer = vi.fn();
+    const api = installGlobals({
+      TfitRender: { __drawUpperWireBoxerForTest: drawUpperWireBoxer },
+      frameCount: 15,
+      gameState: {
+        curMoves: [],
+        gameStarted: true,
+        gameTimer: 0
+      },
+      padState: {
+        type: 1,
+        x: 100,
+        y: 250
+      }
+    });
+
+    api.renderPadMode();
+
+    expect(drawUpperWireBoxer).toHaveBeenCalledWith(
+      expect.any(Number),
+      expect.any(Number),
+      0.9,
+      15 * 0.045,
+      true,
+      false,
+      expect.objectContaining({
+        x: expect.any(Number),
+        y: expect.any(Number),
+        side: 'left',
+        blinkSide: 'right',
+        reach: expect.any(Number)
+      }),
+      true,
+      'right'
+    );
+  });
+
+  it('uses guard stance for dodge targets', () => {
+    const drawUpperWireBoxer = vi.fn();
+    const api = installGlobals({
+      TfitRender: { __drawUpperWireBoxerForTest: drawUpperWireBoxer },
+      frameCount: 50,
+      gameState: {
+        curMoves: [],
+        gameStarted: true,
+        gameTimer: 0
+      },
+      padState: {
+        type: 2,
+        x: 320,
+        y: 300
+      },
+      randomInteger: vi.fn(() => 250),
+      TfitPoseDetection: {
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        isPadPunchHit: vi.fn(() => false),
+        nextDownDodgeState: vi.fn(() => ({
+          done: false,
+          switched: false,
+          touchedDown: false
+        })),
+        posePartsFromPoses: vi.fn(() => ({
+          leftHand: { confidence: 0.9, x: 20, y: 30 },
+          nose: { confidence: 0.9, x: 10, y: 200 },
+          rightHand: { confidence: 0.9, x: 40, y: 50 }
+        }))
+      }
+    });
+
+    api.renderPadMode();
+
+    expect(drawUpperWireBoxer).toHaveBeenCalledWith(
+      320,
+      240,
+      0.9,
+      50 * 0.045,
+      false,
+      true,
+      null,
+      false,
+      null
     );
   });
 
@@ -578,8 +705,8 @@ describe('pad mode rendering', () => {
 
     api.renderPadMode();
 
-    expect(calls.rect).toContainEqual([48, 276, 544, 48, 20]);
-    expect(calls.text).toContainEqual(['D', 320, 300]);
+    expect(calls.rect).toContainEqual([176, 324, 288, 48, 20]);
+    expect(calls.text).toContainEqual(['D', 320, 348]);
     expect(globalThis.timingState.downDodge).toBe(9500);
     expect(globalThis.timingState.downDodgeDone).toBe(false);
     expect(globalThis.timingState.downDodgeSwitch).toBe(false);
@@ -741,7 +868,7 @@ describe('pad mode rendering', () => {
 
     api.renderPadMode();
 
-    expect(calls.text).toContainEqual(['D', 320, 300]);
+    expect(calls.text).toContainEqual(['D', 320, 348]);
     expect(globalThis.TfitPoseDetection.nextDownDodgeState).toHaveBeenCalledTimes(1);
   });
 
@@ -826,7 +953,7 @@ describe('pad mode rendering', () => {
 
     api.renderPadMode();
 
-    expect(calls.text).toContainEqual(['D', 320, 300]);
+    expect(calls.text).toContainEqual(['D', 320, 348]);
     expect(globalThis.TfitPoseDetection.nextDownDodgeState).toHaveBeenCalledTimes(1);
     expect(globalThis.timingState.downDodge).toBe(9_500);
     expect(globalThis.hitSuccess).toHaveBeenCalledTimes(1);
@@ -872,7 +999,7 @@ describe('pad mode rendering', () => {
     api.renderPadMode();
 
     expect(globalThis.TfitPoseDetection.nextDownDodgeState).toHaveBeenCalledTimes(1);
-    expect(calls.text).toContainEqual(['D', 320, 300]);
+    expect(calls.text).toContainEqual(['D', 320, 348]);
     expect(globalThis.padState.type).toBe(2);
     expect(globalThis.gameState.curMoves.at(-1).type).toBe(2);
   });

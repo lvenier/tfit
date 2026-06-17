@@ -51,14 +51,31 @@
       return;
     }
 
+    const isPunchTarget = padState.type === 1;
+    const isDodgeTarget = padState.type === 2;
+    const boxerScale = 0.9;
+    const shouldAnimatePunch = isPunchTarget && gameState.gameStarted;
+    const target = shouldAnimatePunch
+      ? {
+          x: (padState.x - layout.width * 0.5) / boxerScale,
+          y: (padState.y - layout.height * 0.5) / boxerScale,
+          side: padState.x < layout.width / 2 ? "left" : "right",
+          blinkSide: padState.x < layout.width / 2 ? "right" : "left",
+          reach: 1
+        }
+      : null;
+
     const anim = frameCount * 0.045;
     drawUpperWireBoxer(
       layout.width * 0.5,
       layout.height * 0.5,
-      0.9,
+      boxerScale,
       anim,
-      false,
-      false
+      shouldAnimatePunch,
+      isDodgeTarget,
+      target,
+      shouldAnimatePunch,
+      target ? target.blinkSide : null
     );
   }
 
@@ -114,9 +131,23 @@
           pushPadMove();
         }
         fill(100, 100, 0, 255);
-        if (padState.type === 1) {circle(padState.x, padState.y, layout.objectPoseSize);}
+        if (padState.type === 1) {
+          circle(padState.x, padState.y, layout.objectPoseSize);
+        }
         fill(0, 0, 100, 255);
-        if (padState.type === 2) {rect(layout.objectPoseSize, calibrationState.init_uppercut_y - layout.objectPoseSize / 2, layout.width - 2 * layout.objectPoseSize, layout.objectPoseSize, 20);}
+        if (padState.type === 2) {
+          const dodgeRectWidth = Math.min(layout.width * 0.45, 300);
+          const dodgeRectHeight = layout.objectPoseSize;
+          const dodgeRectOffset = dodgeRectHeight;
+          const dodgeRectY = calibrationState.init_uppercut_y - dodgeRectHeight / 2 + dodgeRectOffset;
+          rect(
+            layout.width / 2 - dodgeRectWidth / 2,
+            dodgeRectY,
+            dodgeRectWidth,
+            dodgeRectHeight,
+            20
+          );
+        }
         fill(255, 255, 255, 192);
         if (padState.type === 1) {
           if (padState.x < layout.width / 2) {
@@ -155,7 +186,10 @@
             }
           }
         } else if (padState.type === 2) {
-          text("D", layout.width / 2, calibrationState.init_uppercut_y);
+          const dodgeRectHeight = layout.objectPoseSize;
+          const dodgeRectOffset = dodgeRectHeight;
+          const dodgeRectY = calibrationState.init_uppercut_y - dodgeRectHeight / 2 + dodgeRectOffset;
+          text("D", layout.width / 2, dodgeRectY + dodgeRectHeight / 2);
           const downDodgeState = nextDownDodgeState({
             coef: layout.coef,
             done: timingState.downDodgeDone,

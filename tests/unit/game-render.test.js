@@ -411,7 +411,7 @@ describe('TfitRender exports', () => {
     expect(sandbox.module.exports).toBe(sandbox.TfitRender);
   });
 
-  it('renders the upper wire boxer punch and guard effects in a sandboxed render module', () => {
+  it('renders the upper wire boxer punch effect in a sandboxed render module', () => {
     const modulePath = require.resolve('../../js/game-render');
     const source = readFileSync(modulePath, 'utf8').replace(
       'root.TfitRender = api;',
@@ -445,7 +445,7 @@ describe('TfitRender exports', () => {
     sandbox.TfitRender.__drawUpperWireBoxerForTest(100, 200, 1.35, 1, true, true);
 
     expect(drawCalls).toContainEqual(['JAB!', 190, -230]);
-    expect(drawCalls).toContainEqual(['GUARD', 0, -285]);
+    expect(drawCalls).not.toContainEqual(['GUARD', 0, -285]);
   });
 
   it('renders upper wire boxer effects in the shared render module for coverage', () => {
@@ -457,7 +457,7 @@ describe('TfitRender exports', () => {
     renderApi.__drawUpperWireBoxerForTest(100, 200, 1.35, 1, true, true);
 
     expect(drawCalls).toContainEqual(['JAB!', 190, -230]);
-    expect(drawCalls).toContainEqual(['GUARD', 0, -285]);
+    expect(drawCalls).not.toContainEqual(['GUARD', 0, -285]);
   });
 
   it('supports upper wire boxer rendering without optional p5 helpers', () => {
@@ -491,7 +491,7 @@ describe('TfitRender exports', () => {
     sandbox.TfitRender.__drawUpperWireBoxerForTest(120, 220, 1.35, 1, true, true);
 
     expect(drawCalls).toContainEqual(['JAB!', 190, -230]);
-    expect(drawCalls).toContainEqual(['GUARD', 0, -285]);
+    expect(drawCalls).not.toContainEqual(['GUARD', 0, -285]);
   });
 
   it('builds shadow results while skipping silent placeholder moves', () => {
@@ -575,6 +575,105 @@ describe('TfitRender exports', () => {
     renderApi.__drawUpperWireBoxerForTest(100, 200, 1.35, 1, false, false);
 
     expect(drawCalls).toHaveLength(0);
+  });
+
+  it('resolves joint target defaults when no target is provided', () => {
+    const points = renderApi.__getJointPointsForTest(0, 0, 0, 0, 0, null);
+
+    expect(points).toHaveLength(12);
+    expect(points[6]).toEqual([-118, -62, 7]);
+    expect(points[7]).toEqual([0, 0, 11]);
+    expect(points[8]).toEqual([116, -70, 7]);
+    expect(points[9]).toEqual([0, 0, 12]);
+  });
+
+  it('resolves joint target defaults when target coordinates are not finite', () => {
+    const points = renderApi.__getJointPointsForTest(0, 0, 0, 0, 0, { x: Number.NaN, y: Infinity, side: 'left', reach: 0.5 });
+
+    expect(points[6]).toEqual([-118, -62, 7]);
+    expect(points[7]).toEqual([0, 0, 11]);
+    expect(points[8]).toEqual([116, -70, 7]);
+    expect(points[9]).toEqual([0, 0, 12]);
+  });
+
+  it('resolves left-target joints with positive target reach', () => {
+    const points = renderApi.__getJointPointsForTest(0, 0, 0, 0, 0, { x: 40, y: 22, side: 'left', reach: 0.75 });
+
+    expect(points[6]).toEqual([0.5, 1, 7]);
+    expect(points[7]).toEqual([40, 22, 11]);
+    expect(points[8]).toEqual([116, -70, 7]);
+    expect(points[9]).toEqual([40, 22, 12]);
+  });
+
+  it('resolves right-target joints with clamped target reach', () => {
+    const points = renderApi.__getJointPointsForTest(0, 0, 0, 0, 0, { x: 190, y: -30, side: 'right', reach: 1.8 });
+
+    expect(points[6]).toEqual([-118, -62, 7]);
+    expect(points[7]).toEqual([190, -30, 11]);
+    expect(points[8]).toEqual([190, -30, 7]);
+    expect(points[9]).toEqual([190, -30, 12]);
+  });
+
+  it('resolves left-target joints via x-based fallback side when side is absent', () => {
+    const points = renderApi.__getJointPointsForTest(0, 0, 0, 0, 0, { x: -160, y: 30, reach: 1 });
+
+    expect(points[6]).toEqual([-160, 30, 7]);
+    expect(points[7]).toEqual([-160, 30, 11]);
+    expect(points[8]).toEqual([116, -70, 7]);
+    expect(points[9]).toEqual([-160, 30, 12]);
+  });
+
+  it('resolves right-target joints via x-based fallback side when side is absent', () => {
+    const points = renderApi.__getJointPointsForTest(0, 0, 0, 0, 0, { x: 160, y: 28, reach: 1 });
+
+    expect(points[6]).toEqual([-118, -62, 7]);
+    expect(points[7]).toEqual([160, 28, 11]);
+    expect(points[8]).toEqual([160, 28, 7]);
+    expect(points[9]).toEqual([160, 28, 12]);
+  });
+
+  it('reaches left target in skeleton motion calculations', () => {
+    const calls = [];
+    vi.spyOn(globalThis, 'line').mockImplementation((...args) => {
+      calls.push(args);
+    });
+
+    renderApi.__drawUpperSkeletonForTest(0, 0, 0, 0.4, 0, true, { x: 40, y: 22, side: 'left', reach: 1 });
+
+    expect(calls).toContainEqual([40, 22, 40, 22]);
+  });
+
+  it('reaches fallback-left target in skeleton motion calculations', () => {
+    const calls = [];
+    vi.spyOn(globalThis, 'line').mockImplementation((...args) => {
+      calls.push(args);
+    });
+
+    renderApi.__drawUpperSkeletonForTest(0, 0, 0, 0.4, 0, true, { x: -170, y: 10, reach: 1 });
+
+    expect(calls).toContainEqual([-170, 10, -170, 10]);
+  });
+
+  it('reaches fallback-right target in skeleton motion calculations', () => {
+    const calls = [];
+    vi.spyOn(globalThis, 'line').mockImplementation((...args) => {
+      calls.push(args);
+    });
+
+    renderApi.__drawUpperSkeletonForTest(0, 0, 0, 0.4, 0, true, { x: 190, y: 32, reach: 1 });
+
+    expect(calls).toContainEqual([190, 32, 190, 32]);
+  });
+
+  it('reaches right target in skeleton motion calculations', () => {
+    const calls = [];
+    vi.spyOn(globalThis, 'line').mockImplementation((...args) => {
+      calls.push(args);
+    });
+
+    renderApi.__drawUpperSkeletonForTest(0, 0, 0, 0.4, 0, true, { x: 190, y: -30, side: 'right', reach: 1 });
+
+    expect(calls).toContainEqual([190, -30, 190, -30]);
   });
 
   it('calls upper wire skeleton helper with both glow states for complete branch coverage', () => {
