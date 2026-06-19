@@ -974,7 +974,7 @@ describe('basic render helpers', () => {
     expect(calls.image).not.toContainEqual([asset('bg2'), 0, 0, 640, 480]);
     expect(globalThis.document.body.style.setProperty).toHaveBeenCalledWith(
       '--app-background-image',
-      'url("assets/backgrounds/2.jpg")'
+      'none'
     );
     expect(calls.image).not.toContainEqual([asset('menu'), 204, 70, 312, 312]);
     expect(calls.image).toContainEqual([asset('logo'), 580, 425, 50, 50]);

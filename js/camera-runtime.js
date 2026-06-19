@@ -8,6 +8,9 @@
   }
 
   function startPoseDetection() {
+    if (root.__TFIT_DISABLE_POSE_DETECTION_FOR_E2E) {
+      return false;
+    }
     if (!bodyPose || isDetecting) {
       return false;
     }

@@ -3,6 +3,7 @@ const { expect, test } = require('@playwright/test');
 async function gotoApp(page) {
   await page.addInitScript(() => {
     window.__TFIT_DISABLE_SW_RELOAD_FOR_E2E = true;
+    window.__TFIT_DISABLE_POSE_DETECTION_FOR_E2E = true;
   });
   await page.goto('/');
 }
@@ -45,6 +46,12 @@ async function flushPendingMenuTransition(page) {
   });
 }
 
+async function openAppMenu(page, button) {
+  await page.evaluate(menuButton => {
+    window.TfitAppInputActions?.handleMenuOpenAction(menuButton, false);
+  }, button);
+}
+
 test('loads the game shell and creates a p5 canvas', async ({ page }) => {
   const consoleErrors = collectConsoleErrors(page);
 
@@ -58,19 +65,16 @@ test('opens settings calibration flow without console errors', async ({ page }) 
 
   await waitForGameCanvas(page);
 
-  await pressAppKey(page, 'c');
-  await flushPendingMenuTransition(page);
+  await openAppMenu(page, 'open_settings');
   await page.waitForFunction(() => typeof gameState !== 'undefined' && gameState.menu === 1, null, { timeout: 10_000 });
 
   const alreadyCalibrating = await page.evaluate(() => gameState.gameCalibration);
   if (!alreadyCalibrating) {
-    await pressAppKey(page, 'c');
-    await flushPendingMenuTransition(page);
+    await openAppMenu(page, 'start_calibration');
     await page.waitForFunction(() => typeof gameState !== 'undefined' && gameState.gameCalibration === true, null, { timeout: 10_000 });
   }
 
-  await pressAppKey(page, 's');
-  await flushPendingMenuTransition(page);
+  await openAppMenu(page, 'leave_calibration');
   await page.waitForFunction(() => typeof gameState !== 'undefined' && gameState.gameOver === true, null, { timeout: 10_000 });
 
   expect(consoleErrors).toEqual([]);

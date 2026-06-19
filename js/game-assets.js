@@ -33,41 +33,6 @@
     };
   }
 
-  async function loadNumberedAssets({ count, loadAsset, pathFor, start = 0 }) {
-    const entries = await Promise.all(
-      Array.from({ length: count }, (_, index) => {
-        const assetIndex = start + index;
-        return loadAsset(pathFor(assetIndex)).then(asset => [assetIndex, asset]);
-      })
-    );
-
-    return entries.reduce((assets, [index, asset]) => {
-      assets[index] = asset;
-      return assets;
-    }, []);
-  }
-
-  async function loadAnimationGrid({ columns, loadAsset, pathFor, rows, startRow = 1 }) {
-    const entries = await Promise.all(
-      Array.from({ length: rows }, (_, rowOffset) => {
-        const row = startRow + rowOffset;
-        return Promise.all(
-          Array.from({ length: columns }, (_, column) => (
-            loadAsset(pathFor(row, column)).then(asset => [column, asset])
-          ))
-        ).then(rowEntries => [row, rowEntries]);
-      })
-    );
-
-    return entries.reduce((animations, [row, rowEntries]) => {
-      animations[row] = rowEntries.reduce((frames, [column, asset]) => {
-        frames[column] = asset;
-        return frames;
-      }, []);
-      return animations;
-    }, [[], []]);
-  }
-
   async function loadAssetMap(paths, loadAsset) {
     const entries = await Promise.all(
       Object.entries(paths).map(([key, path]) => (
@@ -118,11 +83,7 @@
   }
 
   function countGameAssets({ gameLength, gameLevel, menuTypes }) {
-    return Object.keys(menuTypes).length +
-      42 +
-      1 +
-      42 +
-      4 +
+    return 3 +
       16;
   }
 
@@ -149,35 +110,12 @@
     const loadImageLimited = createTrackedLoader(createConcurrentLoader(loadImage, 8), progress);
     const loadSoundLimited = createTrackedLoader(createConcurrentLoader(loadSound, 4), progress);
     const [
-      backgroundImages,
-      meImages,
-      opponentZero,
-      opponentsImages,
       fixedImages,
       soundAssets
     ] = await Promise.all([
-      loadNumberedAssets({
-        count: Object.keys(menuTypes).length,
-        loadAsset: loadImageLimited,
-        pathFor: index => 'assets/backgrounds/' + index + '.jpg'
-      }),
-      loadAnimationGrid({
-        columns: 7,
-        loadAsset: loadImageLimited,
-        pathFor: (row, column) => 'assets/images/boxers/' + row + '-me-' + column + '.png',
-        rows: 6
-      }),
-      loadImageLimited('assets/images/opponents/0/0-1.png'),
-      loadAnimationGrid({
-        columns: 7,
-        loadAsset: loadImageLimited,
-        pathFor: (row, column) => 'assets/images/opponents/0/' + row + '-' + column + '.png',
-        rows: 6
-      }),
       loadAssetMap({
         leftFoot: 'assets/images/LFoot.png',
         logo: 'assets/logos/logo.512.rounded.png',
-        me: 'assets/images/boxers/0-me.png',
         rightFoot: 'assets/images/RFoot.png'
       }, loadImageLimited),
       loadAssetMap({
@@ -200,18 +138,15 @@
       }, loadSoundLimited)
     ]);
 
-    const opponentImage = [];
-    opponentImage[0] = opponentZero;
-
     return {
       images: {
-        backgrounds: backgroundImages,
+        backgrounds: [],
         leftFoot: fixedImages.leftFoot,
         logo: fixedImages.logo,
-        me: fixedImages.me,
-        meAnimations: meImages,
-        opponentAnimations: opponentsImages,
-        opponents: opponentImage,
+        me: null,
+        meAnimations: [],
+        opponentAnimations: [],
+        opponents: [],
         rightFoot: fixedImages.rightFoot,
       },
       sounds: soundAssets
