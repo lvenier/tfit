@@ -30,7 +30,7 @@
     { label: "SHADOW", yIndex: 0, variant: "default" },
     { label: "PUNCH PAD", yIndex: 1, variant: "default" },
     { label: "FIGHT", yIndex: 2, variant: "default" },
-    { label: "SETTINGS", yIndex: 3, variant: "settings" }
+    { label: "CONFIGURE", yIndex: 3, variant: "settings" }
   ];
 
   function isPointInRect({ x, y }, rect) {
