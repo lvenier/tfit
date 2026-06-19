@@ -272,6 +272,30 @@ describe('pointerAction', () => {
     })).toEqual({ click: true, type: 'cycle_series' });
   });
 
+  it('maps the fight opponent panel to opponent cycling before the fight starts', () => {
+    expect(pointerAction({
+      ...basePointer,
+      menu: 4,
+      mouseX: 30,
+      mouseY: 44
+    })).toEqual({ click: true, type: 'cycle_opponent' });
+
+    expect(pointerAction({
+      ...basePointer,
+      gameStarted: true,
+      menu: 4,
+      mouseX: 30,
+      mouseY: 44
+    })).toEqual({ type: 'none' });
+
+    expect(pointerAction({
+      ...basePointer,
+      menu: 4,
+      mouseX: 5,
+      mouseY: 44
+    })).toEqual({ type: 'none' });
+  });
+
   it('maps fight and calibration buttons', () => {
     expect(pointerAction({
       ...basePointer,
@@ -405,6 +429,9 @@ describe('keyAction', () => {
     expect(keyAction({ gameCalibration: true, gameStarted: false, key: 'r', menu: 1 })).toEqual({
       type: 'reset_calibration_defaults'
     });
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'r', menu: 1 })).toEqual({
+      type: 'none'
+    });
   });
 
   it('maps mode shortcuts based on menu and game state', () => {
@@ -428,6 +455,12 @@ describe('keyAction', () => {
     });
     expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'F', menu: 3 })).toEqual({
       type: 'start_fight'
+    });
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'o', menu: 4 })).toEqual({
+      type: 'cycle_opponent'
+    });
+    expect(keyAction({ gameCalibration: false, gameStarted: true, key: 'o', menu: 4 })).toEqual({
+      type: 'none'
     });
     expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'f', menu: 2 })).toEqual({
       type: 'start_fight'

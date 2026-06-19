@@ -19,6 +19,7 @@ describe('TfitState browser export', () => {
         cloneOpponent: id => ({ id, stamina: 6 }),
         GAME_LENGTH: { "1": "30", "2": "60", "3": "120" },
         GAME_LEVEL: { "0": "easy", "1": "medium" },
+        OPPONENTS: { "0": { stamina: 6 }, "1": { stamina: 8 } },
         SHADOW_SPECIFIC: { "0": "ALL", "1": "JAB" }
       },
       TfitUtils: {

@@ -24,6 +24,7 @@ const STUBBED_GLOBALS = [
   'myWindowHeight',
   'myWindowWidth',
   'OBJECT_POSE_SIZE',
+  'OPPONENTS',
   'SHADOW_SPECIFIC',
   'sounds',
   'TfitAppInputActions',
@@ -99,6 +100,7 @@ function installGlobals(overrides = {}) {
     myWindowHeight: 480,
     myWindowWidth: 640,
     OBJECT_POSE_SIZE: 48,
+    OPPONENTS: { 0: { stamina: 6 }, 1: { stamina: 8 }, 2: { stamina: 10 } },
     SHADOW_SPECIFIC: { 0: 'ALL', 1: 'JAB' },
     sounds: {
       click: sound()
@@ -323,6 +325,7 @@ describe('applyInputAction', () => {
     api.applyInputAction({ click: true, type: 'cycle_level' });
     api.applyInputAction({ click: true, type: 'cycle_length' });
     api.applyInputAction({ click: true, type: 'cycle_series' });
+    api.applyInputAction({ click: true, type: 'cycle_opponent' });
     api.applyInputAction({ type: 'cycle_shadow_focus' });
 
     expect(globalThis.FRAME_RATE).toBe(40);
@@ -331,8 +334,12 @@ describe('applyInputAction', () => {
     expect(globalThis.gameState.gameLengthIndex).toBe(3);
     expect(globalThis.gameState.gameLength).toBe('120');
     expect(globalThis.gameState.gameSeries).toBe(2);
+    expect(globalThis.gameState.opponent).toBe(1);
+    expect(globalThis.gameState.my_opponent).toEqual({ id: 1, stamina: 6 });
+    expect(globalThis.gameState.my_stamina).toBe(6);
     expect(globalThis.gameState.shadow_focus).toBe(1);
     expect(globalThis.localStorage.setItem).toHaveBeenCalledWith('frame_rate', 40);
+    expect(globalThis.localStorage.setItem).toHaveBeenCalledWith('opponent', 1);
     expect(globalThis.localStorage.setItem).toHaveBeenCalledWith('shadow_focus', 1);
   });
 

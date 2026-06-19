@@ -294,6 +294,14 @@
       localStorage.setItem("series", gameState.gameSeries);
       return;
     }
+    if (action.type === "cycle_opponent") {
+      playClick();
+      gameState.opponent = nextZeroBasedIndex(gameState.opponent, Object.keys(root.OPPONENTS).length);
+      localStorage.setItem("opponent", gameState.opponent);
+      gameState.my_opponent = cloneOpponent(gameState.opponent);
+      gameState.my_stamina = gameState.my_opponent.stamina;
+      return;
+    }
     if (action.type === "cycle_shadow_focus") {
       gameState.shadow_focus = nextZeroBasedIndex(gameState.shadow_focus, Object.keys(SHADOW_SPECIFIC).length);
       localStorage.setItem("shadow_focus", gameState.shadow_focus);

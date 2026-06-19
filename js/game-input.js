@@ -93,6 +93,17 @@
       return { type: "start_fight" };
     }
 
+    if (menu === 4 && !gameStarted && !gameCalibration) {
+      const panelX = 10 * coef;
+      const panelY = 14 * coef;
+      const panelWidth = Math.min(188 * coef, Math.max(112 * coef, myWindowWidth * 0.3));
+      const opponentRowTop = panelY + 22 * coef;
+      const opponentRowBottom = panelY + 44 * coef;
+      if (isWithin(mouseX, panelX, panelX + panelWidth) && isWithin(mouseY, opponentRowTop, opponentRowBottom)) {
+        return { click: true, type: "cycle_opponent" };
+      }
+    }
+
     if (menu === 1 && !gameCalibration && centerXHit) {
       if (isWithin(mouseY, myWindowHeight - 148 * coef, myWindowHeight - 108 * coef)) {
         return { click: true, type: "cycle_frame_rate" };
@@ -169,6 +180,9 @@
     if (['d', 'D'].includes(key) && menu === 1) {
       return { type: "cycle_length" };
     }
+    if (['o', 'O'].includes(key) && menu === 4 && !gameStarted) {
+      return { type: "cycle_opponent" };
+    }
     if (['c', 'C'].includes(key) && menu === 1) {
       return { type: "start_calibration" };
     }
@@ -208,6 +222,7 @@
 
   root.TfitInput = api;
 
+  /* c8 ignore next 3 */
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;
   }

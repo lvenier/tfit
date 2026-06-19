@@ -1189,6 +1189,37 @@ describe('hud and meter rendering', () => {
     expect(calls.text).not.toContainEqual(['(S)eries: 1 / 3', 20, 63]);
   });
 
+  it('renders fight opponent selection panel on fight mode', () => {
+    installRenderGlobals({
+      gameState: { menu: 4, opponent: 1 },
+      OPPONENTS: {
+        0: { name: 'Raja', stamina: 6 },
+        1: { name: 'Theo', stamina: 8 }
+      }
+    });
+
+    renderApi.renderRoundHud(4);
+
+    expect(calls.rect).toContainEqual([10, 14, 188, 72, 8]);
+    expect(calls.text).toContainEqual(['Fight', 20, 28]);
+    expect(calls.text).toContainEqual(['(O)pponent: theo', 20, 46]);
+    expect(calls.text).toContainEqual(['Series: 1 / 3', 20, 64]);
+  });
+
+  it('uses the default fight opponent label when opponent config has no name', () => {
+    installRenderGlobals({
+      gameState: { menu: 4, opponent: 1 },
+      OPPONENTS: {
+        0: { name: 'Raja', stamina: 6 },
+        1: { stamina: 8 }
+      }
+    });
+
+    renderApi.renderRoundHud(4);
+
+    expect(calls.text).toContainEqual(['(O)pponent: raja', 20, 46]);
+  });
+
   it('renders fight meters with reduced opponent stamina', () => {
     renderApi.renderFightMeters();
 
