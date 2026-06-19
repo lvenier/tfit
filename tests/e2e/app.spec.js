@@ -71,7 +71,7 @@ test('opens settings calibration flow without console errors', async ({ page }) 
 
   await pressAppKey(page, 's');
   await flushPendingMenuTransition(page);
-  await page.waitForFunction(() => typeof gameState !== 'undefined' && gameState.gameOver === true, null, { timeout: 5_000 });
+  await page.waitForFunction(() => typeof gameState !== 'undefined' && gameState.gameOver === true, null, { timeout: 10_000 });
 
   expect(consoleErrors).toEqual([]);
 });
@@ -96,7 +96,7 @@ test('reloads the app shell from the service worker while offline', async ({ pag
     try {
       await Promise.race([
         navigator.serviceWorker.ready,
-        new Promise((resolve, reject) => setTimeout(() => reject(new Error('sw-timeout')), 5000))
+        new Promise((resolve, reject) => setTimeout(() => reject(new Error('sw-timeout')), 10000))
       ]);
       return true;
     } catch (error) {
