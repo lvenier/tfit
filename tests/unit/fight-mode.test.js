@@ -420,6 +420,50 @@ describe('fight mode rendering', () => {
     expect(calls.circle).toContainEqual([440, 160, 96]);
   });
 
+  it('keeps guard return timestamps stable while hands remain in guard', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 20, y: 30 },
+      nose: { confidence: 0.9, x: 10, y: 15 },
+      rightHand: { confidence: 0.9, x: 40, y: 50 }
+    };
+    const api = installGlobals({
+      poses: [trackedPose],
+      timingState: {
+        downDodge: 0,
+        leftDodge: 0,
+        leftGuardInGuard: true,
+        leftHook: 0,
+        leftJab: 0,
+        leftPoses: 0,
+        leftPosesReturn: 1234,
+        leftUppercut: 0,
+        rightDodge: 0,
+        rightGuardInGuard: true,
+        rightHook: 0,
+        rightJab: 0,
+        rightPoses: 0,
+        rightPosesReturn: 5678,
+        rightUppercut: 0
+      },
+      TfitPoseDetection: {
+        detectDodgeGestures: vi.fn(() => ({ down: false, left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => true),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderFightMode();
+
+    expect(globalThis.timingState.leftPoses).toBe(10_000);
+    expect(globalThis.timingState.leftPosesReturn).toBe(1234);
+    expect(globalThis.timingState.leftGuardInGuard).toBe(true);
+    expect(globalThis.timingState.rightPoses).toBe(10_000);
+    expect(globalThis.timingState.rightPosesReturn).toBe(5678);
+    expect(globalThis.timingState.rightGuardInGuard).toBe(true);
+  });
+
   it('starts left and right dodge player animations', () => {
     const trackedPose = {
       leftHand: { confidence: 0.9, x: 20, y: 30 },
@@ -491,11 +535,13 @@ describe('fight mode rendering', () => {
         leftHook: 0,
         leftJab: 0,
         leftPoses: 9800,
+        leftPosesReturn: 9990,
         leftUppercut: 9950,
         rightDodge: 0,
         rightHook: 0,
         rightJab: 0,
         rightPoses: 9800,
+        rightPosesReturn: 0,
         rightUppercut: 0
       },
       TfitPoseDetection: {
@@ -559,15 +605,18 @@ describe('fight mode rendering', () => {
         leftHook: 0,
         leftJab: 0,
         leftPoses: 0,
+        leftPosesReturn: 0,
         leftUppercut: 0,
         rightDodge: 0,
         rightHook: 0,
         rightJab: 0,
         rightPoses: 0,
+        rightPosesReturn: 0,
         rightUppercut: 0
       });
       globalThis.timingState[poseTime] = 9800;
       globalThis.timingState[timeKey] = 9950;
+      globalThis.timingState[side === 'left' ? 'leftPosesReturn' : 'rightPosesReturn'] = 9990;
       globalThis.gameState.curMoves = [{ hit: false, type }];
 
       api.renderFightMode();
@@ -673,11 +722,13 @@ describe('fight mode rendering', () => {
         leftHook: 0,
         leftJab: 9950,
         leftPoses: 9800,
+        leftPosesReturn: 9990,
         leftUppercut: 0,
         rightDodge: 0,
         rightHook: 0,
         rightJab: 0,
         rightPoses: 9800,
+        rightPosesReturn: 9990,
         rightUppercut: 0
       },
       TfitPoseDetection: {
@@ -1393,11 +1444,13 @@ describe('fight mode rendering', () => {
         leftHook: 0,
         leftJab: 9950,
         leftPoses: 9800,
+        leftPosesReturn: 9990,
         leftUppercut: 0,
         rightDodge: 0,
         rightHook: 0,
         rightJab: 0,
         rightPoses: 0,
+        rightPosesReturn: 0,
         rightUppercut: 0
       },
       TfitPoseDetection: {

@@ -30,7 +30,7 @@
     { label: "SHADOW", yIndex: 0, variant: "default" },
     { label: "PUNCH PAD", yIndex: 1, variant: "default" },
     { label: "FIGHT", yIndex: 2, variant: "default" },
-    { label: "SETTINGS", yIndex: 3, variant: "settings" }
+    { label: "CONFIGURE", yIndex: 3, variant: "settings" }
   ];
 
   function isPointInRect({ x, y }, rect) {
@@ -917,6 +917,32 @@
       text("(T)ype: " + SHADOW_SPECIFIC[gameState.shadow_focus].toLowerCase(), panel.x + panelPadding, panel.y + titleY + panelLineGap);
       text("(S)eries: " + gameState.gameCurrentSeries + " / " + gameState.gameSeries, panel.x + panelPadding, panel.y + titleY + panelLineGap * 2);
     }
+    if (gameState.menu === 4) {
+      const panelPadding = 10 * layout.coef;
+      const panelLineGap = 18 * layout.coef;
+      const titleY = 14 * layout.coef;
+      const panel = {
+        height: 72 * layout.coef,
+        width: Math.min(188 * layout.coef, Math.max(112 * layout.coef, layout.width * 0.3)),
+        x: 10 * layout.coef,
+        y: 14 * layout.coef
+      };
+      const opponentConfig = OPPONENTS[gameState.opponent] || OPPONENTS["0"] || {};
+      fill(0, 0, 0, 112);
+      rect(panel.x, panel.y, panel.width, panel.height, 8 * layout.coef);
+      fill(255, 255, 255, 26);
+      rect(panel.x + 4 * layout.coef, panel.y + 4 * layout.coef, panel.width - 8 * layout.coef, panel.height - 8 * layout.coef, 6 * layout.coef);
+      fill(255, 255, 255, 210);
+      textStyle(BOLD);
+      textSize(8 * layout.coef);
+      textAlign(LEFT, CENTER);
+      text("Fight", panel.x + panelPadding, panel.y + titleY);
+      textStyle(NORMAL);
+      fill(255, 255, 255, 230);
+      textSize(9 * layout.coef);
+      text("(O)pponent: " + (opponentConfig.name || "Raja").toLowerCase(), panel.x + panelPadding, panel.y + titleY + panelLineGap);
+      text("Series: " + gameState.gameCurrentSeries + " / " + gameState.gameSeries, panel.x + panelPadding, panel.y + titleY + panelLineGap * 2);
+    }
     textSize(10 * layout.coef);
     fill(255, 0, 0, hide_sensor);
   }
@@ -1444,27 +1470,52 @@
     return;
   }
 
-  function drawFightOpponentGlove(x, y, scaleValue, front) {
+  const RAJA_OPPONENT_PALETTE = {
+    skinDark: "#5a241d",
+    skinBase: "#bf6a53",
+    skinLight: "#d47d65",
+    skinHighlight: [255, 185, 135, 150],
+    skinLine: "#7b392d",
+    mouthLine: "#5b241f",
+    armDark: "#9a4f40",
+    armBase: "#c46b55",
+    armHighlight: [255, 185, 135, 130],
+    neck: "#b85f4b",
+    gloveDark: "#164b28",
+    gloveMid: "#245e31",
+    gloveLight: "#3f7c43",
+    gloveHighlight: "#78b176",
+    gloveShadow: "#0e351d"
+  };
+
+  function opponentPalette(overrides = {}) {
+    return {
+      ...RAJA_OPPONENT_PALETTE,
+      ...overrides
+    };
+  }
+
+  function drawFightOpponentGlove(x, y, scaleValue, front, palette = RAJA_OPPONENT_PALETTE) {
     push();
     translate(x, y);
     if (typeof scale === "function") {
       scale(scaleValue);
     }
     noStroke();
-    fill("#164b28");
+    fill(palette.gloveDark);
     ellipse(2, 42, 88, 88);
     rect(-33, 55, 72, 38, 8);
-    fill("#245e31");
+    fill(palette.gloveMid);
     ellipse(0, 12, 105, 120);
-    fill("#3f7c43");
+    fill(palette.gloveLight);
     ellipse(5, 0, 92, 108);
-    fill("#78b176");
+    fill(palette.gloveHighlight);
     arc(-6, -32, 70, 34, Math.PI, Math.PI * 2);
-    fill("#164b28");
+    fill(palette.gloveDark);
     arc(-22, 15, 50, 74, -1, 1.55);
     rect(-30, 58, 74, 34, 7);
     if (front) {
-      fill("#0e351d");
+      fill(palette.gloveShadow);
       arc(0, 45, 92, 77, 0.2, 2.8);
     }
     pop();
@@ -1528,6 +1579,7 @@
     frame = -1,
     layout = layoutSnapshot(),
     opponent = {},
+    palette: paletteOverrides = {},
     reaction = root.animationState && root.animationState.opponent ? root.animationState.opponent.reaction : null,
     type = 0
   } = {}) {
@@ -1540,6 +1592,7 @@
     const cy = layout.height * (opponent.yRatio || 0.56);
     const t = frameCount || 0;
     const sway = Math.sin(t * 0.035) * 5;
+    const palette = opponentPalette(paletteOverrides);
 
     push();
     translate(cx + move.bodyX + hitReaction.bodyX, cy + move.bodyY + hitReaction.bodyY + Math.sin(t * 0.055) * 7 * scaleValue);
@@ -1571,18 +1624,18 @@
     }
 
     noStroke();
-    fill("#5a241d");
+    fill(palette.skinDark);
     ellipse(-48, 85, 65, 155);
     ellipse(52, 83, 70, 158);
-    fill("#bf6a53");
+    fill(palette.skinBase);
     ellipse(0, 35, 150, 235);
-    fill("#d47d65");
+    fill(palette.skinLight);
     ellipse(0, 5, 118, 176);
-    fill(255, 185, 135, 150);
+    fill(...palette.skinHighlight);
     ellipse(-34, 44, 55, 22);
     ellipse(63, 2, 16, 48);
     ellipse(-72, 42, 13, 50);
-    stroke("#7b392d");
+    stroke(palette.skinLine);
     strokeWeight(5);
     noFill();
     arc(-12, 80, 38, 85, 0.15, 1.35);
@@ -1607,13 +1660,13 @@
     });
 
     noStroke();
-    fill("#9a4f40");
+    fill(palette.armDark);
     ellipse(-93 + fightOpponentArmOffset(move, -1, "shoulderX"), 55 + fightOpponentArmOffset(move, -1, "shoulderY"), 50, 145);
     ellipse(96 + fightOpponentArmOffset(move, 1, "shoulderX"), 58 + fightOpponentArmOffset(move, 1, "shoulderY"), 54, 150);
-    fill("#c46b55");
+    fill(palette.armBase);
     ellipse(-104 + fightOpponentArmOffset(move, -1, "forearmX"), 95 + fightOpponentArmOffset(move, -1, "forearmY"), 62, 126);
     ellipse(110 + fightOpponentArmOffset(move, 1, "forearmX"), 91 + fightOpponentArmOffset(move, 1, "forearmY"), 62, 130);
-    fill(255, 185, 135, 130);
+    fill(...palette.armHighlight);
     ellipse(-128 + fightOpponentArmOffset(move, -1, "shineX"), 75 + fightOpponentArmOffset(move, -1, "shineY"), 14, 41);
     ellipse(128 + fightOpponentArmOffset(move, 1, "shineX"), 58 + fightOpponentArmOffset(move, 1, "shineY"), 14, 45);
     ellipse(97, 16, 12, 37);
@@ -1630,14 +1683,14 @@
       fill(255, 70, 90, 95 * hitReaction.flash);
       ellipse(-34 * hitReaction.flash, -205, 76 + hitReaction.flash * 58, 42 + hitReaction.flash * 36);
     }
-    fill("#b85f4b");
+    fill(palette.neck);
     rect(-25, -129, 50, 52, 20);
-    fill("#c46b55");
+    fill(palette.armBase);
     ellipse(-60, -166, 18, 45);
     ellipse(0, -170, 112, 139);
-    fill("#d47d65");
+    fill(palette.skinLight);
     ellipse(5, -177, 93, 122);
-    fill("#d47d65");
+    fill(palette.skinLight);
     ellipse(60, -166, 18, 45);
     fill("#101010");
     ellipse(-18, -174, 14, 24);
@@ -1645,20 +1698,20 @@
     fill(255);
     ellipse(-22, -181, 4, 5);
     ellipse(21, -181, 4, 5);
-    stroke("#7c392e");
+    stroke(palette.skinLine);
     strokeWeight(5);
     noFill();
     arc(4, -154, 20, 25, 1.8, 4.7);
     line(2, -151, 12, -145);
-    stroke("#5b241f");
+    stroke(palette.mouthLine);
     strokeWeight(4);
     arc(5, -124, 42, 14, 0.1, 2.8);
     line(-10, -131, 21, -131);
     pop();
 
     drawFightOpponentTrails(move);
-    drawFightOpponentGlove(leftGlove.x, leftGlove.y, leftGlove.scale, move.hand === "left");
-    drawFightOpponentGlove(rightGlove.x, rightGlove.y, rightGlove.scale, move.hand === "right");
+    drawFightOpponentGlove(leftGlove.x, leftGlove.y, leftGlove.scale, move.hand === "left", palette);
+    drawFightOpponentGlove(rightGlove.x, rightGlove.y, rightGlove.scale, move.hand === "right", palette);
     drawFightOpponentLabel(move, leftGlove, rightGlove);
 
     pop();

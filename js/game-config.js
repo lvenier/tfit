@@ -59,11 +59,21 @@
     },
     "1": {
       "name": "Theo",
+      "punchWaitFrames": 120,
+      "renderer": "theo",
+      "scale": 0.7,
+      "xRatio": 0.5,
+      "yRatio": 0.56,
       "stamina": 8,
       "recovery": 3
     },
     "2": {
       "name": "Vehbo",
+      "punchWaitFrames": 120,
+      "renderer": "vehbo",
+      "scale": 0.78,
+      "xRatio": 0.5,
+      "yRatio": 0.54,
       "stamina": 10,
       "recovery": 2
     }

@@ -64,6 +64,12 @@
     return now - gestureTime < levelWindow && gestureTime - guardTime < levelWindow;
   }
 
+  function isPunchGestureActive(now, gestureTime, guardTime, returnGuardTime, levelWindow) {
+    return isTimedGestureActive(now, gestureTime, guardTime, levelWindow) &&
+      returnGuardTime > gestureTime &&
+      now - returnGuardTime < levelWindow;
+  }
+
   function detectHandGestures({
     coef = 1,
     hand,
@@ -106,6 +112,7 @@
     leftHook,
     leftJab,
     leftPoses,
+    leftPosesReturn,
     leftUppercut,
     levelWindow,
     moveType,
@@ -114,15 +121,16 @@
     rightHook,
     rightJab,
     rightPoses,
+    rightPosesReturn,
     rightUppercut,
     downDodge
   }) {
-    if (moveType === 1) {return isTimedGestureActive(now, leftJab, leftPoses, levelWindow);}
-    if (moveType === 2) {return isTimedGestureActive(now, rightJab, rightPoses, levelWindow);}
-    if (moveType === 3) {return isTimedGestureActive(now, leftHook, leftPoses, levelWindow);}
-    if (moveType === 4) {return isTimedGestureActive(now, rightHook, rightPoses, levelWindow);}
-    if (moveType === 5) {return isTimedGestureActive(now, leftUppercut, leftPoses, levelWindow);}
-    if (moveType === 6) {return isTimedGestureActive(now, rightUppercut, rightPoses, levelWindow);}
+    if (moveType === 1) {return isPunchGestureActive(now, leftJab, leftPoses, leftPosesReturn, levelWindow);}
+    if (moveType === 2) {return isPunchGestureActive(now, rightJab, rightPoses, rightPosesReturn, levelWindow);}
+    if (moveType === 3) {return isPunchGestureActive(now, leftHook, leftPoses, leftPosesReturn, levelWindow);}
+    if (moveType === 4) {return isPunchGestureActive(now, rightHook, rightPoses, rightPosesReturn, levelWindow);}
+    if (moveType === 5) {return isPunchGestureActive(now, leftUppercut, leftPoses, leftPosesReturn, levelWindow);}
+    if (moveType === 6) {return isPunchGestureActive(now, rightUppercut, rightPoses, rightPosesReturn, levelWindow);}
     if (moveType === 7) {return isTimedGestureActive(now, leftDodge, leftPoses, levelWindow);}
     if (moveType === 8) {return isTimedGestureActive(now, rightDodge, rightPoses, levelWindow);}
     if (moveType === 9) {return now - downDodge < levelWindow;}
@@ -179,6 +187,7 @@
     isInsideGuard,
     isInsideTarget,
     isPadPunchHit,
+    isPunchGestureActive,
     isTimedGestureActive,
     moveMatchesRecentGesture,
     nextDownDodgeState,

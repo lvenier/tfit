@@ -294,6 +294,25 @@ describe('shadow mode layout usage', () => {
     expect(globalThis.TfitRender.renderMoveShape).not.toHaveBeenCalled();
   });
 
+  it('renders the idle shadow screen without advancing active game moves', () => {
+    const api = installGlobals({
+      gameState: {
+        curMoves: [],
+        gameStarted: false,
+        gameTimer: 7,
+        gameTimerNext: 3,
+        moves: []
+      },
+      poses: []
+    });
+
+    api.renderShadowMode();
+
+    expect(globalThis.TfitRender.renderShadowMoveReport).toHaveBeenCalledTimes(1);
+    expect(globalThis.gameState.gameTimer).toBe(7);
+    expect(globalThis.gameState.gameTimerNext).toBe(3);
+  });
+
   it('adds zero-hit and switch-guard scheduled moves', () => {
     const api = installGlobals({
       gameState: {
@@ -1682,6 +1701,154 @@ describe('shadow mode layout usage', () => {
 
     expect(globalThis.timingState.rightJab).toBe(10_000);
     expect(globalThis.punchSound).toHaveBeenCalledTimes(3);
+    expect(globalThis.timingState.rightPoses).toBe(10_000);
+  });
+
+  it('tracks guard re-entry timestamps only when hands first return to guard', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 200, y: 160 },
+      nose: { confidence: 0.9, x: 10, y: 170 },
+      rightHand: { confidence: 0.9, x: 440, y: 160 }
+    };
+
+    const api = installGlobals({
+      poses: [trackedPose],
+      timingState: {
+        downDodge: 0,
+        leftDodge: 0,
+        leftGuardInGuard: true,
+        leftHook: 0,
+        leftJab: 0,
+        leftPoses: 0,
+        leftPosesReturn: 1234,
+        leftUppercut: 0,
+        rightDodge: 0,
+        rightGuardInGuard: true,
+        rightHook: 0,
+        rightJab: 0,
+        rightPoses: 0,
+        rightPosesReturn: 5678,
+        rightUppercut: 0,
+        switchGuard: 0
+      },
+      TfitPoseDetection: {
+        areBothHandsRecent: vi.fn(() => false),
+        detectDodgeGestures: vi.fn(() => ({ down: false, left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => true),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderShadowMode();
+
+    expect(globalThis.timingState.leftPoses).toBe(10_000);
+    expect(globalThis.timingState.leftPosesReturn).toBe(1234);
+    expect(globalThis.timingState.leftGuardInGuard).toBe(true);
+    expect(globalThis.timingState.rightPoses).toBe(10_000);
+    expect(globalThis.timingState.rightPosesReturn).toBe(5678);
+    expect(globalThis.timingState.rightGuardInGuard).toBe(true);
+  });
+
+  it('records a fresh right guard return and clears the flag when the right hand leaves guard', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.05, x: 200, y: 160 },
+      nose: { confidence: 0.9, x: 10, y: 170 },
+      rightHand: { confidence: 0.9, x: 440, y: 160 }
+    };
+
+    const api = installGlobals({
+      poses: [trackedPose],
+      timingState: {
+        downDodge: 0,
+        leftDodge: 0,
+        leftGuardInGuard: true,
+        leftHook: 0,
+        leftJab: 0,
+        leftPoses: 0,
+        leftPosesReturn: 0,
+        leftUppercut: 0,
+        rightDodge: 0,
+        rightGuardInGuard: false,
+        rightHook: 0,
+        rightJab: 0,
+        rightPoses: 0,
+        rightPosesReturn: 0,
+        rightUppercut: 0,
+        switchGuard: 0
+      },
+      TfitPoseDetection: {
+        areBothHandsRecent: vi.fn(() => false),
+        detectDodgeGestures: vi.fn(() => ({ down: false, left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => true),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderShadowMode();
+
+    expect(globalThis.timingState.leftGuardInGuard).toBe(false);
+    expect(globalThis.timingState.rightPosesReturn).toBe(10_000);
+    expect(globalThis.timingState.rightGuardInGuard).toBe(true);
+
+    globalThis.TfitPoseDetection.isInsideGuard.mockReturnValue(false);
+    api.renderShadowMode();
+
+    expect(globalThis.timingState.rightGuardInGuard).toBe(false);
+  });
+
+  it('covers right-hand in-guard and out-of-guard branches independently', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.05, x: 200, y: 160 },
+      nose: { confidence: 0.05, x: 10, y: 170 },
+      rightHand: { confidence: 0.9, x: 440, y: 160 }
+    };
+    const isInsideGuard = vi.fn(() => false);
+
+    const api = installGlobals({
+      poses: [trackedPose],
+      timingState: {
+        downDodge: 0,
+        leftDodge: 0,
+        leftGuardInGuard: false,
+        leftHook: 0,
+        leftJab: 0,
+        leftPoses: 0,
+        leftPosesReturn: 0,
+        leftUppercut: 0,
+        rightDodge: 0,
+        rightGuardInGuard: true,
+        rightHook: 0,
+        rightJab: 0,
+        rightPoses: 0,
+        rightPosesReturn: 0,
+        rightUppercut: 0,
+        switchGuard: 0
+      },
+      TfitPoseDetection: {
+        areBothHandsRecent: vi.fn(() => false),
+        detectDodgeGestures: vi.fn(() => ({ down: false, left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard,
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderShadowMode();
+
+    expect(globalThis.timingState.rightGuardInGuard).toBe(false);
+
+    isInsideGuard.mockReturnValue(true);
+    api.renderShadowMode();
+
+    expect(globalThis.timingState.rightGuardInGuard).toBe(true);
     expect(globalThis.timingState.rightPoses).toBe(10_000);
   });
 

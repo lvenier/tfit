@@ -1,3 +1,3 @@
 
-globalThis.APP_VERSION = "Box4Fit © 2026 (v1.16.7)";
+globalThis.APP_VERSION = "Box4Fit © 2026 (v1.17.0)";
 document.getElementById("loading-version").textContent = globalThis.APP_VERSION;

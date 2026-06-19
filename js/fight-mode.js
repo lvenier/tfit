@@ -174,6 +174,7 @@
       leftHook: timingState.leftHook,
       leftJab: timingState.leftJab,
       leftPoses: timingState.leftPoses,
+      leftPosesReturn: timingState.leftPosesReturn,
       leftUppercut: timingState.leftUppercut,
       levelWindow,
       moveType,
@@ -182,6 +183,7 @@
       rightHook: timingState.rightHook,
       rightJab: timingState.rightJab,
       rightPoses: timingState.rightPoses,
+      rightPosesReturn: timingState.rightPosesReturn,
       rightUppercut: timingState.rightUppercut
     });
   }
@@ -235,11 +237,18 @@
         if (dodges.down) {timingState.downDodge = now;}
       }
       if (hasPoseConfidence(leftHand)) {
-        if (isInsideGuard(leftHand, calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, layout.objectPoseSize, layout.coef)) {
+        const leftInGuard = isInsideGuard(leftHand, calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, layout.objectPoseSize, layout.coef);
+        if (leftInGuard) {
           timingState.leftPoses = now;
+          if (!timingState.leftGuardInGuard) {
+            timingState.leftPosesReturn = now;
+          }
+          timingState.leftGuardInGuard = true;
           timingState.leftHook = now - levelWindow;
           fill(255, 255, 255, 128);
           circle(calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, layout.objectPoseSize);
+        } else {
+          timingState.leftGuardInGuard = false;
         }
         fill(255, 0, 0, 128);
         circle(poseX(leftHand, layout), poseY(leftHand, layout), layout.objectPoseSize / 2);
@@ -260,13 +269,22 @@
         if (leftGestures.uppercut) {timingState.leftUppercut = now;}
         if (leftGestures.jab) {timingState.leftJab = now;}
         if (leftGestures.hook) {timingState.leftHook = now;}
+      } else {
+        timingState.leftGuardInGuard = false;
       }
       if (hasPoseConfidence(rightHand)) {
-        if (isInsideGuard(rightHand, calibrationState.right_init_pose_x, calibrationState.right_init_pose_y, layout.objectPoseSize, layout.coef)) {
+        const rightInGuard = isInsideGuard(rightHand, calibrationState.right_init_pose_x, calibrationState.right_init_pose_y, layout.objectPoseSize, layout.coef);
+        if (rightInGuard) {
           timingState.rightPoses = now;
+          if (!timingState.rightGuardInGuard) {
+            timingState.rightPosesReturn = now;
+          }
+          timingState.rightGuardInGuard = true;
           timingState.rightHook = now - levelWindow;
           fill(255, 255, 255, 128);
           circle(calibrationState.right_init_pose_x, calibrationState.right_init_pose_y, layout.objectPoseSize);
+        } else {
+          timingState.rightGuardInGuard = false;
         }
         fill(255, 0, 0, 128);
         circle(poseX(rightHand, layout), poseY(rightHand, layout), layout.objectPoseSize / 2);
@@ -289,6 +307,8 @@
         if (rightGestures.jab) {timingState.rightJab = now;}
         /* c8 ignore next */
         if (rightGestures.hook) {timingState.rightHook = now;}
+      } else {
+        timingState.rightGuardInGuard = false;
       }
       if (now - timingState.rightDodge < levelWindow && timingState.rightDodge - timingState.rightPoses < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
         animationState.player.type = 1;
@@ -301,22 +321,22 @@
         animationState.player.frame = 0;
         animationState.player.delay = 0;
       }
-      if (now - timingState.leftUppercut < levelWindow && timingState.leftUppercut - timingState.leftPoses < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
+      if (now - timingState.leftUppercut < levelWindow && timingState.leftUppercut - timingState.leftPoses < levelWindow && timingState.leftPosesReturn - timingState.leftUppercut > 0 && now - timingState.leftPosesReturn < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
         updateFightPunchAnimation(5, "left");
       }
-      if (now - timingState.leftJab < levelWindow && timingState.leftJab - timingState.leftPoses < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
+      if (now - timingState.leftJab < levelWindow && timingState.leftJab - timingState.leftPoses < levelWindow && timingState.leftPosesReturn - timingState.leftJab > 0 && now - timingState.leftPosesReturn < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
         updateFightPunchAnimation(1, "left");
       }
-      if (now - timingState.leftHook < levelWindow && timingState.leftHook - timingState.leftPoses < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
+      if (now - timingState.leftHook < levelWindow && timingState.leftHook - timingState.leftPoses < levelWindow && timingState.leftPosesReturn - timingState.leftHook > 0 && now - timingState.leftPosesReturn < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
         updateFightPunchAnimation(3, "left");
       }
-      if (now - timingState.rightUppercut < levelWindow && timingState.rightUppercut - timingState.rightPoses < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
+      if (now - timingState.rightUppercut < levelWindow && timingState.rightUppercut - timingState.rightPoses < levelWindow && timingState.rightPosesReturn - timingState.rightUppercut > 0 && now - timingState.rightPosesReturn < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
         updateFightPunchAnimation(6, "right");
       }
-      if (now - timingState.rightJab < levelWindow && timingState.rightJab - timingState.rightPoses < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
+      if (now - timingState.rightJab < levelWindow && timingState.rightJab - timingState.rightPoses < levelWindow && timingState.rightPosesReturn - timingState.rightJab > 0 && now - timingState.rightPosesReturn < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
         updateFightPunchAnimation(2, "right");
       }
-      if (now - timingState.rightHook < levelWindow && timingState.rightHook - timingState.rightPoses < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
+      if (now - timingState.rightHook < levelWindow && timingState.rightHook - timingState.rightPoses < levelWindow && timingState.rightPosesReturn - timingState.rightHook > 0 && now - timingState.rightPosesReturn < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
         updateFightPunchAnimation(4, "right");
       }
       /* c8 ignore next */

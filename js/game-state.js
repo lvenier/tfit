@@ -1,6 +1,7 @@
 (function(root) {
   const { storageJson, storageNumber } = root.TfitUtils;
-  const { GAME_LENGTH, GAME_LEVEL, SHADOW_SPECIFIC, cloneOpponent } = root.TfitConfig;
+  const { GAME_LENGTH, GAME_LEVEL, OPPONENTS, SHADOW_SPECIFIC, cloneOpponent } = root.TfitConfig;
+  const opponentCount = Object.keys(OPPONENTS).length;
 
   const gameState = {
     arrayScore: [],
@@ -34,7 +35,7 @@
     moves: [],
     my_opponent: null,
     my_stamina: 0,
-    opponent: 0,
+    opponent: storageNumber("opponent", 0, { min: 0, max: opponentCount - 1 }),
     score: 0,
     score_max: 0,
     score_max_prev: 0,
