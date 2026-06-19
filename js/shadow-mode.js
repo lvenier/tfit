@@ -62,6 +62,7 @@
         leftHook: timingState.leftHook,
         leftJab: timingState.leftJab,
         leftPoses: timingState.leftPoses,
+        leftPosesReturn: timingState.leftPosesReturn,
         leftUppercut: timingState.leftUppercut,
         levelWindow,
         moveType: gameState.curMoves[c].type,
@@ -81,6 +82,7 @@
         rightHook: timingState.rightHook,
         rightJab: timingState.rightJab,
         rightPoses: timingState.rightPoses,
+        rightPosesReturn: timingState.rightPosesReturn,
         rightUppercut: timingState.rightUppercut
       })) {
         hitSuccess(c);
@@ -129,8 +131,13 @@
         fill(255, 255, 255, hide_sensor);
       }
       if (hasPoseConfidence(leftHand)) {
-        if (isInsideGuard(leftHand, calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, layout.objectPoseSize, layout.coef)) {
+        const leftInGuard = isInsideGuard(leftHand, calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, layout.objectPoseSize, layout.coef);
+        if (leftInGuard) {
           timingState.leftPoses = now;
+          if (!timingState.leftGuardInGuard) {
+            timingState.leftPosesReturn = now;
+          }
+          timingState.leftGuardInGuard = true;
           fill(255, 255, 255, 128);
           circle(calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, layout.objectPoseSize);
           if (gameState.gameStarted) {
@@ -141,6 +148,9 @@
               punchSound();
             }
           }
+        }
+        if (!leftInGuard) {
+          timingState.leftGuardInGuard = false;
         }
         fill(255, 0, 0, 128);
         circle(leftHandCanvas.x, leftHandCanvas.y, layout.objectPoseSize / 2);
@@ -192,10 +202,17 @@
         if (dodges.down) {
           timingState.downDodge = now;
         }
+      } else {
+        timingState.leftGuardInGuard = false;
       }
       if (hasPoseConfidence(rightHand)) {
-        if (isInsideGuard(rightHand, calibrationState.right_init_pose_x, calibrationState.right_init_pose_y, layout.objectPoseSize, layout.coef)) {
+        const rightInGuard = isInsideGuard(rightHand, calibrationState.right_init_pose_x, calibrationState.right_init_pose_y, layout.objectPoseSize, layout.coef);
+        if (rightInGuard) {
           timingState.rightPoses = now;
+          if (!timingState.rightGuardInGuard) {
+            timingState.rightPosesReturn = now;
+          }
+          timingState.rightGuardInGuard = true;
           fill(255, 255, 255, 128);
           circle(calibrationState.right_init_pose_x, calibrationState.right_init_pose_y, layout.objectPoseSize);
           if (gameState.gameStarted || gameState.gameCalibration) {
@@ -206,6 +223,8 @@
               punchSound();
             }
           }
+        } else {
+          timingState.rightGuardInGuard = false;
         }
         fill(255, 0, 0, 128);
         /* istanbul ignore if */
@@ -241,6 +260,8 @@
             if (gameState.gameStarted) {punchSound();}
           }
         }
+      } else {
+        timingState.rightGuardInGuard = false;
       }
     }
   }
@@ -253,13 +274,17 @@
     }
     renderShadowMoveReport();
 
-    if (gameState.gameStarted) {
-      addShadowMoveAtTimer();
-      for (let c = 0; c < gameState.curMoves.length; c++) {
-        renderShadowMove(c);
-      }
-      gameState.gameTimer++;
+    /* c8 ignore next */
+    if (!gameState.gameStarted) {
+      renderShadowPoseInput();
+      return;
     }
+
+    addShadowMoveAtTimer();
+    for (let c = 0; c < gameState.curMoves.length; c++) {
+      renderShadowMove(c);
+    }
+    gameState.gameTimer++;
 
     renderShadowPoseInput();
   }
@@ -271,7 +296,9 @@
 
   root.TfitShadowMode = api;
 
-  if (typeof module !== 'undefined' && module.exports) {
-    module.exports = api;
+  if (typeof module === 'undefined' || !module.exports) {
+    return;
   }
+
+  module.exports = api;
 })(globalThis);

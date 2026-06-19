@@ -26,12 +26,13 @@ describe('TfitPoseDetection exports', () => {
       'detectDodgeGestures',
       'detectHandGestures',
       'hasPoseConfidence',
-      'isInsideGuard',
-      'isInsideTarget',
-      'isPadPunchHit',
-      'isTimedGestureActive',
-      'moveMatchesRecentGesture',
-      'nextDownDodgeState',
+    'isInsideGuard',
+    'isInsideTarget',
+    'isPadPunchHit',
+    'isPunchGestureActive',
+    'isTimedGestureActive',
+    'moveMatchesRecentGesture',
+    'nextDownDodgeState',
       'posePartsFromPoses'
     ]);
   });
@@ -268,6 +269,7 @@ describe('moveMatchesRecentGesture', () => {
     leftHook: 970,
     leftJab: 980,
     leftPoses: 960,
+    leftPosesReturn: 995,
     leftUppercut: 980,
     levelWindow: 50,
     now: 1000,
@@ -275,6 +277,7 @@ describe('moveMatchesRecentGesture', () => {
     rightHook: 980,
     rightJab: 980,
     rightPoses: 970,
+    rightPosesReturn: 995,
     rightUppercut: 980
   };
 
