@@ -281,15 +281,7 @@
       return false;
     }
 
-    if (menu === 0) {
-      root.document.body.style.setProperty("--app-background-image", "none");
-      return true;
-    }
-
-    root.document.body.style.setProperty(
-      "--app-background-image",
-      `url("assets/backgrounds/${menu}.jpg")`
-    );
+    root.document.body.style.setProperty("--app-background-image", "none");
     return true;
   }
 

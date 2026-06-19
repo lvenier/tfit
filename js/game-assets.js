@@ -33,20 +33,6 @@
     };
   }
 
-  async function loadNumberedAssets({ count, loadAsset, pathFor, start = 0 }) {
-    const entries = await Promise.all(
-      Array.from({ length: count }, (_, index) => {
-        const assetIndex = start + index;
-        return loadAsset(pathFor(assetIndex)).then(asset => [assetIndex, asset]);
-      })
-    );
-
-    return entries.reduce((assets, [index, asset]) => {
-      assets[index] = asset;
-      return assets;
-    }, []);
-  }
-
   async function loadAssetMap(paths, loadAsset) {
     const entries = await Promise.all(
       Object.entries(paths).map(([key, path]) => (
@@ -97,8 +83,7 @@
   }
 
   function countGameAssets({ gameLength, gameLevel, menuTypes }) {
-    return Object.keys(menuTypes).length +
-      3 +
+    return 3 +
       16;
   }
 
@@ -125,15 +110,9 @@
     const loadImageLimited = createTrackedLoader(createConcurrentLoader(loadImage, 8), progress);
     const loadSoundLimited = createTrackedLoader(createConcurrentLoader(loadSound, 4), progress);
     const [
-      backgroundImages,
       fixedImages,
       soundAssets
     ] = await Promise.all([
-      loadNumberedAssets({
-        count: Object.keys(menuTypes).length,
-        loadAsset: loadImageLimited,
-        pathFor: index => 'assets/backgrounds/' + index + '.jpg'
-      }),
       loadAssetMap({
         leftFoot: 'assets/images/LFoot.png',
         logo: 'assets/logos/logo.512.rounded.png',
@@ -161,7 +140,7 @@
 
     return {
       images: {
-        backgrounds: backgroundImages,
+        backgrounds: [],
         leftFoot: fixedImages.leftFoot,
         logo: fixedImages.logo,
         me: null,

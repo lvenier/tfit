@@ -92,8 +92,7 @@ describe('loadGameAssets', () => {
       onProgress: event => progressEvents.push(event)
     });
 
-    expect(assets.images.backgrounds[0]).toEqual({ image: 'assets/backgrounds/0.jpg' });
-    expect(assets.images.backgrounds[1]).toEqual({ image: 'assets/backgrounds/1.jpg' });
+    expect(assets.images.backgrounds).toEqual([]);
     expect(assets.images.me).toBeNull();
     expect(assets.images.meAnimations).toEqual([]);
     expect(assets.images.opponentAnimations).toEqual([]);
@@ -102,6 +101,7 @@ describe('loadGameAssets', () => {
 
     expect(imagePaths.some(path => path.includes('assets/images/boxers/'))).toBe(false);
     expect(imagePaths.some(path => path.includes('assets/images/opponents/'))).toBe(false);
+    expect(imagePaths.some(path => path.includes('assets/backgrounds/'))).toBe(false);
     expect(imagePaths).toContain('assets/logos/logo.512.rounded.png');
     expect(imagePaths).toContain('assets/images/LFoot.png');
     expect(imagePaths).toContain('assets/images/RFoot.png');
@@ -126,12 +126,12 @@ describe('loadGameAssets', () => {
     expect(progressEvents[0]).toEqual({
       label: 'Loading assets',
       loaded: 0,
-      total: 21
+      total: 19
     });
     expect(progressEvents.at(-1)).toEqual({
       label: 'Loading assets',
-      loaded: 21,
-      total: 21
+      loaded: 19,
+      total: 19
     });
   });
 
