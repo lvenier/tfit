@@ -63,7 +63,7 @@ describe('asset state factories', () => {
 });
 
 describe('loadGameAssets', () => {
-  it('loads menu, settings, boxer, opponent, and sound assets into the app shape', async () => {
+  it('loads menu, settings, opponent, and sound assets into the app shape', async () => {
     const imagePaths = [];
     const soundPaths = [];
     const progressEvents = [];
@@ -94,10 +94,12 @@ describe('loadGameAssets', () => {
 
     expect(assets.images.backgrounds[0]).toEqual({ image: 'assets/backgrounds/0.jpg' });
     expect(assets.images.backgrounds[1]).toEqual({ image: 'assets/backgrounds/1.jpg' });
-    expect(assets.images.meAnimations[6][6]).toEqual({ image: 'assets/images/boxers/6-me-6.png' });
+    expect(assets.images.me).toBeNull();
+    expect(assets.images.meAnimations).toEqual([]);
     expect(assets.images.opponentAnimations[6][6]).toEqual({ image: 'assets/images/opponents/0/6-6.png' });
     expect(assets.sounds.thatsIt).toEqual({ sound: 'assets/sounds/thats_it.mp3' });
 
+    expect(imagePaths.some(path => path.includes('assets/images/boxers/'))).toBe(false);
     expect(imagePaths).toContain('assets/logos/logo.512.rounded.png');
     expect(imagePaths).toContain('assets/images/LFoot.png');
     expect(imagePaths).toContain('assets/images/RFoot.png');
@@ -122,12 +124,12 @@ describe('loadGameAssets', () => {
     expect(progressEvents[0]).toEqual({
       label: 'Loading assets',
       loaded: 0,
-      total: 107
+      total: 64
     });
     expect(progressEvents.at(-1)).toEqual({
       label: 'Loading assets',
-      loaded: 107,
-      total: 107
+      loaded: 64,
+      total: 64
     });
   });
 

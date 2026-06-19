@@ -119,10 +119,9 @@
 
   function countGameAssets({ gameLength, gameLevel, menuTypes }) {
     return Object.keys(menuTypes).length +
-      42 +
       1 +
       42 +
-      4 +
+      3 +
       16;
   }
 
@@ -150,7 +149,6 @@
     const loadSoundLimited = createTrackedLoader(createConcurrentLoader(loadSound, 4), progress);
     const [
       backgroundImages,
-      meImages,
       opponentZero,
       opponentsImages,
       fixedImages,
@@ -160,12 +158,6 @@
         count: Object.keys(menuTypes).length,
         loadAsset: loadImageLimited,
         pathFor: index => 'assets/backgrounds/' + index + '.jpg'
-      }),
-      loadAnimationGrid({
-        columns: 7,
-        loadAsset: loadImageLimited,
-        pathFor: (row, column) => 'assets/images/boxers/' + row + '-me-' + column + '.png',
-        rows: 6
       }),
       loadImageLimited('assets/images/opponents/0/0-1.png'),
       loadAnimationGrid({
@@ -177,7 +169,6 @@
       loadAssetMap({
         leftFoot: 'assets/images/LFoot.png',
         logo: 'assets/logos/logo.512.rounded.png',
-        me: 'assets/images/boxers/0-me.png',
         rightFoot: 'assets/images/RFoot.png'
       }, loadImageLimited),
       loadAssetMap({
@@ -208,8 +199,8 @@
         backgrounds: backgroundImages,
         leftFoot: fixedImages.leftFoot,
         logo: fixedImages.logo,
-        me: fixedImages.me,
-        meAnimations: meImages,
+        me: null,
+        meAnimations: [],
         opponentAnimations: opponentsImages,
         opponents: opponentImage,
         rightFoot: fixedImages.rightFoot,
