@@ -180,6 +180,7 @@ describe('TfitAppInputActions exports', () => {
       'applyPendingMenuButtonTransition',
       'applyPointerInputAction',
       'canApplyDuringRecentResult',
+      'clearCalibrationUiState',
       'clearMenuDoorTransition',
       'handleMenuOpenAction',
       'queueMenuDoorAnimation',
@@ -369,6 +370,8 @@ describe('applyInputAction', () => {
     expect(globalThis.gameState.menuButtonAnimation.pendingTransition).toMatchObject({
       menu: 1
     });
+    expect(globalThis.gameState.gameCalibration).toBe(false);
+    expect(globalThis.hide_sensor).toBe(0);
     expect(api.applyPendingMenuButtonTransition()).toBe(true);
     expect(globalThis.gameState.gameOver).toBe(true);
 

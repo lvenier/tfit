@@ -84,14 +84,14 @@
 
   function calibrationDefaults(windowWidth, windowHeight, objectPoseSize, coef) {
     return {
-      left_init_pose_x: windowWidth / 3,
+      left_init_pose_x: 3 * windowWidth / 7,
       left_init_pose_y: windowHeight / 3,
-      right_init_pose_x: 2 * windowWidth / 3,
+      right_init_pose_x: 4 * windowWidth / 7,
       right_init_pose_y: windowHeight / 3,
-      init_jab_y: windowHeight / 3 - objectPoseSize * coef,
-      init_uppercut_y: windowHeight / 3 + objectPoseSize * coef,
-      left_init_hook_x: windowWidth / 3 - objectPoseSize * coef,
-      right_init_hook_x: windowWidth * 2 / 3 + objectPoseSize * coef
+      init_jab_y: windowHeight / 3 - objectPoseSize * coef / 1.4,
+      init_uppercut_y: windowHeight / 3 + objectPoseSize * coef / 1.4,
+      left_init_hook_x: windowWidth / 7 * 3 - objectPoseSize * coef,
+      right_init_hook_x: windowWidth / 7 * 4 + objectPoseSize * coef
     };
   }
 

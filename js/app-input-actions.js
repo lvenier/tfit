@@ -220,6 +220,19 @@
     calibrationState.left_init_pose_dragging = flags.left_init_pose_dragging;
   }
 
+  function clearCalibrationUiState() {
+    gameState.gameCalibration = false;
+    hide_sensor = 0;
+    applyCalibrationDragFlags({
+      init_jab_dragging: false,
+      init_uppercut_dragging: false,
+      left_init_hook_dragging: false,
+      right_init_hook_dragging: false,
+      right_init_pose_dragging: false,
+      left_init_pose_dragging: false
+    });
+  }
+
   const calibrationSetters = {
     init_jab_y: value => { calibrationState.init_jab_y = value; },
     init_uppercut_y: value => { calibrationState.init_uppercut_y = value; },
@@ -255,16 +268,19 @@
       return;
     }
     if (action.type === "open_shadow") {
+      clearCalibrationUiState();
       handleMenuOpenAction("open_shadow", true);
       playClick();
       return;
     }
     if (action.type === "open_pad") {
+      clearCalibrationUiState();
       handleMenuOpenAction("open_pad", true);
       playClick();
       return;
     }
     if (action.type === "open_fight") {
+      clearCalibrationUiState();
       handleMenuOpenAction("open_fight", true);
       playClick();
       return;
@@ -315,13 +331,14 @@
     }
     if (action.type === "leave_calibration") {
       playClick();
+      clearCalibrationUiState();
       handleMenuOpenAction("leave_calibration", true);
       return;
     }
     if (action.type === "stop_calibration") {
       clearMenuDoorTransition();
       queueMenuRestore();
-      gameState.gameCalibration = false;
+      clearCalibrationUiState();
       gameState.menu = 1;
       return;
     }
@@ -340,6 +357,7 @@
     }
     if (action.type === "back_to_menu") {
       playClick();
+      clearCalibrationUiState();
       handleMenuOpenAction("back_to_menu", true);
       return;
     }
@@ -431,6 +449,7 @@
     clearMenuDoorTransition,
     applyMenuButtonTransition,
     applyCalibrationDragFlags,
+    clearCalibrationUiState,
     applyCalibrationUpdates,
     applyInputAction,
     applyPendingMenuButtonTransition,

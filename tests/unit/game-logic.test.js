@@ -165,14 +165,14 @@ describe('moveDisplay', () => {
 describe('calibration defaults', () => {
   it('matches the app calibration formulas', () => {
     expect(calibrationDefaults(640, 480, 48, 1)).toEqual({
-      left_init_pose_x: 640 / 3,
+      left_init_pose_x: 3 * 640 / 7,
       left_init_pose_y: 160,
-      right_init_pose_x: 1280 / 3,
+      right_init_pose_x: 4 * 640 / 7,
       right_init_pose_y: 160,
-      init_jab_y: 112,
-      init_uppercut_y: 208,
-      left_init_hook_x: 640 / 3 - 48,
-      right_init_hook_x: 1280 / 3 + 48
+      init_jab_y: 480 / 3 - 48 / 1.4,
+      init_uppercut_y: 480 / 3 + 48 / 1.4,
+      left_init_hook_x: 3 * 640 / 7 - 48,
+      right_init_hook_x: 4 * 640 / 7 + 48
     });
   });
 });
