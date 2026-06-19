@@ -23,7 +23,8 @@ const STUBBED_GLOBALS = [
   'TfitCameraRuntime',
   'TfitGameLogic',
   'video',
-  'VIDEO'
+  'VIDEO',
+  '__TFIT_DISABLE_POSE_DETECTION_FOR_E2E'
 ];
 
 const originalGlobals = new Map();
@@ -142,6 +143,14 @@ describe('pose detection lifecycle', () => {
 
     expect(api.startPoseDetection()).toBe(false);
     expect(api.stopPoseDetection()).toBe(false);
+  });
+
+  it('does not start pose detection when e2e disables it', () => {
+    const api = installGlobals({ __TFIT_DISABLE_POSE_DETECTION_FOR_E2E: true });
+
+    expect(api.startPoseDetection()).toBe(false);
+    expect(globalThis.bodyPose.detectStart).not.toHaveBeenCalled();
+    expect(globalThis.isDetecting).toBe(false);
   });
 
   it('initializes camera capture, model, and detection', async () => {

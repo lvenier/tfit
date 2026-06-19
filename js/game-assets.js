@@ -47,27 +47,6 @@
     }, []);
   }
 
-  async function loadAnimationGrid({ columns, loadAsset, pathFor, rows, startRow = 1 }) {
-    const entries = await Promise.all(
-      Array.from({ length: rows }, (_, rowOffset) => {
-        const row = startRow + rowOffset;
-        return Promise.all(
-          Array.from({ length: columns }, (_, column) => (
-            loadAsset(pathFor(row, column)).then(asset => [column, asset])
-          ))
-        ).then(rowEntries => [row, rowEntries]);
-      })
-    );
-
-    return entries.reduce((animations, [row, rowEntries]) => {
-      animations[row] = rowEntries.reduce((frames, [column, asset]) => {
-        frames[column] = asset;
-        return frames;
-      }, []);
-      return animations;
-    }, [[], []]);
-  }
-
   async function loadAssetMap(paths, loadAsset) {
     const entries = await Promise.all(
       Object.entries(paths).map(([key, path]) => (
@@ -119,8 +98,6 @@
 
   function countGameAssets({ gameLength, gameLevel, menuTypes }) {
     return Object.keys(menuTypes).length +
-      1 +
-      42 +
       3 +
       16;
   }
@@ -149,8 +126,6 @@
     const loadSoundLimited = createTrackedLoader(createConcurrentLoader(loadSound, 4), progress);
     const [
       backgroundImages,
-      opponentZero,
-      opponentsImages,
       fixedImages,
       soundAssets
     ] = await Promise.all([
@@ -158,13 +133,6 @@
         count: Object.keys(menuTypes).length,
         loadAsset: loadImageLimited,
         pathFor: index => 'assets/backgrounds/' + index + '.jpg'
-      }),
-      loadImageLimited('assets/images/opponents/0/0-1.png'),
-      loadAnimationGrid({
-        columns: 7,
-        loadAsset: loadImageLimited,
-        pathFor: (row, column) => 'assets/images/opponents/0/' + row + '-' + column + '.png',
-        rows: 6
       }),
       loadAssetMap({
         leftFoot: 'assets/images/LFoot.png',
@@ -191,9 +159,6 @@
       }, loadSoundLimited)
     ]);
 
-    const opponentImage = [];
-    opponentImage[0] = opponentZero;
-
     return {
       images: {
         backgrounds: backgroundImages,
@@ -201,8 +166,8 @@
         logo: fixedImages.logo,
         me: null,
         meAnimations: [],
-        opponentAnimations: opponentsImages,
-        opponents: opponentImage,
+        opponentAnimations: [],
+        opponents: [],
         rightFoot: fixedImages.rightFoot,
       },
       sounds: soundAssets
