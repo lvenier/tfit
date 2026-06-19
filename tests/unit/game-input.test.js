@@ -204,6 +204,13 @@ describe('pointerAction', () => {
   it('maps settings and game control actions from shared style buttons', () => {
     expect(pointerAction({
       ...basePointer,
+      menu: 0,
+      mouseX: 550,
+      mouseY: 560
+    })).toEqual({ type: 'none' });
+
+    expect(pointerAction({
+      ...basePointer,
       menu: 1,
       mouseX: 300,
       mouseY: 520

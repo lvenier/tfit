@@ -129,7 +129,7 @@
     const settingsButtonBounds = root.TfitRender?.getSettingsButtonBounds
       ? root.TfitRender.getSettingsButtonBounds()
       : null;
-    if (settingsButtonBounds && isWithin(mouseX, settingsButtonBounds.left, settingsButtonBounds.right) && isWithin(mouseY, settingsButtonBounds.top, settingsButtonBounds.bottom)) {
+    if (menu !== 0 && settingsButtonBounds && isWithin(mouseX, settingsButtonBounds.left, settingsButtonBounds.right) && isWithin(mouseY, settingsButtonBounds.top, settingsButtonBounds.bottom)) {
       if (gameStarted) {
         return { click: true, type: "stop_current" };
       }
