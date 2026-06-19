@@ -162,6 +162,7 @@ describe('registerAppHandlers', () => {
 
   it('absorbs service worker registration failures', async () => {
     const api = installGlobals();
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
     const dependencies = createDependencies({
       navigator: {
         serviceWorker: {
@@ -176,6 +177,7 @@ describe('registerAppHandlers', () => {
     await Promise.resolve();
 
     expect(dependencies.navigator.serviceWorker.register).toHaveBeenCalledWith('/service-worker.js', { scope: '/' });
+    expect(consoleError).toHaveBeenCalledWith('Service worker registration failed:', expect.any(Error));
   });
 
   it('shows and uses the install button when the browser offers PWA installation', async () => {
