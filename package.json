@@ -2,7 +2,7 @@
     "name": "box4fit",
     "desktopName": "Box4Fit",
     "main": "main.js",
-    "version": "1.17.1",
+    "version": "1.17.2",
     "description": "A webcam boxing fitness game with motion detection",
     "license": "MIT",
     "keywords": [
