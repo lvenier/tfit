@@ -35,6 +35,10 @@
     "build": {
         "appId": "app.box4.fit",
         "productName": "Box4Fit",
+        "asarUnpack": [
+            "assets/models/face-recognition/**/*",
+            "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.*"
+        ],
         "linux": {
             "icon": "assets/logos/logo.256.png",
             "target": [

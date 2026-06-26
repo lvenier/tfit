@@ -172,7 +172,7 @@ describe('TfitFaceRecognition', () => {
       const api = loadModule();
 
       expect(api.resolveAppAssetUrl('node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm'))
-        .toBe('file:///opt/Box4Fit/resources/app.asar/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm');
+        .toBe('file:///opt/Box4Fit/resources/app.asar.unpacked/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm');
     } finally {
       globalThis.document = originalDocument;
     }

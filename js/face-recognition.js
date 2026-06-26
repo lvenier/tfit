@@ -194,7 +194,8 @@
   }
 
   function resolveAppAssetUrl(path) {
-    return new URL(path, root.document?.baseURI || root.location?.href || "http://localhost/").href;
+    const url = new URL(path, root.document?.baseURI || root.location?.href || "http://localhost/");
+    return url.href.replace("/app.asar/", "/app.asar.unpacked/");
   }
 
   async function loadOrtRuntime() {
@@ -214,7 +215,7 @@
   async function loadOnnxSession(modelPath, label) {
     const ort = await loadOrtRuntime();
     try {
-      return await ort.InferenceSession.create(modelPath, {
+      return await ort.InferenceSession.create(resolveAppAssetUrl(modelPath), {
         executionProviders: ["wasm"],
         graphOptimizationLevel: "all",
         interOpNumThreads: 1,
