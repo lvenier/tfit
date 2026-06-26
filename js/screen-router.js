@@ -20,6 +20,7 @@
     renderGuardTargets,
     renderLoadingScreen,
     renderMainMenu,
+    renderProfileScreen,
     renderRoundHud,
     renderSceneBackground,
     renderSpeech
@@ -59,7 +60,7 @@
   const DOOR_LOGO_SCALE = 0.3;
 
   function renderBackNavigation() {
-    if ((gameState.menu === 2 || gameState.menu === 3 || gameState.menu === 4 || gameState.menu === 1) && !gameState.gameStarted && !gameResultBool()) {
+    if ((gameState.menu === 1 || gameState.menu === 2 || gameState.menu === 3 || gameState.menu === 4 || gameState.menu === 5) && !gameState.gameStarted && !gameResultBool()) {
       renderBackButton();
     }
   }
@@ -355,7 +356,11 @@
       renderSettingsScreen();
     }
 
-    if (gameState.menu > 1) {
+    if (gameState.menu === 5) {
+      renderProfileScreen();
+    }
+
+    if (gameState.menu === 2 || gameState.menu === 3 || gameState.menu === 4) {
       renderRoundScreen();
     } else {
       void gameState.menu;

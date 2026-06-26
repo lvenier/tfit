@@ -69,6 +69,7 @@ const STUBBED_GLOBALS = [
   'triangle',
   'tint',
   'TfitGameLogic',
+  'TfitFaceRecognition',
   'TfitLayoutState',
   'TfitOpponentRenderers',
   'translate',
@@ -281,6 +282,9 @@ describe('TfitRender exports', () => {
       'drawDetectionProgress',
       'drawMessagePanel',
       'getCalibrationResetButtonBounds',
+      'getMainMenuButtonBounds',
+      'getProfileEditButtonBounds',
+      'getProfileViewButtonBounds',
       'getSettingsButtonBounds',
       'renderBackButton',
       'renderCalibrationOverlay',
@@ -293,6 +297,7 @@ describe('TfitRender exports', () => {
       'renderLoadingScreen',
       'renderMainMenu',
       'renderMoveShape',
+      'renderProfileScreen',
       'renderRajaOpponentCharacter',
       'renderRoundHud',
       'renderSceneBackground',
@@ -1097,6 +1102,53 @@ describe('basic render helpers', () => {
       ['(F)RAMERATE (20 FPS)', 320, 352],
       ['(C)ALIBRATE', 320, 402]
     ]));
+  });
+
+  it('keeps all main menu buttons inside the viewport', () => {
+    renderApi.renderMainMenu();
+
+    expect(calls.text).toEqual(expect.arrayContaining([
+      ['(S)HADOW', 176.66666666666669, 102],
+      ['(A)PUNCH PAD', 176.66666666666669, 168],
+      ['(F)IGHT', 176.66666666666669, 234],
+      ['(C)ONFIGURE', 176.66666666666669, 300],
+      ['(P)ROFILE', 176.66666666666669, 366]
+    ]));
+    expect(renderApi.getMainMenuButtonBounds(4)).toEqual({
+      left: 126,
+      right: 226,
+      top: 344,
+      bottom: 386
+    });
+  });
+
+  it('renders the profile screen controls', () => {
+    installRenderGlobals({
+      TfitFaceRecognition: {
+        selectedProfile: () => ({ key: 'player', name: 'Laurent' })
+      }
+    });
+
+    renderApi.renderProfileScreen();
+
+    expect(calls.text).toEqual(expect.arrayContaining([
+      ['PROFILE', 320, 148],
+      ['Laurent', 320, 178],
+      ['(E)DIT', 320, 232],
+      ['(V)IEW', 320, 286]
+    ]));
+    expect(renderApi.getProfileEditButtonBounds()).toEqual({
+      left: 245,
+      right: 395,
+      top: 210,
+      bottom: 252
+    });
+    expect(renderApi.getProfileViewButtonBounds()).toEqual({
+      left: 245,
+      right: 395,
+      top: 264,
+      bottom: 306
+    });
   });
 
   it('uses the default level label when the configured index is missing', () => {

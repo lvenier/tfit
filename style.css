@@ -66,8 +66,12 @@ canvas {
   left: max(14px, env(safe-area-inset-left));
   bottom: max(14px, env(safe-area-inset-bottom));
   z-index: 9998;
-  width: min(330px, calc(100vw - 28px));
-  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(156px, calc(100vw - 28px));
+  min-height: 52px;
+  padding: 10px 12px;
   box-sizing: border-box;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
@@ -77,58 +81,15 @@ canvas {
   font-size: 13px;
 }
 
-.face-recognition-header {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  justify-content: flex-start;
+.face-profile-name {
   min-width: 0;
-}
-
-.face-register-button {
-  flex: 0 0 auto;
-  min-height: 34px;
-  padding: 0 12px;
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: 8px;
-  background: #8f1d5a;
-  color: #ffffff;
-  cursor: pointer;
-  font: 700 12px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-
-.face-register-button:hover {
-  background: #a62469;
-}
-
-.face-register-button:focus-visible {
-  outline: 3px solid #ffffff;
-  outline-offset: 3px;
-}
-
-.face-recognition-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px 12px;
-  margin: 12px 0 0;
-}
-
-.face-recognition-grid div {
-  min-width: 0;
-}
-
-.face-recognition-grid dt {
-  color: rgba(255, 255, 255, 0.68);
-  font-size: 11px;
-}
-
-.face-recognition-grid dd {
-  margin: 2px 0 0;
-  min-width: 0;
+  max-width: 100%;
   overflow: hidden;
   color: #ffffff;
+  font: 800 16px/1.2 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  text-align: center;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .logo {

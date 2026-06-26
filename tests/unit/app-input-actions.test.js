@@ -25,10 +25,12 @@ const STUBBED_GLOBALS = [
   'myWindowWidth',
   'OBJECT_POSE_SIZE',
   'OPPONENTS',
+  'prompt',
   'SHADOW_SPECIFIC',
   'sounds',
   'TfitAppInputActions',
   'TfitCalibration',
+  'TfitFaceRecognition',
   'TfitFlow',
   'TfitGameLogic',
   'TfitInput',
@@ -101,6 +103,7 @@ function installGlobals(overrides = {}) {
     myWindowWidth: 640,
     OBJECT_POSE_SIZE: 48,
     OPPONENTS: { 0: { stamina: 6 }, 1: { stamina: 8 }, 2: { stamina: 10 } },
+    prompt: vi.fn(() => 'Lolo'),
     SHADOW_SPECIFIC: { 0: 'ALL', 1: 'JAB' },
     sounds: {
       click: sound()
@@ -108,6 +111,11 @@ function installGlobals(overrides = {}) {
     TfitCalibration: {
       calibrationDragUpdates: vi.fn(() => ({ init_jab_y: 111, right_init_pose_y: 222 })),
       persistCalibrationUpdates: vi.fn()
+    },
+    TfitFaceRecognition: {
+      selectedProfile: vi.fn(() => ({ key: 'player', name: 'Laurent' })),
+      updatePanel: vi.fn(),
+      updateSelectedPlayerName: vi.fn(() => ({ key: 'player', name: 'Lolo' }))
     },
     TfitFlow: {
       gameResultBool: vi.fn(() => false),
@@ -182,11 +190,13 @@ describe('TfitAppInputActions exports', () => {
       'canApplyDuringRecentResult',
       'clearCalibrationUiState',
       'clearMenuDoorTransition',
+      'editSelectedProfileName',
       'handleMenuOpenAction',
       'queueMenuDoorAnimation',
       'queueMenuRestore',
       'resetCalibrationDefaults',
-      'updateCalibrationFromPointer'
+      'updateCalibrationFromPointer',
+      'viewSelectedProfileName'
     ]);
     expect(globalThis.TfitAppInputActions).toBe(api);
   });
@@ -293,6 +303,28 @@ describe('applyInputAction', () => {
     expect(globalThis.gameState.curMoves).toEqual([]);
     expect(globalThis.TfitFlow.loadSongmoves).toHaveBeenCalledTimes(2);
     expect(globalThis.gameState.my_opponent).toEqual({ id: 0, stamina: 6 });
+  });
+
+  it('opens profile menu and applies profile edit/view actions', () => {
+    const api = installGlobals();
+
+    api.applyInputAction({ click: true, type: 'open_profile' });
+    expect(globalThis.gameState.menuButtonAnimation).toMatchObject({
+      active: true,
+      button: 'open_profile',
+      pendingTransition: { menu: 5 }
+    });
+    expect(globalThis.sounds.click.play).toHaveBeenCalledTimes(1);
+    expect(api.applyPendingMenuButtonTransition()).toBe(true);
+    expect(globalThis.gameState.menu).toBe(5);
+
+    api.applyInputAction({ click: true, type: 'profile_edit' });
+    expect(globalThis.prompt).toHaveBeenCalledWith('Player name', 'Laurent');
+    expect(globalThis.TfitFaceRecognition.updateSelectedPlayerName).toHaveBeenCalledWith('Lolo');
+    expect(globalThis.TfitFaceRecognition.updatePanel).toHaveBeenCalledWith({ matched: 'Lolo' });
+
+    api.applyInputAction({ click: true, type: 'profile_view' });
+    expect(globalThis.TfitFaceRecognition.updatePanel).toHaveBeenCalledWith({ matched: 'Laurent' });
   });
 
   it('covers menu transition fallback and no-op states', () => {

@@ -167,11 +167,35 @@ describe('pointerAction', () => {
     top: 540,
     bottom: 582
   });
+  const mainMenuButtonBounds = index => {
+    const top = [80, 146, 212, 278, 344][index];
+    return {
+      left: 120,
+      right: 220,
+      top,
+      bottom: top + 42
+    };
+  };
+  const profileEditButtonBounds = () => ({
+    left: 240,
+    right: 390,
+    top: 210,
+    bottom: 252
+  });
+  const profileViewButtonBounds = () => ({
+    left: 240,
+    right: 390,
+    top: 264,
+    bottom: 306
+  });
 
   beforeEach(() => {
     globalThis.TfitRender = {
       ...originalTfitRender,
       getCalibrationResetButtonBounds: calibrationResetButtonBounds,
+      getMainMenuButtonBounds: mainMenuButtonBounds,
+      getProfileEditButtonBounds: profileEditButtonBounds,
+      getProfileViewButtonBounds: profileViewButtonBounds,
       getSettingsButtonBounds: settingsButtonBounds
     };
   });
@@ -227,28 +251,49 @@ describe('pointerAction', () => {
   it('maps main menu pointer regions to menu actions with click feedback', () => {
     expect(pointerAction({
       ...basePointer,
-      mouseY: 110
+      mouseY: 100
     })).toEqual({ click: true, type: 'open_shadow' });
 
     expect(pointerAction({
       ...basePointer,
-      mouseY: 210
+      mouseY: 166
     })).toEqual({ click: true, type: 'open_pad' });
 
     expect(pointerAction({
       ...basePointer,
-      mouseY: 310
+      mouseY: 232
     })).toEqual({ click: true, type: 'open_fight' });
 
     expect(pointerAction({
       ...basePointer,
-      mouseY: 410
+      mouseY: 298
     })).toEqual({ click: true, type: 'open_settings' });
 
     expect(pointerAction({
       ...basePointer,
-      mouseY: 360
+      mouseY: 364
+    })).toEqual({ click: true, type: 'open_profile' });
+
+    expect(pointerAction({
+      ...basePointer,
+      mouseY: 392
     })).toEqual({ type: 'none' });
+  });
+
+  it('maps profile menu buttons to profile actions', () => {
+    expect(pointerAction({
+      ...basePointer,
+      menu: 5,
+      mouseX: 300,
+      mouseY: 230
+    })).toEqual({ click: true, type: 'profile_edit' });
+
+    expect(pointerAction({
+      ...basePointer,
+      menu: 5,
+      mouseX: 300,
+      mouseY: 285
+    })).toEqual({ click: true, type: 'profile_view' });
   });
 
   it('maps settings controls to cycle actions with click feedback', () => {
@@ -397,8 +442,11 @@ describe('keyAction', () => {
     expect(keyAction({ gameCalibration: false, gameStarted: false, key: 's', menu: 0 })).toEqual({
       type: 'open_shadow'
     });
-    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'p', menu: 0 })).toEqual({
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'a', menu: 0 })).toEqual({
       type: 'open_pad'
+    });
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'p', menu: 0 })).toEqual({
+      type: 'open_profile'
     });
     expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'i', menu: 0 })).toEqual({
       type: 'open_fight'
@@ -477,6 +525,12 @@ describe('keyAction', () => {
     });
     expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'f', menu: 5 })).toEqual({
       type: 'none'
+    });
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'e', menu: 5 })).toEqual({
+      type: 'profile_edit'
+    });
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'v', menu: 5 })).toEqual({
+      type: 'profile_view'
     });
   });
 });

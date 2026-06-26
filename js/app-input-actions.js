@@ -52,6 +52,9 @@
       loadSongmoves: true,
       resetOpponent: true
     },
+    open_profile: {
+      menu: 5
+    },
     start_calibration: {
       menu: 1,
       onApply: () => {
@@ -211,6 +214,28 @@
     }
   }
 
+  function editSelectedProfileName() {
+    const faceRecognition = root.TfitFaceRecognition;
+    if (!faceRecognition?.selectedProfile || !faceRecognition?.updateSelectedPlayerName) {
+      return;
+    }
+
+    const current = faceRecognition.selectedProfile().name;
+    const name = root.prompt?.("Player name", current);
+    const player = faceRecognition.updateSelectedPlayerName(name);
+    if (player) {
+      faceRecognition.updatePanel?.({ matched: player.name });
+    }
+  }
+
+  function viewSelectedProfileName() {
+    const faceRecognition = root.TfitFaceRecognition;
+    const name = faceRecognition?.selectedProfile?.().name;
+    if (name) {
+      faceRecognition.updatePanel?.({ matched: name });
+    }
+  }
+
   function applyCalibrationDragFlags(flags) {
     calibrationState.init_uppercut_dragging = flags.init_uppercut_dragging;
     calibrationState.init_jab_dragging = flags.init_jab_dragging;
@@ -283,6 +308,22 @@
       clearCalibrationUiState();
       handleMenuOpenAction("open_fight", true);
       playClick();
+      return;
+    }
+    if (action.type === "open_profile") {
+      clearCalibrationUiState();
+      handleMenuOpenAction("open_profile", true);
+      playClick();
+      return;
+    }
+    if (action.type === "profile_edit") {
+      playClick();
+      editSelectedProfileName();
+      return;
+    }
+    if (action.type === "profile_view") {
+      playClick();
+      viewSelectedProfileName();
       return;
     }
     if (action.type === "cycle_frame_rate") {
@@ -454,13 +495,15 @@
     applyInputAction,
     applyPendingMenuButtonTransition,
     canApplyDuringRecentResult,
+    editSelectedProfileName,
     applyKeyInputAction,
     applyPointerInputAction,
     handleMenuOpenAction,
     queueMenuDoorAnimation,
     queueMenuRestore,
     resetCalibrationDefaults,
-    updateCalibrationFromPointer
+    updateCalibrationFromPointer,
+    viewSelectedProfileName
   };
 
   root.TfitAppInputActions = api;

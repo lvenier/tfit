@@ -28,10 +28,25 @@
   };
   const MENU_BUTTONS = [
     { label: "SHADOW", yIndex: 0, variant: "default" },
-    { label: "PUNCH PAD", yIndex: 1, variant: "default" },
+    { label: "(A)PUNCH PAD", yIndex: 1, variant: "default" },
     { label: "FIGHT", yIndex: 2, variant: "default" },
-    { label: "CONFIGURE", yIndex: 3, variant: "settings" }
+    { label: "CONFIGURE", yIndex: 3, variant: "settings" },
+    { label: "PROFILE", yIndex: 4, variant: "default" }
   ];
+
+  function mainMenuButtonMetrics(layout = layoutSnapshot()) {
+    const buttonH = 42 * layout.coef;
+    const maxGap = 24 * layout.coef;
+    const minGap = 12 * layout.coef;
+    const availableGap = (layout.height - buttonH * MENU_BUTTONS.length - 28 * layout.coef) / Math.max(1, MENU_BUTTONS.length - 1);
+    return {
+      buttonH,
+      buttonGap: Math.max(minGap, Math.min(maxGap, availableGap)),
+      buttonW: 100 * layout.coef,
+      x: layout.width / 6 + 20 * layout.coef,
+      y: Math.max(14 * layout.coef, layout.height / 6)
+    };
+  }
 
   function isPointInRect({ x, y }, rect) {
     return x > rect.left && x < rect.right && y > rect.top && y < rect.bottom;
@@ -330,10 +345,7 @@
 
   function renderMainMenu() {
     const layout = layoutSnapshot();
-    const menuButtonOffset = 20 * layout.coef;
-    const menuButtonX = layout.width / 6 + menuButtonOffset;
-    const menuButtonW = 100 * layout.coef;
-    const menuButtonH = 42 * layout.coef;
+    const menu = mainMenuButtonMetrics(layout);
 
     fill(0, 0, 0);
     image(images.logo, layout.width - 60 * layout.coef, layout.height - 55 * layout.coef, 50 * layout.coef, 50 * layout.coef);
@@ -373,10 +385,10 @@
       drawMenuButton({
         label: button.label,
         variant: button.variant,
-        x: menuButtonX,
-        y: Math.trunc(layout.height / 6 + index * 100 * layout.coef),
-        w: menuButtonW,
-        h: menuButtonH
+        x: menu.x,
+        y: Math.trunc(menu.y + index * (menu.buttonH + menu.buttonGap)),
+        w: menu.buttonW,
+        h: menu.buttonH
       });
     });
 
@@ -389,6 +401,18 @@
       false,
       false
     );
+  }
+
+  function getMainMenuButtonBounds(index) {
+    const layout = layoutSnapshot();
+    const menu = mainMenuButtonMetrics(layout);
+    const y = Math.trunc(menu.y + index * (menu.buttonH + menu.buttonGap));
+    return {
+      left: Math.trunc(menu.x),
+      right: Math.trunc(menu.x + menu.buttonW),
+      top: y,
+      bottom: Math.trunc(y + menu.buttonH)
+    };
   }
 
   function renderBackButton() {
@@ -678,6 +702,30 @@
     };
   }
 
+  function getProfileEditButtonBounds() {
+    const layout = layoutSnapshot();
+    const buttonWidth = 150 * layout.coef;
+    const buttonHeight = 42 * layout.coef;
+    return {
+      left: layout.width / 2 - buttonWidth / 2,
+      right: layout.width / 2 + buttonWidth / 2,
+      top: Math.trunc(layout.height / 2 - 30 * layout.coef),
+      bottom: Math.trunc(layout.height / 2 - 30 * layout.coef + buttonHeight)
+    };
+  }
+
+  function getProfileViewButtonBounds() {
+    const layout = layoutSnapshot();
+    const buttonWidth = 150 * layout.coef;
+    const buttonHeight = 42 * layout.coef;
+    return {
+      left: layout.width / 2 - buttonWidth / 2,
+      right: layout.width / 2 + buttonWidth / 2,
+      top: Math.trunc(layout.height / 2 + 24 * layout.coef),
+      bottom: Math.trunc(layout.height / 2 + 24 * layout.coef + buttonHeight)
+    };
+  }
+
   function renderSettingsStyleButton({
     label,
     layout
@@ -753,6 +801,42 @@
       w: SETTINGS_BUTTON_WIDTH * layout.coef,
       h: SETTINGS_BUTTON_HEIGHT * layout.coef,
       textSizePx: controlTextSize
+    });
+  }
+
+  function renderProfileScreen() {
+    const layout = layoutSnapshot();
+    const editBounds = getProfileEditButtonBounds();
+    const viewBounds = getProfileViewButtonBounds();
+    const name = root.TfitFaceRecognition?.selectedProfile?.().name || "Unknown player";
+
+    textAlign(CENTER, CENTER);
+    textStyle(BOLD);
+    textSize(24 * layout.coef);
+    fill(255, 255, 255, 230);
+    text("PROFILE", layout.width / 2, layout.height / 2 - 92 * layout.coef);
+
+    textStyle(NORMAL);
+    textSize(14 * layout.coef);
+    fill(225, 225, 225, 210);
+    text(name, layout.width / 2, layout.height / 2 - 62 * layout.coef);
+
+    drawMenuButton({
+      label: "EDIT",
+      variant: "default",
+      x: editBounds.left,
+      y: editBounds.top,
+      w: editBounds.right - editBounds.left,
+      h: editBounds.bottom - editBounds.top
+    });
+
+    drawMenuButton({
+      label: "VIEW",
+      variant: "default",
+      x: viewBounds.left,
+      y: viewBounds.top,
+      w: viewBounds.right - viewBounds.left,
+      h: viewBounds.bottom - viewBounds.top
     });
   }
 
@@ -1741,9 +1825,13 @@
     renderGuardTargets,
     renderLoadingScreen,
     renderMainMenu,
+    renderProfileScreen,
     renderRoundHud,
     renderStopButton,
     getCalibrationResetButtonBounds,
+    getMainMenuButtonBounds,
+    getProfileEditButtonBounds,
+    getProfileViewButtonBounds,
     getSettingsButtonBounds,
     renderSceneBackground,
     renderSettingsControls,

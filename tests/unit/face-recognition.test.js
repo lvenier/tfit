@@ -41,7 +41,8 @@ describe('TfitFaceRecognition', () => {
     const api = loadModule();
 
     expect(api.DEFAULT_CONFIG.autoRegisterWhenEmpty).toBe(true);
-    expect(api.DEFAULT_CONFIG.mainMenuTimeoutMs).toBe(15000);
+    expect(api.DEFAULT_CONFIG.autoRegisterUnknown).toBe(true);
+    expect(api.DEFAULT_CONFIG.mainMenuPollMs).toBe(250);
     expect(api.DEFAULT_CONFIG.recognitionTimeoutMs).toBe(5000);
     expect(api.DEFAULT_CONFIG.recognitionRetryDelayMs).toBe(250);
   });
@@ -51,24 +52,35 @@ describe('TfitFaceRecognition', () => {
 
     expect(api.isMainMenuReady({
       gameCalibration: false,
+      gameReady: true,
       gameStarted: false,
       menu: 0,
       menuButtonAnimation: { active: false }
     })).toBe(true);
     expect(api.isMainMenuReady({
       gameCalibration: false,
+      gameReady: false,
+      gameStarted: false,
+      menu: 0,
+      menuButtonAnimation: { active: false }
+    })).toBe(false);
+    expect(api.isMainMenuReady({
+      gameCalibration: false,
+      gameReady: true,
       gameStarted: false,
       menu: 1,
       menuButtonAnimation: { active: false }
     })).toBe(false);
     expect(api.isMainMenuReady({
       gameCalibration: false,
+      gameReady: true,
       gameStarted: true,
       menu: 0,
       menuButtonAnimation: { active: false }
     })).toBe(false);
     expect(api.isMainMenuReady({
       gameCalibration: false,
+      gameReady: true,
       gameStarted: false,
       menu: 0,
       menuButtonAnimation: { active: true }
@@ -159,6 +171,49 @@ describe('TfitFaceRecognition', () => {
     expect(api.selectedProfile(storage)).toEqual({
       key: 'player-laurent',
       name: 'Laurent'
+    });
+  });
+
+  it('updates the selected player profile and matching face profile name', () => {
+    const api = loadModule();
+    const storage = fakeStorage({
+      selected_player: 'player-laurent',
+      'player-laurent': JSON.stringify({ name: 'Laurent', score: 10 }),
+      [api.DEFAULT_CONFIG.storageKey]: JSON.stringify([
+        { name: 'Laurent', profileKey: 'player-laurent', embedding: [1, 0] },
+        { name: 'Ada', profileKey: 'player-ada', embedding: [0, 1] }
+      ])
+    });
+
+    expect(api.updateSelectedPlayerName(' Lolo ', storage)).toEqual({
+      key: 'player-laurent',
+      name: 'Lolo'
+    });
+    expect(JSON.parse(storage.values.get('player-laurent')).name).toBe('Lolo');
+    expect(api.readProfiles(storage)).toEqual([
+      { name: 'Lolo', profileKey: 'player-laurent', embedding: [1, 0] },
+      { name: 'Ada', profileKey: 'player-ada', embedding: [0, 1] }
+    ]);
+  });
+
+  it('creates a fresh selected player profile for unknown faces', () => {
+    const api = loadModule();
+    const storage = fakeStorage({
+      [api.DEFAULT_CONFIG.storageKey]: JSON.stringify([
+        { name: 'Laurent', profileKey: 'player-laurent', embedding: [1, 0] }
+      ]),
+      selected_player: 'player-laurent'
+    });
+
+    const player = api.createAutoPlayerProfile(storage, api.readProfiles(storage));
+
+    expect(player.name).toBe('Player 2');
+    expect(player.key).toMatch(/^player-/);
+    expect(storage.values.get('selected_player')).toBe(player.key);
+    expect(JSON.parse(storage.values.get(player.key))).toEqual({
+      name: 'Player 2',
+      score: 0,
+      scores: {}
     });
   });
 });

@@ -1,6 +1,7 @@
 (function(root) {
   const DEFAULT_CONFIG = {
     autoRegisterWhenEmpty: true,
+    autoRegisterUnknown: true,
     detectorModelPath: "assets/models/face-recognition/500m.onnx",
     detectorInputSize: 640,
     embeddingInputSize: 112,
@@ -8,7 +9,7 @@
     faceConfidenceThreshold: 0.5,
     maxProfiles: 12,
     minSamples: 5,
-    mainMenuTimeoutMs: 15000,
+    mainMenuPollMs: 250,
     nmsThreshold: 0.4,
     recognitionRetryDelayMs: 250,
     recognitionTimeoutMs: 5000,
@@ -24,6 +25,10 @@
   let ortRuntime = null;
   let ui = {};
   let initPromise = null;
+  let mainMenuRecognitionDone = false;
+  let mainMenuRecognitionInFlight = false;
+  let mainMenuWatchTimer = null;
+  let wasMainMenuReady = false;
 
   function now() {
     return root.performance && typeof root.performance.now === "function" ? root.performance.now() : Date.now();
@@ -76,6 +81,60 @@
     }
   }
 
+  function updateSelectedPlayerName(name, storage = root.localStorage) {
+    const newName = String(name || "").trim();
+    const appStorage = getStorage(storage);
+    if (!appStorage || !newName) {
+      return null;
+    }
+
+    const profileKey = appStorage.getItem("selected_player") || "player";
+    let profile = {};
+    try {
+      profile = JSON.parse(appStorage.getItem(profileKey) || "{}") || {};
+    } catch {
+      profile = {};
+    }
+
+    profile.name = newName;
+    appStorage.setItem(profileKey, JSON.stringify(profile));
+
+    const profiles = readProfiles(storage);
+    const updatedProfiles = profiles.map(faceProfile => (
+      faceProfile.profileKey === profileKey ? { ...faceProfile, name: newName } : faceProfile
+    ));
+    writeProfiles(updatedProfiles, storage);
+
+    return {
+      key: profileKey,
+      name: newName
+    };
+  }
+
+  function nextAutoPlayerName(profiles = readProfiles()) {
+    const used = new Set(profiles.map(profile => profile.name));
+    let index = profiles.length + 1;
+    let name = `Player ${index}`;
+    while (used.has(name)) {
+      index += 1;
+      name = `Player ${index}`;
+    }
+    return name;
+  }
+
+  function createAutoPlayerProfile(storage = root.localStorage, profiles = readProfiles(storage)) {
+    const appStorage = getStorage(storage);
+    if (!appStorage) {
+      return null;
+    }
+
+    const key = `player-${Date.now().toString(36)}`;
+    const name = nextAutoPlayerName(profiles);
+    appStorage.setItem(key, JSON.stringify({ name, score: 0, scores: {} }));
+    appStorage.setItem("selected_player", key);
+    return { key, name };
+  }
+
   function getVideoElement(candidate = root.video) {
     if (!candidate) {
       return null;
@@ -102,21 +161,11 @@
 
   function isMainMenuReady(state = root.gameState) {
     return Boolean(state) &&
+      state.gameReady === true &&
       state.menu === 0 &&
       !state.gameStarted &&
       !state.gameCalibration &&
       !state.menuButtonAnimation?.active;
-  }
-
-  async function waitForMainMenu(timeoutMs = config.mainMenuTimeoutMs) {
-    const started = now();
-    while (now() - started < timeoutMs) {
-      if (isMainMenuReady()) {
-        return true;
-      }
-      await delay(100);
-    }
-    return false;
   }
 
   function setText(element, value) {
@@ -138,19 +187,8 @@
 
   function bindPanel(document = root.document) {
     ui = {
-      matched: document.getElementById("face-recognition-match"),
-      registerButton: document.getElementById("face-register-button")
+      matched: document.getElementById("face-recognition-match")
     };
-
-    if (ui.registerButton && !ui.registerButton.dataset.faceRecognitionBound) {
-      ui.registerButton.dataset.faceRecognitionBound = "true";
-      ui.registerButton.addEventListener("click", () => {
-        registerCurrentFace().catch(error => {
-          console.error("Face registration failed:", error);
-          updatePanel({ status: "unavailable", matched: error.message });
-        });
-      });
-    }
   }
 
   async function loadOrtRuntime() {
@@ -514,13 +552,17 @@
 
       if (accepted) {
         getStorage(storage)?.setItem("selected_player", match.profile.profileKey || "player");
+      } else if (config.autoRegisterUnknown) {
+        createAutoPlayerProfile(storage, profiles);
+        updatePanel({ status: "registering", matched: `0/${config.sampleCount} samples` });
+        return registerCurrentFace({ videoElement, storage });
       }
 
       updatePanel({
         status: accepted ? "recognized" : "unknown",
         detected: true,
         elapsedMs: now() - started,
-        matched: accepted ? `Welcome back, ${match.profile.name} 👋` : "Unknown player",
+        matched: accepted ? match.profile.name : "Unknown player",
         score: match?.score
       });
 
@@ -532,13 +574,53 @@
     }
   }
 
+  async function recognizeOnMainMenu(options = {}) {
+    if (!isMainMenuReady() || mainMenuRecognitionDone || mainMenuRecognitionInFlight) {
+      return null;
+    }
+
+    mainMenuRecognitionDone = true;
+    mainMenuRecognitionInFlight = true;
+    try {
+      return await recognizeCurrentFace(options);
+    } finally {
+      mainMenuRecognitionInFlight = false;
+    }
+  }
+
+  function watchMainMenuRecognition(options = {}) {
+    if (mainMenuWatchTimer) {
+      return false;
+    }
+
+    const tick = () => {
+      const ready = isMainMenuReady();
+      if (!ready) {
+        wasMainMenuReady = false;
+        mainMenuRecognitionDone = false;
+        return;
+      }
+
+      if (!wasMainMenuReady) {
+        mainMenuRecognitionDone = false;
+      }
+      wasMainMenuReady = true;
+
+      void recognizeOnMainMenu(options);
+    };
+
+    tick();
+    mainMenuWatchTimer = root.setInterval(tick, config.mainMenuPollMs);
+    return true;
+  }
+
   async function registerCurrentFace({
     videoElement = getVideoElement(),
     storage = root.localStorage
   } = {}) {
     const started = now();
     bindPanel();
-    updatePanel({ status: "registering" });
+    updatePanel({ status: "registering", matched: `0/${config.sampleCount} samples` });
 
     if (!videoElement || !(await waitForVideo(videoElement))) {
       throw new Error("Camera is not ready.");
@@ -556,6 +638,12 @@
 
       if (detection) {
         embeddings.push(await computeEmbedding(videoElement, detection));
+        updatePanel({
+          status: "registering",
+          detected: true,
+          elapsedMs: now() - started,
+          matched: `${embeddings.length}/${config.sampleCount} samples`
+        });
       }
       await delay(config.sampleDelayMs);
     }
@@ -579,7 +667,7 @@
       status: "ready",
       detected: true,
       elapsedMs: now() - started,
-      matched: `Welcome back, ${profile.name} 👋`,
+      matched: profile.name,
       score: 1
     });
 
@@ -595,17 +683,15 @@
       return null;
     }
 
-    if (!(await waitForMainMenu())) {
-      return null;
-    }
-
-    return recognizeCurrentFace(options);
+    watchMainMenuRecognition(options);
+    return null;
   }
 
   const api = {
     DEFAULT_CONFIG,
     averageEmbeddings,
     cosineSimilarity,
+    createAutoPlayerProfile,
     initFaceRecognitionPoc,
     intersectionOverUnion,
     isMainMenuReady,
@@ -613,10 +699,13 @@
     nonMaxSuppression,
     readProfiles,
     recognizeCurrentFace,
+    recognizeOnMainMenu,
     registerCurrentFace,
     selectedProfile,
     sessionInputSize,
     updatePanel,
+    updateSelectedPlayerName,
+    watchMainMenuRecognition,
     writeProfiles
   };
 
