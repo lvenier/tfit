@@ -25,6 +25,10 @@ function unique(paths) {
   return [...new Set(paths)];
 }
 
+function existing(paths) {
+  return paths.filter(path => fs.existsSync(path.replace(/^\.\//, "")));
+}
+
 const content = `
 globalThis.APP_VERSION = "Box4Fit © 2026 (v${pkg.version})";
 document.getElementById("loading-version").textContent = globalThis.APP_VERSION;
@@ -48,6 +52,15 @@ const coreAssets = unique([
   "./js/ml5js/group1-shard1of3.bin",
   "./js/ml5js/group1-shard2of3.bin",
   "./js/ml5js/group1-shard3of3.bin",
+  ...existing([
+    "./node_modules/onnxruntime-web/dist/ort.wasm.min.mjs",
+    "./node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.mjs",
+    "./node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm"
+  ]),
+  ...existing([
+    "./assets/models/face-recognition/500m.onnx",
+    "./assets/models/face-recognition/w600k_mbf.onnx"
+  ]),
   "./assets/logos/logo.48.png",
   "./assets/logos/logo.96.png",
   "./assets/logos/logo.128.png",

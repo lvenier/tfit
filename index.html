@@ -45,6 +45,7 @@
   <script src="js/pad-mode.js"></script>
   <script src="js/shadow-mode.js"></script>
   <script src="js/screen-router.js"></script>
+  <script src="js/face-recognition.js"></script>
   <script src="js/app-lifecycle.js"></script>
   <script src="js/app-bootstrap.js"></script>
 </head>
@@ -66,6 +67,17 @@
         <div class="loading-count" id="loading-count">0%</div>
       </div>
     </div>
+    <aside class="face-recognition-panel" id="face-recognition-panel" aria-label="Face recognition status">
+      <div class="face-recognition-header">
+        <button class="face-register-button" id="face-register-button" type="button">Register Face</button>
+      </div>
+      <dl class="face-recognition-grid">
+        <div>
+          <dt>Matched player</dt>
+          <dd id="face-recognition-match">Unknown player</dd>
+        </div>
+      </dl>
+    </aside>
     <button class="pwa-install-button" id="pwa-install-button" type="button">Install Box4Fit</button>
     <noscript>Box4Fit needs JavaScript enabled to run the webcam boxing game.</noscript>
   </main>

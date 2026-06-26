@@ -49,6 +49,9 @@
 
     updateLoadingProgress({ label: "Starting camera", loaded: 1, total: 1 });
     await initCameraRuntime();
+    if (root.TfitFaceRecognition) {
+      root.TfitFaceRecognition.initFaceRecognitionPoc({ videoElement: root.video?.elt || root.video });
+    }
     updateLoadingProgress({ label: "Ready", loaded: 1, total: 1 });
     hideInitialLoader();
   }

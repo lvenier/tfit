@@ -3,6 +3,7 @@ const { expect, test } = require('@playwright/test');
 async function gotoApp(page) {
   await page.addInitScript(() => {
     window.__TFIT_DISABLE_SW_RELOAD_FOR_E2E = true;
+    window.__TFIT_DISABLE_FACE_RECOGNITION_FOR_E2E = true;
     window.__TFIT_DISABLE_POSE_DETECTION_FOR_E2E = true;
   });
   await page.goto('/');
