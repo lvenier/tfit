@@ -280,6 +280,18 @@ describe('pointerAction', () => {
     })).toEqual({ type: 'none' });
   });
 
+  it('uses fallback main menu button bounds when render helpers are unavailable', () => {
+    delete globalThis.TfitRender;
+
+    expect(pointerAction({
+      ...basePointer,
+      myWindowHeight: 480,
+      myWindowWidth: 640,
+      mouseX: 150,
+      mouseY: 160
+    })).toEqual({ click: true, type: 'open_pad' });
+  });
+
   it('maps profile menu buttons to profile actions', () => {
     expect(pointerAction({
       ...basePointer,
@@ -445,7 +457,13 @@ describe('keyAction', () => {
     expect(keyAction({ gameCalibration: false, gameStarted: false, key: 't', menu: 0 })).toEqual({
       type: 'open_pad'
     });
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'T', menu: 0 })).toEqual({
+      type: 'open_pad'
+    });
     expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'p', menu: 0 })).toEqual({
+      type: 'open_profile'
+    });
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'P', menu: 0 })).toEqual({
       type: 'open_profile'
     });
     expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'i', menu: 0 })).toEqual({
@@ -529,8 +547,32 @@ describe('keyAction', () => {
     expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'e', menu: 5 })).toEqual({
       type: 'profile_edit'
     });
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'E', menu: 5 })).toEqual({
+      type: 'profile_edit'
+    });
     expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'v', menu: 5 })).toEqual({
       type: 'profile_view'
+    });
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'V', menu: 5 })).toEqual({
+      type: 'profile_view'
+    });
+  });
+
+  it('ignores menu shortcuts outside their owning menu', () => {
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'S', menu: 1 })).toEqual({
+      type: 'cycle_series'
+    });
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'T', menu: 1 })).toEqual({
+      type: 'none'
+    });
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'P', menu: 1 })).toEqual({
+      type: 'none'
+    });
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'E', menu: 0 })).toEqual({
+      type: 'none'
+    });
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'V', menu: 0 })).toEqual({
+      type: 'none'
     });
   });
 });

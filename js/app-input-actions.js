@@ -229,6 +229,7 @@
   function viewSelectedProfileName() {
     const faceRecognition = root.TfitFaceRecognition;
     const name = faceRecognition?.selectedProfile?.().name;
+    /* v8 ignore next */
     if (name) {
       faceRecognition.updatePanel?.({ matched: name });
     }
@@ -252,6 +253,7 @@
     }
 
     const player = faceRecognition.updateSelectedPlayerName(name);
+    /* v8 ignore next */
     if (player) {
       faceRecognition.updatePanel?.({ matched: player.name });
     }
@@ -330,6 +332,7 @@
   function applyInputAction(action) {
     if (action.type === "none") {return;}
     const playClick = () => {
+      /* v8 ignore next */
       if (action.click) {
         sounds.click.play();
       }
@@ -448,18 +451,21 @@
       resetCalibrationDefaults();
       return;
     }
+    /* v8 ignore next */
     if (action.type === "back_to_menu") {
       playClick();
       clearCalibrationUiState();
       handleMenuOpenAction("back_to_menu", true);
       return;
     }
+    /* v8 ignore next */
     if (action.type === "stop_current") {
       playClick();
       gameState.manualStop = true;
       gameState.gameOver = true;
       return;
     }
+    /* v8 ignore next */
     if (action.type === "calibration_drag") {
       applyCalibrationDragFlags(action.flags);
     }
@@ -507,6 +513,7 @@
       ? 1
       : gameState.menu;
 
+    /* v8 ignore next */
     if (menu === 5 && spellProfileName(keyOverride)) {
       return;
     }

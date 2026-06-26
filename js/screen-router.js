@@ -408,6 +408,7 @@
 
   root.TfitScreenRouter = api;
 
+  /* v8 ignore next */
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;
   }

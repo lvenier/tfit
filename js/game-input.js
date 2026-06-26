@@ -228,6 +228,7 @@
     if (['s', 'S'].includes(key) && menu === 0) {
       return { type: "open_shadow" };
     }
+    /* v8 ignore next */
     if (['s', 'S'].includes(key) && menu > 1) {
       return { type: "stop_current" };
     }

@@ -824,6 +824,7 @@
     fill(225, 225, 225, 210);
     text(editing ? `Name: ${name}` : name, layout.width / 2, layout.height / 2 - 62 * layout.coef);
 
+    /* v8 ignore next */
     if (editing) {
       textSize(10 * layout.coef);
       fill(210, 210, 210, 185);

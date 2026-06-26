@@ -1168,6 +1168,20 @@ describe('basic render helpers', () => {
     ]));
   });
 
+  it('renders a cursor placeholder for an empty profile spelling draft', () => {
+    installRenderGlobals({
+      gameState: {
+        ...defaultGameState(),
+        profileNameDraft: '',
+        profileNameEditing: true
+      }
+    });
+
+    renderApi.renderProfileScreen();
+
+    expect(calls.text).toContainEqual(['Name: _', 320, 178]);
+  });
+
   it('uses the default level label when the configured index is missing', () => {
     installRenderGlobals({ gameState: { level: 99 } });
 
