@@ -1109,7 +1109,7 @@ describe('basic render helpers', () => {
 
     expect(calls.text).toEqual(expect.arrayContaining([
       ['(S)HADOW', 176.66666666666669, 102],
-      ['(A)PUNCH PAD', 176.66666666666669, 168],
+      ['(T)RAIN PAD', 176.66666666666669, 168],
       ['(F)IGHT', 176.66666666666669, 234],
       ['(C)ONFIGURE', 176.66666666666669, 300],
       ['(P)ROFILE', 176.66666666666669, 366]

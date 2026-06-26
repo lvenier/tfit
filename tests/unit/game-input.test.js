@@ -442,7 +442,7 @@ describe('keyAction', () => {
     expect(keyAction({ gameCalibration: false, gameStarted: false, key: 's', menu: 0 })).toEqual({
       type: 'open_shadow'
     });
-    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'a', menu: 0 })).toEqual({
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 't', menu: 0 })).toEqual({
       type: 'open_pad'
     });
     expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'p', menu: 0 })).toEqual({

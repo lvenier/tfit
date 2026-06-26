@@ -28,7 +28,7 @@
   };
   const MENU_BUTTONS = [
     { label: "SHADOW", yIndex: 0, variant: "default" },
-    { label: "(A)PUNCH PAD", yIndex: 1, variant: "default" },
+    { label: "TRAIN PAD", yIndex: 1, variant: "default" },
     { label: "FIGHT", yIndex: 2, variant: "default" },
     { label: "CONFIGURE", yIndex: 3, variant: "settings" },
     { label: "PROFILE", yIndex: 4, variant: "default" }

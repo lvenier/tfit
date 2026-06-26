@@ -231,7 +231,7 @@
     if (['s', 'S'].includes(key) && menu > 1) {
       return { type: "stop_current" };
     }
-    if (['a', 'A'].includes(key) && menu === 0) {
+    if (['t', 'T'].includes(key) && menu === 0) {
       return { type: "open_pad" };
     }
     if (['p', 'P'].includes(key) && menu === 0) {
