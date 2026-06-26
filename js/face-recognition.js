@@ -196,7 +196,7 @@
       return ortRuntime;
     }
     const ort = await import("../node_modules/onnxruntime-web/dist/ort.wasm.min.mjs");
-    ort.env.wasm.wasmPaths = "/node_modules/onnxruntime-web/dist/";
+    ort.env.wasm.wasmPaths = "./node_modules/onnxruntime-web/dist/";
     ort.env.wasm.numThreads = 1;
     ort.env.wasm.proxy = false;
     ortRuntime = ort;
@@ -537,7 +537,7 @@
       const profiles = readProfiles(storage);
       if (config.autoRegisterWhenEmpty && profiles.length === 0) {
         updatePanel({ status: "registering", matched: "Registering face..." });
-        return registerCurrentFace({ videoElement, storage });
+        return await registerCurrentFace({ videoElement, storage });
       }
 
       const detection = await detectFaceWithRetry(videoElement);
@@ -555,7 +555,7 @@
       } else if (config.autoRegisterUnknown) {
         createAutoPlayerProfile(storage, profiles);
         updatePanel({ status: "registering", matched: `0/${config.sampleCount} samples` });
-        return registerCurrentFace({ videoElement, storage });
+        return await registerCurrentFace({ videoElement, storage });
       }
 
       updatePanel({

@@ -216,4 +216,35 @@ describe('TfitFaceRecognition', () => {
       scores: {}
     });
   });
+
+  it('handles failed first-run auto-registration inside recognition', async () => {
+    const originalSetInterval = globalThis.setInterval;
+    const matched = { textContent: '' };
+    globalThis.document = {
+      getElementById(id) {
+        return id === 'face-recognition-match' ? matched : null;
+      }
+    };
+    globalThis.gameState = { gameReady: false };
+    globalThis.setInterval = () => 1;
+
+    const api = loadModule();
+    try {
+      await api.initFaceRecognitionPoc({ minSamples: 1, sampleCount: 0 });
+
+      const result = await api.recognizeCurrentFace({
+        storage: fakeStorage(),
+        videoElement: {
+          readyState: 2,
+          videoHeight: 480,
+          videoWidth: 640
+        }
+      });
+
+      expect(result).toBeNull();
+      expect(matched.textContent).toBe('Only captured 0 face samples.');
+    } finally {
+      globalThis.setInterval = originalSetInterval;
+    }
+  });
 });
