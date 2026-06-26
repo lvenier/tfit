@@ -12,6 +12,8 @@
     mainMenuPollMs: 250,
     nmsThreshold: 0.4,
     recognitionRetryDelayMs: 250,
+    recognitionSampleCount: 3,
+    recognitionSampleDelayMs: 120,
     recognitionTimeoutMs: 5000,
     sampleCount: 8,
     sampleDelayMs: 260,
@@ -191,13 +193,19 @@
     };
   }
 
+  function resolveAppAssetUrl(path) {
+    return new URL(path, root.document?.baseURI || root.location?.href || "http://localhost/").href;
+  }
+
   async function loadOrtRuntime() {
     if (ortRuntime) {
       return ortRuntime;
     }
     const ort = await import("../node_modules/onnxruntime-web/dist/ort.wasm.min.mjs");
-    ort.env.wasm.wasmPaths = "./node_modules/onnxruntime-web/dist/";
     ort.env.wasm.numThreads = 1;
+    ort.env.wasm.wasmPaths = {
+      wasm: resolveAppAssetUrl("node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm")
+    };
     ort.env.wasm.proxy = false;
     ortRuntime = ort;
     return ortRuntime;
@@ -433,6 +441,21 @@
     return detection;
   }
 
+  async function collectRecognitionEmbedding(videoElement, firstDetection) {
+    const embeddings = [await computeEmbedding(videoElement, firstDetection)];
+    const sampleCount = Math.max(1, Number(config.recognitionSampleCount) || 1);
+
+    for (let sample = 1; sample < sampleCount; sample += 1) {
+      await delay(config.recognitionSampleDelayMs);
+      const detection = await detectFace(videoElement);
+      if (detection) {
+        embeddings.push(await computeEmbedding(videoElement, detection));
+      }
+    }
+
+    return averageEmbeddings(embeddings);
+  }
+
   function detectionToCropBox(detection, videoElement) {
     const box = detection.boundingBox;
     const margin = Math.max(box.width, box.height) * 0.24;
@@ -546,7 +569,7 @@
         return null;
       }
 
-      const embedding = await computeEmbedding(videoElement, detection);
+      const embedding = await collectRecognitionEmbedding(videoElement, detection);
       const match = matchEmbedding(embedding, profiles);
       const accepted = match && match.score >= config.scoreThreshold;
 
@@ -701,6 +724,7 @@
     recognizeCurrentFace,
     recognizeOnMainMenu,
     registerCurrentFace,
+    resolveAppAssetUrl,
     selectedProfile,
     sessionInputSize,
     updatePanel,

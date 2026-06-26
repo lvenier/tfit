@@ -43,6 +43,8 @@ describe('TfitFaceRecognition', () => {
     expect(api.DEFAULT_CONFIG.autoRegisterWhenEmpty).toBe(true);
     expect(api.DEFAULT_CONFIG.autoRegisterUnknown).toBe(false);
     expect(api.DEFAULT_CONFIG.mainMenuPollMs).toBe(250);
+    expect(api.DEFAULT_CONFIG.recognitionSampleCount).toBe(3);
+    expect(api.DEFAULT_CONFIG.recognitionSampleDelayMs).toBe(120);
     expect(api.DEFAULT_CONFIG.recognitionTimeoutMs).toBe(5000);
     expect(api.DEFAULT_CONFIG.recognitionRetryDelayMs).toBe(250);
   });
@@ -146,6 +148,34 @@ describe('TfitFaceRecognition', () => {
     expect(api.writeProfiles(profiles, storage)).toBe(true);
     expect(api.readProfiles(storage)).toEqual(profiles);
     expect(storage.values.get(api.DEFAULT_CONFIG.storageKey)).not.toContain('image');
+  });
+
+  it('resolves ONNX Runtime assets relative to the app document', () => {
+    const originalDocument = globalThis.document;
+    globalThis.document = { baseURI: 'http://localhost:8000/index.html' };
+
+    try {
+      const api = loadModule();
+
+      expect(api.resolveAppAssetUrl('node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm'))
+        .toBe('http://localhost:8000/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm');
+    } finally {
+      globalThis.document = originalDocument;
+    }
+  });
+
+  it('resolves ONNX Runtime assets under the Electron app directory', () => {
+    const originalDocument = globalThis.document;
+    globalThis.document = { baseURI: 'file:///opt/Box4Fit/resources/app.asar/index.html' };
+
+    try {
+      const api = loadModule();
+
+      expect(api.resolveAppAssetUrl('node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm'))
+        .toBe('file:///opt/Box4Fit/resources/app.asar/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm');
+    } finally {
+      globalThis.document = originalDocument;
+    }
   });
 
   it('suppresses overlapping SCRFD detections by score', () => {
