@@ -61,6 +61,37 @@ canvas {
   outline-offset: 3px;
 }
 
+.face-recognition-panel {
+  position: fixed;
+  left: max(14px, env(safe-area-inset-left));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(156px, calc(100vw - 28px));
+  min-height: 52px;
+  padding: 10px 12px;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(5, 5, 5, 0.78);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.36);
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.face-profile-name {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  color: #ffffff;
+  font: 800 16px/1.2 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  text-align: center;
+  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
+}
+
 .logo {
   width: clamp(72px, 8vw, 132px);
   height: clamp(72px, 8vw, 132px);

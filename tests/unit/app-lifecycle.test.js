@@ -23,10 +23,12 @@ const STUBBED_GLOBALS = [
   'TfitAssets',
   'TfitCameraRuntime',
   'TfitConfig',
+  'TfitFaceRecognition',
   'TfitFlow',
   'TfitLayoutState',
   'TfitLoadingProgress',
-  'TfitScreenRouter'
+  'TfitScreenRouter',
+  'video'
 ];
 
 const originalGlobals = new Map();
@@ -78,6 +80,7 @@ function installGlobals(overrides = {}) {
       GAME_LEVEL: { "0": "easy" },
       MENUTYPE: { "0": "main" }
     },
+    TfitFaceRecognition: null,
     TfitFlow: {
       fetchSong: vi.fn()
     },
@@ -202,6 +205,32 @@ describe('app lifecycle handlers', () => {
       loaded: 1,
       total: 1
     });
+  });
+
+  it('starts face recognition after setup when the module is available', async () => {
+    const initFaceRecognitionPoc = vi.fn();
+    const videoElement = { id: 'camera-video' };
+    const api = installGlobals({
+      TfitFaceRecognition: { initFaceRecognitionPoc },
+      video: { elt: videoElement }
+    });
+
+    await api.setup();
+
+    expect(initFaceRecognitionPoc).toHaveBeenCalledWith({ videoElement });
+  });
+
+  it('passes direct video handles to face recognition when no wrapped element exists', async () => {
+    const initFaceRecognitionPoc = vi.fn();
+    const video = { id: 'camera-video' };
+    const api = installGlobals({
+      TfitFaceRecognition: { initFaceRecognitionPoc },
+      video
+    });
+
+    await api.setup();
+
+    expect(initFaceRecognitionPoc).toHaveBeenCalledWith({ videoElement: video });
   });
 
   it('hides the initial DOM loader once the canvas owns the screen', () => {

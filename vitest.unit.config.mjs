@@ -7,6 +7,7 @@ export default defineConfig({
     globals: false,
     coverage: {
       enabled: true,
+      exclude: ["js/face-recognition.js"],
       reporter: ["text", "lcovonly", "html"],
       reportsDirectory: "./coverage/unit",
     }

@@ -158,6 +158,7 @@ function installGlobals(overrides = {}) {
       renderGuardTargets: vi.fn(),
       renderLoadingScreen: vi.fn(),
       renderMainMenu: vi.fn(),
+      renderProfileScreen: vi.fn(),
       renderRoundHud: vi.fn(),
       renderSceneBackground: vi.fn(),
       renderSpeech: vi.fn()
@@ -255,6 +256,7 @@ describe('TfitScreenRouter exports', () => {
         renderGuardTargets: () => {},
         renderLoadingScreen: () => {},
         renderMainMenu: () => {},
+        renderProfileScreen: () => {},
         renderRoundHud: () => {},
         renderSceneBackground: () => {},
         renderSpeech: () => {}
@@ -849,7 +851,7 @@ describe('menu routing', () => {
     expect(globalThis.TfitShadowMode.renderShadowMode).toHaveBeenCalledTimes(1);
   });
 
-  it('invokes renderRoundScreen when menu is above first submenu level', () => {
+  it('invokes renderRoundScreen for gameplay submenus', () => {
     const api = installGlobals({
       gameState: defaultGameState({ menu: 3 })
     });
@@ -862,6 +864,19 @@ describe('menu routing', () => {
     expect(guardTargetsSpy).toHaveBeenCalledTimes(1);
     expect(roundHudSpy).toHaveBeenCalledWith(0);
     expect(fightButtonSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders the profile screen without round content', () => {
+    const api = installGlobals({
+      gameState: defaultGameState({ menu: 5 })
+    });
+
+    api.renderGameScreen();
+
+    expect(globalThis.TfitRender.renderBackButton).toHaveBeenCalledTimes(1);
+    expect(globalThis.TfitRender.renderProfileScreen).toHaveBeenCalledTimes(1);
+    expect(globalThis.TfitRender.renderGuardTargets).not.toHaveBeenCalled();
+    expect(globalThis.TfitRender.renderRoundHud).not.toHaveBeenCalled();
   });
 });
 

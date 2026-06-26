@@ -36,6 +36,8 @@
     my_opponent: null,
     my_stamina: 0,
     opponent: storageNumber("opponent", 0, { min: 0, max: opponentCount - 1 }),
+    profileNameDraft: "",
+    profileNameEditing: false,
     score: 0,
     score_max: 0,
     score_max_prev: 0,

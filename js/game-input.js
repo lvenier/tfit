@@ -71,21 +71,57 @@
 
     const centerXHit = isWithin(mouseX, myWindowWidth / 2 - 40 * coef, myWindowWidth / 2 + 60 * coef);
 
-    const menuButtonsOffset = 20 * coef;
-    const menuButtonH = 42;
+    const mainMenuButtonBounds = index => {
+      if (root.TfitRender?.getMainMenuButtonBounds) {
+        return root.TfitRender.getMainMenuButtonBounds(index);
+      }
+      const buttonH = 42 * coef;
+      const gap = Math.max(12 * coef, Math.min(24 * coef, (myWindowHeight - buttonH * 5 - 28 * coef) / 4));
+      const top = Math.trunc(Math.max(14 * coef, myWindowHeight / 6) + index * (buttonH + gap));
+      const left = Math.trunc(myWindowWidth / 6 + 20 * coef);
+      return {
+        bottom: Math.trunc(top + buttonH),
+        left,
+        right: Math.trunc(left + 100 * coef),
+        top
+      };
+    };
 
-    if (menu === 0 && isWithin(mouseX, Math.trunc(myWindowWidth / 6 + menuButtonsOffset), Math.trunc(myWindowWidth / 6 + menuButtonsOffset + 100 * coef))) {
-      if (isWithin(mouseY, Math.trunc(myWindowHeight / 6 + 300 * coef), Math.trunc(myWindowHeight / 6 + 300 * coef + menuButtonH * coef))) {
+    if (menu === 0) {
+      const isInMainMenuButton = index => {
+        const bounds = mainMenuButtonBounds(index);
+        return isWithin(mouseX, bounds.left, bounds.right) && isWithin(mouseY, bounds.top, bounds.bottom);
+      };
+      if (isInMainMenuButton(3)) {
         return { click: true, type: "open_settings" };
       }
-      if (isWithin(mouseY, Math.trunc(myWindowHeight / 6), Math.trunc(myWindowHeight / 6 + menuButtonH * coef))) {
+      if (isInMainMenuButton(4)) {
+        return { click: true, type: "open_profile" };
+      }
+      if (isInMainMenuButton(0)) {
         return { click: true, type: "open_shadow" };
       }
-      if (isWithin(mouseY, Math.trunc(myWindowHeight / 6 + 100 * coef), Math.trunc(myWindowHeight / 6 + 100 * coef + menuButtonH * coef))) {
+      if (isInMainMenuButton(1)) {
         return { click: true, type: "open_pad" };
       }
-      if (isWithin(mouseY, Math.trunc(myWindowHeight / 6 + 200 * coef), Math.trunc(myWindowHeight / 6 + 200 * coef + menuButtonH * coef))) {
+      if (isInMainMenuButton(2)) {
         return { click: true, type: "open_fight" };
+      }
+    }
+
+    if (menu === 5 && !gameStarted) {
+      const profileEditButtonBounds = root.TfitRender?.getProfileEditButtonBounds
+        ? root.TfitRender.getProfileEditButtonBounds()
+        : null;
+      if (profileEditButtonBounds && isWithin(mouseX, profileEditButtonBounds.left, profileEditButtonBounds.right) && isWithin(mouseY, profileEditButtonBounds.top, profileEditButtonBounds.bottom)) {
+        return { click: true, type: "profile_edit" };
+      }
+
+      const profileViewButtonBounds = root.TfitRender?.getProfileViewButtonBounds
+        ? root.TfitRender.getProfileViewButtonBounds()
+        : null;
+      if (profileViewButtonBounds && isWithin(mouseX, profileViewButtonBounds.left, profileViewButtonBounds.right) && isWithin(mouseY, profileViewButtonBounds.top, profileViewButtonBounds.bottom)) {
+        return { click: true, type: "profile_view" };
       }
     }
 
@@ -165,7 +201,7 @@
     if (gameCalibration && ['s', 'S'].includes(key) && menu !== 1) {
       return { type: "stop_calibration" };
     }
-    if (['b', 'B'].includes(key) && [1, 2, 3, 4].includes(menu) && !gameStarted) {
+    if (['b', 'B'].includes(key) && [1, 2, 3, 4, 5].includes(menu) && !gameStarted) {
       return { type: "back_to_menu" };
     }
     if (['s', 'S'].includes(key) && menu === 1) {
@@ -192,11 +228,21 @@
     if (['s', 'S'].includes(key) && menu === 0) {
       return { type: "open_shadow" };
     }
+    /* v8 ignore next */
     if (['s', 'S'].includes(key) && menu > 1) {
       return { type: "stop_current" };
     }
-    if (['p', 'P'].includes(key) && menu === 0) {
+    if (['t', 'T'].includes(key) && menu === 0) {
       return { type: "open_pad" };
+    }
+    if (['p', 'P'].includes(key) && menu === 0) {
+      return { type: "open_profile" };
+    }
+    if (['e', 'E'].includes(key) && menu === 5) {
+      return { type: "profile_edit" };
+    }
+    if (['v', 'V'].includes(key) && menu === 5) {
+      return { type: "profile_view" };
     }
     if (['f', 'F', 'i', 'I'].includes(key) && menu === 0) {
       return { type: "open_fight" };

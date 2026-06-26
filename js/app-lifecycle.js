@@ -51,6 +51,9 @@
     await initCameraRuntime();
     updateLoadingProgress({ label: "Ready", loaded: 1, total: 1 });
     hideInitialLoader();
+    if (root.TfitFaceRecognition) {
+      root.TfitFaceRecognition.initFaceRecognitionPoc({ videoElement: root.video?.elt || root.video });
+    }
   }
 
   function draw() {

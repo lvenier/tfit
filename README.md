@@ -67,6 +67,41 @@ Main files:
 - `main.js`: Electron entry point
 - `assets/`: sprites, backgrounds, logos, and sounds
 
+## Local Face Recognition POC
+
+Box4Fit includes a local-only proof of concept that can recognize a registered player before a workout starts. It complements the existing ml5.js BodyPose flow: pose detection still owns punch detection, while face recognition runs once after the webcam starts and then stops.
+
+The POC uses:
+
+- SCRFD ONNX for face detection
+- ONNX Runtime Web for local inference
+- A local ONNX face embedding model
+- `localStorage` for averaged face embeddings
+
+No face images are stored. No backend or cloud API is used.
+
+Before testing, place the model files in:
+
+```text
+assets/models/face-recognition/500m.onnx
+assets/models/face-recognition/w600k_mbf.onnx
+```
+
+Use `500m.onnx` as the SCRFD detector with `1x3x640x640` RGB input and `w600k_mbf.onnx` as the embedding model with `1x3x112x112` RGB input. The app reads ONNX input metadata when available, so compatible square input sizes can be used with config fallbacks. The default recognition threshold is `0.72`; override it with `window.__TFIT_FACE_RECOGNITION_CONFIG__ = { scoreThreshold: 0.68 }` before app startup when tuning the POC.
+
+To register a player:
+
+1. Start Box4Fit with `npm run serve` or `npm start`.
+2. Allow camera access.
+3. Select or create the player profile you want associated with this face.
+4. Keep your face visible for a few seconds while 5-8 samples are captured.
+
+When no face profiles are stored yet, Box4Fit automatically registers the currently selected player at startup. If a face is detected but does not match an existing profile, Box4Fit now shows `Unknown player` by default instead of creating another `Player X` profile on every reload. To re-register, clear `localStorage.box4fit_face_profiles` and reload on the main menu. To disable first-run registration, set `window.__TFIT_FACE_RECOGNITION_CONFIG__ = { autoRegisterWhenEmpty: false }` before app startup. Unknown-face auto-registration is available only if explicitly enabled with `autoRegisterUnknown: true`.
+
+Use `(P)ROFILE` on the main menu to open the profile screen after configuration. The profile screen has `(E)DIT`, `(V)IEW`, and the standard `(B)ACK` button. Use `Edit` to spell the current player name with the keyboard, `Enter` to save, `Backspace` to delete, and `Esc` to cancel. `View` shows the current selected player name in the compact profile panel. The app updates both the selected player profile and the stored face-profile name used in the panel. Train Pad now uses the `(T)RAIN PAD` shortcut so `(P)` can open Profile.
+
+To test recognition, reload the app and stay on the main menu. Recognition starts only after Box4Fit finishes the initial gesture/pose readiness check and is idle on menu `0`; if you leave and return to the main menu, recognition can run again. The panel shows `Recognizing...` while Box4Fit looks for a face for up to 5 seconds, then shows the matched player name or the registration counter. A successful match sets `selected_player` to the stored profile key and shows the player name; a detected unknown face starts automatic registration, while no detected face shows `Unknown player`. Tune the startup detection window with `window.__TFIT_FACE_RECOGNITION_CONFIG__ = { recognitionTimeoutMs: 8000 }`.
+
 Useful commands:
 
 ```bash
