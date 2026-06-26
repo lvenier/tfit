@@ -808,7 +808,10 @@
     const layout = layoutSnapshot();
     const editBounds = getProfileEditButtonBounds();
     const viewBounds = getProfileViewButtonBounds();
-    const name = root.TfitFaceRecognition?.selectedProfile?.().name || "Unknown player";
+    const editing = Boolean(gameState.profileNameEditing);
+    const name = editing
+      ? (gameState.profileNameDraft || "_")
+      : root.TfitFaceRecognition?.selectedProfile?.().name || "Unknown player";
 
     textAlign(CENTER, CENTER);
     textStyle(BOLD);
@@ -819,7 +822,13 @@
     textStyle(NORMAL);
     textSize(14 * layout.coef);
     fill(225, 225, 225, 210);
-    text(name, layout.width / 2, layout.height / 2 - 62 * layout.coef);
+    text(editing ? `Name: ${name}` : name, layout.width / 2, layout.height / 2 - 62 * layout.coef);
+
+    if (editing) {
+      textSize(10 * layout.coef);
+      fill(210, 210, 210, 185);
+      text("Spell with keyboard - Enter saves - Esc cancels", layout.width / 2, layout.height / 2 - 38 * layout.coef);
+    }
 
     drawMenuButton({
       label: "EDIT",

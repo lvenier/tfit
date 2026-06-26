@@ -216,16 +216,14 @@
 
   function editSelectedProfileName() {
     const faceRecognition = root.TfitFaceRecognition;
-    if (!faceRecognition?.selectedProfile || !faceRecognition?.updateSelectedPlayerName) {
+    if (!faceRecognition?.selectedProfile) {
       return;
     }
 
     const current = faceRecognition.selectedProfile().name;
-    const name = root.prompt?.("Player name", current);
-    const player = faceRecognition.updateSelectedPlayerName(name);
-    if (player) {
-      faceRecognition.updatePanel?.({ matched: player.name });
-    }
+    gameState.profileNameDraft = current;
+    gameState.profileNameEditing = true;
+    faceRecognition.updatePanel?.({ matched: current });
   }
 
   function viewSelectedProfileName() {
@@ -234,6 +232,59 @@
     if (name) {
       faceRecognition.updatePanel?.({ matched: name });
     }
+  }
+
+  function cancelProfileNameSpelling() {
+    gameState.profileNameDraft = "";
+    gameState.profileNameEditing = false;
+    viewSelectedProfileName();
+  }
+
+  function saveProfileNameSpelling() {
+    const faceRecognition = root.TfitFaceRecognition;
+    const name = String(gameState.profileNameDraft || "").trim();
+    gameState.profileNameDraft = "";
+    gameState.profileNameEditing = false;
+
+    if (!name || !faceRecognition?.updateSelectedPlayerName) {
+      viewSelectedProfileName();
+      return;
+    }
+
+    const player = faceRecognition.updateSelectedPlayerName(name);
+    if (player) {
+      faceRecognition.updatePanel?.({ matched: player.name });
+    }
+  }
+
+  function spellProfileName(keyValue) {
+    if (!gameState.profileNameEditing) {
+      return false;
+    }
+
+    if (keyValue === "Enter") {
+      saveProfileNameSpelling();
+      return true;
+    }
+
+    if (keyValue === "Escape") {
+      cancelProfileNameSpelling();
+      return true;
+    }
+
+    if (keyValue === "Backspace" || keyValue === "Delete") {
+      gameState.profileNameDraft = String(gameState.profileNameDraft || "").slice(0, -1);
+      root.TfitFaceRecognition?.updatePanel?.({ matched: gameState.profileNameDraft || " " });
+      return true;
+    }
+
+    if (typeof keyValue === "string" && keyValue.length === 1 && /^[A-Za-z0-9 _-]$/.test(keyValue) && String(gameState.profileNameDraft || "").length < 24) {
+      gameState.profileNameDraft = `${gameState.profileNameDraft || ""}${keyValue}`;
+      root.TfitFaceRecognition?.updatePanel?.({ matched: gameState.profileNameDraft });
+      return true;
+    }
+
+    return true;
   }
 
   function applyCalibrationDragFlags(flags) {
@@ -313,6 +364,7 @@
     if (action.type === "open_profile") {
       clearCalibrationUiState();
       handleMenuOpenAction("open_profile", true);
+      viewSelectedProfileName();
       playClick();
       return;
     }
@@ -454,6 +506,11 @@
     const menu = activeAnimation?.pendingTransition?.menu === 1 && activeAnimation?.active
       ? 1
       : gameState.menu;
+
+    if (menu === 5 && spellProfileName(keyOverride)) {
+      return;
+    }
+
     const action = keyAction({
       gameCalibration: gameState.gameCalibration,
       gameStarted: gameState.gameStarted,
@@ -494,6 +551,7 @@
     applyCalibrationUpdates,
     applyInputAction,
     applyPendingMenuButtonTransition,
+    cancelProfileNameSpelling,
     canApplyDuringRecentResult,
     editSelectedProfileName,
     applyKeyInputAction,
@@ -502,6 +560,8 @@
     queueMenuDoorAnimation,
     queueMenuRestore,
     resetCalibrationDefaults,
+    saveProfileNameSpelling,
+    spellProfileName,
     updateCalibrationFromPointer,
     viewSelectedProfileName
   };

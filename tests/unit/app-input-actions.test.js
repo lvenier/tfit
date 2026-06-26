@@ -25,7 +25,6 @@ const STUBBED_GLOBALS = [
   'myWindowWidth',
   'OBJECT_POSE_SIZE',
   'OPPONENTS',
-  'prompt',
   'SHADOW_SPECIFIC',
   'sounds',
   'TfitAppInputActions',
@@ -103,7 +102,6 @@ function installGlobals(overrides = {}) {
     myWindowWidth: 640,
     OBJECT_POSE_SIZE: 48,
     OPPONENTS: { 0: { stamina: 6 }, 1: { stamina: 8 }, 2: { stamina: 10 } },
-    prompt: vi.fn(() => 'Lolo'),
     SHADOW_SPECIFIC: { 0: 'ALL', 1: 'JAB' },
     sounds: {
       click: sound()
@@ -188,6 +186,7 @@ describe('TfitAppInputActions exports', () => {
       'applyPendingMenuButtonTransition',
       'applyPointerInputAction',
       'canApplyDuringRecentResult',
+      'cancelProfileNameSpelling',
       'clearCalibrationUiState',
       'clearMenuDoorTransition',
       'editSelectedProfileName',
@@ -195,6 +194,8 @@ describe('TfitAppInputActions exports', () => {
       'queueMenuDoorAnimation',
       'queueMenuRestore',
       'resetCalibrationDefaults',
+      'saveProfileNameSpelling',
+      'spellProfileName',
       'updateCalibrationFromPointer',
       'viewSelectedProfileName'
     ]);
@@ -315,16 +316,56 @@ describe('applyInputAction', () => {
       pendingTransition: { menu: 5 }
     });
     expect(globalThis.sounds.click.play).toHaveBeenCalledTimes(1);
+    expect(globalThis.TfitFaceRecognition.updatePanel).toHaveBeenCalledWith({ matched: 'Laurent' });
     expect(api.applyPendingMenuButtonTransition()).toBe(true);
     expect(globalThis.gameState.menu).toBe(5);
 
     api.applyInputAction({ click: true, type: 'profile_edit' });
-    expect(globalThis.prompt).toHaveBeenCalledWith('Player name', 'Laurent');
-    expect(globalThis.TfitFaceRecognition.updateSelectedPlayerName).toHaveBeenCalledWith('Lolo');
-    expect(globalThis.TfitFaceRecognition.updatePanel).toHaveBeenCalledWith({ matched: 'Lolo' });
+    expect(globalThis.gameState.profileNameEditing).toBe(true);
+    expect(globalThis.gameState.profileNameDraft).toBe('Laurent');
 
     api.applyInputAction({ click: true, type: 'profile_view' });
     expect(globalThis.TfitFaceRecognition.updatePanel).toHaveBeenCalledWith({ matched: 'Laurent' });
+  });
+
+  it('spells profile names with keyboard input', () => {
+    const api = installGlobals({
+      gameState: {
+        ...globalThis.gameState,
+        menu: 5,
+        profileNameDraft: '',
+        profileNameEditing: true
+      }
+    });
+
+    expect(api.spellProfileName('L')).toBe(true);
+    expect(api.spellProfileName('o')).toBe(true);
+    expect(api.spellProfileName('Backspace')).toBe(true);
+    expect(api.spellProfileName('l')).toBe(true);
+    expect(api.spellProfileName('o')).toBe(true);
+    expect(globalThis.gameState.profileNameDraft).toBe('Llo');
+
+    api.applyKeyInputAction('Enter');
+
+    expect(globalThis.gameState.profileNameEditing).toBe(false);
+    expect(globalThis.TfitFaceRecognition.updateSelectedPlayerName).toHaveBeenCalledWith('Llo');
+    expect(globalThis.TfitFaceRecognition.updatePanel).toHaveBeenCalledWith({ matched: 'Lolo' });
+  });
+
+  it('can cancel profile name spelling', () => {
+    const api = installGlobals({
+      gameState: {
+        ...globalThis.gameState,
+        profileNameDraft: 'Draft',
+        profileNameEditing: true
+      }
+    });
+
+    expect(api.spellProfileName('Escape')).toBe(true);
+
+    expect(globalThis.gameState.profileNameEditing).toBe(false);
+    expect(globalThis.gameState.profileNameDraft).toBe('');
+    expect(globalThis.TfitFaceRecognition.updateSelectedPlayerName).not.toHaveBeenCalled();
   });
 
   it('covers menu transition fallback and no-op states', () => {

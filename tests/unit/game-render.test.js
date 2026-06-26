@@ -1151,6 +1151,23 @@ describe('basic render helpers', () => {
     });
   });
 
+  it('renders profile spelling mode', () => {
+    installRenderGlobals({
+      gameState: {
+        ...defaultGameState(),
+        profileNameDraft: 'Lolo',
+        profileNameEditing: true
+      }
+    });
+
+    renderApi.renderProfileScreen();
+
+    expect(calls.text).toEqual(expect.arrayContaining([
+      ['Name: Lolo', 320, 178],
+      ['Spell with keyboard - Enter saves - Esc cancels', 320, 202]
+    ]));
+  });
+
   it('uses the default level label when the configured index is missing', () => {
     installRenderGlobals({ gameState: { level: 99 } });
 

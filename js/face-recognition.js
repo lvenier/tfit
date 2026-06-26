@@ -1,7 +1,7 @@
 (function(root) {
   const DEFAULT_CONFIG = {
     autoRegisterWhenEmpty: true,
-    autoRegisterUnknown: true,
+    autoRegisterUnknown: false,
     detectorModelPath: "assets/models/face-recognition/500m.onnx",
     detectorInputSize: 640,
     embeddingInputSize: 112,

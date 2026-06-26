@@ -41,7 +41,7 @@ describe('TfitFaceRecognition', () => {
     const api = loadModule();
 
     expect(api.DEFAULT_CONFIG.autoRegisterWhenEmpty).toBe(true);
-    expect(api.DEFAULT_CONFIG.autoRegisterUnknown).toBe(true);
+    expect(api.DEFAULT_CONFIG.autoRegisterUnknown).toBe(false);
     expect(api.DEFAULT_CONFIG.mainMenuPollMs).toBe(250);
     expect(api.DEFAULT_CONFIG.recognitionTimeoutMs).toBe(5000);
     expect(api.DEFAULT_CONFIG.recognitionRetryDelayMs).toBe(250);
