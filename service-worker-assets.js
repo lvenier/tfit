@@ -21,6 +21,7 @@ self.CORE_ASSETS=[
   "./js/game-input.js",
   "./js/game-logic.js",
   "./js/game-round.js",
+  "./js/game-background.js",
   "./js/game-render.js",
   "./js/opponent/raja.js",
   "./js/opponent/theo.js",

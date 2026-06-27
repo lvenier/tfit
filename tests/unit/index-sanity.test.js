@@ -21,6 +21,7 @@ describe('index.html app surface', () => {
     expect(scripts).toContain('js/game-config.js');
     expect(scripts).toContain('js/game-state.js');
     expect(scripts).toContain('js/game-logic.js');
+    expect(scripts).toContain('js/game-background.js');
     expect(scripts).toContain('js/game-render.js');
     expect(scripts).toContain('js/game-flow.js');
     expect(scripts).toContain('js/loading-progress.js');
@@ -28,6 +29,7 @@ describe('index.html app surface', () => {
     expect(scripts).toContain('js/app-bootstrap.js');
     expect(scripts.at(-1)).toBe('js/app.js');
     expect(scripts.indexOf('js/game-config.js')).toBeLessThan(scripts.indexOf('js/game-state.js'));
+    expect(scripts.indexOf('js/game-background.js')).toBeLessThan(scripts.indexOf('js/game-render.js'));
     expect(scripts.indexOf('js/game-logic.js')).toBeLessThan(scripts.indexOf('js/game-render.js'));
     expect(scripts.indexOf('js/game-flow.js')).toBeLessThan(scripts.indexOf('js/screen-router.js'));
     expect(scripts.indexOf('js/loading-progress.js')).toBeLessThan(scripts.indexOf('js/app-lifecycle.js'));

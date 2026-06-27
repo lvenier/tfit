@@ -69,6 +69,7 @@ const STUBBED_GLOBALS = [
   'triangle',
   'tint',
   'TfitGameLogic',
+  'TfitBackground',
   'TfitFaceRecognition',
   'TfitLayoutState',
   'TfitOpponentRenderers',
@@ -319,6 +320,21 @@ describe('TfitRender exports', () => {
     new Script(source, { filename: modulePath }).runInNewContext(sandbox);
 
     expect(Object.keys(sandbox.TfitRender).sort()).toEqual(Object.keys(renderApi).sort());
+    expect(sandbox.TfitRender.syncPageBackground(0)).toBe(false);
+  });
+
+  it('delegates scene background rendering to an existing background module', () => {
+    const renderSceneBackground = vi.fn();
+    installRenderGlobals({
+      TfitBackground: {
+        renderSceneBackground,
+        syncPageBackground: vi.fn(() => true)
+      }
+    });
+
+    renderApi.renderSceneBackground();
+
+    expect(renderSceneBackground).toHaveBeenCalledWith(2);
   });
 
   it('reads configured game labels when loaded in a browser context', () => {
@@ -367,8 +383,8 @@ describe('TfitRender exports', () => {
     new Script(source, { filename: modulePath }).runInNewContext(sandbox);
     sandbox.TfitRender.renderSettingsControls();
 
-    expect(drawCalls).toContainEqual(['(L)ENGTH (45s)', 320, 252]);
-    expect(drawCalls).toContainEqual(['(L)EVEL (CUSTOM)', 320, 302]);
+    expect(drawCalls).toContainEqual(['(L)ENGTH (45s)', 460, 252]);
+    expect(drawCalls).toContainEqual(['(L)EVEL (CUSTOM)', 460, 302]);
   });
 
   it('keeps preformatted button labels unchanged in a sandboxed render module', () => {
@@ -1109,21 +1125,21 @@ describe('basic render helpers', () => {
     expect(calls.rect).toEqual(expect.arrayContaining([
       [530, 420, 100, 42, 16],
       [260, 330, 120, 42, 16],
-      [245, 180, 150, 42, 16],
-      [245, 230, 150, 42, 16],
-      [245, 280, 150, 42, 16],
-      [245, 330, 150, 42, 16],
-      [245, 380, 150, 42, 16]
+      [385, 180, 150, 42, 16],
+      [385, 230, 150, 42, 16],
+      [385, 280, 150, 42, 16],
+      [385, 330, 150, 42, 16],
+      [385, 380, 150, 42, 16]
     ]));
 
     expect(calls.text).toEqual(expect.arrayContaining([
       ['(B)ACK', 580, 442],
       ['(F)IGHT', 320, 352],
-      ['(S)ERIES (3/5)', 320, 202],
-      ['(L)ENGTH (60s)', 320, 252],
-      ['(L)EVEL (MEDIUM)', 320, 302],
-      ['(F)RAMERATE (20 FPS)', 320, 352],
-      ['(C)ALIBRATE', 320, 402]
+      ['(S)ERIES (3/5)', 460, 202],
+      ['(L)ENGTH (60s)', 460, 252],
+      ['(L)EVEL (MEDIUM)', 460, 302],
+      ['(F)RAMERATE (20 FPS)', 460, 352],
+      ['(C)ALIBRATE', 460, 402]
     ]));
   });
 
@@ -1167,20 +1183,20 @@ describe('basic render helpers', () => {
     renderApi.renderProfileScreen();
 
     expect(calls.text).toEqual(expect.arrayContaining([
-      ['PROFILE', 320, 148],
-      ['Laurent', 320, 178],
-      ['(E)DIT', 320, 232],
-      ['(V)IEW', 320, 286]
+      ['PROFILE', 460, 148],
+      ['Laurent', 460, 178],
+      ['(E)DIT', 460, 232],
+      ['(V)IEW', 460, 286]
     ]));
     expect(renderApi.getProfileEditButtonBounds()).toEqual({
-      left: 245,
-      right: 395,
+      left: 385,
+      right: 535,
       top: 210,
       bottom: 252
     });
     expect(renderApi.getProfileViewButtonBounds()).toEqual({
-      left: 245,
-      right: 395,
+      left: 385,
+      right: 535,
       top: 264,
       bottom: 306
     });
@@ -1205,17 +1221,17 @@ describe('basic render helpers', () => {
     renderApi.renderProfileScreen();
 
     expect(calls.text).toEqual(expect.arrayContaining([
-      ['Calories burned', 320, 218],
-      ['12.6 kcal', 320, 252],
-      ['Games played', 320, 292],
-      ['Shadow: 10', 320, 314],
-      ['Train pad: 3', 320, 334],
-      ['Fight: 4', 320, 354]
+      ['Calories burned', 460, 218],
+      ['12.6 kcal', 460, 252],
+      ['Games played', 460, 292],
+      ['Shadow: 10', 460, 314],
+      ['Train pad: 3', 460, 334],
+      ['Fight: 4', 460, 354]
     ]));
-    expect(calls.text).not.toContainEqual(['PROFILE', 320, 148]);
-    expect(calls.text).not.toContainEqual(['Laurent', 320, 178]);
-    expect(calls.text).not.toContainEqual(['(E)DIT', 320, 232]);
-    expect(calls.text).not.toContainEqual(['(V)IEW', 320, 286]);
+    expect(calls.text).not.toContainEqual(['PROFILE', 460, 148]);
+    expect(calls.text).not.toContainEqual(['Laurent', 460, 178]);
+    expect(calls.text).not.toContainEqual(['(E)DIT', 460, 232]);
+    expect(calls.text).not.toContainEqual(['(V)IEW', 460, 286]);
   });
 
   it('keeps profile calorie totals hidden before viewing stats', () => {
@@ -1243,8 +1259,8 @@ describe('basic render helpers', () => {
     renderApi.renderProfileScreen();
 
     expect(calls.text).toEqual(expect.arrayContaining([
-      ['Name: Lolo', 320, 178],
-      ['Spell with keyboard - Enter saves - Esc cancels', 320, 202]
+      ['Name: Lolo', 460, 178],
+      ['Spell with keyboard - Enter saves - Esc cancels', 460, 202]
     ]));
   });
 
@@ -1259,7 +1275,7 @@ describe('basic render helpers', () => {
 
     renderApi.renderProfileScreen();
 
-    expect(calls.text).toContainEqual(['Name: _', 320, 178]);
+    expect(calls.text).toContainEqual(['Name: _', 460, 178]);
   });
 
   it('uses the default level label when the configured index is missing', () => {
@@ -1267,7 +1283,7 @@ describe('basic render helpers', () => {
 
     renderApi.renderSettingsControls();
 
-    expect(calls.text).toContainEqual(['(L)EVEL (MEDIUM)', 320, 302]);
+    expect(calls.text).toContainEqual(['(L)EVEL (MEDIUM)', 460, 302]);
   });
 
   it('draws hovered menu button glow and system-style buttons', () => {
