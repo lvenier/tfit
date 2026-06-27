@@ -519,6 +519,30 @@ describe('round flow helpers', () => {
     });
   });
 
+  it('increments fight count when a fight completes by stamina ending', () => {
+    installFlowGlobals({
+      gameState: {
+        curMoves: [{ hit: true }],
+        caloriesBurned: 0.9,
+        fightEnding: true,
+        gameCurrentSeries: 1,
+        gameSeries: 3,
+        manualStop: true,
+        menu: 4,
+        opponent: 0,
+        score: 2
+      }
+    });
+
+    flowApi.finishRound({ now: 9000, scheduleNextSeries: vi.fn() });
+
+    expect(JSON.parse(globalThis.localStorage.values.get('player'))).toMatchObject({
+      caloriesBurned: 2.4,
+      gameCounts: { fight: 5, shadow: 10, trainPad: 3 },
+      lastCaloriesBurned: 0.9
+    });
+  });
+
   it('stores selected player calories and game counts for a completed game', () => {
     installFlowGlobals({
       gameState: {

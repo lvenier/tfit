@@ -146,6 +146,7 @@
     now = Date.now(),
     scheduleNextSeries = callback => setTimeout(callback, 5100)
   } = {}) {
+    const fightEndedByStamina = gameState.menu === 4 && Boolean(gameState.fightEnding);
     gameState.gameCalibration = false;
     gameState.my_opponent = cloneOpponent(gameState.opponent);
     gameState.my_stamina = cloneOpponent(gameState.opponent).stamina;
@@ -182,7 +183,7 @@
     }
 
     if (manualStop || gameState.menu === 4 || !roundEnd.shouldStartNextSeries) {
-      const completedGame = !manualStop && (gameState.menu === 4 || !roundEnd.shouldStartNextSeries);
+      const completedGame = fightEndedByStamina || (!manualStop && (gameState.menu === 4 || !roundEnd.shouldStartNextSeries));
       storeSelectedPlayerCalories(root.localStorage, { completed: completedGame });
     }
 
