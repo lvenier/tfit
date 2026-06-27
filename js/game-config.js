@@ -76,6 +76,26 @@
       "yRatio": 0.54,
       "stamina": 10,
       "recovery": 2
+    },
+    "3": {
+      "name": "Cyril",
+      "punchWaitFrames": 110,
+      "renderer": "cyril",
+      "scale": 0.9,
+      "xRatio": 0.5,
+      "yRatio": 0.52,
+      "stamina": 12,
+      "recovery": 3
+    },
+    "4": {
+      "name": "Lav",
+      "punchWaitFrames": 100,
+      "renderer": "lav",
+      "scale": 0.76,
+      "xRatio": 0.5,
+      "yRatio": 0.55,
+      "stamina": 14,
+      "recovery": 4
     }
   };
 

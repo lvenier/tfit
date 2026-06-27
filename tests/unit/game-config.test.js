@@ -56,6 +56,26 @@ describe('TfitConfig browser export', () => {
       xRatio: 0.5,
       yRatio: 0.54
     });
+    expect(sandbox.TfitConfig.cloneOpponent("3")).toEqual({
+      name: 'Cyril',
+      punchWaitFrames: 110,
+      recovery: 3,
+      renderer: 'cyril',
+      scale: 0.9,
+      stamina: 12,
+      xRatio: 0.5,
+      yRatio: 0.52
+    });
+    expect(sandbox.TfitConfig.cloneOpponent("4")).toEqual({
+      name: 'Lav',
+      punchWaitFrames: 100,
+      recovery: 4,
+      renderer: 'lav',
+      scale: 0.76,
+      stamina: 14,
+      xRatio: 0.5,
+      yRatio: 0.55
+    });
     expect(sandbox.module.exports).toBe(sandbox.TfitConfig);
   });
 
