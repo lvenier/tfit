@@ -1602,7 +1602,10 @@
     gloveMid: "#245e31",
     gloveLight: "#3f7c43",
     gloveHighlight: "#78b176",
-    gloveShadow: "#0e351d"
+    gloveShadow: "#0e351d",
+    hairBase: null,
+    hairLight: null,
+    hairLine: null
   };
 
   function opponentPalette(overrides = {}) {
@@ -1809,6 +1812,15 @@
     ellipse(5, -177, 93, 122);
     fill(palette.skinLight);
     ellipse(60, -166, 18, 45);
+    if (palette.hairBase) {
+      fill(palette.hairBase);
+      rect(-48, -244, 96, 34, 8);
+      quad(-44, -246, 44, -246, 36, -215, -52, -213);
+      fill(palette.hairLine || palette.hairBase);
+      rect(-42, -219, 84, 12, 5);
+      triangle(-51, -224, -20, -214, -48, -207);
+      triangle(49, -224, 20, -214, 46, -207);
+    }
     fill("#101010");
     ellipse(-18, -174, 14, 24);
     ellipse(25, -174, 14, 24);

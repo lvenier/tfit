@@ -27,6 +27,8 @@ describe('Lav opponent renderer module', () => {
       type: 1,
       palette: expect.objectContaining({
         gloveLight: '#7e28d8',
+        hairBase: '#d7b947',
+        hairLight: '#ffe37a',
         skinLight: '#ffd0a6'
       })
     });

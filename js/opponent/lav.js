@@ -14,7 +14,10 @@
     gloveMid: "#3f146c",
     gloveLight: "#7e28d8",
     gloveHighlight: "#c78cff",
-    gloveShadow: "#090212"
+    gloveShadow: "#090212",
+    hairBase: "#d7b947",
+    hairLight: "#ffe37a",
+    hairLine: "#9f8126"
   };
 
   function renderLav(options = {}) {

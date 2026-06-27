@@ -782,6 +782,21 @@ describe('TfitRender exports', () => {
     expect(calls.scale).toContainEqual([(480 / 780) * 0.5]);
   });
 
+  it('renders optional opponent flat-top hair from palette overrides', () => {
+    renderApi.renderRajaOpponentCharacter({
+      layout: { height: 480, width: 640 },
+      palette: {
+        hairBase: '#d7b947',
+        hairLight: '#ffe37a',
+        hairLine: '#9f8126'
+      }
+    });
+
+    expect(calls.fill).toContainEqual(['#d7b947']);
+    expect(calls.fill).toContainEqual(['#9f8126']);
+    expect(calls.quad).toContainEqual([-44, -246, 44, -246, 36, -215, -52, -213]);
+  });
+
   it('renders procedural fight opponent hit reactions', () => {
     renderApi.renderFightOpponentCharacter({
       layout: { height: 480, width: 640 },
