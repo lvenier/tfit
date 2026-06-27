@@ -140,26 +140,43 @@
       }
     }
 
-    if (menu === 1 && !gameCalibration && centerXHit) {
-      if (isWithin(mouseY, myWindowHeight - 148 * coef, myWindowHeight - 108 * coef)) {
-        return { click: true, type: "cycle_frame_rate" };
-      }
-      if (isWithin(mouseY, myWindowHeight - 198 * coef, myWindowHeight - 158 * coef)) {
-        return { click: true, type: "cycle_level" };
-      }
-      if (isWithin(mouseY, myWindowHeight - 248 * coef, myWindowHeight - 208 * coef)) {
-        return { click: true, type: "cycle_length" };
-      }
-      if (isWithin(mouseY, myWindowHeight - 298 * coef, myWindowHeight - 258 * coef)) {
-        return { click: true, type: "cycle_series" };
+    if (menu === 1 && !gameCalibration) {
+      const settingsActions = [
+        "cycle_series",
+        "cycle_length",
+        "cycle_level",
+        "cycle_frame_rate",
+        "start_calibration"
+      ];
+      const settingsControlButtonBounds = index => {
+        if (root.TfitRender?.getSettingsControlButtonBounds) {
+          return root.TfitRender.getSettingsControlButtonBounds(index);
+        }
+        if (!centerXHit) {
+          return null;
+        }
+        const top = myWindowHeight - (298 - index * 50) * coef;
+        return {
+          left: myWindowWidth / 2 - 40 * coef,
+          right: myWindowWidth / 2 + 60 * coef,
+          top,
+          bottom: top + 40 * coef
+        };
+      };
+
+      for (let index = 0; index < settingsActions.length; index += 1) {
+        const bounds = settingsControlButtonBounds(index);
+        if (bounds && isWithin(mouseX, bounds.left, bounds.right) && isWithin(mouseY, bounds.top, bounds.bottom)) {
+          return { click: true, type: settingsActions[index] };
+        }
       }
     }
 
     const calibrationActionButtonBounds = root.TfitRender?.getCalibrationResetButtonBounds
       ? root.TfitRender.getCalibrationResetButtonBounds()
       : null;
-    if (menu === 1 && calibrationActionButtonBounds && isWithin(mouseX, calibrationActionButtonBounds.left, calibrationActionButtonBounds.right) && isWithin(mouseY, calibrationActionButtonBounds.top, calibrationActionButtonBounds.bottom)) {
-      return { click: true, type: gameCalibration ? "reset_calibration" : "start_calibration" };
+    if (menu === 1 && gameCalibration && calibrationActionButtonBounds && isWithin(mouseX, calibrationActionButtonBounds.left, calibrationActionButtonBounds.right) && isWithin(mouseY, calibrationActionButtonBounds.top, calibrationActionButtonBounds.bottom)) {
+      return { click: true, type: "reset_calibration" };
     }
 
     const settingsButtonBounds = root.TfitRender?.getSettingsButtonBounds

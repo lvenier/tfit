@@ -167,6 +167,17 @@ describe('pointerAction', () => {
     top: 540,
     bottom: 582
   });
+  const settingsControlButtonBounds = index => {
+    const top = [300, 350, 400, 450, 500][index];
+    return Number.isFinite(top)
+      ? {
+          left: 400,
+          right: 550,
+          top,
+          bottom: top + 42
+        }
+      : null;
+  };
   const mainMenuButtonBounds = index => {
     const top = [80, 146, 212, 278, 344][index];
     return {
@@ -196,6 +207,7 @@ describe('pointerAction', () => {
       getMainMenuButtonBounds: mainMenuButtonBounds,
       getProfileEditButtonBounds: profileEditButtonBounds,
       getProfileViewButtonBounds: profileViewButtonBounds,
+      getSettingsControlButtonBounds: settingsControlButtonBounds,
       getSettingsButtonBounds: settingsButtonBounds
     };
   });
@@ -236,7 +248,7 @@ describe('pointerAction', () => {
     expect(pointerAction({
       ...basePointer,
       menu: 1,
-      mouseX: 300,
+      mouseX: 460,
       mouseY: 520
     })).toEqual({ click: true, type: 'start_calibration' });
 
@@ -335,7 +347,7 @@ describe('pointerAction', () => {
     const settingsPointer = {
       ...basePointer,
       menu: 1,
-      mouseX: 300
+      mouseX: 460
     };
 
     expect(pointerAction({
@@ -357,6 +369,40 @@ describe('pointerAction', () => {
       ...settingsPointer,
       mouseY: 320
     })).toEqual({ click: true, type: 'cycle_series' });
+  });
+
+  it('ignores the old centered settings strip after controls move right', () => {
+    expect(pointerAction({
+      ...basePointer,
+      menu: 1,
+      mouseX: 300,
+      mouseY: 470
+    })).toEqual({ type: 'none' });
+
+    expect(pointerAction({
+      ...basePointer,
+      menu: 1,
+      mouseX: 300,
+      mouseY: 520
+    })).toEqual({ type: 'none' });
+  });
+
+  it('falls back to centered settings controls when render row bounds are unavailable', () => {
+    delete globalThis.TfitRender.getSettingsControlButtonBounds;
+
+    expect(pointerAction({
+      ...basePointer,
+      menu: 1,
+      mouseX: 300,
+      mouseY: 470
+    })).toEqual({ click: true, type: 'cycle_frame_rate' });
+
+    expect(pointerAction({
+      ...basePointer,
+      menu: 1,
+      mouseX: 120,
+      mouseY: 470
+    })).toEqual({ type: 'none' });
   });
 
   it('maps the fight opponent panel to opponent cycling before the fight starts', () => {
@@ -394,7 +440,7 @@ describe('pointerAction', () => {
     expect(pointerAction({
       ...basePointer,
       menu: 1,
-      mouseX: 300,
+      mouseX: 460,
       mouseY: 520
     })).toEqual({ click: true, type: 'start_calibration' });
 

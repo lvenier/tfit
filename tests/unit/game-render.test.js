@@ -288,6 +288,7 @@ describe('TfitRender exports', () => {
       'getProfileEditButtonBounds',
       'getProfileViewButtonBounds',
       'getSettingsButtonBounds',
+      'getSettingsControlButtonBounds',
       'renderBackButton',
       'renderCalibrationOverlay',
       'renderCalibrationResetButton',
@@ -1334,6 +1335,22 @@ describe('basic render helpers', () => {
     renderApi.renderSettingsControls();
 
     expect(calls.text).toContainEqual(['(L)EVEL (MEDIUM)', 460, 302]);
+  });
+
+  it('returns right-column settings control bounds from the current layout', () => {
+    expect(renderApi.getSettingsControlButtonBounds(0)).toEqual({
+      left: 385,
+      right: 535,
+      top: 180,
+      bottom: 222
+    });
+    expect(renderApi.getSettingsControlButtonBounds(4)).toEqual({
+      left: 385,
+      right: 535,
+      top: 380,
+      bottom: 422
+    });
+    expect(renderApi.getSettingsControlButtonBounds(5)).toBeNull();
   });
 
   it('draws hovered menu button glow and system-style buttons', () => {

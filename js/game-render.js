@@ -575,6 +575,32 @@
     };
   }
 
+  function getSettingsControlButtonBounds(index) {
+    const layout = layoutSnapshot();
+    const settingsButtonWidth = SETTINGS_BUTTON_WIDTH * layout.coef;
+    const settingsButtonHeight = SETTINGS_BUTTON_HEIGHT * layout.coef;
+    const settingsButtonX = Math.trunc(menuContentCenterX(layout, settingsButtonWidth) - settingsButtonWidth / 2);
+    const controlsY = [
+      layout.height - 300 * layout.coef,
+      layout.height - 250 * layout.coef,
+      layout.height - 200 * layout.coef,
+      layout.height - 150 * layout.coef,
+      layout.height - 100 * layout.coef
+    ];
+    const y = controlsY[index];
+
+    if (!Number.isFinite(y)) {
+      return null;
+    }
+
+    return rectFor({
+      x: settingsButtonX,
+      y,
+      w: settingsButtonWidth,
+      h: settingsButtonHeight
+    });
+  }
+
   function menuContentCenterX(layout = layoutSnapshot(), contentWidth = SETTINGS_BUTTON_WIDTH * layout.coef) {
     const margin = 24 * layout.coef;
     const preferred = layout.width * 0.72;
@@ -661,16 +687,10 @@
 
   function renderSettingsControls() {
     const layout = layoutSnapshot();
-    const controlsY = [
-      layout.height - 300 * layout.coef,
-      layout.height - 250 * layout.coef,
-      layout.height - 200 * layout.coef,
-      layout.height - 150 * layout.coef,
-      layout.height - 100 * layout.coef
-    ];
+    const controlsY = [0, 1, 2, 3, 4].map(index => getSettingsControlButtonBounds(index).top);
     const settingsButtonWidth = SETTINGS_BUTTON_WIDTH * layout.coef;
     const settingsButtonHeight = SETTINGS_BUTTON_HEIGHT * layout.coef;
-    const settingsButtonX = Math.trunc(menuContentCenterX(layout, settingsButtonWidth) - settingsButtonWidth / 2);
+    const settingsButtonX = getSettingsControlButtonBounds(0).left;
     const controlTextSize = 11;
     const robot = menuRobotPose({ layout });
     const controlBounds = controlsY.map(y => rectFor({
@@ -1885,6 +1905,7 @@
     getMainMenuButtonBounds,
     getProfileEditButtonBounds,
     getProfileViewButtonBounds,
+    getSettingsControlButtonBounds,
     getSettingsButtonBounds,
     renderSceneBackground,
     renderSettingsControls,
