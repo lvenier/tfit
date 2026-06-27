@@ -23,6 +23,8 @@ describe('index.html app surface', () => {
     expect(scripts).toContain('js/game-logic.js');
     expect(scripts).toContain('js/game-background.js');
     expect(scripts).toContain('js/game-render.js');
+    expect(scripts).toContain('js/opponent/cyril.js');
+    expect(scripts).toContain('js/opponent/lav.js');
     expect(scripts).toContain('js/game-flow.js');
     expect(scripts).toContain('js/loading-progress.js');
     expect(scripts).toContain('js/screen-router.js');
@@ -31,6 +33,8 @@ describe('index.html app surface', () => {
     expect(scripts.indexOf('js/game-config.js')).toBeLessThan(scripts.indexOf('js/game-state.js'));
     expect(scripts.indexOf('js/game-background.js')).toBeLessThan(scripts.indexOf('js/game-render.js'));
     expect(scripts.indexOf('js/game-logic.js')).toBeLessThan(scripts.indexOf('js/game-render.js'));
+    expect(scripts.indexOf('js/game-render.js')).toBeLessThan(scripts.indexOf('js/opponent/cyril.js'));
+    expect(scripts.indexOf('js/opponent/vehbo.js')).toBeLessThan(scripts.indexOf('js/opponent/lav.js'));
     expect(scripts.indexOf('js/game-flow.js')).toBeLessThan(scripts.indexOf('js/screen-router.js'));
     expect(scripts.indexOf('js/loading-progress.js')).toBeLessThan(scripts.indexOf('js/app-lifecycle.js'));
     expect(scripts.indexOf('js/app-bootstrap.js')).toBeLessThan(scripts.indexOf('js/app.js'));
