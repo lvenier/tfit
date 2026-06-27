@@ -456,6 +456,7 @@
       playClick();
       clearCalibrationUiState();
       handleMenuOpenAction("back_to_menu", true);
+      viewSelectedProfileName();
       return;
     }
     /* v8 ignore next */

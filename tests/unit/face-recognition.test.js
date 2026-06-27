@@ -150,6 +150,21 @@ describe('TfitFaceRecognition', () => {
     expect(storage.values.get(api.DEFAULT_CONFIG.storageKey)).not.toContain('image');
   });
 
+  it('uses the selected profile name when recognition does not match confidently', () => {
+    const api = loadModule();
+    const storage = fakeStorage({
+      selected_player: 'player-laurent',
+      'player-laurent': JSON.stringify({ name: 'Laurent' })
+    });
+
+    expect(api.recognitionDisplayName({ accepted: false, storage })).toBe('Laurent');
+    expect(api.recognitionDisplayName({
+      accepted: true,
+      match: { profile: { name: 'Lolo' } },
+      storage
+    })).toBe('Lolo');
+  });
+
   it('resolves ONNX Runtime assets relative to the app document', () => {
     const originalDocument = globalThis.document;
     globalThis.document = { baseURI: 'http://localhost:8000/index.html' };

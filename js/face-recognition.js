@@ -544,6 +544,13 @@
     }, null);
   }
 
+  function recognitionDisplayName({ accepted, match, storage = root.localStorage } = {}) {
+    if (accepted && match?.profile?.name) {
+      return match.profile.name;
+    }
+    return selectedProfile(storage).name || "Unknown player";
+  }
+
   async function recognizeCurrentFace({
     videoElement = getVideoElement(),
     storage = root.localStorage
@@ -573,6 +580,7 @@
       const embedding = await collectRecognitionEmbedding(videoElement, detection);
       const match = matchEmbedding(embedding, profiles);
       const accepted = match && match.score >= config.scoreThreshold;
+      const matchedName = recognitionDisplayName({ accepted, match, storage });
 
       if (accepted) {
         getStorage(storage)?.setItem("selected_player", match.profile.profileKey || "player");
@@ -586,7 +594,7 @@
         status: accepted ? "recognized" : "unknown",
         detected: true,
         elapsedMs: now() - started,
-        matched: accepted ? match.profile.name : "Unknown player",
+        matched: matchedName,
         score: match?.score
       });
 
@@ -723,6 +731,7 @@
     nonMaxSuppression,
     readProfiles,
     recognizeCurrentFace,
+    recognitionDisplayName,
     recognizeOnMainMenu,
     registerCurrentFace,
     resolveAppAssetUrl,

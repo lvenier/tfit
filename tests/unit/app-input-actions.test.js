@@ -630,6 +630,7 @@ describe('applyInputAction', () => {
       button: 'back_to_menu',
       pendingTransition: { menu: 0 }
     });
+    expect(globalThis.TfitFaceRecognition.updatePanel).toHaveBeenCalledWith({ matched: 'Laurent' });
     expect(api.applyPendingMenuButtonTransition()).toBe(true);
     expect(globalThis.gameState.menu).toBe(0);
 

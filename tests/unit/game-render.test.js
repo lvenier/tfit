@@ -1122,6 +1122,18 @@ describe('basic render helpers', () => {
     });
   });
 
+  it('renders the configure menu button with the standard menu colors', () => {
+    renderApi.renderMainMenu();
+
+    const mainMenuButtonStrokes = calls.stroke.filter(call => (
+      call[3] === 145 || call[3] === 255
+    ));
+    const configureButtonStroke = mainMenuButtonStrokes[3];
+
+    expect(configureButtonStroke).toEqual([175, 70, 255, 145]);
+    expect(calls.fill).toContainEqual([255, 255, 255]);
+  });
+
   it('renders the profile screen controls', () => {
     installRenderGlobals({
       TfitFaceRecognition: {
