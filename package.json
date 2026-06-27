@@ -2,7 +2,7 @@
     "name": "box4fit",
     "desktopName": "Box4Fit",
     "main": "main.js",
-    "version": "1.18.3",
+    "version": "1.18.4",
     "description": "A webcam boxing fitness game with motion detection",
     "license": "MIT",
     "keywords": [
@@ -37,7 +37,7 @@
         "productName": "Box4Fit",
         "asarUnpack": [
             "assets/models/face-recognition/**/*",
-            "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.*"
+            "assets/vendor/onnxruntime-web/**/*"
         ],
         "linux": {
             "icon": "assets/logos/logo.256.png",
