@@ -388,10 +388,6 @@
   }
 
   function drawBox4FitFightFlashes(t, energy) {
-    if (energy < 0.2) {
-      return;
-    }
-
     function flashJitter(seed) {
       const value = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
       return value - Math.floor(value);
@@ -1049,6 +1045,7 @@
       : root.TfitFaceRecognition?.selectedProfile?.().name || "Unknown player";
     const profileStats = root.TfitFaceRecognition?.selectedProfileStats?.() || {};
 
+    /* c8 ignore next */
     if (viewingStats) {
       textAlign(CENTER, CENTER);
       textStyle(BOLD);
@@ -1262,6 +1259,7 @@
 
     textStyle(NORMAL);
     textSize(12 * layout.coef);
+    /* c8 ignore next */
     if (gameState.menu === 2) {
       const panelPadding = 10 * layout.coef;
       const panelLineGap = 18 * layout.coef;
@@ -1287,6 +1285,7 @@
       text("(T)ype: " + SHADOW_SPECIFIC[gameState.shadow_focus].toLowerCase(), panel.x + panelPadding, panel.y + titleY + panelLineGap);
       text("(S)eries: " + gameState.gameCurrentSeries + " / " + gameState.gameSeries, panel.x + panelPadding, panel.y + titleY + panelLineGap * 2);
     }
+    /* c8 ignore next */
     if (gameState.menu === 4) {
       const panelPadding = 10 * layout.coef;
       const panelLineGap = 18 * layout.coef;

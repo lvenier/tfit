@@ -581,6 +581,21 @@ describe('keyAction', () => {
     });
   });
 
+  it('ignores profile edit and view keys when profile stats are visible or state is unavailable', () => {
+    globalThis.gameState = { profileStatsVisible: true };
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'e', menu: 5 })).toEqual({
+      type: 'none'
+    });
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'v', menu: 5 })).toEqual({
+      type: 'none'
+    });
+
+    delete globalThis.gameState;
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'e', menu: 5 })).toEqual({
+      type: 'profile_edit'
+    });
+  });
+
   it('ignores menu shortcuts outside their owning menu', () => {
     expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'S', menu: 1 })).toEqual({
       type: 'cycle_series'

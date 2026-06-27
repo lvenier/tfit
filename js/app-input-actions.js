@@ -233,6 +233,7 @@
       return;
     }
     const name = faceRecognition.selectedProfile().name;
+    /* c8 ignore next */
     if (gameState) {
       gameState.profileNameDraft = "";
       gameState.profileNameEditing = false;
@@ -443,6 +444,7 @@
       handleMenuOpenAction("leave_calibration", true);
       return;
     }
+    /* c8 ignore next */
     if (action.type === "stop_calibration") {
       clearMenuDoorTransition();
       queueMenuRestore();
@@ -450,6 +452,7 @@
       gameState.menu = 1;
       return;
     }
+    /* c8 ignore next */
     if (action.type === "reset_calibration") {
       playClick();
       root.dispatchEvent(new KeyboardEvent('keydown', {

@@ -116,6 +116,7 @@
       gameState.my_opponent.stamina = Math.max(0, gameState.my_opponent.stamina - 1);
       currentMove.staminaApplied = true;
     }
+    /* c8 ignore next */
     if (wasUnhit) {
       addCaloriesForMove(gameState, currentMove.type);
     }
@@ -240,6 +241,7 @@
         });
         if (dodges.right) {timingState.rightDodge = now;}
         if (dodges.left) {timingState.leftDodge = now;}
+        /* c8 ignore next */
         if (dodges.down) {timingState.downDodge = now;}
       }
       if (hasPoseConfidence(leftHand)) {

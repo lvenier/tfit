@@ -64,6 +64,10 @@ describe('calorie helpers', () => {
     expect(addCaloriesForMove(state, 7)).toBe(0.2);
     expect(state.caloriesBurned).toBe(0.3);
   });
+
+  it('skips calorie updates when no state is available', () => {
+    expect(addCaloriesForMove(null, 7)).toBe(0);
+  });
 });
 
 describe('hasComboBeforeHit', () => {

@@ -352,6 +352,25 @@ describe('round flow helpers', () => {
     expect(globalThis.gameState.song).toEqual({ moveLength: 0, moves: [] });
   });
 
+  it('resets calories when starting the first series', () => {
+    installFlowGlobals({
+      gameState: {
+        caloriesBurned: 4.2,
+        gameCurrentSeries: 1,
+        gameLength: 30,
+        gameStarted: false,
+        menu: 2,
+        opponent: 0,
+        score: 8,
+        song: { moveLength: 0, moves: [] }
+      }
+    });
+
+    flowApi.letsfight(10_000);
+
+    expect(globalThis.gameState.caloriesBurned).toBe(0);
+  });
+
   it('finishes a round, resets runtime state, and records result timing', () => {
     installFlowGlobals({
       animationState: {
@@ -534,6 +553,48 @@ describe('round flow helpers', () => {
       caloriesBurned: 1.5,
       gameCounts: { fight: 4, shadow: 10, trainPad: 4 },
       lastCaloriesBurned: 0
+    });
+  });
+
+  it('skips profile stats storage when storage is unavailable', () => {
+    installFlowGlobals();
+
+    expect(flowApi.storeSelectedPlayerCalories(null)).toBeNull();
+    expect(flowApi.storeSelectedPlayerCalories({ getItem: () => null })).toBeNull();
+  });
+
+  it('recovers profile stats storage when stored profile JSON is invalid', () => {
+    installFlowGlobals({
+      gameState: {
+        caloriesBurned: 1.2,
+        menu: 4
+      }
+    });
+    globalThis.localStorage.values.set('player', '{bad json');
+
+    expect(flowApi.storeSelectedPlayerCalories()).toEqual({
+      key: 'player',
+      caloriesBurned: 1.2,
+      gameCounts: { fight: 1, shadow: 0, trainPad: 0 },
+      lastCaloriesBurned: 1.2
+    });
+  });
+
+  it('uses the default player key and empty object fallback for profile stat storage', () => {
+    installFlowGlobals({
+      gameState: {
+        caloriesBurned: 0.5,
+        menu: 2
+      }
+    });
+    globalThis.localStorage.values.delete('selected_player');
+    globalThis.localStorage.values.set('player', 'null');
+
+    expect(flowApi.storeSelectedPlayerCalories()).toEqual({
+      key: 'player',
+      caloriesBurned: 0.5,
+      gameCounts: { fight: 0, shadow: 1, trainPad: 0 },
+      lastCaloriesBurned: 0.5
     });
   });
 

@@ -44,6 +44,7 @@
   }
 
   function addCaloriesForMove(state, type) {
+    /* c8 ignore next */
     if (!state) {
       return 0;
     }

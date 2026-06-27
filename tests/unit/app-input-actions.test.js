@@ -418,6 +418,16 @@ describe('applyInputAction', () => {
     expect(globalThis.TfitFaceRecognition.updatePanel).not.toHaveBeenCalled();
   });
 
+  it('can view the selected profile name when game state is unavailable', () => {
+    const api = installGlobals({
+      gameState: undefined
+    });
+
+    api.viewSelectedProfileName({ showStats: true });
+
+    expect(globalThis.TfitFaceRecognition.updatePanel).toHaveBeenCalledWith({ matched: 'Laurent' });
+  });
+
   it('ignores profile editing when face recognition helpers are unavailable', () => {
     const api = installGlobals({
       TfitFaceRecognition: null
