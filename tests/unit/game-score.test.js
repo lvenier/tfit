@@ -6,6 +6,8 @@ import { Script } from 'node:vm';
 const require = createRequire(import.meta.url);
 
 const {
+  addCaloriesForMove,
+  caloriesForMove,
   comboFeedbackKey,
   hasComboBeforeHit,
   markHit
@@ -14,6 +16,8 @@ const {
 describe('TfitScore exports', () => {
   it('exposes scoring helpers for app.js', () => {
     expect(Object.keys(globalThis.TfitScore).sort()).toEqual([
+      'addCaloriesForMove',
+      'caloriesForMove',
       'comboFeedbackKey',
       'hasComboBeforeHit',
       'markHit'
@@ -41,6 +45,24 @@ describe('comboFeedbackKey', () => {
     expect(comboFeedbackKey(() => 10 / 20)).toBe('thats_it');
     expect(comboFeedbackKey(() => 12 / 20)).toBe('well_done');
     expect(comboFeedbackKey(() => 14 / 20)).toBeNull();
+  });
+});
+
+describe('calorie helpers', () => {
+  it('assigns more calories to dodges than punches', () => {
+    expect(caloriesForMove(1)).toBe(0.1);
+    expect(caloriesForMove(6)).toBe(0.1);
+    expect(caloriesForMove(7)).toBe(0.2);
+    expect(caloriesForMove(9)).toBe(0.2);
+    expect(caloriesForMove(10)).toBe(0.2);
+    expect(caloriesForMove(0)).toBe(0);
+  });
+
+  it('adds rounded calories to game state', () => {
+    const state = { caloriesBurned: 0.1 };
+
+    expect(addCaloriesForMove(state, 7)).toBe(0.2);
+    expect(state.caloriesBurned).toBe(0.3);
   });
 });
 
@@ -107,9 +129,11 @@ describe('markHit', () => {
   it('marks score and move hit state, returning the hit timestamp once', () => {
     const arrayScore = [0];
     const curMoves = [{ type: 1, hit: false }];
+    const calorieState = { caloriesBurned: 0 };
 
     expect(markHit({
       arrayScore,
+      calorieState,
       curMoves,
       index: 0,
       now: 1234
@@ -117,13 +141,16 @@ describe('markHit', () => {
 
     expect(arrayScore).toEqual([1]);
     expect(curMoves).toEqual([{ type: 1, hit: true }]);
+    expect(calorieState.caloriesBurned).toBe(0.1);
 
     expect(markHit({
       arrayScore,
+      calorieState,
       curMoves,
       index: 0,
       now: 5678
     })).toEqual({ hitSuccess: null });
+    expect(calorieState.caloriesBurned).toBe(0.1);
   });
 
   it('plays combo feedback only for first-time combo hits', () => {

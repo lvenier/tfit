@@ -323,9 +323,16 @@ describe('applyInputAction', () => {
     api.applyInputAction({ click: true, type: 'profile_edit' });
     expect(globalThis.gameState.profileNameEditing).toBe(true);
     expect(globalThis.gameState.profileNameDraft).toBe('Laurent');
+    expect(globalThis.gameState.profileStatsVisible).toBe(false);
 
     api.applyInputAction({ click: true, type: 'profile_view' });
     expect(globalThis.TfitFaceRecognition.updatePanel).toHaveBeenCalledWith({ matched: 'Laurent' });
+    expect(globalThis.gameState.profileStatsVisible).toBe(true);
+
+    api.applyInputAction({ click: true, type: 'back_to_menu' });
+    expect(globalThis.gameState.menu).toBe(5);
+    expect(globalThis.gameState.profileStatsVisible).toBe(false);
+    expect(globalThis.gameState.menuButtonAnimation.button).toBe('open_profile');
   });
 
   it('spells profile names with keyboard input', () => {

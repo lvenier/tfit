@@ -14,6 +14,7 @@ const STUBBED_GLOBALS = [
   'gameState',
   'hide_sensor',
   'LEVEL',
+  'localStorage',
   'myWindowHeight',
   'randomInteger',
   'SHADOW_SPECIFIC',
@@ -56,6 +57,7 @@ function installFlowGlobals(overrides = {}) {
       gameLength: 30,
       gameStarted: false,
       gameTimer: -1,
+      caloriesBurned: 0,
       level: 1,
       menu: 2,
       moves: [],
@@ -69,6 +71,22 @@ function installFlowGlobals(overrides = {}) {
     },
     hide_sensor: 64,
     LEVEL: 0,
+    localStorage: {
+      values: new Map([
+        ['selected_player', 'player'],
+        ['player', JSON.stringify({
+          name: 'Laurent',
+          caloriesBurned: 1.5,
+          gameCounts: { fight: 4, shadow: 10, trainPad: 3 }
+        })]
+      ]),
+      getItem(key) {
+        return this.values.has(key) ? this.values.get(key) : null;
+      },
+      setItem(key, value) {
+        this.values.set(key, value);
+      }
+    },
     myWindowHeight: 480,
     randomInteger: vi.fn(() => 2),
     SHADOW_SPECIFIC: { 0: 'ALL', 1: 'JAB' },
@@ -147,6 +165,7 @@ describe('TfitFlow exports', () => {
       'letsfight',
       'loadSongmoves',
       'punchSound',
+      'storeSelectedPlayerCalories',
       'switch_feet'
     ]);
     expect(globalThis.TfitFlow).toBe(flowApi);
@@ -393,6 +412,7 @@ describe('round flow helpers', () => {
     installFlowGlobals({
       gameState: {
         curMoves: [{ hit: true }],
+        caloriesBurned: 0.8,
         gameCurrentSeries: 1,
         gameSeries: 3,
         opponent: 0,
@@ -414,6 +434,7 @@ describe('round flow helpers', () => {
     expect(globalThis.timingState.gameResult).toBe(1000);
     expect(globalThis.gameState.gameCurrentSeries).toBe(2);
     expect(scheduleNextSeries).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(globalThis.localStorage.values.get('player')).caloriesBurned).toBe(1.5);
 
     scheduleNextSeries.mock.calls[0][0]();
 
@@ -426,6 +447,7 @@ describe('round flow helpers', () => {
     installFlowGlobals({
       gameState: {
         curMoves: [{ hit: true }],
+        caloriesBurned: 0.7,
         gameCurrentSeries: 1,
         gameSeries: 3,
         menu: 4,
@@ -448,6 +470,71 @@ describe('round flow helpers', () => {
     expect(globalThis.gameState.gameCurrentSeries).toBe(1);
     expect(globalThis.gameState.gameStarted).toBe(false);
     expect(scheduleNextSeries).not.toHaveBeenCalled();
+    expect(JSON.parse(globalThis.localStorage.values.get('player'))).toMatchObject({
+      caloriesBurned: 2.2,
+      gameCounts: { fight: 5, shadow: 10, trainPad: 3 },
+      lastCaloriesBurned: 0.7
+    });
+  });
+
+  it('does not increment game counts when a game is stopped before completion', () => {
+    installFlowGlobals({
+      gameState: {
+        curMoves: [{ hit: true }],
+        caloriesBurned: 0.7,
+        gameCurrentSeries: 1,
+        gameSeries: 3,
+        manualStop: true,
+        menu: 4,
+        opponent: 0,
+        score: 2
+      }
+    });
+
+    flowApi.finishRound({ now: 9000, scheduleNextSeries: vi.fn() });
+
+    expect(JSON.parse(globalThis.localStorage.values.get('player'))).toMatchObject({
+      caloriesBurned: 2.2,
+      gameCounts: { fight: 4, shadow: 10, trainPad: 3 },
+      lastCaloriesBurned: 0.7
+    });
+  });
+
+  it('stores selected player calories and game counts for a completed game', () => {
+    installFlowGlobals({
+      gameState: {
+        caloriesBurned: 2.4,
+        menu: 2
+      }
+    });
+
+    expect(flowApi.storeSelectedPlayerCalories()).toEqual({
+      key: 'player',
+      caloriesBurned: 3.9,
+      gameCounts: { fight: 4, shadow: 11, trainPad: 3 },
+      lastCaloriesBurned: 2.4
+    });
+    expect(JSON.parse(globalThis.localStorage.values.get('player'))).toMatchObject({
+      caloriesBurned: 3.9,
+      gameCounts: { fight: 4, shadow: 11, trainPad: 3 },
+      lastCaloriesBurned: 2.4
+    });
+  });
+
+  it('stores a game count even when no calories were burned', () => {
+    installFlowGlobals({
+      gameState: {
+        caloriesBurned: 0,
+        menu: 3
+      }
+    });
+
+    expect(flowApi.storeSelectedPlayerCalories()).toMatchObject({
+      key: 'player',
+      caloriesBurned: 1.5,
+      gameCounts: { fight: 4, shadow: 10, trainPad: 4 },
+      lastCaloriesBurned: 0
+    });
   });
 
   it('uses a delayed restart when no scheduler override is provided', () => {

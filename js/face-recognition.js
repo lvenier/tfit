@@ -83,6 +83,28 @@
     }
   }
 
+  function selectedProfileStats(storage = root.localStorage) {
+    const appStorage = getStorage(storage);
+    const profile = selectedProfile(storage);
+    let stored = {};
+
+    try {
+      stored = JSON.parse(appStorage?.getItem(profile.key) || "{}") || {};
+    } catch {
+      stored = {};
+    }
+
+    return {
+      caloriesBurned: Number(stored.caloriesBurned) || 0,
+      gameCounts: {
+        fight: Number(stored.gameCounts?.fight) || 0,
+        shadow: Number(stored.gameCounts?.shadow) || 0,
+        trainPad: Number(stored.gameCounts?.trainPad) || 0
+      },
+      lastCaloriesBurned: Number(stored.lastCaloriesBurned) || 0
+    };
+  }
+
   function updateSelectedPlayerName(name, storage = root.localStorage) {
     const newName = String(name || "").trim();
     const appStorage = getStorage(storage);
@@ -736,6 +758,7 @@
     registerCurrentFace,
     resolveAppAssetUrl,
     selectedProfile,
+    selectedProfileStats,
     sessionInputSize,
     updatePanel,
     updateSelectedPlayerName,

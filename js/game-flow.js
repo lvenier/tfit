@@ -60,6 +60,9 @@
     hide_sensor = 0;
     gameState.gameTimer = 0;
     gameState.score = 0;
+    if (gameState.gameCurrentSeries === 1) {
+      gameState.caloriesBurned = 0;
+    }
     gameState.arrayScore = [];
     loadSongmoves();
     gameState.score_max_prev = gameState.score_max;
@@ -74,6 +77,7 @@
   function hitSuccess(c) {
     const result = root.TfitScore.markHit({
       arrayScore: gameState.arrayScore,
+      calorieState: gameState,
       curMoves: gameState.curMoves,
       index: c,
       playComboFeedback: key => {
@@ -92,6 +96,50 @@
     if (result.hitSuccess !== null) {
       timingState.hitSuccess = result.hitSuccess;
     }
+  }
+
+  function storeSelectedPlayerCalories(storage = root.localStorage, { completed = true } = {}) {
+    if (!storage || typeof storage.getItem !== "function" || typeof storage.setItem !== "function") {
+      return null;
+    }
+
+    const profileKey = storage.getItem("selected_player") || "player";
+    const calories = Math.max(0, Number(gameState.caloriesBurned) || 0);
+    const gameCountKey = {
+      2: "shadow",
+      3: "trainPad",
+      4: "fight"
+    }[gameState.menu];
+    if (calories <= 0 && (!completed || !gameCountKey)) {
+      return null;
+    }
+
+    let profile = {};
+    try {
+      profile = JSON.parse(storage.getItem(profileKey) || "{}") || {};
+    } catch {
+      profile = {};
+    }
+
+    const total = Math.round(((Number(profile.caloriesBurned) || 0) + calories) * 10) / 10;
+    profile.caloriesBurned = total;
+    profile.lastCaloriesBurned = Math.round(calories * 10) / 10;
+    profile.gameCounts = {
+      fight: Number(profile.gameCounts?.fight) || 0,
+      shadow: Number(profile.gameCounts?.shadow) || 0,
+      trainPad: Number(profile.gameCounts?.trainPad) || 0
+    };
+    if (completed && gameCountKey) {
+      profile.gameCounts[gameCountKey] += 1;
+    }
+    storage.setItem(profileKey, JSON.stringify(profile));
+
+    return {
+      key: profileKey,
+      caloriesBurned: profile.caloriesBurned,
+      gameCounts: profile.gameCounts,
+      lastCaloriesBurned: profile.lastCaloriesBurned
+    };
   }
 
   function finishRound({
@@ -133,6 +181,11 @@
       });
     }
 
+    if (manualStop || gameState.menu === 4 || !roundEnd.shouldStartNextSeries) {
+      const completedGame = !manualStop && (gameState.menu === 4 || !roundEnd.shouldStartNextSeries);
+      storeSelectedPlayerCalories(root.localStorage, { completed: completedGame });
+    }
+
     gameState.gameCurrentSeries = manualStop || gameState.menu === 4 ? 1 : roundEnd.gameSeries;
     gameState.feet_position = 0;
     calibrationState.left_init_pose_y = storageNumber("left_init_pose_y", root.TfitLayoutState.snapshot().height / 3);
@@ -149,6 +202,7 @@
     letsfight,
     loadSongmoves,
     punchSound,
+    storeSelectedPlayerCalories,
     switch_feet
   };
 

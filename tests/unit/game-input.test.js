@@ -308,6 +308,29 @@ describe('pointerAction', () => {
     })).toEqual({ click: true, type: 'profile_view' });
   });
 
+  it('ignores profile edit and view controls while profile stats are visible', () => {
+    const originalGameState = globalThis.gameState;
+    globalThis.gameState = { profileStatsVisible: true };
+
+    try {
+      expect(pointerAction({
+        ...basePointer,
+        menu: 5,
+        mouseX: 300,
+        mouseY: 230
+      })).toEqual({ type: 'none' });
+
+      expect(keyAction({
+        gameCalibration: false,
+        gameStarted: false,
+        key: 'v',
+        menu: 5
+      })).toEqual({ type: 'none' });
+    } finally {
+      globalThis.gameState = originalGameState;
+    }
+  });
+
   it('maps settings controls to cycle actions with click feedback', () => {
     const settingsPointer = {
       ...basePointer,

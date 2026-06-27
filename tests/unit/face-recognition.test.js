@@ -219,6 +219,33 @@ describe('TfitFaceRecognition', () => {
     });
   });
 
+  it('reads selected player calorie stats from profile storage', () => {
+    const api = loadModule();
+    const storage = fakeStorage({
+      selected_player: 'player-laurent',
+      'player-laurent': JSON.stringify({
+        name: 'Laurent',
+        caloriesBurned: 12.6,
+        gameCounts: {
+          fight: 4,
+          shadow: 10,
+          trainPad: 3
+        },
+        lastCaloriesBurned: 1.4
+      })
+    });
+
+    expect(api.selectedProfileStats(storage)).toEqual({
+      caloriesBurned: 12.6,
+      gameCounts: {
+        fight: 4,
+        shadow: 10,
+        trainPad: 3
+      },
+      lastCaloriesBurned: 1.4
+    });
+  });
+
   it('updates the selected player profile and matching face profile name', () => {
     const api = loadModule();
     const storage = fakeStorage({
