@@ -208,6 +208,13 @@
     }
   }
 
+  function mainMenuGuardActive(layout = layoutSnapshot()) {
+    const frameRate = Math.max(1, Number(layout.frameRate) || 20);
+    const frame = typeof frameCount === "number" ? frameCount : 0;
+    const secondsInCycle = (frame / frameRate) % 5;
+    return secondsInCycle < 1;
+  }
+
   function renderMainMenu() {
     const layout = layoutSnapshot();
     const menu = mainMenuButtonMetrics(layout);
@@ -262,7 +269,8 @@
     renderMenuBoxingRobot({
       x: panelX,
       y: panelY + panelH + 360,
-      scale: 1.35
+      scale: 1.35,
+      guard: mainMenuGuardActive(layout)
     });
   }
 
@@ -575,6 +583,41 @@
     return Math.trunc(Math.max(minCenter, Math.min(maxCenter, preferred)));
   }
 
+  function menuRobotPose({
+    layout = layoutSnapshot(),
+    x = null,
+    y = null,
+    scale: robotScale = null
+  } = {}) {
+    const resolvedScale = robotScale ?? Math.max(0.95, Math.min(1.24, layout.coef * 1.18));
+    return {
+      scale: resolvedScale,
+      x: x ?? layout.width * 0.28,
+      y: y ?? layout.height / 2 + 36 * resolvedScale
+    };
+  }
+
+  function hoveredButtonRobotTarget(buttonBounds, robot) {
+    const pointer = {
+      x: typeof mouseX === "number" ? mouseX : Number.NEGATIVE_INFINITY,
+      y: typeof mouseY === "number" ? mouseY : Number.NEGATIVE_INFINITY
+    };
+    const hovered = buttonBounds.find(bounds => isPointInRect(pointer, bounds));
+
+    if (!hovered) {
+      return null;
+    }
+
+    const centerX = (hovered.left + hovered.right) / 2;
+    const centerY = (hovered.top + hovered.bottom) / 2;
+    return {
+      x: (centerX - robot.x) / robot.scale,
+      y: (centerY - robot.y) / robot.scale,
+      reach: 1,
+      side: "right"
+    };
+  }
+
   function getProfileEditButtonBounds() {
     const layout = layoutSnapshot();
     const buttonWidth = 150 * layout.coef;
@@ -626,10 +669,21 @@
       layout.height - 100 * layout.coef
     ];
     const settingsButtonWidth = SETTINGS_BUTTON_WIDTH * layout.coef;
+    const settingsButtonHeight = SETTINGS_BUTTON_HEIGHT * layout.coef;
     const settingsButtonX = Math.trunc(menuContentCenterX(layout, settingsButtonWidth) - settingsButtonWidth / 2);
     const controlTextSize = 11;
+    const robot = menuRobotPose({ layout });
+    const controlBounds = controlsY.map(y => rectFor({
+      x: settingsButtonX,
+      y,
+      w: settingsButtonWidth,
+      h: settingsButtonHeight
+    }));
 
-    renderMenuBoxingRobot();
+    renderMenuBoxingRobot({
+      ...robot,
+      target: hoveredButtonRobotTarget(controlBounds, robot)
+    });
 
     drawMenuButton({
       label: `SERIES (${gameState.gameSeries}/${SERIES_TOTAL})`,
@@ -637,7 +691,7 @@
       x: settingsButtonX,
       y: controlsY[0],
       w: settingsButtonWidth,
-      h: SETTINGS_BUTTON_HEIGHT * layout.coef,
+      h: settingsButtonHeight,
       textSizePx: controlTextSize
     });
 
@@ -647,7 +701,7 @@
       x: settingsButtonX,
       y: controlsY[1],
       w: settingsButtonWidth,
-      h: SETTINGS_BUTTON_HEIGHT * layout.coef,
+      h: settingsButtonHeight,
       textSizePx: controlTextSize
     });
 
@@ -657,7 +711,7 @@
       x: settingsButtonX,
       y: controlsY[2],
       w: settingsButtonWidth,
-      h: SETTINGS_BUTTON_HEIGHT * layout.coef,
+      h: settingsButtonHeight,
       textSizePx: controlTextSize
     });
 
@@ -667,7 +721,7 @@
       x: settingsButtonX,
       y: controlsY[3],
       w: settingsButtonWidth,
-      h: SETTINGS_BUTTON_HEIGHT * layout.coef,
+      h: settingsButtonHeight,
       textSizePx: controlTextSize
     });
 
@@ -677,7 +731,7 @@
       x: settingsButtonX,
       y: controlsY[4],
       w: settingsButtonWidth,
-      h: SETTINGS_BUTTON_HEIGHT * layout.coef,
+      h: settingsButtonHeight,
       textSizePx: controlTextSize
     });
   }
@@ -694,8 +748,13 @@
       : root.TfitFaceRecognition?.selectedProfile?.().name || "Unknown player";
     const profileStats = root.TfitFaceRecognition?.selectedProfileStats?.() || {};
     const profileCenterX = menuContentCenterX(layout, 150 * layout.coef);
+    const robot = menuRobotPose({ layout });
+    const profileButtonBounds = viewingStats ? [] : [editBounds, viewBounds];
 
-    renderMenuBoxingRobot();
+    renderMenuBoxingRobot({
+      ...robot,
+      target: hoveredButtonRobotTarget(profileButtonBounds, robot)
+    });
 
     /* c8 ignore next */
     if (viewingStats) {
@@ -762,7 +821,8 @@
     y = null,
     scale: robotScale = null,
     attack = false,
-    guard = false
+    guard = false,
+    target = null
   } = {}) {
     if (
       typeof push !== "function" ||
@@ -773,10 +833,11 @@
       return false;
     }
 
-    const layout = layoutSnapshot();
-    const resolvedScale = robotScale ?? Math.max(0.72, Math.min(1.02, layout.coef * 0.92));
-    const resolvedX = x ?? layout.width * 0.28;
-    const resolvedY = y ?? layout.height / 2 + 36 * resolvedScale;
+    const {
+      scale: resolvedScale,
+      x: resolvedX,
+      y: resolvedY
+    } = menuRobotPose({ x, y, scale: robotScale });
     const anim = (typeof frameCount === "number" ? frameCount : 0) * 0.045;
 
     drawUpperWireBoxer(
@@ -786,7 +847,7 @@
       anim,
       attack,
       guard,
-      null,
+      target,
       true
     );
     return true;

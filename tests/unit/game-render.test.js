@@ -1202,6 +1202,41 @@ describe('basic render helpers', () => {
     });
   });
 
+  it('aims the profile robot glove toward a hovered profile button', () => {
+    installRenderGlobals({
+      mouseX: 460,
+      mouseY: 232,
+      TfitFaceRecognition: {
+        selectedProfile: () => ({ key: 'player', name: 'Laurent' })
+      }
+    });
+
+    renderApi.renderProfileScreen();
+
+    const targetX = (460 - 640 * 0.28) / 1.18;
+    const targetY = (231 - (480 / 2 + 36 * 1.18)) / 1.18;
+    expect(calls.line.some(([x1, y1, x2, y2]) => (
+      Math.abs(x1 - targetX) < 0.001 &&
+      Math.abs(y1 - targetY) < 0.001 &&
+      Math.abs(x2 - targetX) < 0.001 &&
+      Math.abs(y2 - targetY) < 0.001
+    ))).toBe(true);
+  });
+
+  it('keeps profile robot idle when pointer coordinates are unavailable', () => {
+    installRenderGlobals({
+      mouseX: undefined,
+      mouseY: undefined,
+      TfitFaceRecognition: {
+        selectedProfile: () => ({ key: 'player', name: 'Laurent' })
+      }
+    });
+
+    renderApi.renderProfileScreen();
+
+    expect(calls.text).toContainEqual(['Laurent', 460, 178]);
+  });
+
   it('renders profile calorie totals after viewing stats', () => {
     installRenderGlobals({
       gameState: {
