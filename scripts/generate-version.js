@@ -53,9 +53,9 @@ const coreAssets = unique([
   "./js/ml5js/group1-shard2of3.bin",
   "./js/ml5js/group1-shard3of3.bin",
   ...existing([
-    "./node_modules/onnxruntime-web/dist/ort.wasm.min.mjs",
-    "./node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.mjs",
-    "./node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm"
+    "./assets/vendor/onnxruntime-web/ort.wasm.min.mjs",
+    "./assets/vendor/onnxruntime-web/ort-wasm-simd-threaded.mjs",
+    "./assets/vendor/onnxruntime-web/ort-wasm-simd-threaded.wasm"
   ]),
   ...existing([
     "./assets/models/face-recognition/500m.onnx",

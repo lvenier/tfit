@@ -157,8 +157,8 @@ describe('TfitFaceRecognition', () => {
     try {
       const api = loadModule();
 
-      expect(api.resolveAppAssetUrl('node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm'))
-        .toBe('http://localhost:8000/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm');
+      expect(api.resolveAppAssetUrl('assets/vendor/onnxruntime-web/ort-wasm-simd-threaded.wasm'))
+        .toBe('http://localhost:8000/assets/vendor/onnxruntime-web/ort-wasm-simd-threaded.wasm');
     } finally {
       globalThis.document = originalDocument;
     }
@@ -171,8 +171,8 @@ describe('TfitFaceRecognition', () => {
     try {
       const api = loadModule();
 
-      expect(api.resolveAppAssetUrl('node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm'))
-        .toBe('file:///opt/Box4Fit/resources/app.asar.unpacked/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm');
+      expect(api.resolveAppAssetUrl('assets/vendor/onnxruntime-web/ort-wasm-simd-threaded.wasm'))
+        .toBe('file:///opt/Box4Fit/resources/app.asar.unpacked/assets/vendor/onnxruntime-web/ort-wasm-simd-threaded.wasm');
     } finally {
       globalThis.document = originalDocument;
     }

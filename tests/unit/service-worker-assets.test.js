@@ -46,7 +46,10 @@ describe('service worker asset manifest', () => {
       './js/ml5js/model.json',
       './js/ml5js/group1-shard1of3.bin',
       './js/ml5js/group1-shard2of3.bin',
-      './js/ml5js/group1-shard3of3.bin'
+      './js/ml5js/group1-shard3of3.bin',
+      './assets/vendor/onnxruntime-web/ort.wasm.min.mjs',
+      './assets/vendor/onnxruntime-web/ort-wasm-simd-threaded.mjs',
+      './assets/vendor/onnxruntime-web/ort-wasm-simd-threaded.wasm'
     ]));
     expect(new Set(coreAssets).size).toBe(coreAssets.length);
   });
