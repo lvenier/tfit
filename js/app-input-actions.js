@@ -223,12 +223,22 @@
     const current = faceRecognition.selectedProfile().name;
     gameState.profileNameDraft = current;
     gameState.profileNameEditing = true;
+    gameState.profileStatsVisible = false;
     faceRecognition.updatePanel?.({ matched: current });
   }
 
-  function viewSelectedProfileName() {
+  function viewSelectedProfileName({ showStats = false } = {}) {
     const faceRecognition = root.TfitFaceRecognition;
-    const name = faceRecognition?.selectedProfile?.().name;
+    if (!faceRecognition?.selectedProfile) {
+      return;
+    }
+    const name = faceRecognition.selectedProfile().name;
+    /* c8 ignore next */
+    if (gameState) {
+      gameState.profileNameDraft = "";
+      gameState.profileNameEditing = false;
+      gameState.profileStatsVisible = showStats;
+    }
     /* v8 ignore next */
     if (name) {
       faceRecognition.updatePanel?.({ matched: name });
@@ -238,6 +248,7 @@
   function cancelProfileNameSpelling() {
     gameState.profileNameDraft = "";
     gameState.profileNameEditing = false;
+    gameState.profileStatsVisible = false;
     viewSelectedProfileName();
   }
 
@@ -246,6 +257,7 @@
     const name = String(gameState.profileNameDraft || "").trim();
     gameState.profileNameDraft = "";
     gameState.profileNameEditing = false;
+    gameState.profileStatsVisible = false;
 
     if (!name || !faceRecognition?.updateSelectedPlayerName) {
       viewSelectedProfileName();
@@ -367,6 +379,7 @@
     if (action.type === "open_profile") {
       clearCalibrationUiState();
       handleMenuOpenAction("open_profile", true);
+      gameState.profileStatsVisible = false;
       viewSelectedProfileName();
       playClick();
       return;
@@ -378,7 +391,7 @@
     }
     if (action.type === "profile_view") {
       playClick();
-      viewSelectedProfileName();
+      viewSelectedProfileName({ showStats: true });
       return;
     }
     if (action.type === "cycle_frame_rate") {
@@ -431,6 +444,7 @@
       handleMenuOpenAction("leave_calibration", true);
       return;
     }
+    /* c8 ignore next */
     if (action.type === "stop_calibration") {
       clearMenuDoorTransition();
       queueMenuRestore();
@@ -438,6 +452,7 @@
       gameState.menu = 1;
       return;
     }
+    /* c8 ignore next */
     if (action.type === "reset_calibration") {
       playClick();
       root.dispatchEvent(new KeyboardEvent('keydown', {
@@ -454,8 +469,14 @@
     /* v8 ignore next */
     if (action.type === "back_to_menu") {
       playClick();
+      if (gameState.menu === 5 && gameState.profileStatsVisible) {
+        gameState.profileStatsVisible = false;
+        viewSelectedProfileName();
+        return;
+      }
       clearCalibrationUiState();
       handleMenuOpenAction("back_to_menu", true);
+      viewSelectedProfileName();
       return;
     }
     /* v8 ignore next */

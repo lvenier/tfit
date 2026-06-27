@@ -30,6 +30,7 @@
     manualStop: false,
     gameTimer: -1,
     gameTimerNext: 0,
+    caloriesBurned: 0,
     level: storageNumber("level", 0, { min: 0, max: Object.keys(GAME_LEVEL).length - 1 }),
     menu: 0,
     moves: [],
@@ -72,6 +73,13 @@
 
   const selectedPlayer = localStorage.getItem("selected_player") || "player";
   storageJson(selectedPlayer, {
+    "caloriesBurned": 0,
+    "gameCounts": {
+      "fight": 0,
+      "shadow": 0,
+      "trainPad": 0
+    },
+    "lastCaloriesBurned": 0,
     "name": (Math.random() + 1).toString(36).substring(2),
     "score": 0,
     "scores": {}

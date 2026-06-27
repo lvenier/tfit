@@ -109,7 +109,7 @@
       }
     }
 
-    if (menu === 5 && !gameStarted) {
+    if (menu === 5 && !gameStarted && !root.gameState?.profileStatsVisible) {
       const profileEditButtonBounds = root.TfitRender?.getProfileEditButtonBounds
         ? root.TfitRender.getProfileEditButtonBounds()
         : null;
@@ -238,10 +238,10 @@
     if (['p', 'P'].includes(key) && menu === 0) {
       return { type: "open_profile" };
     }
-    if (['e', 'E'].includes(key) && menu === 5) {
+    if (['e', 'E'].includes(key) && menu === 5 && !root.gameState?.profileStatsVisible) {
       return { type: "profile_edit" };
     }
-    if (['v', 'V'].includes(key) && menu === 5) {
+    if (['v', 'V'].includes(key) && menu === 5 && !root.gameState?.profileStatsVisible) {
       return { type: "profile_view" };
     }
     if (['f', 'F', 'i', 'I'].includes(key) && menu === 0) {

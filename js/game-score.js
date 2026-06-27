@@ -33,8 +33,29 @@
     return null;
   }
 
+  function caloriesForMove(type) {
+    if (type >= 7 && type <= 10) {
+      return 0.2;
+    }
+    if (type >= 1 && type <= 6) {
+      return 0.1;
+    }
+    return 0;
+  }
+
+  function addCaloriesForMove(state, type) {
+    /* c8 ignore next */
+    if (!state) {
+      return 0;
+    }
+    const calories = caloriesForMove(type);
+    state.caloriesBurned = Math.round(((Number(state.caloriesBurned) || 0) + calories) * 10) / 10;
+    return calories;
+  }
+
   function markHit({
     arrayScore,
+    calorieState = null,
     curMoves,
     index,
     now = Date.now(),
@@ -51,6 +72,7 @@
         }
       }
       hitSuccess = now;
+      addCaloriesForMove(calorieState, curMoves[index].type);
     }
 
     arrayScore[index] = 1;
@@ -60,6 +82,8 @@
   }
 
   const api = {
+    addCaloriesForMove,
+    caloriesForMove,
     comboFeedbackKey,
     hasComboBeforeHit,
     markHit

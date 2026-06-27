@@ -308,6 +308,29 @@ describe('pointerAction', () => {
     })).toEqual({ click: true, type: 'profile_view' });
   });
 
+  it('ignores profile edit and view controls while profile stats are visible', () => {
+    const originalGameState = globalThis.gameState;
+    globalThis.gameState = { profileStatsVisible: true };
+
+    try {
+      expect(pointerAction({
+        ...basePointer,
+        menu: 5,
+        mouseX: 300,
+        mouseY: 230
+      })).toEqual({ type: 'none' });
+
+      expect(keyAction({
+        gameCalibration: false,
+        gameStarted: false,
+        key: 'v',
+        menu: 5
+      })).toEqual({ type: 'none' });
+    } finally {
+      globalThis.gameState = originalGameState;
+    }
+  });
+
   it('maps settings controls to cycle actions with click feedback', () => {
     const settingsPointer = {
       ...basePointer,
@@ -555,6 +578,21 @@ describe('keyAction', () => {
     });
     expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'V', menu: 5 })).toEqual({
       type: 'profile_view'
+    });
+  });
+
+  it('ignores profile edit and view keys when profile stats are visible or state is unavailable', () => {
+    globalThis.gameState = { profileStatsVisible: true };
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'e', menu: 5 })).toEqual({
+      type: 'none'
+    });
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'v', menu: 5 })).toEqual({
+      type: 'none'
+    });
+
+    delete globalThis.gameState;
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'e', menu: 5 })).toEqual({
+      type: 'profile_edit'
     });
   });
 

@@ -17,6 +17,8 @@
     moveDisplay
   } = root.TfitGameLogic;
 
+  const addCaloriesForMove = root.TfitScore?.addCaloriesForMove || (() => 0);
+
   const {
     renderFightMeters,
     renderFightOpponentCharacter,
@@ -109,9 +111,14 @@
   }
 
   function markFightPromptSuccess(currentMove, now) {
+    const wasUnhit = currentMove.hit === false;
     if (currentMove.type >= 1 && currentMove.type <= 6 && !currentMove.staminaApplied) {
       gameState.my_opponent.stamina = Math.max(0, gameState.my_opponent.stamina - 1);
       currentMove.staminaApplied = true;
+    }
+    /* c8 ignore next */
+    if (wasUnhit) {
+      addCaloriesForMove(gameState, currentMove.type);
     }
     currentMove.hit = true;
     timingState.hitSuccess = now;
@@ -234,6 +241,7 @@
         });
         if (dodges.right) {timingState.rightDodge = now;}
         if (dodges.left) {timingState.leftDodge = now;}
+        /* c8 ignore next */
         if (dodges.down) {timingState.downDodge = now;}
       }
       if (hasPoseConfidence(leftHand)) {

@@ -323,9 +323,16 @@ describe('applyInputAction', () => {
     api.applyInputAction({ click: true, type: 'profile_edit' });
     expect(globalThis.gameState.profileNameEditing).toBe(true);
     expect(globalThis.gameState.profileNameDraft).toBe('Laurent');
+    expect(globalThis.gameState.profileStatsVisible).toBe(false);
 
     api.applyInputAction({ click: true, type: 'profile_view' });
     expect(globalThis.TfitFaceRecognition.updatePanel).toHaveBeenCalledWith({ matched: 'Laurent' });
+    expect(globalThis.gameState.profileStatsVisible).toBe(true);
+
+    api.applyInputAction({ click: true, type: 'back_to_menu' });
+    expect(globalThis.gameState.menu).toBe(5);
+    expect(globalThis.gameState.profileStatsVisible).toBe(false);
+    expect(globalThis.gameState.menuButtonAnimation.button).toBe('open_profile');
   });
 
   it('spells profile names with keyboard input', () => {
@@ -409,6 +416,16 @@ describe('applyInputAction', () => {
     expect(api.spellProfileName('Enter')).toBe(true);
     expect(globalThis.TfitFaceRecognition.updateSelectedPlayerName).toHaveBeenCalledWith('Lolo');
     expect(globalThis.TfitFaceRecognition.updatePanel).not.toHaveBeenCalled();
+  });
+
+  it('can view the selected profile name when game state is unavailable', () => {
+    const api = installGlobals({
+      gameState: undefined
+    });
+
+    api.viewSelectedProfileName({ showStats: true });
+
+    expect(globalThis.TfitFaceRecognition.updatePanel).toHaveBeenCalledWith({ matched: 'Laurent' });
   });
 
   it('ignores profile editing when face recognition helpers are unavailable', () => {
@@ -630,6 +647,7 @@ describe('applyInputAction', () => {
       button: 'back_to_menu',
       pendingTransition: { menu: 0 }
     });
+    expect(globalThis.TfitFaceRecognition.updatePanel).toHaveBeenCalledWith({ matched: 'Laurent' });
     expect(api.applyPendingMenuButtonTransition()).toBe(true);
     expect(globalThis.gameState.menu).toBe(0);
 

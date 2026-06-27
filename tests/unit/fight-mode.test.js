@@ -1270,6 +1270,39 @@ describe('fight mode rendering', () => {
     expect(globalThis.TfitPoseDetection.moveMatchesRecentGesture).not.toHaveBeenCalled();
   });
 
+  it('records down dodge timing from pose detection', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0, x: 20, y: 30 },
+      nose: { confidence: 0.9, x: 10, y: 15 },
+      rightHand: { confidence: 0, x: 40, y: 50 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [],
+        gameStarted: false,
+        gameTimer: 1,
+        gameTimerNext: 0,
+        moves: [],
+        my_opponent: { stamina: 6 },
+        my_stamina: 6,
+        opponent: 0
+      },
+      poses: [trackedPose],
+      TfitPoseDetection: {
+        detectDodgeGestures: vi.fn(() => ({ down: true, left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderFightMode();
+
+    expect(globalThis.timingState.downDodge).toBe(10_000);
+  });
+
   it('keeps an active opponent punch animating after a successful dodge', () => {
     const trackedPose = {
       leftHand: { confidence: 0.9, x: 20, y: 30 },

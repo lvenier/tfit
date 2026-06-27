@@ -48,7 +48,16 @@ describe('TfitState browser export', () => {
     expect(sandbox.animationState.player.frame).toBe(4);
     expect(sandbox.padState.x).toBe(120);
     expect(sandbox.module.exports).toBe(sandbox.TfitState);
-    expect(storageJson).toHaveBeenCalledWith('player', expect.objectContaining({ score: 0 }));
+    expect(storageJson).toHaveBeenCalledWith('player', expect.objectContaining({
+      caloriesBurned: 0,
+      gameCounts: {
+        fight: 0,
+        shadow: 0,
+        trainPad: 0
+      },
+      lastCaloriesBurned: 0,
+      score: 0
+    }));
   });
 
   it('supports browser globals without CommonJS exports and selected player storage', () => {

@@ -83,6 +83,28 @@
     }
   }
 
+  function selectedProfileStats(storage = root.localStorage) {
+    const appStorage = getStorage(storage);
+    const profile = selectedProfile(storage);
+    let stored = {};
+
+    try {
+      stored = JSON.parse(appStorage?.getItem(profile.key) || "{}") || {};
+    } catch {
+      stored = {};
+    }
+
+    return {
+      caloriesBurned: Number(stored.caloriesBurned) || 0,
+      gameCounts: {
+        fight: Number(stored.gameCounts?.fight) || 0,
+        shadow: Number(stored.gameCounts?.shadow) || 0,
+        trainPad: Number(stored.gameCounts?.trainPad) || 0
+      },
+      lastCaloriesBurned: Number(stored.lastCaloriesBurned) || 0
+    };
+  }
+
   function updateSelectedPlayerName(name, storage = root.localStorage) {
     const newName = String(name || "").trim();
     const appStorage = getStorage(storage);
@@ -544,6 +566,13 @@
     }, null);
   }
 
+  function recognitionDisplayName({ accepted, match, storage = root.localStorage } = {}) {
+    if (accepted && match?.profile?.name) {
+      return match.profile.name;
+    }
+    return selectedProfile(storage).name || "Unknown player";
+  }
+
   async function recognizeCurrentFace({
     videoElement = getVideoElement(),
     storage = root.localStorage
@@ -573,6 +602,7 @@
       const embedding = await collectRecognitionEmbedding(videoElement, detection);
       const match = matchEmbedding(embedding, profiles);
       const accepted = match && match.score >= config.scoreThreshold;
+      const matchedName = recognitionDisplayName({ accepted, match, storage });
 
       if (accepted) {
         getStorage(storage)?.setItem("selected_player", match.profile.profileKey || "player");
@@ -586,7 +616,7 @@
         status: accepted ? "recognized" : "unknown",
         detected: true,
         elapsedMs: now() - started,
-        matched: accepted ? match.profile.name : "Unknown player",
+        matched: matchedName,
         score: match?.score
       });
 
@@ -723,10 +753,12 @@
     nonMaxSuppression,
     readProfiles,
     recognizeCurrentFace,
+    recognitionDisplayName,
     recognizeOnMainMenu,
     registerCurrentFace,
     resolveAppAssetUrl,
     selectedProfile,
+    selectedProfileStats,
     sessionInputSize,
     updatePanel,
     updateSelectedPlayerName,

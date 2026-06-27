@@ -94,6 +94,7 @@ function record(name) {
 function defaultGameState() {
   return {
     arrayScore: [],
+    caloriesBurned: 1.2,
     curMoves: [],
     feet_position: 0,
     gameCurrentSeries: 1,
@@ -1034,26 +1035,48 @@ describe('basic render helpers', () => {
     expect(hasGame3PerspectiveLine).toBe(true);
   });
 
-  it('renders the fight arena for game 4 in scene background', () => {
-    installRenderGlobals({ gameState: { menu: 4 } });
+  it('renders the Box4Fit arena background for game 4 in scene background', () => {
+    installRenderGlobals({ gameState: { menu: 4 }, frameCount: 0 });
+    renderApi.renderSceneBackground();
+
+    expect(calls.text.some(([label]) => label === 'BOX4FIT')).toBe(true);
+    expect(calls.text.some(([label]) => label === 'FIGHT NIGHT')).toBe(true);
+    expect(calls.quad.length).toBeGreaterThan(4);
+    expect(calls.circle.length).toBeGreaterThan(6);
+    expect(calls.circle.some((entry) => entry[2] > 45 && entry[2] < 55)).toBe(true);
+
+    installRenderGlobals({ gameState: { menu: 4 }, frameCount: 50 });
+    renderApi.renderSceneBackground();
+
+    expect(calls.circle.some((entry) => entry[2] > 45 && entry[2] < 55)).toBe(false);
+    expect(calls.rect).not.toContainEqual([0, 0, 640, 480]);
+  });
+
+  it('renders the fight arena background for config and profile screens', () => {
+    installRenderGlobals({ gameState: { menu: 1 } });
     renderApi.renderSceneBackground();
 
     expect(calls.triangle).toHaveLength(5);
     expect(calls.ellipse.length).toBeGreaterThan(50);
-    const hasFightBanner = calls.ellipse.some((entry) => (
+    const hasConfigFightBanner = calls.ellipse.some((entry) => (
       Math.abs(entry[0] - (640 * 0.13)) < 0.001 &&
       Math.abs(entry[1] - 22) < 0.001 &&
       entry[2] === 38 &&
       entry[3] === 13
     ));
-    expect(hasFightBanner).toBe(true);
-    const hasFightPostFloor = calls.rect.some((entry) => (
+    expect(hasConfigFightBanner).toBe(true);
+
+    installRenderGlobals({ gameState: { menu: 5 } });
+    renderApi.renderSceneBackground();
+
+    expect(calls.triangle).toHaveLength(5);
+    const hasProfileFightPostFloor = calls.rect.some((entry) => (
       entry[0] === 320 &&
       Math.abs(entry[1] - 379.2) < 0.01 &&
       entry[2] === 640 &&
       Math.abs(entry[3] - 201.6) < 0.01
     ));
-    expect(hasFightPostFloor).toBe(true);
+    expect(hasProfileFightPostFloor).toBe(true);
   });
 
   it('renders the arena background without menu overlay styling on the main menu', () => {
@@ -1122,6 +1145,18 @@ describe('basic render helpers', () => {
     });
   });
 
+  it('renders the configure menu button with the standard menu colors', () => {
+    renderApi.renderMainMenu();
+
+    const mainMenuButtonStrokes = calls.stroke.filter(call => (
+      call[3] === 145 || call[3] === 255
+    ));
+    const configureButtonStroke = mainMenuButtonStrokes[3];
+
+    expect(configureButtonStroke).toEqual([175, 70, 255, 145]);
+    expect(calls.fill).toContainEqual([255, 255, 255]);
+  });
+
   it('renders the profile screen controls', () => {
     installRenderGlobals({
       TfitFaceRecognition: {
@@ -1149,6 +1184,51 @@ describe('basic render helpers', () => {
       top: 264,
       bottom: 306
     });
+  });
+
+  it('renders profile calorie totals after viewing stats', () => {
+    installRenderGlobals({
+      gameState: {
+        ...defaultGameState(),
+        profileStatsVisible: true
+      },
+      TfitFaceRecognition: {
+        selectedProfile: () => ({ key: 'player', name: 'Laurent' }),
+        selectedProfileStats: () => ({
+          caloriesBurned: 12.6,
+          gameCounts: { fight: 4, shadow: 10, trainPad: 3 },
+          lastCaloriesBurned: 1.4
+        })
+      }
+    });
+
+    renderApi.renderProfileScreen();
+
+    expect(calls.text).toEqual(expect.arrayContaining([
+      ['Calories burned', 320, 218],
+      ['12.6 kcal', 320, 252],
+      ['Games played', 320, 292],
+      ['Shadow: 10', 320, 314],
+      ['Train pad: 3', 320, 334],
+      ['Fight: 4', 320, 354]
+    ]));
+    expect(calls.text).not.toContainEqual(['PROFILE', 320, 148]);
+    expect(calls.text).not.toContainEqual(['Laurent', 320, 178]);
+    expect(calls.text).not.toContainEqual(['(E)DIT', 320, 232]);
+    expect(calls.text).not.toContainEqual(['(V)IEW', 320, 286]);
+  });
+
+  it('keeps profile calorie totals hidden before viewing stats', () => {
+    installRenderGlobals({
+      TfitFaceRecognition: {
+        selectedProfile: () => ({ key: 'player', name: 'Laurent' }),
+        selectedProfileStats: () => ({ caloriesBurned: 12.6 })
+      }
+    });
+
+    renderApi.renderProfileScreen();
+
+    expect(calls.text).not.toContainEqual(['Calories burned', 320, 218]);
   });
 
   it('renders profile spelling mode', () => {
@@ -1254,6 +1334,9 @@ describe('hud and meter rendering', () => {
     expect(calls.text).toContainEqual(['29', 640 / 3, 439.16]);
     expect(calls.text).toContainEqual(['POINTS', 2 * 640 / 3, 421.66400000000004]);
     expect(calls.text).toContainEqual(['4', 2 * 640 / 3, 439.16]);
+    expect(calls.rect).toContainEqual([482, 40, 144, 50, 8]);
+    expect(calls.text).toContainEqual(['CALORIES', 494, 56]);
+    expect(calls.text).toContainEqual(['1.2 kcal', 494, 74]);
     expect(calls.rect).toContainEqual([10, 14, 168, 72, 8]);
     expect(calls.rect).toContainEqual([14, 18, 160, 64, 6]);
     expect(calls.text).toContainEqual(['Shadow', 20, 28]);
