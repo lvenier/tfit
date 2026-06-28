@@ -55,7 +55,8 @@
       "xRatio": 0.5,
       "yRatio": 0.56,
       "stamina": 6,
-      "recovery": 2
+      "recovery": 2,
+      "blockChance": 0.16
     },
     "1": {
       "name": "Theo",
@@ -65,7 +66,8 @@
       "xRatio": 0.5,
       "yRatio": 0.56,
       "stamina": 8,
-      "recovery": 3
+      "recovery": 3,
+      "blockChance": 0.24
     },
     "2": {
       "name": "Vehbo",
@@ -75,7 +77,8 @@
       "xRatio": 0.5,
       "yRatio": 0.54,
       "stamina": 10,
-      "recovery": 2
+      "recovery": 2,
+      "blockChance": 0.32
     },
     "3": {
       "name": "Cyril",
@@ -85,7 +88,8 @@
       "xRatio": 0.5,
       "yRatio": 0.52,
       "stamina": 12,
-      "recovery": 3
+      "recovery": 3,
+      "blockChance": 0.4
     },
     "4": {
       "name": "Lav",
@@ -95,7 +99,8 @@
       "xRatio": 0.5,
       "yRatio": 0.55,
       "stamina": 14,
-      "recovery": 4
+      "recovery": 4,
+      "blockChance": 0.48
     }
   };
 

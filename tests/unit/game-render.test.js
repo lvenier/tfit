@@ -384,7 +384,7 @@ describe('TfitRender exports', () => {
     new Script(source, { filename: modulePath }).runInNewContext(sandbox);
     sandbox.TfitRender.renderSettingsControls();
 
-    expect(drawCalls).toContainEqual(['(L)ENGTH (45s)', 460, 252]);
+    expect(drawCalls).toContainEqual(['(T)IME (45s)', 460, 252]);
     expect(drawCalls).toContainEqual(['(L)EVEL (CUSTOM)', 460, 302]);
   });
 
@@ -830,6 +830,16 @@ describe('TfitRender exports', () => {
     ]));
   });
 
+  it('renders opponent guard stance during block reactions', () => {
+    renderApi.renderRajaOpponentCharacter({
+      block: { duration: 32, frame: 0, type: 1 },
+      layout: { height: 480, width: 640 }
+    });
+
+    expect(calls.translate.some(([x, y]) => x < -50 && y === -135)).toBe(true);
+    expect(calls.translate.some(([x, y]) => x > 50 && y === -139)).toBe(true);
+  });
+
   it('ignores unknown generated move types in sandboxed shadow report counts', () => {
     const modulePath = require.resolve('../../js/game-render');
     const source = readFileSync(modulePath, 'utf8').replace(
@@ -1152,7 +1162,7 @@ describe('basic render helpers', () => {
       ['(B)ACK', 580, 442],
       ['(F)IGHT', 320, 352],
       ['(S)ERIES (3/5)', 460, 202],
-      ['(L)ENGTH (60s)', 460, 252],
+      ['(T)IME (60s)', 460, 252],
       ['(L)EVEL (MEDIUM)', 460, 302],
       ['(F)RAMERATE (20 FPS)', 460, 352],
       ['(C)ALIBRATE', 460, 402]
@@ -1450,9 +1460,9 @@ describe('hud and meter rendering', () => {
     renderApi.renderRoundHud(4);
 
     expect(calls.rect).toContainEqual([10, 14, 188, 72, 8]);
-    expect(calls.text).toContainEqual(['Fight', 20, 28]);
-    expect(calls.text).toContainEqual(['(O)pponent: theo', 20, 46]);
-    expect(calls.text).toContainEqual(['Series: 1 / 3', 20, 64]);
+    expect(calls.text).toContainEqual(['Stage 2', 20, 28]);
+    expect(calls.text).toContainEqual(['Opponent: theo', 20, 46]);
+    expect(calls.text).toContainEqual(['Round: 1 / 3', 20, 64]);
   });
 
   it('uses the default fight opponent label when opponent config has no name', () => {
@@ -1466,7 +1476,7 @@ describe('hud and meter rendering', () => {
 
     renderApi.renderRoundHud(4);
 
-    expect(calls.text).toContainEqual(['(O)pponent: raja', 20, 46]);
+    expect(calls.text).toContainEqual(['Opponent: raja', 20, 46]);
   });
 
   it('renders fight meters with reduced opponent stamina', () => {

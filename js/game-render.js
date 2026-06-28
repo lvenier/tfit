@@ -716,7 +716,7 @@
     });
 
     drawMenuButton({
-      label: `LENGTH (${GAME_LENGTH_LABELS[gameState.gameLengthIndex]}s)`,
+      label: `TIME (${GAME_LENGTH_LABELS[gameState.gameLengthIndex]}s)`,
       variant: "default",
       x: settingsButtonX,
       y: controlsY[1],
@@ -1073,12 +1073,12 @@
       textStyle(BOLD);
       textSize(8 * layout.coef);
       textAlign(LEFT, CENTER);
-      text("Fight", panel.x + panelPadding, panel.y + titleY);
+      text("Stage " + (gameState.fightStage || (Number(gameState.opponent) || 0) + 1), panel.x + panelPadding, panel.y + titleY);
       textStyle(NORMAL);
       fill(255, 255, 255, 230);
       textSize(9 * layout.coef);
-      text("(O)pponent: " + (opponentConfig.name || "Raja").toLowerCase(), panel.x + panelPadding, panel.y + titleY + panelLineGap);
-      text("Series: " + gameState.gameCurrentSeries + " / " + gameState.gameSeries, panel.x + panelPadding, panel.y + titleY + panelLineGap * 2);
+      text("Opponent: " + (opponentConfig.name || "Raja").toLowerCase(), panel.x + panelPadding, panel.y + titleY + panelLineGap);
+      text("Round: " + gameState.gameCurrentSeries + " / " + gameState.gameSeries, panel.x + panelPadding, panel.y + titleY + panelLineGap * 2);
     }
     textSize(10 * layout.coef);
     fill(255, 0, 0, hide_sensor);
@@ -1716,6 +1716,7 @@
   }
 
   function renderRajaOpponentCharacter({
+    block = root.animationState && root.animationState.opponent ? root.animationState.opponent.block : null,
     frame = -1,
     layout = layoutSnapshot(),
     opponent = {},
@@ -1727,6 +1728,7 @@
     const phase = frame >= 0 ? Math.min(frame, 6) / 6 : 0;
     const move = fightOpponentMoveParams(action, phase);
     const hitReaction = fightOpponentHitReactionParams(reaction);
+    const blockActive = Boolean(block && Number.isFinite(block.frame) && Number.isFinite(block.duration) && block.frame < block.duration);
     const scaleValue = (Math.min(layout.width, layout.height) / 780) * (opponent.scale || 0.7);
     const cx = layout.width * (opponent.xRatio || 0.5);
     const cy = layout.height * (opponent.yRatio || 0.56);
@@ -1798,6 +1800,15 @@
         rightGlove.scale = gloveScale;
       }
     });
+    if (blockActive) {
+      const pulse = 1 + Math.sin((block.frame / Math.max(1, block.duration)) * Math.PI) * 0.06;
+      leftGlove.x = -58 + sway * 0.4;
+      leftGlove.y = -135;
+      leftGlove.scale = 1.12 * pulse;
+      rightGlove.x = 55 + sway * 0.3;
+      rightGlove.y = -139;
+      rightGlove.scale = 1.15 * pulse;
+    }
 
     noStroke();
     fill(palette.armDark);

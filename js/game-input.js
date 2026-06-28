@@ -129,17 +129,6 @@
       return { type: "start_fight" };
     }
 
-    if (menu === 4 && !gameStarted && !gameCalibration) {
-      const panelX = 10 * coef;
-      const panelY = 14 * coef;
-      const panelWidth = Math.min(188 * coef, Math.max(112 * coef, myWindowWidth * 0.3));
-      const opponentRowTop = panelY + 22 * coef;
-      const opponentRowBottom = panelY + 44 * coef;
-      if (isWithin(mouseX, panelX, panelX + panelWidth) && isWithin(mouseY, opponentRowTop, opponentRowBottom)) {
-        return { click: true, type: "cycle_opponent" };
-      }
-    }
-
     if (menu === 1 && !gameCalibration) {
       const settingsActions = [
         "cycle_series",
@@ -230,11 +219,8 @@
     if (['l', 'L'].includes(key) && menu === 1) {
       return { type: "cycle_level" };
     }
-    if (['d', 'D'].includes(key) && menu === 1) {
+    if (['t', 'T', 'd', 'D'].includes(key) && menu === 1) {
       return { type: "cycle_length" };
-    }
-    if (['o', 'O'].includes(key) && menu === 4 && !gameStarted) {
-      return { type: "cycle_opponent" };
     }
     if (['c', 'C'].includes(key) && menu === 1) {
       return { type: "start_calibration" };

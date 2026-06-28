@@ -90,6 +90,11 @@
       loadSongmoves();
     }
     if (transition.resetOpponent) {
+      gameState.opponent = 0;
+      gameState.fightStage = 1;
+      gameState.fightLadderActive = false;
+      gameState.fightTransitionActive = false;
+      gameState.pendingFightOpponentStamina = null;
       gameState.my_opponent = cloneOpponent(gameState.opponent);
     }
     if (typeof transition.onApply === "function") {
@@ -420,11 +425,6 @@
       return;
     }
     if (action.type === "cycle_opponent") {
-      playClick();
-      gameState.opponent = nextZeroBasedIndex(gameState.opponent, Object.keys(root.OPPONENTS).length);
-      localStorage.setItem("opponent", gameState.opponent);
-      gameState.my_opponent = cloneOpponent(gameState.opponent);
-      gameState.my_stamina = gameState.my_opponent.stamina;
       return;
     }
     if (action.type === "cycle_shadow_focus") {
