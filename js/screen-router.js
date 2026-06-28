@@ -58,6 +58,7 @@
   const DOOR_SOUND_RATE = 0.8;
   const DOOR_FILL_COLOR = [10, 11, 18, 255];
   const DOOR_LOGO_SCALE = 0.3;
+  const DOOR_DEFAULT_FRAME_MS = 1000 / 60;
 
   function renderBackNavigation() {
     if ((gameState.menu === 1 || gameState.menu === 2 || gameState.menu === 3 || gameState.menu === 4 || gameState.menu === 5) && !gameState.gameStarted && !gameResultBool()) {
@@ -311,20 +312,29 @@
     const closeDuration = Math.max(1, Math.floor(duration / 2));
     const openDuration = Math.max(1, duration - closeDuration);
     const totalDuration = closeDuration + holdFrames + openDuration;
-    const currentFrame = Math.min(animation.frame || 0, totalDuration);
-    const phase = currentFrame < closeDuration
-      ? (currentFrame + 1) / closeDuration
-      : currentFrame < closeDuration + holdFrames
+    const frameMs = Math.max(1, Number(animation.frameMs) || DOOR_DEFAULT_FRAME_MS);
+    const elapsedFrame = Number.isFinite(animation.startedAt)
+      ? Math.floor(Math.max(0, Date.now() - animation.startedAt) / frameMs)
+      : animation.frame || 0;
+    const currentFrame = Math.min(elapsedFrame, totalDuration);
+    const closingFrame = currentFrame < closeDuration;
+    const holdFrame = currentFrame < closeDuration + holdFrames;
+    const phase = closingFrame
+      ? Math.min((currentFrame + 1) / closeDuration, 1)
+      : holdFrame
         ? 1
         : 1 - Math.min(currentFrame - closeDuration - holdFrames + 1, openDuration) / openDuration;
     const progress = Math.max(0, Math.min(phase, 1));
     const wallWidth = (animation.width / 2) * progress;
     const closedFrame = currentFrame >= closeDuration - 1 && currentFrame < closeDuration;
-    const closingStarted = currentFrame === 0 && animation?.pendingTransition;
-    const openingStarted = currentFrame === closeDuration + holdFrames && animation?.pendingTransition;
+    const fullyClosed = currentFrame >= closeDuration - 1;
+    const openingFrame = currentFrame >= closeDuration + holdFrames;
+    const closingStarted = currentFrame === 0 && !animation.closeSoundPlayed;
+    const openingStarted = openingFrame && !animation.openSoundPlayed;
     const canTransition = typeof getApplyPendingMenuButtonTransition() === "function" &&
       animation.pendingTransition &&
-      closedFrame;
+      fullyClosed &&
+      !animation.transitionApplied;
 
     const hasSound = typeof sounds !== "undefined" && sounds !== null;
 
@@ -333,6 +343,7 @@
         sounds.doorClose.rate(DOOR_SOUND_RATE);
       }
       sounds.doorClose.play();
+      animation.closeSoundPlayed = true;
     } else {
       void closingStarted;
     }
@@ -342,12 +353,14 @@
         sounds.doorOpen.rate(DOOR_SOUND_RATE);
       }
       sounds.doorOpen.play();
+      animation.openSoundPlayed = true;
     } else {
       void openingStarted;
     }
 
     if (canTransition) {
       getApplyPendingMenuButtonTransition()();
+      animation.transitionApplied = true;
     } else {
       void canTransition;
     }

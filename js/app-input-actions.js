@@ -29,6 +29,7 @@
 
   const DOOR_ANIMATION_DURATION_FRAMES = 60;
   const DOOR_ANIMATION_HOLD_FRAMES = 20;
+  const DOOR_ANIMATION_FRAME_MS = 1000 / 60;
   const MENU_BUTTON_TRANSITIONS = {
     back_to_menu: {
       menu: 0
@@ -120,9 +121,6 @@
       return;
     }
 
-    const closeFrames = Math.max(1, Math.floor(DOOR_ANIMATION_DURATION_FRAMES / 2));
-    const transitionDelayMs = Math.max(1, Math.round(closeFrames * (1000 / 60)));
-
     if (gameState.menuButtonAnimation?.transitionTimeout) {
       clearTimeout(gameState.menuButtonAnimation.transitionTimeout);
     }
@@ -138,11 +136,10 @@
       width: layout.width,
       height: layout.height,
       progress: 0,
-      transitionTimeout: setTimeout(() => {
-        if (gameState.menuButtonAnimation?.pendingTransition) {
-          applyPendingMenuButtonTransition();
-        }
-      }, transitionDelayMs),
+      startedAt: Date.now(),
+      frameMs: DOOR_ANIMATION_FRAME_MS,
+      transitionApplied: false,
+      transitionTimeout: null,
       pendingTransition: transition
     };
   }
