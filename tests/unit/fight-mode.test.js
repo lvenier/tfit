@@ -1049,8 +1049,11 @@ describe('fight mode rendering', () => {
 
     api.renderFightMode();
 
-    expect(globalThis.gameState.curMoves.at(-1)).toMatchObject({ hit: false, type: 2 });
-    expect(globalThis.gameState.gameTimerNext).toBe(1);
+    expect(globalThis.gameState.curMoves.slice(-2)).toEqual([
+      expect.objectContaining({ hit: false, type: 1 }),
+      expect.objectContaining({ hit: false, type: 2 })
+    ]);
+    expect(globalThis.gameState.gameTimerNext).toBe(2);
     expect(globalThis.animationState.opponent).toMatchObject({ frame: -1, delay: 0 });
     expect(globalThis.gameState.curMoves.at(-1).reactionFrames).toBe(1);
   });

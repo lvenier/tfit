@@ -37,13 +37,14 @@
   function addShadowMoveAtTimer() {
     const layout = layoutSnapshot();
     const moveIndex = Math.ceil(gameState.gameTimer / timerUnitsPerSecond(layout));
-    if (gameState.gameTimerNext < moveIndex) {
-      if (gameState.moves.length >= moveIndex && gameState.moves[moveIndex] >= 0) {
-        let xt = Math.trunc(gameState.moves[moveIndex]) % 2 ? calibrationState.left_init_pose_x : calibrationState.right_init_pose_x;
-        if (gameState.moves[moveIndex] === 10) {xt = calibrationState.left_init_pose_x;}
+    while (gameState.gameTimerNext < moveIndex) {
+      const nextMoveIndex = gameState.gameTimerNext + 1;
+      if (gameState.moves.length >= nextMoveIndex && gameState.moves[nextMoveIndex] >= 0) {
+        let xt = Math.trunc(gameState.moves[nextMoveIndex]) % 2 ? calibrationState.left_init_pose_x : calibrationState.right_init_pose_x;
+        if (gameState.moves[nextMoveIndex] === 10) {xt = calibrationState.left_init_pose_x;}
         gameState.curMoves.push({
-          "hit": gameState.moves[moveIndex] === 0,
-          "type": Math.trunc(gameState.moves[moveIndex]),
+          "hit": gameState.moves[nextMoveIndex] === 0,
+          "type": Math.trunc(gameState.moves[nextMoveIndex]),
           "x": xt,
           "y": layout.height
         })

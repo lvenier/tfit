@@ -474,12 +474,13 @@
         if (!gameState.fightEnding) {
           const moveIntervalUnits = (timerUnitsPerSecond(layout) + layout.levelWindowBase / 2) * fightMoveIntervalMultiplier();
           const moveIndex = Math.max(1, Math.ceil((gameState.gameTimer + 1) / moveIntervalUnits));
-          if (gameState.gameTimerNext < moveIndex) {
-            if (gameState.moves.length >= moveIndex && gameState.moves[moveIndex] >= 0) {
+          while (gameState.gameTimerNext < moveIndex) {
+            const nextMoveIndex = gameState.gameTimerNext + 1;
+            if (gameState.moves.length >= nextMoveIndex && gameState.moves[nextMoveIndex] >= 0) {
               gameState.curMoves.push({
                 "hit": false,
                 "promptStartedAt": now,
-                "type": Math.trunc(gameState.moves[moveIndex]),
+                "type": Math.trunc(gameState.moves[nextMoveIndex]),
                 "x": 0,
                 "y": 0
               })
