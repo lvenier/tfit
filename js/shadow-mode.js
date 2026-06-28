@@ -24,16 +24,27 @@
     snapshot: layoutSnapshot
   } = root.TfitLayoutState;
 
+  const GAME_TIMER_UNITS_PER_SECOND = root.TfitRound?.GAME_TIMER_UNITS_PER_SECOND || 100;
+  const advanceGameTimer = root.TfitRound?.advanceGameTimer || function(state) {
+    state.gameTimer = (Number(state.gameTimer) || 0) + 1;
+    return 1;
+  };
+
+  function timerUnitsPerSecond(layout) {
+    return root.TfitRound ? GAME_TIMER_UNITS_PER_SECOND : layout.frameRate;
+  }
+
   function addShadowMoveAtTimer() {
     const layout = layoutSnapshot();
-    const moveIndex = Math.ceil(gameState.gameTimer / layout.frameRate);
-    if (gameState.gameTimerNext < moveIndex) {
-      if (gameState.moves.length >= moveIndex && gameState.moves[moveIndex] >= 0) {
-        let xt = Math.trunc(gameState.moves[moveIndex]) % 2 ? calibrationState.left_init_pose_x : calibrationState.right_init_pose_x;
-        if (gameState.moves[moveIndex] === 10) {xt = calibrationState.left_init_pose_x;}
+    const moveIndex = Math.ceil(gameState.gameTimer / timerUnitsPerSecond(layout));
+    while (gameState.gameTimerNext < moveIndex) {
+      const nextMoveIndex = gameState.gameTimerNext + 1;
+      if (gameState.moves.length >= nextMoveIndex && gameState.moves[nextMoveIndex] >= 0) {
+        let xt = Math.trunc(gameState.moves[nextMoveIndex]) % 2 ? calibrationState.left_init_pose_x : calibrationState.right_init_pose_x;
+        if (gameState.moves[nextMoveIndex] === 10) {xt = calibrationState.left_init_pose_x;}
         gameState.curMoves.push({
-          "hit": gameState.moves[moveIndex] === 0,
-          "type": Math.trunc(gameState.moves[moveIndex]),
+          "hit": gameState.moves[nextMoveIndex] === 0,
+          "type": Math.trunc(gameState.moves[nextMoveIndex]),
           "x": xt,
           "y": layout.height
         })
@@ -42,9 +53,9 @@
     }
   }
 
-  function renderShadowMove(c) {
+  function renderShadowMove(c, elapsedUnits = 1) {
     const layout = layoutSnapshot();
-    gameState.curMoves[c].y = gameState.curMoves[c].y - Math.ceil(240 / layout.frameRate);
+    gameState.curMoves[c].y = gameState.curMoves[c].y - (240 * elapsedUnits / timerUnitsPerSecond(layout));
     const now = Date.now();
     const levelWindow = layout.levelWindowBase * 10;
     let alpha = 128;
@@ -280,11 +291,11 @@
       return;
     }
 
+    const elapsedUnits = advanceGameTimer(gameState);
     addShadowMoveAtTimer();
     for (let c = 0; c < gameState.curMoves.length; c++) {
-      renderShadowMove(c);
+      renderShadowMove(c, elapsedUnits);
     }
-    gameState.gameTimer++;
 
     renderShadowPoseInput();
   }

@@ -36,6 +36,7 @@ const STUBBED_GLOBALS = [
   'TfitLayoutState',
   'TfitPoseDetection',
   'TfitRender',
+  'TfitRound',
   'TfitShadowMode'
 ];
 
@@ -139,7 +140,8 @@ function installGlobals(overrides = {}) {
       renderMoveShape: vi.fn(),
       renderShadowMoveReport: vi.fn(),
       renderShadowResult: vi.fn()
-    }
+    },
+    TfitRound: undefined
   }, overrides);
 
   vi.useFakeTimers();
@@ -224,6 +226,27 @@ describe('shadow mode layout usage', () => {
     expect(globalThis.gameState.gameTimerNext).toBe(1);
   });
 
+  it('adds moves using shared real-time timer units when available', () => {
+    const api = installGlobals({
+      gameState: {
+        curMoves: [],
+        gameTimer: 100,
+        gameTimerNext: 0,
+        moves: [0, 1]
+      },
+      TfitRound: {
+        GAME_TIMER_UNITS_PER_SECOND: 100
+      }
+    });
+
+    api.addShadowMoveAtTimer();
+
+    expect(globalThis.gameState.curMoves).toEqual([
+      { hit: false, type: 1, x: 200, y: 480 }
+    ]);
+    expect(globalThis.gameState.gameTimerNext).toBe(1);
+  });
+
   it('advances the shadow move timer without adding unavailable moves', () => {
     const api = installGlobals({
       gameState: {
@@ -237,12 +260,32 @@ describe('shadow mode layout usage', () => {
     api.addShadowMoveAtTimer();
 
     expect(globalThis.gameState.curMoves).toEqual([]);
-    expect(globalThis.gameState.gameTimerNext).toBe(1);
+    expect(globalThis.gameState.gameTimerNext).toBe(3);
 
     globalThis.gameState.gameTimer = 20;
     globalThis.gameState.gameTimerNext = 1;
     api.addShadowMoveAtTimer();
     expect(globalThis.gameState.gameTimerNext).toBe(1);
+  });
+
+  it('catches up every missed shadow move index after a timer jump', () => {
+    const api = installGlobals({
+      gameState: {
+        curMoves: [],
+        gameTimer: 60,
+        gameTimerNext: 0,
+        moves: [0, 1, 2, 10]
+      }
+    });
+
+    api.addShadowMoveAtTimer();
+
+    expect(globalThis.gameState.curMoves).toEqual([
+      { hit: false, type: 1, x: 200, y: 480 },
+      { hit: false, type: 2, x: 440, y: 480 },
+      { hit: false, type: 10, x: 200, y: 480 }
+    ]);
+    expect(globalThis.gameState.gameTimerNext).toBe(3);
   });
 
   it('renders falling moves with snapshot object size and timing window', () => {
@@ -326,6 +369,7 @@ describe('shadow mode layout usage', () => {
     api.addShadowMoveAtTimer();
 
     expect(globalThis.gameState.curMoves).toEqual([
+      { hit: true, type: 0, x: 440, y: 480 },
       { hit: false, type: 10, x: 200, y: 480 }
     ]);
 

@@ -1,0 +1,7 @@
+
+add score hud in all games... consecutive succesfull moves in time give extra points
+in profile keep a daily history with the profile counters and scores
+fight easy medal is bronze, silver in medium and gold for hard. Kepp it profile. 
+
+
+

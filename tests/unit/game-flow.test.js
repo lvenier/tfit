@@ -197,7 +197,7 @@ describe('round flow helpers', () => {
 
     expect(globalThis.LEVEL).toBe(40);
     expect(globalThis.TfitLayoutState.setLevelWindowBase).toHaveBeenCalledWith(40);
-    expect(globalThis.gameState.gameDuration).toBe(600);
+    expect(globalThis.gameState.gameDuration).toBe(3000);
     expect(globalThis.gameState.moves).toEqual([0, 1, 2, 10]);
     expect(globalThis.gameState.score_max).toBe(2);
     expect(globalThis.TfitGameLogic.createSongMoves).toHaveBeenCalledWith(expect.objectContaining({
@@ -247,7 +247,7 @@ describe('round flow helpers', () => {
 
     flowApi.loadSongmoves();
 
-    expect(globalThis.gameState.gameDuration).toBe(600);
+    expect(globalThis.gameState.gameDuration).toBe(3000);
     expect(globalThis.gameState.moves).toEqual([0, 1, 9, 10]);
     expect(globalThis.gameState.score_max).toBe(2);
     expect(globalThis.TfitGameLogic.createSongMoves).not.toHaveBeenCalled();

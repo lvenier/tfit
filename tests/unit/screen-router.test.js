@@ -658,6 +658,42 @@ describe('menu routing', () => {
     expect(globalThis.gameState.menu).toBe(0);
   });
 
+  it('applies pending door transitions from elapsed animation time', () => {
+    const api = installGlobals({
+      gameState: {
+        ...defaultGameState({ menu: 0 }),
+        menuButtonAnimation: {
+          active: true,
+          button: 'open_shadow',
+          duration: 20,
+          frame: 0,
+          frameMs: 100,
+          holdFrames: 2,
+          progress: 0,
+          startedAt: 10_000,
+          transitionApplied: false,
+          x: 0,
+          y: 0,
+          width: 640,
+          height: 480,
+          pendingTransition: {
+            menu: 2,
+            clearCurMoves: true,
+            loadSongmoves: true
+          }
+        }
+      }
+    });
+    vi.setSystemTime(10_900);
+
+    api.renderGameScreen();
+
+    expect(globalThis.TfitAppInputActions.applyPendingMenuButtonTransition).toHaveBeenCalledTimes(1);
+    expect(globalThis.gameState.menuButtonAnimation.transitionApplied).toBe(true);
+    expect(globalThis.gameState.menuButtonAnimation.frame).toBe(10);
+    expect(globalThis.gameState.menuButtonAnimation.progress).toBe(1);
+  });
+
   it('renders split logo halves when menu logo asset exists', () => {
     const logo = { name: 'app-logo', width: 240, height: 120 };
     const api = installGlobals({

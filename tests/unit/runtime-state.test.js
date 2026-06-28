@@ -51,7 +51,7 @@ describe('runtime state script split', () => {
     expect(context.myWindowWidth).toBe(1024);
     expect(context.myWindowHeight).toBe(768);
     expect(context.OBJECT_POSE_SIZE).toBeCloseTo(76.8);
-    expect(context.FRAME_RATE).toBe(20);
+    expect(context.FRAME_RATE).toBe(60);
     expect(context.LEVEL).toBe(50);
 
     expect(context.error).toBe('');
@@ -88,12 +88,12 @@ describe('runtime state script split', () => {
     expect(context.TfitLayoutState.width).toBe(1024);
     expect(context.TfitLayoutState.height).toBe(768);
     expect(context.TfitLayoutState.coef).toBe(1.6);
-    expect(context.TfitLayoutState.frameRate).toBe(20);
+    expect(context.TfitLayoutState.frameRate).toBe(60);
     expect(context.TfitLayoutState.levelWindowBase).toBe(50);
     expect(context.TfitLayoutState.objectPoseSize).toBeCloseTo(76.8);
     expect(context.TfitLayoutState.snapshot()).toMatchObject({
       coef: 1.6,
-      frameRate: 20,
+      frameRate: 60,
       height: 768,
       levelWindowBase: 50,
       width: 1024
@@ -172,6 +172,6 @@ describe('runtime state script split', () => {
     expect(context.FRAME_RATE).toBe(60);
     expect(context.calibrationState.init_jab_y).toBe(111);
     expect(context.calibrationState.right_init_pose_x).toBe(555);
-    expect(storageNumber).toHaveBeenCalledWith('frame_rate', 20, { allowed: [20, 40, 60, 80, 100, 120] });
+    expect(storageNumber).toHaveBeenCalledWith('frame_rate', 60, { allowed: [20, 40, 60, 80, 100, 120] });
   });
 });

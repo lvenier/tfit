@@ -591,7 +591,7 @@ describe('applyInputAction', () => {
       vi.spyOn(globalThis, 'clearTimeout');
 
       api.applyInputAction({ click: true, type: 'open_shadow' });
-      vi.runAllTimers();
+      expect(api.applyPendingMenuButtonTransition()).toBe(true);
       expect(globalThis.gameState.menu).toBe(2);
       expect(globalThis.gameState.menuButtonAnimation.pendingTransition).toBeNull();
 
@@ -668,7 +668,7 @@ describe('applyInputAction', () => {
     expect(globalThis.TfitFlow.letsfight).toHaveBeenCalledTimes(1);
   });
 
-  it('does not apply a pending menu transition when the timer resolves without one', () => {
+  it('queues door animations without a timer-driven transition fallback', () => {
     const api = installGlobals({
       TfitInput: {
         keyAction: vi.fn(() => ({ type: 'none' })),
@@ -676,38 +676,31 @@ describe('applyInputAction', () => {
       }
     });
 
-    vi.useFakeTimers();
-    vi.spyOn(api, 'applyPendingMenuButtonTransition');
-
-    try {
-      api.queueMenuDoorAnimation('open_pad');
-      globalThis.gameState.menuButtonAnimation.pendingTransition = null;
-      vi.advanceTimersByTime(600);
-
-      expect(api.applyPendingMenuButtonTransition).not.toHaveBeenCalled();
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it('applies the pending menu transition when the queue timer resolves', () => {
-    const api = installGlobals();
-    let queuedTransitionCallback;
-
-    vi.spyOn(globalThis, 'setTimeout').mockImplementation((callback, _delay) => {
-      queuedTransitionCallback = callback;
-      return 99;
-    });
+    vi.spyOn(globalThis, 'setTimeout');
 
     api.queueMenuDoorAnimation('open_pad');
-    expect(typeof queuedTransitionCallback).toBe('function');
 
-    queuedTransitionCallback();
+    expect(setTimeout).not.toHaveBeenCalled();
+    expect(globalThis.gameState.menuButtonAnimation.transitionTimeout).toBeNull();
+    expect(globalThis.gameState.menuButtonAnimation.startedAt).toEqual(expect.any(Number));
+    expect(globalThis.gameState.menu).toBe(0);
+  });
 
-    expect(globalThis.gameState.menu).toBe(3);
-    expect(globalThis.TfitFlow.loadSongmoves).toHaveBeenCalledTimes(1);
-    expect(globalThis.gameState.curMoves).toEqual([]);
-    expect(globalThis.gameState.menuButtonAnimation.pendingTransition).toBeNull();
+  it('leaves pending menu transitions for the door renderer to apply', () => {
+    const api = installGlobals();
+
+    vi.spyOn(globalThis, 'setTimeout');
+
+    api.queueMenuDoorAnimation('open_pad');
+
+    expect(setTimeout).not.toHaveBeenCalled();
+    expect(globalThis.gameState.menu).toBe(0);
+    expect(globalThis.TfitFlow.loadSongmoves).not.toHaveBeenCalled();
+    expect(globalThis.gameState.menuButtonAnimation.pendingTransition).toMatchObject({
+      menu: 3,
+      clearCurMoves: true,
+      loadSongmoves: true
+    });
   });
 
   it('skips restore-timeout menu-button cleanup if animation state is removed before callback', () => {

@@ -11,6 +11,11 @@
     snapshot: layoutSnapshot
   } = root.TfitLayoutState;
 
+  const advanceGameTimer = root.TfitRound?.advanceGameTimer || function(state) {
+    state.gameTimer = (Number(state.gameTimer) || 0) + 1;
+    return 1;
+  };
+
   const POSE_INPUT_WIDTH = 640;
   const POSE_INPUT_HEIGHT = 480;
 
@@ -214,7 +219,7 @@
         textSize(10 * layout.coef);
         textAlign(LEFT,CENTER);
         textStyle(NORMAL);
-        gameState.gameTimer++;
+        advanceGameTimer(gameState, now);
       }
     }
   }

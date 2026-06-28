@@ -69,7 +69,8 @@
   function loadSongmoves() {
     root.TfitLayoutState.setLevelWindowBase(root.TfitGameLogic.levelDelay(gameState.level));
     if (gameState.song) {
-      gameState.gameDuration = gameState.gameLength * root.TfitLayoutState.snapshot().frameRate;
+      const roundDurationUnits = root.TfitRound?.roundDurationUnits || (seconds => Number(seconds) * 100);
+      gameState.gameDuration = roundDurationUnits(gameState.gameLength);
       if (gameState.song.moveLength === 0) {
         if (gameState.menu === 4) {
           gameState.shadow_focus = storageNumber("shadow_focus", gameState.shadow_focus, { min: 0, max: Object.keys(SHADOW_SPECIFIC).length - 1 });
@@ -141,6 +142,7 @@
     gameState.gameCalibration = false;
     hide_sensor = 0;
     gameState.gameTimer = 0;
+    gameState.gameTimerUpdatedAt = now;
     gameState.score = 0;
     if (gameState.gameCurrentSeries === 1) {
       gameState.caloriesBurned = 0;

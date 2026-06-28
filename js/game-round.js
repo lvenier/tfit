@@ -1,6 +1,26 @@
 (function(root) {
+  const GAME_TIMER_UNITS_PER_SECOND = 100;
+  const GAME_TIMER_UNIT_MS = 1000 / GAME_TIMER_UNITS_PER_SECOND;
+
+  function roundDurationUnits(seconds) {
+    return Number(seconds) * GAME_TIMER_UNITS_PER_SECOND;
+  }
+
+  function advanceGameTimer(state, now = Date.now()) {
+    const lastUpdate = state.gameTimerUpdatedAt;
+    const elapsedMs = Number.isFinite(lastUpdate)
+      ? Math.max(0, now - lastUpdate)
+      : GAME_TIMER_UNIT_MS;
+    const elapsedUnits = elapsedMs / GAME_TIMER_UNIT_MS;
+
+    state.gameTimer = (Number(state.gameTimer) || 0) + elapsedUnits;
+    state.gameTimerUpdatedAt = now;
+    return elapsedUnits;
+  }
+
   function remainingRoundSeconds({ frameRate, gameDuration, gameTimer }) {
-    return Math.ceil((gameDuration - gameTimer) / frameRate);
+    void frameRate;
+    return Math.ceil((gameDuration - gameTimer) / GAME_TIMER_UNITS_PER_SECOND);
   }
 
   function isRoundExpired({ gameDuration, gameTimer }) {
@@ -96,11 +116,14 @@
   }
 
   const api = {
+    advanceGameTimer,
+    GAME_TIMER_UNITS_PER_SECOND,
     guardFeedback,
     initialRoundMoveState,
     isRoundExpired,
     keepTryingFeedback,
     remainingRoundSeconds,
+    roundDurationUnits,
     roundEndState,
     scoreTotal,
     shouldShowHitFeedback
