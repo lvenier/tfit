@@ -94,14 +94,52 @@
       stored = {};
     }
 
+    const gameCounts = {
+      fight: Number(stored.gameCounts?.fight) || 0,
+      shadow: Number(stored.gameCounts?.shadow) || 0,
+      trainPad: Number(stored.gameCounts?.trainPad) || 0
+    };
+    const scoreSummary = {
+      fightLosses: Number(stored.scoreSummary?.fightLosses) || 0,
+      fightWins: Number(stored.scoreSummary?.fightWins) || 0,
+      hits: Number(stored.scoreSummary?.hits) || 0,
+      misses: Number(stored.scoreSummary?.misses) || 0,
+      scoringMoves: Number(stored.scoreSummary?.scoringMoves) || 0,
+      shadowCombos: Number(stored.scoreSummary?.shadowCombos) || 0
+    };
+    const dailyStats = {};
+
+    if (stored.dailyStats && typeof stored.dailyStats === "object") {
+      for (const [day, value] of Object.entries(stored.dailyStats)) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !value || typeof value !== "object") {
+          continue;
+        }
+        dailyStats[day] = {
+          caloriesBurned: Number(value.caloriesBurned) || 0,
+          gameCounts: {
+            fight: Number(value.gameCounts?.fight) || 0,
+            shadow: Number(value.gameCounts?.shadow) || 0,
+            trainPad: Number(value.gameCounts?.trainPad) || 0
+          },
+          lastCaloriesBurned: Number(value.lastCaloriesBurned) || 0,
+          scoreSummary: {
+            fightLosses: Number(value.scoreSummary?.fightLosses) || 0,
+            fightWins: Number(value.scoreSummary?.fightWins) || 0,
+            hits: Number(value.scoreSummary?.hits) || 0,
+            misses: Number(value.scoreSummary?.misses) || 0,
+            scoringMoves: Number(value.scoreSummary?.scoringMoves) || 0,
+            shadowCombos: Number(value.scoreSummary?.shadowCombos) || 0
+          }
+        };
+      }
+    }
+
     return {
       caloriesBurned: Number(stored.caloriesBurned) || 0,
-      gameCounts: {
-        fight: Number(stored.gameCounts?.fight) || 0,
-        shadow: Number(stored.gameCounts?.shadow) || 0,
-        trainPad: Number(stored.gameCounts?.trainPad) || 0
-      },
-      lastCaloriesBurned: Number(stored.lastCaloriesBurned) || 0
+      dailyStats,
+      gameCounts,
+      lastCaloriesBurned: Number(stored.lastCaloriesBurned) || 0,
+      scoreSummary
     };
   }
 

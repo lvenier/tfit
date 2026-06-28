@@ -32,7 +32,11 @@
   const DOOR_ANIMATION_FRAME_MS = 1000 / 60;
   const MENU_BUTTON_TRANSITIONS = {
     back_to_menu: {
-      menu: 0
+      menu: 0,
+      onApply: () => {
+        gameState.profileStatsVisible = false;
+        viewSelectedProfileName();
+      }
     },
     open_settings: {
       menu: 1
@@ -55,6 +59,12 @@
     },
     open_profile: {
       menu: 5
+    },
+    profile_view: {
+      menu: 5,
+      onApply: () => {
+        viewSelectedProfileName({ showStats: true });
+      }
     },
     start_calibration: {
       menu: 1,
@@ -393,7 +403,7 @@
     }
     if (action.type === "profile_view") {
       playClick();
-      viewSelectedProfileName({ showStats: true });
+      handleMenuOpenAction("profile_view", true);
       return;
     }
     if (action.type === "cycle_frame_rate") {
@@ -466,14 +476,8 @@
     /* v8 ignore next */
     if (action.type === "back_to_menu") {
       playClick();
-      if (gameState.menu === 5 && gameState.profileStatsVisible) {
-        gameState.profileStatsVisible = false;
-        viewSelectedProfileName();
-        return;
-      }
       clearCalibrationUiState();
       handleMenuOpenAction("back_to_menu", true);
-      viewSelectedProfileName();
       return;
     }
     /* v8 ignore next */

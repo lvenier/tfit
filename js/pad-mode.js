@@ -58,7 +58,7 @@
 
     const isPunchTarget = padState.type === 1;
     const isDodgeTarget = padState.type === 2;
-    const boxerScale = 0.9;
+    const boxerScale = 1.35;
     const shouldAnimatePunch = isPunchTarget && gameState.gameStarted;
     const target = shouldAnimatePunch
       ? {

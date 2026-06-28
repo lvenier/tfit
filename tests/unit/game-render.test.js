@@ -268,6 +268,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
   for (const name of STUBBED_GLOBALS) {
     const original = originalGlobals.get(name);
@@ -1266,6 +1267,8 @@ describe('basic render helpers', () => {
   });
 
   it('renders profile calorie totals after viewing stats', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 5, 28, 12));
     installRenderGlobals({
       gameState: {
         ...defaultGameState(),
@@ -1276,21 +1279,48 @@ describe('basic render helpers', () => {
         selectedProfileStats: () => ({
           caloriesBurned: 12.6,
           gameCounts: { fight: 4, shadow: 10, trainPad: 3 },
-          lastCaloriesBurned: 1.4
+          lastCaloriesBurned: 1.4,
+          scoreSummary: {
+            fightWins: 2,
+            fightLosses: 1,
+            hits: 20,
+            misses: 10,
+            scoringMoves: 30,
+            shadowCombos: 5
+          },
+          dailyStats: {
+            '2026-06-28': {
+              caloriesBurned: 2.4,
+              gameCounts: { fight: 1, shadow: 2, trainPad: 1 },
+              scoreSummary: { hits: 9, scoringMoves: 12, shadowCombos: 3 }
+            }
+          }
         })
       }
     });
 
     renderApi.renderProfileScreen();
 
+    expect(calls.rect).toContainEqual([0, 0, 640, 480]);
     expect(calls.text).toEqual(expect.arrayContaining([
-      ['Calories burned', 460, 218],
-      ['12.6 kcal', 460, 252],
-      ['Games played', 460, 292],
-      ['Shadow: 10', 460, 314],
-      ['Train pad: 3', 460, 334],
-      ['Fight: 4', 460, 354]
+      ['SUMMARY', 320, 38],
+      ['12.6 kcal  |  17 games  |  Score 67%', 320, 62],
+      ['Hits 20/30  |  Misses 10  |  Shadow 5  |  Fight 2W/1L', 320, 82],
+      ['This week', 94, 141],
+      ['Score', 104, 110],
+      ['Hits', 164, 110],
+      ['Game', 224, 110],
+      ['Kcal', 284, 110],
+      ['6/22', 104, 171],
+      ['6/28', 604, 171],
+      ['2 wk ago', 94, 219],
+      ['3 wk ago', 94, 297],
+      ['4 wk ago', 94, 375],
+      ['(B)ACK', 580, 442]
     ]));
+    expect(calls.line.length).toBeGreaterThanOrEqual(26);
+    expect(calls.text).not.toContainEqual(['Score 75%', 563.4285714285714, 380]);
+    expect(calls.text).not.toContainEqual(['Hits 9/12', 563.4285714285714, 391]);
     expect(calls.text).not.toContainEqual(['PROFILE', 460, 148]);
     expect(calls.text).not.toContainEqual(['Laurent', 460, 178]);
     expect(calls.text).not.toContainEqual(['(E)DIT', 460, 232]);

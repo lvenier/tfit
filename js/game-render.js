@@ -670,6 +670,174 @@
     };
   }
 
+  function profileDateKey(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function profileDayLabel(date) {
+    return `${date.getMonth() + 1}/${date.getDate()}`;
+  }
+
+  function profileTotalGames(gameCounts = {}) {
+    return (Number(gameCounts.shadow) || 0) +
+      (Number(gameCounts.trainPad) || 0) +
+      (Number(gameCounts.fight) || 0);
+  }
+
+  function profileStatsForDay(profileStats, key) {
+    return profileStats?.dailyStats?.[key] || {};
+  }
+
+  function profileHitSuccessPercent(summary = {}) {
+    const scoringMoves = Number(summary.scoringMoves) || 0;
+    if (scoringMoves <= 0) {
+      return 0;
+    }
+    return Math.round(((Number(summary.hits) || 0) / scoringMoves) * 100);
+  }
+
+  function profileWeeklyGraphDays(profileStats, weekEndDate) {
+    return Array.from({ length: 7 }, (_value, index) => {
+      const date = new Date(weekEndDate);
+      date.setDate(weekEndDate.getDate() - (6 - index));
+      const dayStats = profileStatsForDay(profileStats, profileDateKey(date));
+      const summary = dayStats.scoreSummary || {};
+      return {
+        calories: Number(dayStats.caloriesBurned) || 0,
+        date,
+        games: profileTotalGames(dayStats.gameCounts),
+        hits: Number(summary.hits) || 0,
+        score: profileHitSuccessPercent(summary)
+      };
+    });
+  }
+
+  function renderProfileWeeklyGraph({
+    graphY,
+    gridWidth,
+    layout,
+    marginX,
+    profileStats,
+    showLegend = false,
+    weekEndDate,
+    weekLabel
+  }) {
+    const days = profileWeeklyGraphDays(profileStats, weekEndDate);
+    const labelWidth = 68 * layout.coef;
+    const graphX = marginX + labelWidth;
+    const graphWidth = gridWidth - labelWidth;
+    const graphHeight = 42 * layout.coef;
+    const segmentWidth = graphWidth / 6;
+    const metrics = [
+      { label: "Score", key: "score", max: 100, color: [79, 214, 149] },
+      { label: "Hits", key: "hits", max: Math.max(1, ...days.map(day => day.hits)), color: [96, 181, 255] },
+      { label: "Game", key: "games", max: Math.max(1, ...days.map(day => day.games)), color: [255, 205, 96] },
+      { label: "Kcal", key: "calories", max: Math.max(1, ...days.map(day => day.calories)), color: [255, 129, 129] }
+    ];
+
+    textAlign(RIGHT, CENTER);
+    textStyle(BOLD);
+    textSize(8 * layout.coef);
+    fill(255, 255, 255, 206);
+    text(weekLabel, graphX - 10 * layout.coef, graphY + graphHeight / 2);
+
+    stroke(255, 255, 255, 34);
+    strokeWeight(1 * layout.coef);
+    for (let lineIndex = 1; lineIndex < 3; lineIndex++) {
+      const y = graphY + (graphHeight / 3) * lineIndex;
+      line(graphX, y, graphX + graphWidth, y);
+    }
+
+    if (showLegend) {
+      textAlign(LEFT, CENTER);
+      textStyle(BOLD);
+      textSize(7 * layout.coef);
+      for (let index = 0; index < metrics.length; index++) {
+        const metric = metrics[index];
+        fill(metric.color[0], metric.color[1], metric.color[2], 218);
+        text(metric.label, graphX + index * 60 * layout.coef, graphY - 10 * layout.coef);
+      }
+    } else {
+      void showLegend;
+    }
+
+    for (const metric of metrics) {
+      stroke(metric.color[0], metric.color[1], metric.color[2], 224);
+      strokeWeight(2 * layout.coef);
+      for (let index = 0; index < days.length - 1; index++) {
+        const currentProgress = Math.max(0, Math.min(1, (Number(days[index][metric.key]) || 0) / metric.max));
+        const nextProgress = Math.max(0, Math.min(1, (Number(days[index + 1][metric.key]) || 0) / metric.max));
+        const x1 = graphX + segmentWidth * index;
+        const x2 = graphX + segmentWidth * (index + 1);
+        const y1 = graphY + graphHeight - currentProgress * graphHeight;
+        const y2 = graphY + graphHeight - nextProgress * graphHeight;
+        line(x1, y1, x2, y2);
+      }
+    }
+    noStroke();
+
+    textAlign(CENTER, CENTER);
+    textStyle(NORMAL);
+    textSize(7 * layout.coef);
+    fill(255, 255, 255, 150);
+    text(profileDayLabel(days[0].date), graphX, graphY + graphHeight + 9 * layout.coef);
+    text(profileDayLabel(days[6].date), graphX + graphWidth, graphY + graphHeight + 9 * layout.coef);
+  }
+
+  function renderProfileStatsGrid(profileStats, layout) {
+    const marginX = 36 * layout.coef;
+    const gridWidth = layout.width - marginX * 2;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    noStroke();
+    fill(4, 8, 10, 238);
+    rect(0, 0, layout.width, layout.height);
+
+    textAlign(CENTER, CENTER);
+    textStyle(BOLD);
+    textSize(16 * layout.coef);
+    fill(255, 255, 255, 232);
+    text("SUMMARY", layout.width / 2, 38 * layout.coef);
+
+    const totalGames = profileTotalGames(profileStats.gameCounts);
+    const summary = profileStats.scoreSummary || {};
+    const totalScoringMoves = Number(summary.scoringMoves) || 0;
+    const totalHits = Number(summary.hits) || 0;
+    const totalMisses = Number(summary.misses) || 0;
+    textStyle(NORMAL);
+    textSize(10 * layout.coef);
+    fill(255, 255, 255, 214);
+    text(
+      `${(Number(profileStats.caloriesBurned) || 0).toFixed(1)} kcal  |  ${totalGames} games  |  Score ${profileHitSuccessPercent(summary)}%`,
+      layout.width / 2,
+      62 * layout.coef
+    );
+    text(
+      `Hits ${totalHits}/${totalScoringMoves}  |  Misses ${totalMisses}  |  Shadow ${Number(summary.shadowCombos) || 0}  |  Fight ${Number(summary.fightWins) || 0}W/${Number(summary.fightLosses) || 0}L`,
+      layout.width / 2,
+      82 * layout.coef
+    );
+
+    for (let weekIndex = 0; weekIndex < 4; weekIndex++) {
+      const weekEndDate = new Date(today);
+      weekEndDate.setDate(today.getDate() - weekIndex * 7);
+      renderProfileWeeklyGraph({
+        graphY: (120 + weekIndex * 78) * layout.coef,
+        gridWidth,
+        layout,
+        marginX,
+        profileStats,
+        showLegend: weekIndex === 0,
+        weekEndDate,
+        weekLabel: weekIndex === 0 ? "This week" : `${weekIndex + 1} wk ago`
+      });
+    }
+  }
+
   function renderSettingsStyleButton({
     label,
     layout
@@ -771,31 +939,17 @@
     const robot = menuRobotPose({ layout });
     const profileButtonBounds = viewingStats ? [] : [editBounds, viewBounds];
 
-    renderMenuBoxingRobot({
-      ...robot,
-      target: hoveredButtonRobotTarget(profileButtonBounds, robot)
-    });
+    if (!viewingStats) {
+      renderMenuBoxingRobot({
+        ...robot,
+        target: hoveredButtonRobotTarget(profileButtonBounds, robot)
+      });
+    }
 
     /* c8 ignore next */
     if (viewingStats) {
-      textAlign(CENTER, CENTER);
-      textStyle(BOLD);
-      textSize(16 * layout.coef);
-      fill(255, 255, 255, 218);
-      text("Calories burned", profileCenterX, layout.height / 2 - 22 * layout.coef);
-      textStyle(NORMAL);
-      textSize(30 * layout.coef);
-      fill(255, 255, 255, 238);
-      text(`${(Number(profileStats.caloriesBurned) || 0).toFixed(1)} kcal`, profileCenterX, layout.height / 2 + 12 * layout.coef);
-      textSize(11 * layout.coef);
-      fill(255, 255, 255, 210);
-      text("Games played", profileCenterX, layout.height / 2 + 52 * layout.coef);
-      textStyle(BOLD);
-      textSize(12 * layout.coef);
-      fill(255, 255, 255, 232);
-      text(`Shadow: ${Number(profileStats.gameCounts?.shadow) || 0}`, profileCenterX, layout.height / 2 + 74 * layout.coef);
-      text(`Train pad: ${Number(profileStats.gameCounts?.trainPad) || 0}`, profileCenterX, layout.height / 2 + 94 * layout.coef);
-      text(`Fight: ${Number(profileStats.gameCounts?.fight) || 0}`, profileCenterX, layout.height / 2 + 114 * layout.coef);
+      renderProfileStatsGrid(profileStats, layout);
+      renderBackButton();
       return;
     }
 
