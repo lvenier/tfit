@@ -271,7 +271,7 @@ describe('pad mode rendering', () => {
     expect(drawUpperWireBoxer).toHaveBeenCalledWith(
       320,
       240,
-      0.9,
+      1.35,
       42 * 0.045,
       false,
       false,
@@ -303,7 +303,7 @@ describe('pad mode rendering', () => {
     expect(drawUpperWireBoxer).toHaveBeenCalledWith(
       expect.any(Number),
       expect.any(Number),
-      0.9,
+      1.35,
       42 * 0.045,
       true,
       false,
@@ -341,7 +341,7 @@ describe('pad mode rendering', () => {
     expect(drawUpperWireBoxer).toHaveBeenCalledWith(
       expect.any(Number),
       expect.any(Number),
-      0.9,
+      1.35,
       15 * 0.045,
       true,
       false,
@@ -395,7 +395,7 @@ describe('pad mode rendering', () => {
     expect(drawUpperWireBoxer).toHaveBeenCalledWith(
       320,
       240,
-      0.9,
+      1.35,
       50 * 0.045,
       false,
       true,

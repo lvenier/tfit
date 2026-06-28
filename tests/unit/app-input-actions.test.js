@@ -326,13 +326,27 @@ describe('applyInputAction', () => {
     expect(globalThis.gameState.profileStatsVisible).toBe(false);
 
     api.applyInputAction({ click: true, type: 'profile_view' });
+    expect(globalThis.gameState.profileStatsVisible).toBe(false);
+    expect(globalThis.gameState.menuButtonAnimation).toMatchObject({
+      active: true,
+      button: 'profile_view',
+      pendingTransition: { menu: 5 }
+    });
+    expect(api.applyPendingMenuButtonTransition()).toBe(true);
     expect(globalThis.TfitFaceRecognition.updatePanel).toHaveBeenCalledWith({ matched: 'Laurent' });
     expect(globalThis.gameState.profileStatsVisible).toBe(true);
 
     api.applyInputAction({ click: true, type: 'back_to_menu' });
     expect(globalThis.gameState.menu).toBe(5);
+    expect(globalThis.gameState.profileStatsVisible).toBe(true);
+    expect(globalThis.gameState.menuButtonAnimation).toMatchObject({
+      active: true,
+      button: 'back_to_menu',
+      pendingTransition: { menu: 0 }
+    });
+    expect(api.applyPendingMenuButtonTransition()).toBe(true);
+    expect(globalThis.gameState.menu).toBe(0);
     expect(globalThis.gameState.profileStatsVisible).toBe(false);
-    expect(globalThis.gameState.menuButtonAnimation.button).toBe('open_profile');
   });
 
   it('spells profile names with keyboard input', () => {
@@ -437,6 +451,19 @@ describe('applyInputAction', () => {
     api.applyInputAction({ click: true, type: 'profile_view' });
 
     expect(globalThis.gameState.profileNameEditing).toBeUndefined();
+  });
+
+  it('skips profile viewing when no selected profile helper is available', () => {
+    const api = installGlobals({
+      TfitFaceRecognition: {
+        updatePanel: vi.fn()
+      }
+    });
+
+    api.viewSelectedProfileName({ showStats: true });
+
+    expect(globalThis.gameState.profileStatsVisible).toBeUndefined();
+    expect(globalThis.TfitFaceRecognition.updatePanel).not.toHaveBeenCalled();
   });
 
   it('can cancel profile name spelling', () => {
@@ -651,9 +678,9 @@ describe('applyInputAction', () => {
       button: 'back_to_menu',
       pendingTransition: { menu: 0 }
     });
-    expect(globalThis.TfitFaceRecognition.updatePanel).toHaveBeenCalledWith({ matched: 'Laurent' });
     expect(api.applyPendingMenuButtonTransition()).toBe(true);
     expect(globalThis.gameState.menu).toBe(0);
+    expect(globalThis.TfitFaceRecognition.updatePanel).toHaveBeenCalledWith({ matched: 'Laurent' });
 
     api.applyInputAction({ type: 'back_to_menu' });
     expect(globalThis.sounds.click.play).toHaveBeenCalledTimes(2);

@@ -182,7 +182,96 @@
     }
   }
 
-  function storeSelectedPlayerCalories(storage = root.localStorage, { completed = true } = {}) {
+  function todayKey(now = Date.now()) {
+    const date = new Date(now);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function emptyScoreSummary() {
+    return {
+      fightLosses: 0,
+      fightWins: 0,
+      hits: 0,
+      misses: 0,
+      scoringMoves: 0,
+      shadowCombos: 0
+    };
+  }
+
+  function normalizedGameCounts(counts = {}) {
+    return {
+      fight: Number(counts.fight) || 0,
+      shadow: Number(counts.shadow) || 0,
+      trainPad: Number(counts.trainPad) || 0
+    };
+  }
+
+  function normalizedScoreSummary(summary = {}) {
+    return {
+      fightLosses: Number(summary.fightLosses) || 0,
+      fightWins: Number(summary.fightWins) || 0,
+      hits: Number(summary.hits) || 0,
+      misses: Number(summary.misses) || 0,
+      scoringMoves: Number(summary.scoringMoves) || 0,
+      shadowCombos: Number(summary.shadowCombos) || 0
+    };
+  }
+
+  function addScoreSummary(target, delta) {
+    const next = normalizedScoreSummary(target);
+    for (const key of Object.keys(next)) {
+      next[key] += Number(delta[key]) || 0;
+    }
+    return next;
+  }
+
+  function scoreDeltaForCurrentRound({
+    fightLost = false,
+    fightWon = false
+  } = {}) {
+    const delta = emptyScoreSummary();
+    let shadowStreak = 0;
+    const moves = Array.isArray(gameState.curMoves) ? gameState.curMoves : [];
+
+    for (const move of moves) {
+      const type = Math.trunc(Number(move?.type) || 0);
+      if (type <= 0) {
+        continue;
+      }
+      delta.scoringMoves += 1;
+      if (move.hit === true && move.success !== false) {
+        delta.hits += 1;
+        if (gameState.menu === 2) {
+          shadowStreak += 1;
+          if (shadowStreak >= 3) {
+            delta.shadowCombos += 1;
+          }
+        }
+      } else {
+        delta.misses += 1;
+        shadowStreak = 0;
+      }
+    }
+
+    if (fightWon) {
+      delta.fightWins += 1;
+    } else {
+      void fightWon;
+    }
+    if (fightLost) {
+      delta.fightLosses += 1;
+    } else {
+      void fightLost;
+    }
+
+    return delta;
+  }
+
+  function storeSelectedPlayerCalories(storage = root.localStorage, options = {}) {
+    const { completed = true } = options;
     if (!storage || typeof storage.getItem !== "function" || typeof storage.setItem !== "function") {
       return null;
     }
@@ -218,6 +307,21 @@
     } else {
       void completed;
     }
+    const scoreDelta = scoreDeltaForCurrentRound(options);
+    profile.scoreSummary = addScoreSummary(profile.scoreSummary, scoreDelta);
+    profile.dailyStats = profile.dailyStats && typeof profile.dailyStats === "object" ? profile.dailyStats : {};
+    const dayKey = todayKey(options.now);
+    const daily = profile.dailyStats[dayKey] && typeof profile.dailyStats[dayKey] === "object" ? profile.dailyStats[dayKey] : {};
+    daily.caloriesBurned = Math.round(((Number(daily.caloriesBurned) || 0) + calories) * 10) / 10;
+    daily.lastCaloriesBurned = Math.round(calories * 10) / 10;
+    daily.gameCounts = normalizedGameCounts(daily.gameCounts);
+    if (completed && gameCountKey) {
+      daily.gameCounts[gameCountKey] += 1;
+    } else {
+      void completed;
+    }
+    daily.scoreSummary = addScoreSummary(daily.scoreSummary, scoreDelta);
+    profile.dailyStats[dayKey] = daily;
     storage.setItem(profileKey, JSON.stringify(profile));
 
     return {
@@ -320,7 +424,12 @@
 
     if (manualStop || gameState.menu === 4 || !roundEnd.shouldStartNextSeries) {
       const completedGame = (fightEndedByStamina && !shouldAdvanceFight) || (!manualStop && gameState.menu !== 4 && !roundEnd.shouldStartNextSeries);
-      storeSelectedPlayerCalories(root.localStorage, { completed: completedGame });
+      storeSelectedPlayerCalories(root.localStorage, {
+        completed: completedGame,
+        fightLost: fightLostByStamina,
+        fightWon: fightWonByStamina,
+        now
+      });
     } else {
       void roundEnd.shouldStartNextSeries;
     }

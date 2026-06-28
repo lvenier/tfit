@@ -231,18 +231,59 @@ describe('TfitFaceRecognition', () => {
           shadow: 10,
           trainPad: 3
         },
-        lastCaloriesBurned: 1.4
+        lastCaloriesBurned: 1.4,
+        scoreSummary: {
+          fightWins: 2,
+          hits: 22,
+          scoringMoves: 30,
+          shadowCombos: 4
+        },
+        dailyStats: {
+          '2026-06-28': {
+            caloriesBurned: 2.5,
+            gameCounts: { shadow: 1 },
+            scoreSummary: { hits: 8, scoringMoves: 10, shadowCombos: 2 }
+          },
+          bad: { caloriesBurned: 99 }
+        }
       })
     });
 
     expect(api.selectedProfileStats(storage)).toEqual({
       caloriesBurned: 12.6,
+      dailyStats: {
+        '2026-06-28': {
+          caloriesBurned: 2.5,
+          gameCounts: {
+            fight: 0,
+            shadow: 1,
+            trainPad: 0
+          },
+          lastCaloriesBurned: 0,
+          scoreSummary: {
+            fightLosses: 0,
+            fightWins: 0,
+            hits: 8,
+            misses: 0,
+            scoringMoves: 10,
+            shadowCombos: 2
+          }
+        }
+      },
       gameCounts: {
         fight: 4,
         shadow: 10,
         trainPad: 3
       },
-      lastCaloriesBurned: 1.4
+      lastCaloriesBurned: 1.4,
+      scoreSummary: {
+        fightLosses: 0,
+        fightWins: 2,
+        hits: 22,
+        misses: 0,
+        scoringMoves: 30,
+        shadowCombos: 4
+      }
     });
   });
 

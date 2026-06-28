@@ -665,6 +665,35 @@ describe('round flow helpers', () => {
     expect(globalThis.timingState.roundAnnouncementNextText).toBeNull();
   });
 
+  it('restarts a timed-out fight stage without recovery metadata', () => {
+    installFlowGlobals({
+      cloneOpponent: vi.fn(id => ({ id, stamina: 6 })),
+      gameState: {
+        curMoves: [{ hit: true, type: 1 }],
+        fightLadderActive: true,
+        fightStage: 1,
+        gameCurrentSeries: 1,
+        gameOver: true,
+        gameSeries: 1,
+        gameStarted: true,
+        manualStop: false,
+        menu: 4,
+        my_opponent: { stamina: undefined },
+        my_stamina: 4,
+        opponent: 0,
+        score: 1
+      }
+    });
+    const scheduleNextSeries = vi.fn();
+
+    flowApi.finishRound({ now: 9000, scheduleNextSeries });
+
+    expect(globalThis.gameState.pendingFightOpponentStamina).toBe(0);
+    expect(globalThis.gameState.gameCurrentSeries).toBe(2);
+    expect(globalThis.gameState.fightTransitionText).toBe('ROUND 2');
+    expect(scheduleNextSeries).toHaveBeenCalledTimes(1);
+  });
+
   it('schedules the next series when round end state asks for it', () => {
     installFlowGlobals({
       gameState: {
@@ -784,7 +813,41 @@ describe('round flow helpers', () => {
     expect(JSON.parse(globalThis.localStorage.values.get('player'))).toMatchObject({
       caloriesBurned: 2.4,
       gameCounts: { fight: 5, shadow: 10, trainPad: 3 },
-      lastCaloriesBurned: 0.9
+      lastCaloriesBurned: 0.9,
+      scoreSummary: {
+        fightWins: 1
+      }
+    });
+  });
+
+  it('scores a fight loss when stamina runs out', () => {
+    installFlowGlobals({
+      gameState: {
+        curMoves: [{ hit: false, type: 1 }],
+        caloriesBurned: 0.8,
+        fightEnding: true,
+        gameCurrentSeries: 1,
+        gameSeries: 3,
+        manualStop: true,
+        menu: 4,
+        my_opponent: { stamina: 3 },
+        my_stamina: 0,
+        opponent: 1,
+        score: 2
+      }
+    });
+
+    flowApi.finishRound({ now: 9000, scheduleNextSeries: vi.fn() });
+
+    expect(JSON.parse(globalThis.localStorage.values.get('player'))).toMatchObject({
+      caloriesBurned: 2.3,
+      gameCounts: { fight: 5, shadow: 10, trainPad: 3 },
+      lastCaloriesBurned: 0.8,
+      scoreSummary: {
+        fightLosses: 1,
+        misses: 1,
+        scoringMoves: 1
+      }
     });
   });
 
@@ -806,6 +869,134 @@ describe('round flow helpers', () => {
       caloriesBurned: 3.9,
       gameCounts: { fight: 4, shadow: 11, trainPad: 3 },
       lastCaloriesBurned: 2.4
+    });
+  });
+
+  it('stores daily score summaries for the selected player', () => {
+    installFlowGlobals({
+      gameState: {
+        caloriesBurned: 2.4,
+        curMoves: [
+          { hit: true, type: 1 },
+          { hit: true, type: 2 },
+          { hit: true, type: 3 },
+          { hit: false, type: 4 },
+          { hit: true, type: 10 },
+          { hit: true, type: 0 }
+        ],
+        menu: 2
+      }
+    });
+
+    flowApi.storeSelectedPlayerCalories(globalThis.localStorage, {
+      completed: true,
+      now: new Date(2026, 5, 28, 9, 30).getTime()
+    });
+
+    expect(JSON.parse(globalThis.localStorage.values.get('player'))).toMatchObject({
+      dailyStats: {
+        '2026-06-28': {
+          caloriesBurned: 2.4,
+          gameCounts: { fight: 0, shadow: 1, trainPad: 0 },
+          lastCaloriesBurned: 2.4,
+          scoreSummary: {
+            hits: 4,
+            misses: 1,
+            scoringMoves: 5,
+            shadowCombos: 1
+          }
+        }
+      },
+      scoreSummary: {
+        hits: 4,
+        misses: 1,
+        scoringMoves: 5,
+        shadowCombos: 1
+      }
+    });
+  });
+
+  it('adds score into an existing daily stats bucket', () => {
+    installFlowGlobals({
+      gameState: {
+        caloriesBurned: 1.1,
+        curMoves: [
+          { hit: true, type: 1 },
+          { hit: false, type: 2 }
+        ],
+        menu: 4
+      }
+    });
+    globalThis.localStorage.values.set('player', JSON.stringify({
+      caloriesBurned: 5,
+      dailyStats: {
+        '2026-06-28': {
+          caloriesBurned: 2,
+          gameCounts: { fight: 1, shadow: 0, trainPad: 0 },
+          scoreSummary: { hits: 3, misses: 1, scoringMoves: 4 }
+        }
+      },
+      gameCounts: { fight: 2, shadow: 0, trainPad: 0 },
+      scoreSummary: { hits: 3, misses: 1, scoringMoves: 4 }
+    }));
+
+    flowApi.storeSelectedPlayerCalories(globalThis.localStorage, {
+      completed: true,
+      fightLost: true,
+      fightWon: true,
+      now: new Date(2026, 5, 28, 11, 30).getTime()
+    });
+
+    expect(JSON.parse(globalThis.localStorage.values.get('player'))).toMatchObject({
+      dailyStats: {
+        '2026-06-28': {
+          caloriesBurned: 3.1,
+          gameCounts: { fight: 2, shadow: 0, trainPad: 0 },
+          scoreSummary: {
+            fightLosses: 1,
+            fightWins: 1,
+            hits: 4,
+            misses: 2,
+            scoringMoves: 6
+          }
+        }
+      },
+      scoreSummary: {
+        fightLosses: 1,
+        fightWins: 1,
+        hits: 4,
+        misses: 2,
+        scoringMoves: 6
+      }
+    });
+  });
+
+  it('stores daily calories without incrementing game counts for incomplete games', () => {
+    installFlowGlobals({
+      gameState: {
+        caloriesBurned: 0.6,
+        curMoves: [{ hit: true, type: 1 }],
+        menu: 2
+      }
+    });
+
+    flowApi.storeSelectedPlayerCalories(globalThis.localStorage, {
+      completed: false,
+      now: new Date(2026, 5, 28, 12).getTime()
+    });
+
+    expect(JSON.parse(globalThis.localStorage.values.get('player'))).toMatchObject({
+      dailyStats: {
+        '2026-06-28': {
+          caloriesBurned: 0.6,
+          gameCounts: { fight: 0, shadow: 0, trainPad: 0 },
+          scoreSummary: {
+            hits: 1,
+            scoringMoves: 1
+          }
+        }
+      },
+      gameCounts: { fight: 4, shadow: 10, trainPad: 3 }
     });
   });
 
