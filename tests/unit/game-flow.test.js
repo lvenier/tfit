@@ -16,6 +16,7 @@ const STUBBED_GLOBALS = [
   'LEVEL',
   'localStorage',
   'myWindowHeight',
+  'OPPONENTS',
   'randomInteger',
   'SHADOW_SPECIFIC',
   'sounds',
@@ -88,6 +89,11 @@ function installFlowGlobals(overrides = {}) {
       }
     },
     myWindowHeight: 480,
+    OPPONENTS: {
+      0: { name: 'Raja', recovery: 2, stamina: 6 },
+      1: { name: 'Theo', recovery: 3, stamina: 8 },
+      2: { name: 'Vehbo', recovery: 2, stamina: 10 }
+    },
     randomInteger: vi.fn(() => 2),
     SHADOW_SPECIFIC: { 0: 'ALL', 1: 'JAB' },
     sounds: {
@@ -255,6 +261,7 @@ describe('round flow helpers', () => {
 
     expect(globalThis.sounds.click.play).toHaveBeenCalledTimes(1);
     expect(globalThis.sounds.letsFight.play).toHaveBeenCalledTimes(1);
+    expect(globalThis.speechString).toBeNull();
     expect(globalThis.gameState).toMatchObject({
       arrayScore: [],
       curMoves: [],
@@ -269,6 +276,36 @@ describe('round flow helpers', () => {
     expect(globalThis.timingState.gameResult).toBe(1999);
     expect(globalThis.timingState.guardWarning).toBe(7000);
     expect(globalThis.hide_sensor).toBe(0);
+  });
+
+  it('starts fight mode from stage one when the ladder is inactive', () => {
+    installFlowGlobals({
+      gameState: {
+        fightLadderActive: false,
+        fightStage: 3,
+        fightVictoryCelebrationActive: true,
+        menu: 4,
+        opponent: 2,
+        pendingFightOpponentStamina: 4
+      }
+    });
+
+    flowApi.letsfight(7000);
+
+    expect(globalThis.gameState).toMatchObject({
+      fightLadderActive: true,
+      fightStage: 1,
+      fightVictoryCelebrationActive: false,
+      gameStarted: true,
+      my_opponent: { id: 0, stamina: 6 },
+      opponent: 0,
+      pendingFightOpponentStamina: null
+    });
+    expect(globalThis.speechString).toBe('STAGE 1');
+    expect(globalThis.timingState.fightResultText).toBeNull();
+    expect(globalThis.timingState.roundAnnouncementText).toBe('STAGE 1');
+    expect(globalThis.timingState.roundAnnouncementNextText).toBe('ROUND 1');
+    expect(globalThis.timingState.roundAnnouncementTime).toBe(7000);
   });
 
   it('reports blocked start attempts without resetting the round', () => {
@@ -427,6 +464,207 @@ describe('round flow helpers', () => {
     expect(scheduleNextSeries).not.toHaveBeenCalled();
   });
 
+  it('advances fight stage to the next opponent after a stamina win', () => {
+    installFlowGlobals({
+      cloneOpponent: vi.fn(id => ({
+        id,
+        recovery: id === 1 ? 3 : 2,
+        stamina: id === 1 ? 8 : 6
+      })),
+      gameState: {
+        curMoves: [{ hit: true, type: 1 }],
+        fightEnding: true,
+        fightLadderActive: true,
+        fightStage: 1,
+        gameCurrentSeries: 1,
+        gameOver: true,
+        gameSeries: 1,
+        gameStarted: false,
+        manualStop: true,
+        menu: 4,
+        my_opponent: { stamina: 0 },
+        my_stamina: 6,
+        opponent: 0,
+        score: 1
+      }
+    });
+    const scheduleNextSeries = vi.fn();
+
+    flowApi.finishRound({ now: 9000, scheduleNextSeries });
+
+    expect(globalThis.gameState.opponent).toBe(1);
+    expect(globalThis.gameState.fightStage).toBe(2);
+    expect(globalThis.gameState.fightLadderActive).toBe(true);
+    expect(globalThis.gameState.fightTransitionActive).toBe(true);
+    expect(globalThis.gameState.fightTransitionText).toBe('NEXT: STAGE 2');
+    expect(globalThis.gameState.my_opponent).toEqual({ id: 1, recovery: 3, stamina: 8 });
+    expect(globalThis.gameState.my_stamina).toBe(8);
+    expect(globalThis.gameState.pendingFightOpponentStamina).toBeNull();
+    expect(globalThis.timingState.fightTransitionTime).toBe(9000);
+    expect(scheduleNextSeries).toHaveBeenCalledTimes(1);
+    expect(scheduleNextSeries.mock.calls[0][1]).toBe(6100);
+
+    scheduleNextSeries.mock.calls[0][0]();
+
+    expect(globalThis.gameState.gameStarted).toBe(true);
+    expect(globalThis.gameState.fightTransitionActive).toBe(false);
+    expect(globalThis.gameState.fightTransitionText).toBeNull();
+    expect(globalThis.gameState.my_opponent).toEqual({ id: 1, recovery: 3, stamina: 8 });
+  });
+
+  it('ends the fight ladder after two opponents on easy level', () => {
+    installFlowGlobals({
+      gameState: {
+        curMoves: [{ hit: true, type: 1 }],
+        fightEnding: true,
+        fightLadderActive: true,
+        fightStage: 2,
+        gameCurrentSeries: 1,
+        gameOver: true,
+        gameSeries: 1,
+        gameStarted: false,
+        level: 0,
+        manualStop: true,
+        menu: 4,
+        my_opponent: { stamina: 0 },
+        my_stamina: 6,
+        opponent: 1,
+        score: 1
+      }
+    });
+    const scheduleNextSeries = vi.fn();
+
+    flowApi.finishRound({ now: 9000, scheduleNextSeries });
+
+    expect(scheduleNextSeries).not.toHaveBeenCalled();
+    expect(globalThis.gameState).toMatchObject({
+      fightLadderActive: false,
+      fightStage: 1,
+      fightTransitionActive: false,
+      opponent: 0
+    });
+  });
+
+  it('uses the full opponent roster on hard level', () => {
+    installFlowGlobals({
+      cloneOpponent: vi.fn(id => ({
+        id,
+        name: id === 4 ? 'Lav' : `Opponent ${id}`,
+        recovery: 2,
+        stamina: 6 + id
+      })),
+      OPPONENTS: {
+        0: { stamina: 6 },
+        1: { stamina: 7 },
+        2: { stamina: 8 },
+        3: { stamina: 9 },
+        4: { stamina: 10 }
+      },
+      gameState: {
+        curMoves: [{ hit: true, type: 1 }],
+        fightEnding: true,
+        fightLadderActive: true,
+        fightStage: 4,
+        gameCurrentSeries: 1,
+        gameOver: true,
+        gameSeries: 1,
+        gameStarted: false,
+        level: 2,
+        manualStop: true,
+        menu: 4,
+        my_opponent: { stamina: 0 },
+        my_stamina: 6,
+        opponent: 3,
+        score: 1
+      }
+    });
+    const scheduleNextSeries = vi.fn();
+
+    flowApi.finishRound({ now: 9000, scheduleNextSeries });
+
+    expect(globalThis.gameState.opponent).toBe(4);
+    expect(globalThis.gameState.fightStage).toBe(5);
+    expect(globalThis.gameState.fightTransitionActive).toBe(true);
+    expect(globalThis.gameState.fightTransitionText).toBe('NEXT: LAV');
+    expect(globalThis.gameState.my_opponent).toEqual({ id: 4, name: 'Lav', recovery: 2, stamina: 10 });
+    expect(scheduleNextSeries).toHaveBeenCalledTimes(1);
+  });
+
+  it('treats a missing opponent roster as a one-opponent fight', () => {
+    installFlowGlobals({
+      OPPONENTS: undefined,
+      gameState: {
+        curMoves: [{ hit: true, type: 1 }],
+        fightEnding: true,
+        fightLadderActive: true,
+        fightStage: 1,
+        gameCurrentSeries: 1,
+        gameOver: true,
+        gameSeries: 1,
+        gameStarted: false,
+        level: 2,
+        manualStop: true,
+        menu: 4,
+        my_opponent: { stamina: 0 },
+        my_stamina: 6,
+        opponent: 0,
+        score: 1
+      }
+    });
+    const scheduleNextSeries = vi.fn();
+
+    flowApi.finishRound({ now: 9000, scheduleNextSeries });
+
+    expect(globalThis.gameState.fightVictoryCelebrationActive).toBe(true);
+    expect(globalThis.gameState.opponent).toBe(0);
+    expect(scheduleNextSeries).not.toHaveBeenCalled();
+  });
+
+  it('recovers the current fight opponent and restarts the stage after timeout', () => {
+    installFlowGlobals({
+      cloneOpponent: vi.fn(id => ({ id, recovery: 2, stamina: 6 })),
+      gameState: {
+        curMoves: [{ hit: true, type: 1 }],
+        fightLadderActive: true,
+        fightStage: 1,
+        gameCurrentSeries: 1,
+        gameOver: true,
+        gameSeries: 1,
+        gameStarted: true,
+        manualStop: false,
+        menu: 4,
+        my_opponent: { stamina: 3 },
+        my_stamina: 4,
+        opponent: 0,
+        score: 1
+      }
+    });
+    const scheduleNextSeries = vi.fn();
+
+    flowApi.finishRound({ now: 9000, scheduleNextSeries });
+
+    expect(globalThis.gameState.opponent).toBe(0);
+    expect(globalThis.gameState.fightStage).toBe(1);
+    expect(globalThis.gameState.gameCurrentSeries).toBe(2);
+    expect(globalThis.gameState.pendingFightOpponentStamina).toBe(5);
+    expect(globalThis.gameState.fightTransitionActive).toBe(true);
+    expect(globalThis.gameState.fightTransitionText).toBe('ROUND 2');
+    expect(globalThis.timingState.fightTransitionTime).toBe(9000);
+    expect(scheduleNextSeries).toHaveBeenCalledTimes(1);
+    expect(scheduleNextSeries.mock.calls[0][1]).toBe(5100);
+
+    scheduleNextSeries.mock.calls[0][0]();
+
+    expect(globalThis.gameState.gameStarted).toBe(true);
+    expect(globalThis.gameState.fightTransitionActive).toBe(false);
+    expect(globalThis.gameState.my_opponent).toEqual({ id: 0, recovery: 2, stamina: 5 });
+    expect(globalThis.gameState.pendingFightOpponentStamina).toBeNull();
+    expect(globalThis.sounds.letsFight.play).not.toHaveBeenCalled();
+    expect(globalThis.speechString).toBe('ROUND 2');
+    expect(globalThis.timingState.roundAnnouncementText).toBe('ROUND 2');
+    expect(globalThis.timingState.roundAnnouncementNextText).toBeNull();
+  });
+
   it('schedules the next series when round end state asks for it', () => {
     installFlowGlobals({
       gameState: {
@@ -462,7 +700,7 @@ describe('round flow helpers', () => {
     expect(globalThis.gameState.gameStarted).toBe(true);
   });
 
-  it('does not schedule another series after a fight round ends', () => {
+  it('stores calories without completing the fight count between ladder stages', () => {
     installFlowGlobals({
       gameState: {
         curMoves: [{ hit: true }],
@@ -491,7 +729,7 @@ describe('round flow helpers', () => {
     expect(scheduleNextSeries).not.toHaveBeenCalled();
     expect(JSON.parse(globalThis.localStorage.values.get('player'))).toMatchObject({
       caloriesBurned: 2.2,
-      gameCounts: { fight: 5, shadow: 10, trainPad: 3 },
+      gameCounts: { fight: 4, shadow: 10, trainPad: 3 },
       lastCaloriesBurned: 0.7
     });
   });
@@ -519,7 +757,7 @@ describe('round flow helpers', () => {
     });
   });
 
-  it('increments fight count when a fight completes by stamina ending', () => {
+  it('increments fight count when the final fight stage completes by stamina ending', () => {
     installFlowGlobals({
       gameState: {
         curMoves: [{ hit: true }],
@@ -529,13 +767,20 @@ describe('round flow helpers', () => {
         gameSeries: 3,
         manualStop: true,
         menu: 4,
-        opponent: 0,
+        my_opponent: { stamina: 0 },
+        opponent: 2,
         score: 2
       }
     });
 
     flowApi.finishRound({ now: 9000, scheduleNextSeries: vi.fn() });
 
+    expect(globalThis.gameState.fightVictoryCelebrationActive).toBe(true);
+    expect(globalThis.gameState.fightVictoryCelebrationTime).toBe(9000);
+    expect(globalThis.gameState.opponent).toBe(0);
+    expect(globalThis.gameState.my_opponent).toEqual({ id: 0, stamina: 6 });
+    expect(globalThis.gameState.my_stamina).toBe(6);
+    expect(globalThis.timingState.gameResult).toBe(9000);
     expect(JSON.parse(globalThis.localStorage.values.get('player'))).toMatchObject({
       caloriesBurned: 2.4,
       gameCounts: { fight: 5, shadow: 10, trainPad: 3 },

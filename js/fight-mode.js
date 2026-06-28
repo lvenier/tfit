@@ -10,6 +10,7 @@
     hasPoseConfidence,
     isInsideGuard,
     moveMatchesRecentGesture = () => false,
+    nextDownDodgeState = () => ({ done: false, switched: false, touchedDown: false }),
     posePartsFromPoses
   } = root.TfitPoseDetection;
 
@@ -34,7 +35,12 @@
   const OPPONENT_FRAME_HOLD = 6;
   const OPPONENT_REACTION_FRAMES = 120;
   const OPPONENT_HIT_REACTION_FRAMES = 30;
-  const FIGHT_MOVE_INTERVAL_MULTIPLIER = 2;
+  const OPPONENT_BLOCK_REACTION_FRAMES = 32;
+  const FIGHT_MOVE_INTERVAL_MULTIPLIERS = {
+    0: 1.75,
+    1: 1.5,
+    2: 1.25
+  };
   const SHADOW_SUCCESS_FILL = [0, 255, 0, 127];
 
   /* c8 ignore next 3 */
@@ -45,6 +51,20 @@
   /* c8 ignore next 3 */
   function opponentPunchWaitFrames() {
     return currentOpponentConfig().punchWaitFrames || OPPONENT_REACTION_FRAMES;
+  }
+
+  function opponentBlockChance() {
+    const chance = Number(currentOpponentConfig().blockChance) || 0;
+    return Math.max(0, Math.min(1, chance));
+  }
+
+  function fightMoveIntervalMultiplier() {
+    const level = Number.isFinite(Number(gameState.level)) ? Math.trunc(Number(gameState.level)) : 1;
+    if (FIGHT_MOVE_INTERVAL_MULTIPLIERS[level]) {
+      return FIGHT_MOVE_INTERVAL_MULTIPLIERS[level];
+    } else {
+      return FIGHT_MOVE_INTERVAL_MULTIPLIERS[1];
+    }
   }
 
   function poseX(point, layout) {
@@ -101,6 +121,14 @@
     };
   }
 
+  function triggerOpponentBlockReaction(type) {
+    animationState.opponent.block = {
+      duration: OPPONENT_BLOCK_REACTION_FRAMES,
+      frame: 0,
+      type
+    };
+  }
+
   function advanceOpponentHitReaction() {
     const reaction = animationState.opponent.reaction;
     if (!reaction) {return;}
@@ -110,27 +138,61 @@
     }
   }
 
+  function advanceOpponentBlockReaction() {
+    const block = animationState.opponent.block;
+    if (!block) {return;}
+    block.frame++;
+    if (block.frame >= block.duration) {
+      animationState.opponent.block = null;
+    }
+  }
+
+  function shouldOpponentBlock(currentMove) {
+    return currentMove.type >= 1 &&
+      currentMove.type <= 6 &&
+      !currentMove.staminaApplied &&
+      Math.random() < opponentBlockChance();
+  }
+
   function markFightPromptSuccess(currentMove, now) {
     const wasUnhit = currentMove.hit === false;
+    const blocked = shouldOpponentBlock(currentMove);
     if (currentMove.type >= 1 && currentMove.type <= 6 && !currentMove.staminaApplied) {
-      gameState.my_opponent.stamina = Math.max(0, gameState.my_opponent.stamina - 1);
+      if (!blocked) {
+        gameState.my_opponent.stamina = Math.max(0, gameState.my_opponent.stamina - 1);
+      }
       currentMove.staminaApplied = true;
     }
     /* c8 ignore next */
-    if (wasUnhit) {
+    if (wasUnhit && !blocked) {
       addCaloriesForMove(gameState, currentMove.type);
     }
+    currentMove.blocked = blocked;
     currentMove.hit = true;
+    currentMove.success = true;
     timingState.hitSuccess = now;
-    timingState.hitSuccessText = currentMove.type >= 7 && currentMove.type <= 9 ? "NICE DODGE" : "GOOD HIT";
+    timingState.hitSuccessText = blocked
+      ? "BLOCKED"
+      : currentMove.type >= 7 && currentMove.type <= 9
+        ? "NICE DODGE"
+        : "GOOD HIT";
     if (currentMove.type >= 1 && currentMove.type <= 6) {
-      triggerOpponentHitReaction(currentMove.type);
+      if (blocked) {
+        triggerOpponentBlockReaction(currentMove.type);
+      } else {
+        triggerOpponentHitReaction(currentMove.type);
+      }
       animationState.opponent.frame = -1;
       animationState.opponent.delay = 0;
     } else if (currentMove.type >= 7 && currentMove.type <= 9 && animationState.opponent.frame < 0) {
       animationState.opponent.type = randomInteger(1, 2);
       animationState.opponent.frame = 0;
       animationState.opponent.delay = 0;
+    }
+    if (currentMove.type === 9) {
+      timingState.downDodge = 0;
+      timingState.downDodgeDone = false;
+      timingState.downDodgeSwitch = false;
     }
   }
 
@@ -155,7 +217,8 @@
       gameState.fightEnding &&
       animationState.opponent.frame < 0 &&
       animationState.player.frame < 0 &&
-      !reaction
+      !reaction &&
+      !animationState.opponent.block
     ) {
       gameState.gameOver = true;
       gameState.gameStarted = false;
@@ -163,6 +226,7 @@
       animationState.opponent.delay = 0;
       animationState.opponent.type = 0;
       animationState.opponent.reaction = null;
+      animationState.opponent.block = null;
       animationState.player.frame = -1;
       animationState.player.delay = 0;
       animationState.player.type = 0;
@@ -171,10 +235,36 @@
     return false;
   }
 
-  function isFightPromptAnswered(moveType, now, levelWindow) {
-    if (moveType === 7) {return now - timingState.leftDodge < levelWindow;}
-    if (moveType === 8) {return now - timingState.rightDodge < levelWindow;}
-    if (moveType === 9) {return now - timingState.downDodge < levelWindow;}
+  function fightPromptGestureTime(moveType) {
+    if (moveType === 1) {return timingState.leftJab;}
+    if (moveType === 2) {return timingState.rightJab;}
+    if (moveType === 3) {return timingState.leftHook;}
+    if (moveType === 4) {return timingState.rightHook;}
+    if (moveType === 5) {return timingState.leftUppercut;}
+    if (moveType === 6) {return timingState.rightUppercut;}
+    if (moveType === 7) {return timingState.leftDodge;}
+    if (moveType === 8) {return timingState.rightDodge;}
+    if (moveType === 9) {
+      return timingState.downDodge;
+    } else {
+      void moveType;
+    }
+    return null;
+  }
+
+  function isFightPromptGestureFresh(currentMove) {
+    const moveType = currentMove.type;
+    const promptStartedAt = Number.isFinite(currentMove.promptStartedAt) ? currentMove.promptStartedAt : -Infinity;
+    const gestureTime = fightPromptGestureTime(moveType);
+    return !Number.isFinite(gestureTime) || gestureTime > promptStartedAt;
+  }
+
+  function isFightPromptAnswered(currentMove, now, levelWindow) {
+    const moveType = currentMove.type;
+    if (!isFightPromptGestureFresh(currentMove)) {return false;}
+    if (moveType === 7) {return now - timingState.leftDodge < levelWindow;} else {void moveType;}
+    if (moveType === 8) {return now - timingState.rightDodge < levelWindow;} else {void moveType;}
+    if (moveType === 9) {return now - timingState.downDodge < levelWindow && timingState.downDodgeSwitch === true;} else {void moveType;}
     return moveMatchesRecentGesture({
       downDodge: timingState.downDodge,
       leftDodge: timingState.leftDodge,
@@ -195,7 +285,7 @@
     });
   }
 
-  function updateFightPunchAnimation(type, side) {
+  function updateFightPunchAnimation(type, side, now) {
     const layout = layoutSnapshot();
 
     animationState.player.type = type;
@@ -203,13 +293,19 @@
     animationState.player.delay = 0;
     if (gameState.curMoves.length > 0 && 'type' in gameState.curMoves.at(-1) && gameState.curMoves.at(-1).type === type) {
       const currentMove = gameState.curMoves.at(-1);
-      markFightPromptSuccess(currentMove, Date.now());
+      if (currentMove.hit === false && isFightPromptGestureFresh(currentMove)) {
+        markFightPromptSuccess(currentMove, now);
+      }
     }
     if (side === "left") {
-      timingState.leftPoses = Date.now() - layout.levelWindowBase * 10;
+      timingState.leftPoses = now - layout.levelWindowBase * 10;
+    } else {
+      void side;
     }
     if (side === "right") {
-      timingState.rightPoses = Date.now() - layout.levelWindowBase * 10;
+      timingState.rightPoses = now - layout.levelWindowBase * 10;
+    } else {
+      void side;
     }
   }
 
@@ -220,6 +316,8 @@
     renderFightMeters();
     if (!gameState.gameStarted) {
       renderFightOpponentCharacter({ layout });
+    } else {
+      void gameState.gameStarted;
     }
     if (poses.length > 0) {
       ({ pose, leftHand, rightHand, nose } = posePartsFromPoses(poses));
@@ -239,10 +337,20 @@
           ready: true,
           rightGuardX: calibrationState.right_init_pose_x
         });
-        if (dodges.right) {timingState.rightDodge = now;}
-        if (dodges.left) {timingState.leftDodge = now;}
-        /* c8 ignore next */
-        if (dodges.down) {timingState.downDodge = now;}
+        if (dodges.right) {timingState.rightDodge = now;} else {void dodges.right;}
+        if (dodges.left) {timingState.leftDodge = now;} else {void dodges.left;}
+        const downDodgeState = nextDownDodgeState({
+          coef: layout.coef,
+          done: timingState.downDodgeDone,
+          initUppercutY: calibrationState.init_uppercut_y,
+          nose,
+          switched: timingState.downDodgeSwitch
+        });
+        timingState.downDodgeDone = downDodgeState.done;
+        timingState.downDodgeSwitch = downDodgeState.switched;
+        if (downDodgeState.touchedDown) {timingState.downDodge = now;} else {void downDodgeState.touchedDown;}
+      } else {
+        void nose;
       }
       if (hasPoseConfidence(leftHand)) {
         const leftInGuard = isInsideGuard(leftHand, calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, layout.objectPoseSize, layout.coef);
@@ -252,7 +360,6 @@
             timingState.leftPosesReturn = now;
           }
           timingState.leftGuardInGuard = true;
-          timingState.leftHook = now - levelWindow;
           fill(255, 255, 255, 128);
           circle(calibrationState.left_init_pose_x, calibrationState.left_init_pose_y, layout.objectPoseSize);
         } else {
@@ -274,9 +381,9 @@
           rightPoseTime: timingState.rightPoses,
           side: "left"
         });
-        if (leftGestures.uppercut) {timingState.leftUppercut = now;}
-        if (leftGestures.jab) {timingState.leftJab = now;}
-        if (leftGestures.hook) {timingState.leftHook = now;}
+        if (leftGestures.uppercut) {timingState.leftUppercut = now;} else {void leftGestures.uppercut;}
+        if (leftGestures.jab) {timingState.leftJab = now;} else {void leftGestures.jab;}
+        if (leftGestures.hook) {timingState.leftHook = now;} else {void leftGestures.hook;}
       } else {
         timingState.leftGuardInGuard = false;
       }
@@ -286,9 +393,10 @@
           timingState.rightPoses = now;
           if (!timingState.rightGuardInGuard) {
             timingState.rightPosesReturn = now;
+          } else {
+            void timingState.rightGuardInGuard;
           }
           timingState.rightGuardInGuard = true;
-          timingState.rightHook = now - levelWindow;
           fill(255, 255, 255, 128);
           circle(calibrationState.right_init_pose_x, calibrationState.right_init_pose_y, layout.objectPoseSize);
         } else {
@@ -310,7 +418,7 @@
           rightPoseTime: timingState.rightPoses,
           side: "right"
         });
-        if (rightGestures.uppercut) {timingState.rightUppercut = now;}
+        if (rightGestures.uppercut) {timingState.rightUppercut = now;} else {void rightGestures.uppercut;}
         /* c8 ignore next */
         if (rightGestures.jab) {timingState.rightJab = now;}
         /* c8 ignore next */
@@ -330,22 +438,22 @@
         animationState.player.delay = 0;
       }
       if (now - timingState.leftUppercut < levelWindow && timingState.leftUppercut - timingState.leftPoses < levelWindow && timingState.leftPosesReturn - timingState.leftUppercut > 0 && now - timingState.leftPosesReturn < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
-        updateFightPunchAnimation(5, "left");
+        updateFightPunchAnimation(5, "left", now);
       }
       if (now - timingState.leftJab < levelWindow && timingState.leftJab - timingState.leftPoses < levelWindow && timingState.leftPosesReturn - timingState.leftJab > 0 && now - timingState.leftPosesReturn < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
-        updateFightPunchAnimation(1, "left");
+        updateFightPunchAnimation(1, "left", now);
       }
       if (now - timingState.leftHook < levelWindow && timingState.leftHook - timingState.leftPoses < levelWindow && timingState.leftPosesReturn - timingState.leftHook > 0 && now - timingState.leftPosesReturn < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
-        updateFightPunchAnimation(3, "left");
+        updateFightPunchAnimation(3, "left", now);
       }
       if (now - timingState.rightUppercut < levelWindow && timingState.rightUppercut - timingState.rightPoses < levelWindow && timingState.rightPosesReturn - timingState.rightUppercut > 0 && now - timingState.rightPosesReturn < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
-        updateFightPunchAnimation(6, "right");
+        updateFightPunchAnimation(6, "right", now);
       }
       if (now - timingState.rightJab < levelWindow && timingState.rightJab - timingState.rightPoses < levelWindow && timingState.rightPosesReturn - timingState.rightJab > 0 && now - timingState.rightPosesReturn < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
-        updateFightPunchAnimation(2, "right");
+        updateFightPunchAnimation(2, "right", now);
       }
       if (now - timingState.rightHook < levelWindow && timingState.rightHook - timingState.rightPoses < levelWindow && timingState.rightPosesReturn - timingState.rightHook > 0 && now - timingState.rightPosesReturn < levelWindow && gameState.gameStarted && !gameState.fightEnding && animationState.player.frame === -1) {
-        updateFightPunchAnimation(4, "right");
+        updateFightPunchAnimation(4, "right", now);
       }
       /* c8 ignore next */
       if (gameState.gameStarted) {
@@ -354,12 +462,13 @@
           return;
         }
         if (!gameState.fightEnding) {
-          const moveIntervalFrames = (layout.frameRate + layout.levelWindowBase / 2) * FIGHT_MOVE_INTERVAL_MULTIPLIER;
+          const moveIntervalFrames = (layout.frameRate + layout.levelWindowBase / 2) * fightMoveIntervalMultiplier();
           const moveIndex = Math.max(1, Math.ceil((gameState.gameTimer + 1) / moveIntervalFrames));
           if (gameState.gameTimerNext < moveIndex) {
             if (gameState.moves.length >= moveIndex && gameState.moves[moveIndex] >= 0) {
               gameState.curMoves.push({
                 "hit": false,
+                "promptStartedAt": now,
                 "type": Math.trunc(gameState.moves[moveIndex]),
                 "x": 0,
                 "y": 0
@@ -373,10 +482,10 @@
           const currentMove = gameState.curMoves[c];
           const prompt = fightPromptPosition(gameState.curMoves[c].type);
           const promptLabel = fightPromptLabel(gameState.curMoves[c].type);
-          if (currentMove.hit === false && isFightPromptAnswered(currentMove.type, now, levelWindow)) {
+          if (currentMove.hit === false && isFightPromptAnswered(currentMove, now, levelWindow)) {
             markFightPromptSuccess(currentMove, now);
           }
-          if (currentMove.hit === true) {
+          if (currentMove.hit === true && currentMove.success !== false) {
             fill(...SHADOW_SUCCESS_FILL);
           } else {
             fill(...moveDisplay(gameState.curMoves[c].type, gameState.feet_position, 255).color);
@@ -417,6 +526,7 @@
                   animationState.opponent.frame = -1;
                   animationState.opponent.delay = 0;
                   currentMove.hit = true;
+                  currentMove.success = false;
                   applyPlayerHit();
                   beginFightEndingIfStaminaEmpty();
                 } else {
@@ -462,6 +572,7 @@
           animationState.player.delay++;
         }
         advanceOpponentHitReaction();
+        advanceOpponentBlockReaction();
         beginFightEndingIfStaminaEmpty();
         /* c8 ignore next */
         if (finishFightEndingIfReady()) {
@@ -470,6 +581,8 @@
         tint(255, 255);
         gameState.gameTimer++;
       }
+    } else {
+      void poses;
     }
   }
 

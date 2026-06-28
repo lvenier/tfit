@@ -65,6 +65,23 @@
     }
   }
 
+  function shouldKeepDetectionForFightContinuation() {
+    if (gameState.fightTransitionActive) {
+      return true;
+    }
+    if (gameState.menu !== 4) {
+      return false;
+    }
+    if (!gameState.fightEnding && gameState.gameOver && !gameState.manualStop) {
+      return true;
+    }
+    const rosterCount = Math.max(1, Object.keys(root.OPPONENTS || {}).length);
+    const level = Number.isFinite(Number(gameState.level)) ? Math.trunc(Number(gameState.level)) : 1;
+    const levelLimit = level <= 0 ? 2 : level >= 2 ? rosterCount : 3;
+    const opponentCount = Math.max(1, Math.min(rosterCount, levelLimit));
+    return Boolean(gameState.fightEnding && gameState.my_opponent && gameState.my_opponent.stamina <= 0 && gameState.opponent < opponentCount - 1);
+  }
+
   function drawRoundFeedbackText(message, layout, pulse = 1) {
     const x = layout.width / 2;
     const y = layout.height * 0.2;
@@ -99,6 +116,51 @@
     text(message, x - 0.4, y - 0.4);
   }
 
+  function drawFightVictoryCelebration(layout) {
+    const now = Date.now();
+    const pulse = 1 + Math.sin(now * 0.006) * 0.05;
+    const x = layout.width / 2;
+    const y = layout.height * 0.34;
+    const scale = Math.max(0.85, layout.objectPoseSize / 48) * pulse;
+    const cupWidth = 78 * scale;
+    const cupHeight = 54 * scale;
+    const cupTop = y - cupHeight / 2;
+    const gold = [255, 207, 68, 238];
+    const glow = [255, 236, 128, 88];
+
+    noStroke();
+    fill(0, 0, 0, 176);
+    rect(x - 188 * scale, y - 94 * scale, 376 * scale, 202 * scale, 14 * scale);
+
+    for (let i = 0; i < 10; i++) {
+      const angle = i * 0.72 + now * 0.002;
+      const radius = (68 + (i % 3) * 22) * scale;
+      const sparkX = x + Math.cos(angle) * radius;
+      const sparkY = y - 46 * scale + Math.sin(angle * 1.4) * 52 * scale;
+      fill(i % 2 === 0 ? 255 : 88, i % 2 === 0 ? 92 : 220, i % 2 === 0 ? 92 : 255, 190);
+      rect(sparkX - 3 * scale, sparkY - 3 * scale, 6 * scale, 6 * scale, 2 * scale);
+    }
+
+    fill(70, 92, 210, 232);
+    rect(x - 34 * scale, cupTop - 10 * scale, 28 * scale, 64 * scale, 4 * scale);
+    fill(218, 50, 84, 232);
+    rect(x + 6 * scale, cupTop - 10 * scale, 28 * scale, 64 * scale, 4 * scale);
+    fill(...glow);
+    rect(x - cupWidth * 0.52, cupTop + 24 * scale, cupWidth * 1.04, cupWidth * 1.04, 999 * scale);
+    fill(...gold);
+    rect(x - cupWidth * 0.44, cupTop + 31 * scale, cupWidth * 0.88, cupWidth * 0.88, 999 * scale);
+    fill(150, 96, 28, 230);
+    rect(x - cupWidth * 0.25, cupTop + 51 * scale, cupWidth * 0.5, 18 * scale, 4 * scale);
+    rect(x - 4 * scale, cupTop + 41 * scale, 8 * scale, 40 * scale, 3 * scale);
+
+    textAlign(root.CENTER, root.CENTER);
+    textStyle(root.BOLD);
+    textSize(20 * scale);
+    fill(255, 245, 210, 255);
+    text("CHAMPION", x, y + 92 * scale);
+    textStyle(root.NORMAL);
+  }
+
   function renderMenuScreen() {
     stopPoseDetection();
     timingState.gameResult = Date.now() - 5001;
@@ -108,20 +170,42 @@
   function renderRoundFeedback() {
     const now = Date.now();
     const layout = layoutSnapshot();
+    const feedbackPulse = 1 + Math.sin(now * 0.008) * 0.06;
+
+    if (gameState.fightTransitionActive) {
+      const transitionElapsed = now - (Number(timingState.fightTransitionTime) || now);
+      const transitionText = transitionElapsed < 1000 && timingState.fightResultText
+        ? timingState.fightResultText
+        : gameState.fightTransitionText;
+      if (transitionText) {
+        drawRoundFeedbackText(transitionText, layout, feedbackPulse);
+      }
+      return;
+    }
+
     const remainingSeconds = remainingRoundSeconds({
       frameRate: layout.frameRate,
       gameDuration: gameState.gameDuration,
       gameTimer: gameState.gameTimer
     });
-    const feedbackPulse = 1 + Math.sin(now * 0.008) * 0.06;
 
     if (timingState.fightResultText) {
       drawRoundFeedbackText(timingState.fightResultText, layout, feedbackPulse);
       return;
     }
 
-    if (shouldShowHitFeedback({ hitSuccessTime: timingState.hitSuccess, now })) {
+    const hitFeedbackShown = shouldShowHitFeedback({ hitSuccessTime: timingState.hitSuccess, now });
+    if (hitFeedbackShown) {
       drawRoundFeedbackText(timingState.hitSuccessText || "GOOD HIT", layout, feedbackPulse);
+    }
+
+    const announcementElapsed = now - timingState.roundAnnouncementTime;
+    if (!hitFeedbackShown && timingState.roundAnnouncementText && announcementElapsed < 3000) {
+      const announcementText = timingState.roundAnnouncementNextText && announcementElapsed >= 1500
+        ? timingState.roundAnnouncementNextText
+        : timingState.roundAnnouncementText;
+      drawRoundFeedbackText(announcementText, layout, feedbackPulse);
+      return;
     }
 
     const keepTrying = keepTryingFeedback({
@@ -164,7 +248,9 @@
       gameState.gameOver = true;
     }
     if (gameState.gameOver) {
-      stopPoseDetection();
+      if (!shouldKeepDetectionForFightContinuation()) {
+        stopPoseDetection();
+      }
       finishRound();
     }
 
@@ -173,7 +259,7 @@
       speechString = null;
     }
 
-    if (!gameState.gameStarted && !gameState.gameCalibration && !gameResultBool()) {
+    if (!gameState.gameStarted && !gameState.gameCalibration && !gameState.fightTransitionActive && !gameResultBool()) {
       renderFightButton();
     }
     textSize(7 * layout.coef);
@@ -188,7 +274,11 @@
     }
     renderRoundHud(gameState.score);
 
-    if (!gameState.gameCalibration && !gameState.gameStarted) {
+    if (gameState.fightVictoryCelebrationActive && gameResultBool()) {
+      drawFightVictoryCelebration(layout);
+    }
+
+    if (!gameState.gameCalibration && !gameState.gameStarted && !shouldKeepDetectionForFightContinuation()) {
       stopPoseDetection();
     }
 
@@ -203,6 +293,8 @@
     if (gameState.gameStarted) {
       renderStopButton();
       fill(255, 0, 0, hide_sensor);
+      renderRoundFeedback();
+    } else if (gameState.fightTransitionActive) {
       renderRoundFeedback();
     }
   }
@@ -241,6 +333,8 @@
         sounds.doorClose.rate(DOOR_SOUND_RATE);
       }
       sounds.doorClose.play();
+    } else {
+      void closingStarted;
     }
 
     if (openingStarted && hasSound && typeof sounds?.doorOpen?.play === "function") {
@@ -248,10 +342,14 @@
         sounds.doorOpen.rate(DOOR_SOUND_RATE);
       }
       sounds.doorOpen.play();
+    } else {
+      void openingStarted;
     }
 
     if (canTransition) {
       getApplyPendingMenuButtonTransition()();
+    } else {
+      void canTransition;
     }
 
     animation.frame = currentFrame + 1;
@@ -272,6 +370,8 @@
 
     if (wallWidth <= 0) {
       return;
+    } else {
+      void wallWidth;
     }
 
     const logo = images?.logo;
@@ -326,20 +426,28 @@
 
   function renderActiveMode() {
     if (gameState.menu === 4) {
-      renderFightMode();
+      if (!(gameState.fightVictoryCelebrationActive && gameResultBool())) {
+        renderFightMode();
+      }
+    } else {
+      void gameState.menu;
     }
 
     if (gameState.menu === 3) {
       renderPadMode();
+    } else {
+      void gameState.menu;
     }
 
     if (gameState.menu === 2) {
       renderShadowMode();
+    } else {
+      void gameState.menu;
     }
   }
 
   function renderForegroundControls() {
-    if (gameState.menu === 4 && !gameState.gameStarted && !gameState.gameCalibration && !gameResultBool()) {
+    if (gameState.menu === 4 && !gameState.gameStarted && !gameState.gameCalibration && !gameState.fightTransitionActive && !gameResultBool()) {
       renderFightButton();
     }
   }
@@ -354,10 +462,14 @@
 
     if (gameState.menu === 1) {
       renderSettingsScreen();
+    } else {
+      void gameState.menu;
     }
 
     if (gameState.menu === 5) {
       renderProfileScreen();
+    } else {
+      void gameState.menu;
     }
 
     if (gameState.menu === 2 || gameState.menu === 3 || gameState.menu === 4) {
@@ -374,6 +486,8 @@
   function renderAppFrame() {
     if (innerWidth < innerHeight) {
       return;
+    } else {
+      void innerWidth;
     }
 
     /* istanbul ignore if */

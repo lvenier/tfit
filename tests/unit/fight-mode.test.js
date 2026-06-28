@@ -35,7 +35,8 @@ const STUBBED_GLOBALS = [
   'TfitGameLogic',
   'TfitLayoutState',
   'TfitPoseDetection',
-  'TfitRender'
+  'TfitRender',
+  'TfitScore'
 ];
 
 const originalGlobals = new Map();
@@ -397,6 +398,11 @@ describe('fight mode rendering', () => {
         detectHandGestures: vi.fn(() => ({ hook: true, jab: true, uppercut: true })),
         hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
         isInsideGuard: vi.fn(() => true),
+        nextDownDodgeState: vi.fn(() => ({
+          done: true,
+          switched: false,
+          touchedDown: true
+        })),
         posePartsFromPoses: vi.fn(() => trackedPose)
       }
     });
@@ -566,6 +572,63 @@ describe('fight mode rendering', () => {
     });
   });
 
+  it('lets opponents block successful punch prompts without losing stamina', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.2);
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 20, y: 30 },
+      nose: { confidence: 0.9, x: 10, y: 15 },
+      rightHand: { confidence: 0.9, x: 40, y: 50 }
+    };
+    const addCaloriesForMove = vi.fn();
+    const api = installGlobals({
+      gameState: {
+        curMoves: [{ hit: false, type: 1 }],
+        gameStarted: true,
+        gameTimer: 1,
+        gameTimerNext: 99,
+        moves: [],
+        my_opponent: { stamina: 6 },
+        opponent: 0
+      },
+      poses: [trackedPose],
+      TfitConfig: {
+        cloneOpponent: vi.fn(() => ({ stamina: 6 })),
+        OPPONENTS: { 0: { blockChance: 1, punchWaitFrames: 120, stamina: 6 } }
+      },
+      TfitPoseDetection: {
+        detectDodgeGestures: vi.fn(() => ({ left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        moveMatchesRecentGesture: vi.fn(() => true),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      },
+      TfitScore: { addCaloriesForMove }
+    });
+
+    api.renderFightMode();
+
+    expect(globalThis.gameState.curMoves[0]).toMatchObject({
+      blocked: true,
+      hit: true,
+      staminaApplied: true
+    });
+    expect(globalThis.gameState.my_opponent.stamina).toBe(6);
+    expect(globalThis.timingState.hitSuccessText).toBe('BLOCKED');
+    expect(globalThis.animationState.opponent.block).toEqual({
+      duration: 32,
+      frame: 1,
+      type: 1
+    });
+    expect(globalThis.animationState.opponent.reaction).toBeUndefined();
+    expect(addCaloriesForMove).not.toHaveBeenCalled();
+
+    globalThis.animationState.opponent.block.frame = 31;
+    api.renderFightMode();
+
+    expect(globalThis.animationState.opponent.block).toBeNull();
+  });
+
   it('starts each remaining punch animation from recent punch timing', () => {
     const trackedPose = {
       leftHand: { confidence: 0.9, x: 20, y: 30 },
@@ -624,6 +687,57 @@ describe('fight mode rendering', () => {
     expect(globalThis.animationState.player.type).toBe(type);
     expect(globalThis.timingState[side === 'left' ? 'leftPoses' : 'rightPoses']).toBe(9500);
     }
+  });
+
+  it('keeps hook timing through guard return so hook prompts can complete', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 200, y: 160 },
+      nose: { confidence: 0.9, x: 10, y: 15 },
+      rightHand: { confidence: 0.9, x: 440, y: 160 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [{ hit: false, type: 3 }],
+        feet_position: 0,
+        gameStarted: true,
+        gameTimer: 1,
+        gameTimerNext: 99,
+        moves: [],
+        my_opponent: { stamina: 10 },
+        opponent: 0
+      },
+      poses: [trackedPose],
+      timingState: {
+        leftDodge: 0,
+        leftGuardInGuard: false,
+        leftHook: 9950,
+        leftJab: 0,
+        leftPoses: 9800,
+        leftPosesReturn: 0,
+        leftUppercut: 0,
+        rightDodge: 0,
+        rightGuardInGuard: true,
+        rightHook: 0,
+        rightJab: 0,
+        rightPoses: 9800,
+        rightPosesReturn: 9800,
+        rightUppercut: 0
+      },
+      TfitPoseDetection: {
+        detectDodgeGestures: vi.fn(() => ({ left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn((_hand, guardX) => guardX === 200),
+        moveMatchesRecentGesture: vi.fn(({ leftHook, leftPosesReturn, moveType }) => moveType === 3 && leftHook === 9950 && leftPosesReturn === 10000),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderFightMode();
+
+    expect(globalThis.gameState.curMoves[0].hit).toBe(true);
+    expect(globalThis.animationState.player.type).toBe(3);
+    expect(globalThis.timingState.leftHook).toBe(9950);
   });
 
   it('skips the nose indicator when nose confidence is low but still renders guarded hand movement', () => {
@@ -898,6 +1012,293 @@ describe('fight mode rendering', () => {
     expect(globalThis.gameState.curMoves.at(-1).reactionFrames).toBe(1);
   });
 
+  it('queues the next fight move with the shorter fight interval', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 20, y: 30 },
+      nose: { confidence: 0.9, x: 10, y: 15 },
+      rightHand: { confidence: 0.9, x: 40, y: 50 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [{ hit: true, type: 1 }],
+        feet_position: 0,
+        gameStarted: true,
+        gameTimer: 68,
+        gameTimerNext: 1,
+        moves: [0, 1, 2],
+        my_opponent: { stamina: 6 },
+        opponent: 0
+      },
+      poses: [trackedPose],
+      TfitPoseDetection: {
+        detectDodgeGestures: vi.fn(() => ({ left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderFightMode();
+
+    expect(globalThis.gameState.curMoves.at(-1)).toMatchObject({ hit: false, type: 2 });
+    expect(globalThis.gameState.gameTimerNext).toBe(2);
+  });
+
+  it('waits longer between fight moves on easy level', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 20, y: 30 },
+      nose: { confidence: 0.9, x: 10, y: 15 },
+      rightHand: { confidence: 0.9, x: 40, y: 50 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [{ hit: true, type: 1 }],
+        feet_position: 0,
+        gameStarted: true,
+        gameTimer: 68,
+        gameTimerNext: 1,
+        level: 0,
+        moves: [0, 1, 2],
+        my_opponent: { stamina: 6 },
+        opponent: 0
+      },
+      poses: [trackedPose],
+      TfitPoseDetection: {
+        detectDodgeGestures: vi.fn(() => ({ left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderFightMode();
+
+    expect(globalThis.gameState.curMoves).toHaveLength(1);
+    expect(globalThis.gameState.gameTimerNext).toBe(1);
+  });
+
+  it('queues fight moves earlier on hard level', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 20, y: 30 },
+      nose: { confidence: 0.9, x: 10, y: 15 },
+      rightHand: { confidence: 0.9, x: 40, y: 50 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [{ hit: true, type: 1 }],
+        feet_position: 0,
+        gameStarted: true,
+        gameTimer: 56,
+        gameTimerNext: 1,
+        level: 2,
+        moves: [0, 1, 2],
+        my_opponent: { stamina: 6 },
+        opponent: 0
+      },
+      poses: [trackedPose],
+      TfitPoseDetection: {
+        detectDodgeGestures: vi.fn(() => ({ left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderFightMode();
+
+    expect(globalThis.gameState.curMoves.at(-1)).toMatchObject({ hit: false, type: 2 });
+    expect(globalThis.gameState.gameTimerNext).toBe(2);
+  });
+
+  it('uses the medium fight move interval when the level is unknown', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 20, y: 30 },
+      nose: { confidence: 0.9, x: 10, y: 15 },
+      rightHand: { confidence: 0.9, x: 40, y: 50 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [{ hit: true, type: 1 }],
+        feet_position: 0,
+        gameStarted: true,
+        gameTimer: 68,
+        gameTimerNext: 1,
+        level: 99,
+        moves: [0, 1, 2],
+        my_opponent: { stamina: 6 },
+        opponent: 0
+      },
+      poses: [trackedPose],
+      TfitPoseDetection: {
+        detectDodgeGestures: vi.fn(() => ({ left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderFightMode();
+
+    expect(globalThis.gameState.curMoves.at(-1)).toMatchObject({ hit: false, type: 2 });
+    expect(globalThis.gameState.gameTimerNext).toBe(2);
+  });
+
+  it('does not answer a newly queued fight prompt with an older gesture', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 20, y: 30 },
+      nose: { confidence: 0.9, x: 10, y: 15 },
+      rightHand: { confidence: 0.9, x: 40, y: 50 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [{ hit: true, type: 1 }],
+        feet_position: 0,
+        gameStarted: true,
+        gameTimer: 68,
+        gameTimerNext: 1,
+        moves: [0, 1, 2],
+        my_opponent: { stamina: 6 },
+        opponent: 0
+      },
+      poses: [trackedPose],
+      timingState: {
+        leftDodge: 0,
+        leftHook: 0,
+        leftJab: 0,
+        leftPoses: 0,
+        leftUppercut: 0,
+        rightDodge: 0,
+        rightHook: 0,
+        rightJab: 9950,
+        rightPoses: 9800,
+        rightPosesReturn: 9990,
+        rightUppercut: 0
+      },
+      TfitPoseDetection: {
+        detectDodgeGestures: vi.fn(() => ({ left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        moveMatchesRecentGesture: vi.fn(() => true),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderFightMode();
+
+    expect(globalThis.gameState.curMoves.at(-1)).toMatchObject({
+      hit: false,
+      promptStartedAt: 10_000,
+      type: 2
+    });
+    expect(globalThis.TfitPoseDetection.moveMatchesRecentGesture).not.toHaveBeenCalled();
+  });
+
+  it('does not answer a newly queued fight prompt with a same-frame gesture', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 20, y: 30 },
+      nose: { confidence: 0.9, x: 10, y: 15 },
+      rightHand: { confidence: 0.9, x: 40, y: 50 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [{ hit: true, type: 1 }],
+        feet_position: 0,
+        gameStarted: true,
+        gameTimer: 68,
+        gameTimerNext: 1,
+        moves: [0, 1, 2],
+        my_opponent: { stamina: 6 },
+        opponent: 0
+      },
+      poses: [trackedPose],
+      timingState: {
+        leftDodge: 0,
+        leftHook: 0,
+        leftJab: 0,
+        leftPoses: 0,
+        leftUppercut: 0,
+        rightDodge: 0,
+        rightHook: 0,
+        rightJab: 0,
+        rightPoses: 0,
+        rightUppercut: 0
+      },
+      TfitPoseDetection: {
+        detectDodgeGestures: vi.fn(() => ({ left: false, right: false })),
+        detectHandGestures: vi.fn(({ side }) => ({ hook: false, jab: side === 'right', uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        moveMatchesRecentGesture: vi.fn(() => true),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderFightMode();
+
+    expect(globalThis.timingState.rightJab).toBe(10_000);
+    expect(globalThis.gameState.curMoves.at(-1)).toMatchObject({
+      hit: false,
+      promptStartedAt: 10_000,
+      type: 2
+    });
+    expect(globalThis.TfitPoseDetection.moveMatchesRecentGesture).not.toHaveBeenCalled();
+  });
+
+  it('does not mark a prompt successful from a stale punch animation trigger', () => {
+    vi.setSystemTime(10_001);
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 20, y: 30 },
+      nose: { confidence: 0.9, x: 10, y: 15 },
+      rightHand: { confidence: 0.9, x: 40, y: 50 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [{ hit: false, promptStartedAt: 10_000, type: 2 }],
+        feet_position: 0,
+        gameStarted: true,
+        gameTimer: 1,
+        gameTimerNext: 99,
+        moves: [],
+        my_opponent: { stamina: 6 },
+        opponent: 0
+      },
+      poses: [trackedPose],
+      timingState: {
+        leftDodge: 0,
+        leftHook: 0,
+        leftJab: 0,
+        leftPoses: 0,
+        leftUppercut: 0,
+        rightDodge: 0,
+        rightHook: 0,
+        rightJab: 10_000,
+        rightPoses: 9800,
+        rightPosesReturn: 10_001,
+        rightUppercut: 0
+      },
+      TfitPoseDetection: {
+        detectDodgeGestures: vi.fn(() => ({ left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        moveMatchesRecentGesture: vi.fn(() => true),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderFightMode();
+
+    expect(globalThis.animationState.player.type).toBe(2);
+    expect(globalThis.gameState.curMoves[0].hit).toBe(false);
+    expect(globalThis.gameState.my_opponent.stamina).toBe(6);
+    expect(globalThis.TfitPoseDetection.moveMatchesRecentGesture).not.toHaveBeenCalled();
+  });
+
   it('marks the current prompt complete when answered before the opponent attacks', () => {
     const trackedPose = {
       leftHand: { confidence: 0.9, x: 20, y: 30 },
@@ -922,6 +1323,11 @@ describe('fight mode rendering', () => {
         hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
         isInsideGuard: vi.fn(() => false),
         moveMatchesRecentGesture: vi.fn(() => true),
+        nextDownDodgeState: vi.fn(() => ({
+          done: true,
+          switched: true,
+          touchedDown: false
+        })),
         posePartsFromPoses: vi.fn(() => trackedPose)
       }
     });
@@ -956,6 +1362,11 @@ describe('fight mode rendering', () => {
         hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
         isInsideGuard: vi.fn(() => false),
         moveMatchesRecentGesture: vi.fn(() => false),
+        nextDownDodgeState: vi.fn(() => ({
+          done: true,
+          switched: false,
+          touchedDown: true
+        })),
         posePartsFromPoses: vi.fn(() => trackedPose)
       }
     });
@@ -1070,9 +1481,46 @@ describe('fight mode rendering', () => {
     api.renderFightMode();
 
     expect(globalThis.gameState.curMoves[0].hit).toBe(true);
+    expect(globalThis.gameState.curMoves[0].success).toBe(false);
     expect(globalThis.gameState.my_stamina).toBe(5);
     expect(globalThis.animationState.opponent).toMatchObject({ delay: 1, frame: -1 });
     expect(globalThis.animationState.player).toMatchObject({ delay: 1, frame: -1 });
+  });
+
+  it('does not draw a resolved missed fight prompt with the success fill', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 20, y: 30 },
+      nose: { confidence: 0.9, x: 10, y: 15 },
+      rightHand: { confidence: 0.9, x: 40, y: 50 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [{ hit: true, success: false, type: 1 }],
+        feet_position: 0,
+        gameStarted: true,
+        gameTimer: 1,
+        gameTimerNext: 99,
+        moves: [],
+        my_opponent: { stamina: 6 },
+        opponent: 0
+      },
+      poses: [trackedPose],
+      TfitGameLogic: {
+        moveDisplay: vi.fn(() => ({ color: [1, 2, 3] }))
+      },
+      TfitPoseDetection: {
+        detectDodgeGestures: vi.fn(() => ({ left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderFightMode();
+
+    expect(calls.fill).toContainEqual([1, 2, 3]);
+    expect(calls.fill).not.toContainEqual([0, 255, 0, 127]);
   });
 
   it('initializes player stamina when an opponent hit lands before stamina exists', () => {
@@ -1133,6 +1581,8 @@ describe('fight mode rendering', () => {
       poses: [trackedPose],
       timingState: {
         downDodge: 9950,
+        downDodgeDone: true,
+        downDodgeSwitch: true,
         leftDodge: 0,
         leftHook: 0,
         leftJab: 0,
@@ -1150,6 +1600,11 @@ describe('fight mode rendering', () => {
         hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
         isInsideGuard: vi.fn(() => false),
         moveMatchesRecentGesture: vi.fn(() => true),
+        nextDownDodgeState: vi.fn(() => ({
+          done: true,
+          switched: true,
+          touchedDown: false
+        })),
         posePartsFromPoses: vi.fn(() => trackedPose)
       }
     });
@@ -1162,11 +1617,109 @@ describe('fight mode rendering', () => {
     expect(globalThis.gameState.my_opponent.stamina).toBe(6);
     expect(globalThis.timingState.hitSuccess).toBe(10_000);
     expect(globalThis.timingState.hitSuccessText).toBe('NICE DODGE');
+    expect(globalThis.timingState.downDodge).toBe(0);
+    expect(globalThis.timingState.downDodgeDone).toBe(false);
+    expect(globalThis.timingState.downDodgeSwitch).toBe(false);
     expect(globalThis.randomInteger).toHaveBeenCalledWith(1, 2);
     expect(globalThis.animationState.opponent).toMatchObject({
       frame: 1,
       type: 2
     });
+  });
+
+  it('leaves unsupported prompt types unanswered', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 20, y: 30 },
+      nose: { confidence: 0.9, x: 10, y: 15 },
+      rightHand: { confidence: 0.9, x: 40, y: 50 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [{ hit: false, reactionFrames: 4, type: 10 }],
+        feet_position: 0,
+        gameStarted: true,
+        gameTimer: 1,
+        gameTimerNext: 99,
+        moves: [],
+        my_opponent: { stamina: 6 },
+        my_stamina: 6,
+        opponent: 0
+      },
+      poses: [trackedPose],
+      TfitPoseDetection: {
+        detectDodgeGestures: vi.fn(() => ({ left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        nextDownDodgeState: vi.fn(() => ({
+          done: false,
+          switched: false,
+          touchedDown: false
+        })),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderFightMode();
+
+    expect(globalThis.gameState.curMoves[0].hit).toBe(false);
+  });
+
+  it('does not complete down dodge prompts until the player returns upward', () => {
+    const trackedPose = {
+      leftHand: { confidence: 0.9, x: 20, y: 30 },
+      nose: { confidence: 0.9, x: 10, y: 320 },
+      rightHand: { confidence: 0.9, x: 40, y: 50 }
+    };
+    const api = installGlobals({
+      gameState: {
+        curMoves: [{ hit: false, reactionFrames: 4, type: 9 }],
+        feet_position: 0,
+        gameStarted: true,
+        gameTimer: 1,
+        gameTimerNext: 99,
+        moves: [],
+        my_opponent: { stamina: 6 },
+        my_stamina: 6,
+        opponent: 0
+      },
+      poses: [trackedPose],
+      timingState: {
+        downDodge: 0,
+        downDodgeDone: false,
+        downDodgeSwitch: false,
+        leftDodge: 0,
+        leftHook: 0,
+        leftJab: 0,
+        leftPoses: 0,
+        leftUppercut: 0,
+        rightDodge: 0,
+        rightHook: 0,
+        rightJab: 0,
+        rightPoses: 0,
+        rightUppercut: 0
+      },
+      TfitPoseDetection: {
+        detectDodgeGestures: vi.fn(() => ({ left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
+        isInsideGuard: vi.fn(() => false),
+        nextDownDodgeState: vi.fn(() => ({
+          done: true,
+          switched: false,
+          touchedDown: true
+        })),
+        posePartsFromPoses: vi.fn(() => trackedPose)
+      }
+    });
+
+    api.renderFightMode();
+
+    expect(globalThis.gameState.curMoves[0].hit).toBe(false);
+    expect(globalThis.timingState.downDodge).toBe(10_000);
+    expect(globalThis.timingState.downDodgeDone).toBe(true);
+    expect(globalThis.timingState.downDodgeSwitch).toBe(false);
   });
 
   it('marks side dodge prompts successful without reducing stamina or requiring guard timing', () => {
@@ -1207,6 +1760,11 @@ describe('fight mode rendering', () => {
         hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
         isInsideGuard: vi.fn(() => false),
         moveMatchesRecentGesture: vi.fn(() => false),
+        nextDownDodgeState: vi.fn(() => ({
+          done: true,
+          switched: false,
+          touchedDown: true
+        })),
         posePartsFromPoses: vi.fn(() => trackedPose)
       }
     });
@@ -1259,6 +1817,11 @@ describe('fight mode rendering', () => {
         hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
         isInsideGuard: vi.fn(() => false),
         moveMatchesRecentGesture: vi.fn(() => false),
+        nextDownDodgeState: vi.fn(() => ({
+          done: true,
+          switched: false,
+          touchedDown: true
+        })),
         posePartsFromPoses: vi.fn(() => trackedPose)
       }
     });
@@ -1294,6 +1857,11 @@ describe('fight mode rendering', () => {
         hasPoseConfidence: vi.fn(point => Boolean(point && point.confidence > 0.1)),
         isInsideGuard: vi.fn(() => false),
         moveMatchesRecentGesture: vi.fn(() => false),
+        nextDownDodgeState: vi.fn(() => ({
+          done: true,
+          switched: false,
+          touchedDown: true
+        })),
         posePartsFromPoses: vi.fn(() => trackedPose)
       }
     });
@@ -1301,6 +1869,8 @@ describe('fight mode rendering', () => {
     api.renderFightMode();
 
     expect(globalThis.timingState.downDodge).toBe(10_000);
+    expect(globalThis.timingState.downDodgeDone).toBe(true);
+    expect(globalThis.timingState.downDodgeSwitch).toBe(false);
   });
 
   it('keeps an active opponent punch animating after a successful dodge', () => {

@@ -39,6 +39,12 @@ describe('TfitState browser export', () => {
 
     expect(sandbox.gameState.gameLength).toBe('60');
     expect(sandbox.gameState.opponent).toBe(0);
+    expect(sandbox.gameState.fightStage).toBe(1);
+    expect(sandbox.gameState.fightLadderActive).toBe(false);
+    expect(sandbox.gameState.fightTransitionActive).toBe(false);
+    expect(sandbox.gameState.fightVictoryCelebrationActive).toBe(false);
+    expect(sandbox.gameState.fightVictoryCelebrationTime).toBe(0);
+    expect(sandbox.gameState.pendingFightOpponentStamina).toBeNull();
     expect(sandbox.gameState.my_opponent).toEqual({ id: 0, stamina: 6 });
     sandbox.animationState.player.frame = 4;
     sandbox.padState.x = 120;

@@ -405,13 +405,13 @@ describe('pointerAction', () => {
     })).toEqual({ type: 'none' });
   });
 
-  it('maps the fight opponent panel to opponent cycling before the fight starts', () => {
+  it('does not map the fight opponent panel to manual opponent cycling', () => {
     expect(pointerAction({
       ...basePointer,
       menu: 4,
       mouseX: 30,
       mouseY: 44
-    })).toEqual({ click: true, type: 'cycle_opponent' });
+    })).toEqual({ type: 'none' });
 
     expect(pointerAction({
       ...basePointer,
@@ -553,6 +553,9 @@ describe('keyAction', () => {
     expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'd', menu: 1 })).toEqual({
       type: 'cycle_length'
     });
+    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'T', menu: 1 })).toEqual({
+      type: 'cycle_length'
+    });
     expect(keyAction({ gameCalibration: false, gameStarted: false, key: 's', menu: 1 })).toEqual({
       type: 'cycle_series'
     });
@@ -599,7 +602,7 @@ describe('keyAction', () => {
       type: 'start_fight'
     });
     expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'o', menu: 4 })).toEqual({
-      type: 'cycle_opponent'
+      type: 'none'
     });
     expect(keyAction({ gameCalibration: false, gameStarted: true, key: 'o', menu: 4 })).toEqual({
       type: 'none'
@@ -645,9 +648,6 @@ describe('keyAction', () => {
   it('ignores menu shortcuts outside their owning menu', () => {
     expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'S', menu: 1 })).toEqual({
       type: 'cycle_series'
-    });
-    expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'T', menu: 1 })).toEqual({
-      type: 'none'
     });
     expect(keyAction({ gameCalibration: false, gameStarted: false, key: 'P', menu: 1 })).toEqual({
       type: 'none'

@@ -34,7 +34,8 @@ describe('TfitConfig browser export', () => {
       scale: 0.7,
       stamina: 6,
       xRatio: 0.5,
-      yRatio: 0.56
+      yRatio: 0.56,
+      blockChance: 0.16
     });
     expect(sandbox.TfitConfig.cloneOpponent("1")).toEqual({
       name: 'Theo',
@@ -44,7 +45,8 @@ describe('TfitConfig browser export', () => {
       scale: 0.7,
       stamina: 8,
       xRatio: 0.5,
-      yRatio: 0.56
+      yRatio: 0.56,
+      blockChance: 0.24
     });
     expect(sandbox.TfitConfig.cloneOpponent("2")).toEqual({
       name: 'Vehbo',
@@ -54,7 +56,8 @@ describe('TfitConfig browser export', () => {
       scale: 0.78,
       stamina: 10,
       xRatio: 0.5,
-      yRatio: 0.54
+      yRatio: 0.54,
+      blockChance: 0.32
     });
     expect(sandbox.TfitConfig.cloneOpponent("3")).toEqual({
       name: 'Cyril',
@@ -64,7 +67,8 @@ describe('TfitConfig browser export', () => {
       scale: 0.9,
       stamina: 12,
       xRatio: 0.5,
-      yRatio: 0.52
+      yRatio: 0.52,
+      blockChance: 0.4
     });
     expect(sandbox.TfitConfig.cloneOpponent("4")).toEqual({
       name: 'Lav',
@@ -74,7 +78,8 @@ describe('TfitConfig browser export', () => {
       scale: 0.76,
       stamina: 14,
       xRatio: 0.5,
-      yRatio: 0.55
+      yRatio: 0.55,
+      blockChance: 0.48
     });
     expect(sandbox.module.exports).toBe(sandbox.TfitConfig);
   });

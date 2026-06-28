@@ -23,6 +23,7 @@ const STUBBED_GLOBALS = [
   'myWindowWidth',
   'OBJECT_POSE_SIZE',
   'noStroke',
+  'OPPONENTS',
   'pop',
   'sounds',
   'speechString',
@@ -102,6 +103,10 @@ function installGlobals(overrides = {}) {
     myWindowHeight: 480,
     myWindowWidth: 640,
     OBJECT_POSE_SIZE: 48,
+    OPPONENTS: {
+      0: { stamina: 6 },
+      1: { stamina: 8 }
+    },
     sounds: {
       keepTrying: { play: vi.fn() },
       yourGuard: { play: vi.fn() },
@@ -594,6 +599,65 @@ describe('menu routing', () => {
     expect(globalThis.gameState.menu).toBe(4);
   });
 
+  it('uses the default door animation duration when none is configured', () => {
+    const api = installGlobals({
+      gameState: {
+        ...defaultGameState({ menu: 0 }),
+        menuButtonAnimation: {
+          active: true,
+          button: 'open_shadow',
+          holdFrames: 0,
+          frame: 0,
+          x: 0,
+          y: 0,
+          width: 640,
+          height: 480,
+          progress: 0,
+          pendingTransition: {
+            menu: 2,
+            clearCurMoves: true,
+            loadSongmoves: true
+          }
+        }
+      }
+    });
+
+    api.renderGameScreen();
+
+    expect(globalThis.gameState.menuButtonAnimation.frame).toBe(1);
+    expect(globalThis.gameState.menuButtonAnimation.progress).toBeCloseTo(1 / 9);
+  });
+
+  it('keeps door animation queued when the close phase is not ready to transition', () => {
+    const api = installGlobals({
+      gameState: {
+        ...defaultGameState({ menu: 0 }),
+        menuButtonAnimation: {
+          active: true,
+          button: 'open_shadow',
+          duration: 20,
+          holdFrames: 2,
+          frame: 0,
+          x: 0,
+          y: 0,
+          width: 640,
+          height: 480,
+          progress: 0,
+          pendingTransition: {
+            menu: 2,
+            clearCurMoves: true,
+            loadSongmoves: true
+          }
+        }
+      }
+    });
+
+    api.renderGameScreen();
+
+    expect(globalThis.TfitAppInputActions.applyPendingMenuButtonTransition).not.toHaveBeenCalled();
+    expect(globalThis.gameState.menu).toBe(0);
+  });
+
   it('renders split logo halves when menu logo asset exists', () => {
     const logo = { name: 'app-logo', width: 240, height: 120 };
     const api = installGlobals({
@@ -840,6 +904,16 @@ describe('menu routing', () => {
     expect(globalThis.TfitShadowMode.renderShadowMode).toHaveBeenCalledTimes(1);
   });
 
+  it('does not route an active gameplay mode from non-gameplay menus', () => {
+    const api = installGlobals({ gameState: defaultGameState({ menu: 1 }) });
+
+    api.renderActiveMode();
+
+    expect(globalThis.TfitFightMode.renderFightMode).not.toHaveBeenCalled();
+    expect(globalThis.TfitPadMode.renderPadMode).not.toHaveBeenCalled();
+    expect(globalThis.TfitShadowMode.renderShadowMode).not.toHaveBeenCalled();
+  });
+
   it('renders round content and mode from the game screen', () => {
     const api = installGlobals({
       gameState: defaultGameState({ menu: 2 })
@@ -878,6 +952,17 @@ describe('menu routing', () => {
     expect(globalThis.TfitRender.renderGuardTargets).not.toHaveBeenCalled();
     expect(globalThis.TfitRender.renderRoundHud).not.toHaveBeenCalled();
   });
+
+  it('does not render settings or profile screens from the main menu', () => {
+    const api = installGlobals({
+      gameState: defaultGameState({ menu: 0 })
+    });
+
+    api.renderGameScreen();
+
+    expect(globalThis.TfitSettingsScreen.renderSettingsScreen).not.toHaveBeenCalled();
+    expect(globalThis.TfitRender.renderProfileScreen).not.toHaveBeenCalled();
+  });
 });
 
 describe('round routing', () => {
@@ -906,6 +991,96 @@ describe('round routing', () => {
     api.renderRoundScreen();
 
     expect(globalThis.gameState.gameOver).toBe(true);
+    expect(globalThis.TfitFlow.finishRound).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps camera detection alive during fight timeout round restarts', () => {
+    const api = installGlobals({
+      gameState: defaultGameState({
+        gameOver: false,
+        gameStarted: true,
+        manualStop: false,
+        menu: 4
+      }),
+      TfitRound: {
+        ...globalThis.TfitRound,
+        isRoundExpired: vi.fn(() => true)
+      },
+      TfitFlow: {
+        finishRound: vi.fn(() => {
+          globalThis.gameState.gameStarted = false;
+          globalThis.gameState.fightTransitionActive = true;
+        }),
+        gameResultBool: vi.fn(() => false)
+      }
+    });
+
+    api.renderRoundScreen();
+
+    expect(globalThis.gameState.gameOver).toBe(true);
+    expect(globalThis.TfitCameraRuntime.stopPoseDetection).not.toHaveBeenCalled();
+    expect(globalThis.TfitFlow.finishRound).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps camera detection alive while advancing to the next fight stage', () => {
+    const api = installGlobals({
+      gameState: defaultGameState({
+        fightEnding: true,
+        gameOver: true,
+        gameStarted: false,
+        menu: 4,
+        my_opponent: { stamina: 0 },
+        opponent: 0
+      })
+    });
+
+    api.renderRoundScreen();
+
+    expect(globalThis.TfitCameraRuntime.stopPoseDetection).not.toHaveBeenCalled();
+    expect(globalThis.TfitFlow.finishRound).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps camera detection alive before the hard final fight stage', () => {
+    const api = installGlobals({
+      OPPONENTS: {
+        0: { stamina: 6 },
+        1: { stamina: 8 },
+        2: { stamina: 10 },
+        3: { stamina: 12 }
+      },
+      gameState: defaultGameState({
+        fightEnding: true,
+        gameOver: true,
+        gameStarted: false,
+        level: 2,
+        menu: 4,
+        my_opponent: { stamina: 0 },
+        opponent: 2
+      })
+    });
+
+    api.renderRoundScreen();
+
+    expect(globalThis.TfitCameraRuntime.stopPoseDetection).not.toHaveBeenCalled();
+    expect(globalThis.TfitFlow.finishRound).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not keep fight continuation alive after the easy final opponent', () => {
+    const api = installGlobals({
+      gameState: defaultGameState({
+        fightEnding: true,
+        gameOver: true,
+        gameStarted: false,
+        level: 0,
+        menu: 4,
+        my_opponent: { stamina: 0 },
+        opponent: 1
+      })
+    });
+
+    api.renderRoundScreen();
+
+    expect(globalThis.TfitCameraRuntime.stopPoseDetection).toHaveBeenCalled();
     expect(globalThis.TfitFlow.finishRound).toHaveBeenCalledTimes(1);
   });
 
@@ -994,6 +1169,116 @@ describe('round routing', () => {
     expect(calls.text.some(([message]) => message === 'GOOD HIT')).toBe(false);
   });
 
+  it('shows the fight round announcement while no fresh hit feedback is active', () => {
+    const api = installGlobals({
+      gameState: defaultGameState({ gameStarted: true, gameTimer: 2, menu: 4 }),
+      timingState: {
+        gameResult: 0,
+        guardWarning: 0,
+        hitSuccess: 0,
+        hitSuccessText: 'GOOD HIT',
+        leftPoses: 0,
+        rightPoses: 0,
+        roundAnnouncementNextText: 'ROUND 1',
+        roundAnnouncementText: 'STAGE 1',
+        roundAnnouncementTime: 9000
+      },
+      TfitRound: {
+        guardFeedback: vi.fn(() => ({
+          guardWarningTime: 123,
+          playSound: false,
+          show: false
+        })),
+        keepTryingFeedback: vi.fn(() => ({
+          playSound: false,
+          show: false
+        })),
+        remainingRoundSeconds: vi.fn(() => 12),
+        shouldShowHitFeedback: vi.fn(() => false)
+      }
+    });
+
+    api.renderRoundFeedback();
+
+    expect(calls.text).toEqual(expect.arrayContaining([
+      ['STAGE 1', expect.any(Number), expect.any(Number)]
+    ]));
+    expect(calls.text.some(([message]) => message === 'GOOD HIT')).toBe(false);
+  });
+
+  it('shows the fight round announcement second phase after the stage phase', () => {
+    const api = installGlobals({
+      gameState: defaultGameState({ gameStarted: true, gameTimer: 2, menu: 4 }),
+      timingState: {
+        gameResult: 0,
+        guardWarning: 0,
+        hitSuccess: 0,
+        leftPoses: 0,
+        rightPoses: 0,
+        roundAnnouncementNextText: 'ROUND 1',
+        roundAnnouncementText: 'STAGE 1',
+        roundAnnouncementTime: 8000
+      },
+      TfitRound: {
+        guardFeedback: vi.fn(() => ({
+          guardWarningTime: 123,
+          playSound: false,
+          show: false
+        })),
+        keepTryingFeedback: vi.fn(() => ({
+          playSound: false,
+          show: false
+        })),
+        remainingRoundSeconds: vi.fn(() => 12),
+        shouldShowHitFeedback: vi.fn(() => false)
+      }
+    });
+
+    api.renderRoundFeedback();
+
+    expect(calls.text).toEqual(expect.arrayContaining([
+      ['ROUND 1', expect.any(Number), expect.any(Number)]
+    ]));
+    expect(calls.text.some(([message]) => message === 'STAGE 1')).toBe(false);
+  });
+
+  it('shows fresh hit feedback immediately over the fight round announcement', () => {
+    const api = installGlobals({
+      gameState: defaultGameState({ gameStarted: true, gameTimer: 2, menu: 4 }),
+      timingState: {
+        gameResult: 0,
+        guardWarning: 0,
+        hitSuccess: 9999,
+        hitSuccessText: 'GOOD HIT',
+        leftPoses: 0,
+        rightPoses: 0,
+        roundAnnouncementNextText: 'ROUND 1',
+        roundAnnouncementText: 'STAGE 1',
+        roundAnnouncementTime: 9000
+      },
+      TfitRound: {
+        guardFeedback: vi.fn(() => ({
+          guardWarningTime: 123,
+          playSound: false,
+          show: false
+        })),
+        keepTryingFeedback: vi.fn(() => ({
+          playSound: false,
+          show: false
+        })),
+        remainingRoundSeconds: vi.fn(() => 12),
+        shouldShowHitFeedback: vi.fn(() => true)
+      }
+    });
+
+    api.renderRoundFeedback();
+
+    expect(calls.text).toEqual(expect.arrayContaining([
+      ['GOOD HIT', expect.any(Number), expect.any(Number)]
+    ]));
+    expect(calls.text.some(([message]) => message === 'STAGE 1')).toBe(false);
+  });
+
   it('shows fight result feedback before transient round feedback', () => {
     const api = installGlobals({
       gameState: defaultGameState({ gameStarted: true, gameTimer: 2, menu: 4 }),
@@ -1034,6 +1319,143 @@ describe('round routing', () => {
       ['YOU WIN', expect.any(Number), expect.any(Number)]
     ]));
     expect(calls.text.some(([message]) => message === 'GOOD HIT')).toBe(false);
+  });
+
+  it('keeps showing a fight win during the first second of opponent transition', () => {
+    const api = installGlobals({
+      gameState: defaultGameState({
+        fightTransitionActive: true,
+        fightTransitionText: 'NEXT: THEO',
+        gameStarted: false,
+        menu: 4
+      }),
+      timingState: {
+        fightResultText: 'YOU WIN',
+        fightTransitionTime: 9500,
+        gameResult: 0,
+        guardWarning: 0,
+        hitSuccess: 0,
+        leftPoses: 0,
+        rightPoses: 0
+      }
+    });
+
+    api.renderRoundFeedback();
+
+    expect(calls.text).toEqual(expect.arrayContaining([
+      ['YOU WIN', expect.any(Number), expect.any(Number)]
+    ]));
+    expect(calls.text.some(([message]) => message === 'NEXT: THEO')).toBe(false);
+  });
+
+  it('shows the next opponent transition after the win hold', () => {
+    const api = installGlobals({
+      gameState: defaultGameState({
+        fightTransitionActive: true,
+        fightTransitionText: 'NEXT: THEO',
+        gameStarted: false,
+        menu: 4
+      }),
+      timingState: {
+        fightResultText: 'YOU WIN',
+        fightTransitionTime: 8500,
+        gameResult: 0,
+        guardWarning: 0,
+        hitSuccess: 0,
+        leftPoses: 0,
+        rightPoses: 0
+      }
+    });
+
+    api.renderRoundFeedback();
+
+    expect(calls.text).toEqual(expect.arrayContaining([
+      ['NEXT: THEO', expect.any(Number), expect.any(Number)]
+    ]));
+    expect(calls.text.some(([message]) => message === 'YOU WIN')).toBe(false);
+  });
+
+  it('renders fight transition feedback instead of the idle fight button', () => {
+    const api = installGlobals({
+      gameState: defaultGameState({
+        fightTransitionActive: true,
+        fightTransitionText: 'NEXT: THEO',
+        gameStarted: false,
+        menu: 4
+      }),
+      timingState: {
+        fightResultText: 'YOU WIN',
+        fightTransitionTime: 8500,
+        gameResult: 0,
+        guardWarning: 0,
+        hitSuccess: 0,
+        leftPoses: 0,
+        rightPoses: 0
+      }
+    });
+
+    api.renderRoundScreen();
+
+    expect(globalThis.TfitRender.renderFightButton).not.toHaveBeenCalled();
+    expect(calls.text).toEqual(expect.arrayContaining([
+      ['NEXT: THEO', expect.any(Number), expect.any(Number)]
+    ]));
+  });
+
+  it('renders a fight victory celebration after the final ladder win', () => {
+    const api = installGlobals({
+      gameState: defaultGameState({
+        fightVictoryCelebrationActive: true,
+        fightVictoryCelebrationTime: 9000,
+        gameStarted: false,
+        menu: 4
+      }),
+      TfitFlow: {
+        finishRound: vi.fn(),
+        gameResultBool: vi.fn(() => true)
+      }
+    });
+
+    api.renderGameScreen();
+
+    expect(calls.text).toEqual(expect.arrayContaining([
+      ['CHAMPION', expect.any(Number), expect.any(Number)]
+    ]));
+    expect(globalThis.TfitFightMode.renderFightMode).not.toHaveBeenCalled();
+    expect(globalThis.TfitRender.renderFightButton).not.toHaveBeenCalled();
+  });
+
+  it('renders fight mode again after the victory celebration expires', () => {
+    const api = installGlobals({
+      gameState: defaultGameState({
+        fightVictoryCelebrationActive: true,
+        gameStarted: false,
+        menu: 4
+      }),
+      TfitFlow: {
+        finishRound: vi.fn(),
+        gameResultBool: vi.fn(() => false)
+      }
+    });
+
+    api.renderActiveMode();
+
+    expect(globalThis.TfitFightMode.renderFightMode).toHaveBeenCalledTimes(1);
+  });
+
+  it('hides foreground fight button during opponent transitions', () => {
+    const api = installGlobals({
+      gameState: defaultGameState({
+        fightTransitionActive: true,
+        fightTransitionText: 'NEXT: THEO',
+        gameStarted: false,
+        menu: 4
+      })
+    });
+
+    api.renderForegroundControls();
+
+    expect(globalThis.TfitRender.renderFightButton).not.toHaveBeenCalled();
   });
 
   it('keeps quiet when round feedback helpers do not request UI or sounds', () => {

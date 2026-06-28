@@ -486,7 +486,6 @@ describe('applyInputAction', () => {
     api.applyInputAction({ click: true, type: 'cycle_level' });
     api.applyInputAction({ click: true, type: 'cycle_length' });
     api.applyInputAction({ click: true, type: 'cycle_series' });
-    api.applyInputAction({ click: true, type: 'cycle_opponent' });
     api.applyInputAction({ type: 'cycle_shadow_focus' });
 
     expect(globalThis.FRAME_RATE).toBe(40);
@@ -495,13 +494,18 @@ describe('applyInputAction', () => {
     expect(globalThis.gameState.gameLengthIndex).toBe(3);
     expect(globalThis.gameState.gameLength).toBe('120');
     expect(globalThis.gameState.gameSeries).toBe(2);
-    expect(globalThis.gameState.opponent).toBe(1);
-    expect(globalThis.gameState.my_opponent).toEqual({ id: 1, stamina: 6 });
-    expect(globalThis.gameState.my_stamina).toBe(6);
     expect(globalThis.gameState.shadow_focus).toBe(1);
     expect(globalThis.localStorage.setItem).toHaveBeenCalledWith('frame_rate', 40);
-    expect(globalThis.localStorage.setItem).toHaveBeenCalledWith('opponent', 1);
     expect(globalThis.localStorage.setItem).toHaveBeenCalledWith('shadow_focus', 1);
+  });
+
+  it('ignores manual opponent cycling because fight mode uses stages', () => {
+    const api = installGlobals();
+
+    api.applyInputAction({ click: true, type: 'cycle_opponent' });
+
+    expect(globalThis.gameState.opponent).toBe(0);
+    expect(globalThis.localStorage.setItem).not.toHaveBeenCalledWith('opponent', expect.any(Number));
   });
 
   it('starts, stops, and resets calibration-related state', () => {
