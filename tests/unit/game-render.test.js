@@ -68,6 +68,7 @@ const STUBBED_GLOBALS = [
   'frameCount',
   'triangle',
   'tint',
+  'TfitRound',
   'TfitGameLogic',
   'TfitBackground',
   'TfitFaceRecognition',
@@ -99,10 +100,10 @@ function defaultGameState() {
     curMoves: [],
     feet_position: 0,
     gameCurrentSeries: 1,
-    gameDuration: 600,
+    gameDuration: 3000,
     gameLengthIndex: 2,
     gameSeries: 3,
-    gameTimer: 19,
+    gameTimer: 100,
     level: 1,
     menu: 2,
     my_opponent: { stamina: 4 },
@@ -247,6 +248,7 @@ function installRenderGlobals(overrides = {}) {
       detectStartCountdown: vi.fn(globalThis.TfitGameLogic.detectStartCountdown),
       moveDisplay: vi.fn(moveDisplay)
     },
+    TfitRound: undefined,
     TfitLayoutState: {
       snapshot: () => ({
         coef: globalThis.coef,
@@ -1436,6 +1438,22 @@ describe('hud and meter rendering', () => {
     expect(calls.text).toContainEqual(['(T)ype: jab', 20, 46]);
     expect(calls.text).toContainEqual(['(S)eries: 1 / 3', 20, 64]);
     expect(calls.arc[1][5]).toBeCloseTo(54);
+  });
+
+  it('uses the shared real-time timer unit for round HUD countdowns', () => {
+    installRenderGlobals({
+      gameState: {
+        gameDuration: 3000,
+        gameTimer: 1200
+      },
+      TfitRound: {
+        GAME_TIMER_UNITS_PER_SECOND: 100
+      }
+    });
+
+    renderApi.renderRoundHud(4);
+
+    expect(calls.text).toContainEqual(['18', 640 / 3, 439.16]);
   });
 
   it('omits shadow labels outside shadow mode', () => {

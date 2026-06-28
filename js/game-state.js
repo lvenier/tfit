@@ -36,6 +36,7 @@
     manualStop: false,
     gameTimer: -1,
     gameTimerNext: 0,
+    gameTimerUpdatedAt: null,
     caloriesBurned: 0,
     level: storageNumber("level", 0, { min: 0, max: Object.keys(GAME_LEVEL).length - 1 }),
     menu: 0,

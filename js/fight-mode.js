@@ -30,6 +30,16 @@
     snapshot: layoutSnapshot
   } = root.TfitLayoutState;
 
+  const GAME_TIMER_UNITS_PER_SECOND = root.TfitRound?.GAME_TIMER_UNITS_PER_SECOND || 100;
+  const advanceGameTimer = root.TfitRound?.advanceGameTimer || function(state) {
+    state.gameTimer = (Number(state.gameTimer) || 0) + 1;
+    return 1;
+  };
+
+  function timerUnitsPerSecond(layout) {
+    return root.TfitRound ? GAME_TIMER_UNITS_PER_SECOND : layout.frameRate;
+  }
+
   const POSE_INPUT_WIDTH = 640;
   const POSE_INPUT_HEIGHT = 480;
   const OPPONENT_FRAME_HOLD = 6;
@@ -462,8 +472,8 @@
           return;
         }
         if (!gameState.fightEnding) {
-          const moveIntervalFrames = (layout.frameRate + layout.levelWindowBase / 2) * fightMoveIntervalMultiplier();
-          const moveIndex = Math.max(1, Math.ceil((gameState.gameTimer + 1) / moveIntervalFrames));
+          const moveIntervalUnits = (timerUnitsPerSecond(layout) + layout.levelWindowBase / 2) * fightMoveIntervalMultiplier();
+          const moveIndex = Math.max(1, Math.ceil((gameState.gameTimer + 1) / moveIntervalUnits));
           if (gameState.gameTimerNext < moveIndex) {
             if (gameState.moves.length >= moveIndex && gameState.moves[moveIndex] >= 0) {
               gameState.curMoves.push({
@@ -579,7 +589,7 @@
           return;
         }
         tint(255, 255);
-        gameState.gameTimer++;
+        advanceGameTimer(gameState, now);
       }
     } else {
       void poses;

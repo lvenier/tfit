@@ -922,8 +922,9 @@
     const layout = layoutSnapshot();
     textAlign(LEFT, CENTER);
 
-    const totalSeconds = Math.max(1, Math.ceil(gameState.gameDuration / layout.frameRate));
-    const remainingSeconds = Math.max(0, Math.ceil((gameState.gameDuration - gameState.gameTimer - 1) / layout.frameRate));
+    const timerUnitsPerSecond = root.TfitRound?.GAME_TIMER_UNITS_PER_SECOND || 100;
+    const totalSeconds = Math.max(1, Math.ceil(gameState.gameDuration / timerUnitsPerSecond));
+    const remainingSeconds = Math.max(0, Math.ceil((gameState.gameDuration - gameState.gameTimer - 1) / timerUnitsPerSecond));
     const timeProgress = Math.max(0, Math.min(totalSeconds - remainingSeconds, totalSeconds));
     const scoreProgress = Math.max(0, Math.min(currentScore, gameState.score_max || 1));
     const scoreDenominator = Math.max(gameState.score_max, 1);

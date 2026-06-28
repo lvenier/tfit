@@ -3,7 +3,7 @@
 
   Object.assign(root, {
     coef: 0.75,
-    FRAME_RATE: storageNumber("frame_rate", 20, { allowed: [20, 40, 60, 80, 100, 120] }),
+    FRAME_RATE: storageNumber("frame_rate", 60, { allowed: [20, 40, 60, 80, 100, 120] }),
     LEVEL: 50,
     myWindowHeight: 480,
     myWindowWidth: 480,

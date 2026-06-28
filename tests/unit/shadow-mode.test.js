@@ -36,6 +36,7 @@ const STUBBED_GLOBALS = [
   'TfitLayoutState',
   'TfitPoseDetection',
   'TfitRender',
+  'TfitRound',
   'TfitShadowMode'
 ];
 
@@ -139,7 +140,8 @@ function installGlobals(overrides = {}) {
       renderMoveShape: vi.fn(),
       renderShadowMoveReport: vi.fn(),
       renderShadowResult: vi.fn()
-    }
+    },
+    TfitRound: undefined
   }, overrides);
 
   vi.useFakeTimers();
@@ -213,6 +215,27 @@ describe('shadow mode layout usage', () => {
         gameTimer: 20,
         gameTimerNext: 0,
         moves: [0, 1]
+      }
+    });
+
+    api.addShadowMoveAtTimer();
+
+    expect(globalThis.gameState.curMoves).toEqual([
+      { hit: false, type: 1, x: 200, y: 480 }
+    ]);
+    expect(globalThis.gameState.gameTimerNext).toBe(1);
+  });
+
+  it('adds moves using shared real-time timer units when available', () => {
+    const api = installGlobals({
+      gameState: {
+        curMoves: [],
+        gameTimer: 100,
+        gameTimerNext: 0,
+        moves: [0, 1]
+      },
+      TfitRound: {
+        GAME_TIMER_UNITS_PER_SECOND: 100
       }
     });
 

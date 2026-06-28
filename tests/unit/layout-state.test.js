@@ -61,7 +61,7 @@ describe('TfitLayoutState CommonJS export', () => {
     expect(api).toBe(globalThis.TfitLayoutState);
     expect(api.snapshot()).toMatchObject({
       coef: 1.6,
-      frameRate: 20,
+      frameRate: 60,
       height: 768,
       levelWindowBase: 50,
       objectPoseSize: 76.80000000000001,

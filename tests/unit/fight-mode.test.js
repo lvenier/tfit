@@ -36,6 +36,7 @@ const STUBBED_GLOBALS = [
   'TfitLayoutState',
   'TfitPoseDetection',
   'TfitRender',
+  'TfitRound',
   'TfitScore'
 ];
 
@@ -161,7 +162,8 @@ function installGlobals(overrides = {}) {
       renderFightMeters: vi.fn(),
       renderFightOpponentCharacter: vi.fn(),
       renderMoveShape: vi.fn()
-    }
+    },
+    TfitRound: undefined
   }, overrides);
 
   vi.useFakeTimers();
@@ -970,6 +972,47 @@ describe('fight mode rendering', () => {
       x: 0,
       y: 0
     });
+  });
+
+  it('queues fight moves using shared real-time timer units when available', () => {
+    const api = installGlobals({
+      gameState: {
+        curMoves: [],
+        feet_position: 0,
+        gameStarted: true,
+        gameTimer: 125,
+        gameTimerNext: 0,
+        moves: [0, 1, 2],
+        my_opponent: { stamina: 6 },
+        opponent: 0
+      },
+      pose: {},
+      poses: [{
+        leftHand: { confidence: 0.9, x: 20, y: 30 },
+        nose: { confidence: 0.9, x: 10, y: 15 },
+        rightHand: { confidence: 0.9, x: 40, y: 50 }
+      }],
+      TfitPoseDetection: {
+        detectDodgeGestures: vi.fn(() => ({ left: false, right: false })),
+        detectHandGestures: vi.fn(() => ({ hook: false, jab: false, uppercut: false })),
+        hasPoseConfidence: vi.fn(() => true),
+        isInsideGuard: vi.fn(() => false),
+        moveMatchesRecentGesture: vi.fn(() => false),
+        posePartsFromPoses: vi.fn(poses => poses[0])
+      },
+      TfitRound: {
+        advanceGameTimer: vi.fn(() => 1),
+        GAME_TIMER_UNITS_PER_SECOND: 100
+      }
+    });
+
+    api.renderFightMode();
+
+    expect(globalThis.gameState.curMoves.at(-1)).toMatchObject({
+      hit: false,
+      type: 1
+    });
+    expect(globalThis.TfitRound.advanceGameTimer).toHaveBeenCalledWith(globalThis.gameState, 10_000);
   });
 
   it('queues scheduled moves and advances opponent animations', () => {

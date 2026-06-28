@@ -6,11 +6,14 @@ import { Script } from 'node:vm';
 const require = createRequire(import.meta.url);
 
 const {
+  advanceGameTimer,
+  GAME_TIMER_UNITS_PER_SECOND,
   guardFeedback,
   initialRoundMoveState,
   isRoundExpired,
   keepTryingFeedback,
   remainingRoundSeconds,
+  roundDurationUnits,
   roundEndState,
   scoreTotal,
   shouldShowHitFeedback
@@ -19,11 +22,14 @@ const {
 describe('TfitRound exports', () => {
   it('exposes round helpers for app.js', () => {
     expect(Object.keys(globalThis.TfitRound).sort()).toEqual([
+      'GAME_TIMER_UNITS_PER_SECOND',
+      'advanceGameTimer',
       'guardFeedback',
       'initialRoundMoveState',
       'isRoundExpired',
       'keepTryingFeedback',
       'remainingRoundSeconds',
+      'roundDurationUnits',
       'roundEndState',
       'scoreTotal',
       'shouldShowHitFeedback'
@@ -41,17 +47,45 @@ describe('TfitRound exports', () => {
       frameRate: 20,
       gameDuration: 400,
       gameTimer: 181
-    })).toBe(11);
+    })).toBe(3);
   });
 });
 
 describe('remainingRoundSeconds', () => {
-  it('rounds remaining frames up to the next second', () => {
+  it('rounds remaining timer units up to the next second', () => {
     expect(remainingRoundSeconds({
       frameRate: 20,
       gameDuration: 400,
       gameTimer: 181
-    })).toBe(11);
+    })).toBe(3);
+  });
+
+  it('does not change speed when the configured frame rate changes', () => {
+    const gameDuration = roundDurationUnits(30);
+    const gameTimer = roundDurationUnits(12);
+
+    expect(remainingRoundSeconds({ frameRate: 20, gameDuration, gameTimer })).toBe(18);
+    expect(remainingRoundSeconds({ frameRate: 120, gameDuration, gameTimer })).toBe(18);
+  });
+
+  it('advances the timer by elapsed real time', () => {
+    const state = {
+      gameTimer: 0,
+      gameTimerUpdatedAt: 1000
+    };
+
+    expect(advanceGameTimer(state, 1750)).toBe(75);
+    expect(state.gameTimer).toBe(75);
+    expect(state.gameTimerUpdatedAt).toBe(1750);
+    expect(GAME_TIMER_UNITS_PER_SECOND).toBe(100);
+  });
+
+  it('advances by one timer unit when no prior update timestamp exists', () => {
+    const state = { gameTimer: 4 };
+
+    expect(advanceGameTimer(state, 2000)).toBe(1);
+    expect(state.gameTimer).toBe(5);
+    expect(state.gameTimerUpdatedAt).toBe(2000);
   });
 });
 
