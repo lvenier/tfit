@@ -900,17 +900,17 @@ describe('round flow helpers', () => {
           gameCounts: { fight: 0, shadow: 1, trainPad: 0 },
           lastCaloriesBurned: 2.4,
           scoreSummary: {
-            hits: 4,
+            hits: 3,
             misses: 1,
-            scoringMoves: 5,
+            scoringMoves: 4,
             shadowCombos: 1
           }
         }
       },
       scoreSummary: {
-        hits: 4,
+        hits: 3,
         misses: 1,
-        scoringMoves: 5,
+        scoringMoves: 4,
         shadowCombos: 1
       }
     });

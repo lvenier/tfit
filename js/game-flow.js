@@ -238,7 +238,7 @@
 
     for (const move of moves) {
       const type = Math.trunc(Number(move?.type) || 0);
-      if (type <= 0) {
+      if (type <= 0 || type === 10) {
         continue;
       }
       delta.scoringMoves += 1;
