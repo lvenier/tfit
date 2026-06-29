@@ -4,15 +4,7 @@ This document explains the gameplay rules, player controls, configurable values,
 
 ## Startup Rules
 
-Box4Fit starts by loading local assets, creating a p5.js canvas, starting the webcam runtime, and waiting for ml5.js BodyPose to detect the player.
-
-The game becomes ready when the camera can see:
-
-- Nose
-- Left wrist
-- Right wrist
-
-Each part must have confidence greater than `0.1`. If the app cannot detect the required parts after the readiness window, it shows a detection error.
+Box4Fit starts by loading local assets, creating a p5.js canvas, starting the webcam runtime, and waiting for ml5.js BodyPose readiness. Pose readiness and movement detection are documented in [move-recognition.md](move-recognition.md).
 
 ## Main Modes
 
@@ -91,6 +83,8 @@ The generated move ids are defined in `js/game-config.js`.
 
 Jabs, hooks, uppercuts, and dodges are scoring moves. Switch guard changes stance and does not count toward the scoring-move total.
 
+Punch and dodge recognition is documented in [move-recognition.md](move-recognition.md).
+
 ## Difficulty
 
 Difficulty is stored as `level` in `localStorage`.
@@ -101,7 +95,7 @@ Difficulty is stored as `level` in `localStorage`.
 | `1` | Medium | Standard hit timing; Shadow inserts occasional rest moves; Fight uses a medium opponent ladder. |
 | `2` | Hard | Tightest hit timing; Shadow does not insert difficulty rests; Fight uses the full opponent ladder. |
 
-The base timing window is calculated as `50 - level * 10`, then used by modes as a gesture-matching window.
+Movement timing windows are documented in [move-recognition.md](move-recognition.md).
 
 ## Round Length
 
@@ -162,19 +156,15 @@ Shadow focus is stored as `shadow_focus` in `localStorage`.
 | `4` | Dodge | Left, right, and down dodges |
 | `5` | Punches | Jabs, hooks, and uppercuts |
 
-A prompt is successful when the matching recent gesture occurs while the prompt overlaps the calibrated target area.
-
 ## Train Pad Rules
 
 Train Pad mode creates one target at a time.
 
 - Punch targets appear as circles.
-- Left-side circles ask for a left punch.
-- Right-side circles ask for a right punch.
-- Dodge targets appear as a horizontal bar and ask for a down dodge.
+- Dodge targets appear as a horizontal bar.
 - Hitting or dodging the current target immediately creates the next target.
 
-Targets are placed inside the canvas while avoiding the calibrated guard area where possible.
+Target recognition details are documented in [move-recognition.md](move-recognition.md).
 
 ## Fight Rules
 
@@ -230,14 +220,7 @@ Calibration values are persisted in `localStorage` and restored on startup.
 | `left_init_hook_x` | Left hook x threshold |
 | `right_init_hook_x` | Right hook x threshold |
 
-Reset calibration uses these defaults based on the current canvas:
-
-- Left guard: `3 * width / 7`, `height / 3`
-- Right guard: `4 * width / 7`, `height / 3`
-- Jab threshold: `height / 3 - objectPoseSize * coef / 1.4`
-- Uppercut threshold: `height / 3 + objectPoseSize * coef / 1.4`
-- Left hook threshold: `3 * width / 7 - objectPoseSize * coef`
-- Right hook threshold: `4 * width / 7 + objectPoseSize * coef`
+Recognition behavior for these calibration values is documented in [move-recognition.md](move-recognition.md).
 
 ## Player Profiles
 
