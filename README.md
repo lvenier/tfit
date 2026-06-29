@@ -8,7 +8,7 @@
 
 # Box4Fit / tfit
 
-Box4Fit is a webcam-controlled boxing fitness game built with vanilla JavaScript, p5.js, ml5.js BodyPose, and optional local ONNX face recognition. It runs as a static browser app, a PWA-style app shell, or a fullscreen Electron desktop app.
+Box4Fit is a webcam-controlled boxing fitness game built with vanilla JavaScript, p5.js, and ml5.js BodyPose. It runs as a static browser app, a PWA-style app shell, or a fullscreen Electron desktop app.
 
 The game ships local runtime, model, sprite, background, and sound assets so normal gameplay does not depend on remote CDN files.
 
@@ -18,7 +18,6 @@ The game ships local runtime, model, sprite, background, and sound assets so nor
 - Three training modes: Shadow, Train Pad, and Fight.
 - Adjustable round length, series count, difficulty, frame rate, and shadow focus.
 - Local player profiles with calories, game counts, score summaries, and daily stats.
-- Optional local-only face recognition.
 - Unit tests with Vitest and browser tests with Playwright.
 
 ## Requirements
@@ -66,7 +65,7 @@ Allow camera access, stand where your nose and both wrists are visible, then cho
 
 Keyboard shortcuts include `S` for Shadow, `T` for Train Pad, `F` or `I` for Fight, `C` for settings/configuration, `P` for Profile, `B` to go back, and `F` to start a round inside a game mode.
 
-The full game rules, move list, settings, stored configuration keys, calibration behavior, and profile storage are documented in [doc/rules-and-configuration.md](doc/rules-and-configuration.md). Face recognition setup and tuning are documented in [doc/face-recognition.md](doc/face-recognition.md).
+The full game rules, move list, settings, stored configuration keys, calibration behavior, and profile storage are documented in [doc/rules-and-configuration.md](doc/rules-and-configuration.md).
 
 ## Project Structure
 
@@ -94,21 +93,6 @@ npm run build-win
 ```
 
 Playwright starts a local static server automatically. The browser tests use fake camera flags, so CI-style runs can verify startup and layout without a physical webcam.
-
-## Face Recognition
-
-Box4Fit can recognize a registered player locally before a workout starts. It uses SCRFD ONNX for face detection, ONNX Runtime Web for local inference, an ONNX embedding model, and `localStorage` for averaged embeddings.
-
-No face images are stored, and no backend or cloud API is used.
-
-Place the model files here:
-
-```text
-assets/models/face-recognition/500m.onnx
-assets/models/face-recognition/w600k_mbf.onnx
-```
-
-See [doc/face-recognition.md](doc/face-recognition.md) for setup, tuning thresholds, sample counts, startup timing, profile behavior, and disable flags.
 
 ## Build
 
