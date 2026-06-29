@@ -8,9 +8,18 @@
 
 # Box4Fit / tfit
 
-Box4Fit is a webcam-controlled boxing fitness game built with p5.js and ml5.js pose detection. The game runs as a static web app in the browser and can also be launched as a fullscreen Electron desktop app.
+Box4Fit is a webcam-controlled boxing fitness game built with vanilla JavaScript, p5.js, ml5.js BodyPose, and optional local ONNX face recognition. It runs as a static browser app, a PWA-style app shell, or a fullscreen Electron desktop app.
 
-The app uses local assets for the p5.js runtime, ml5.js runtime, pose model files, boxer sprites, backgrounds, and sounds, so normal gameplay does not depend on remote CDN assets.
+The game ships local runtime, model, sprite, background, and sound assets so normal gameplay does not depend on remote CDN files.
+
+## Features
+
+- Webcam pose detection for punches, dodges, guard position, and calibration.
+- Three training modes: Shadow, Train Pad, and Fight.
+- Adjustable round length, series count, difficulty, frame rate, and shadow focus.
+- Local player profiles with calories, game counts, score summaries, and daily stats.
+- Optional local-only face recognition.
+- Unit tests with Vitest and browser tests with Playwright.
 
 ## Requirements
 
@@ -19,19 +28,17 @@ The app uses local assets for the p5.js runtime, ml5.js runtime, pose model file
 - A webcam
 - Camera permission enabled for the app
 
-Camera access works on `localhost` over HTTP. If you open the app from another device or a non-local hostname, browsers usually require HTTPS.
+Camera access works on `localhost` over HTTP. Browsers usually require HTTPS for webcam access from another device or a non-local hostname.
 
 ## Install
-
-Install project dependencies:
 
 ```bash
 npm install
 ```
 
-## Run In The Browser
+## Run
 
-Start the static development server:
+Start the static browser app:
 
 ```bash
 npm run serve
@@ -43,102 +50,65 @@ Open:
 http://localhost:8000
 ```
 
-The server is powered by `http-server` and serves the current project directory on port `8000`.
-
-## Run As Desktop App
-
-Start the Electron app:
+Start the fullscreen Electron app:
 
 ```bash
 npm start
 ```
 
-This launches `main.js`, opens `index.html`, and runs the game fullscreen.
+## How To Play
 
-## Development
+Allow camera access, stand where your nose and both wrists are visible, then choose a mode from the main menu:
 
-Main files:
+- `Shadow`: follow generated punch, dodge, and guard-switch prompts.
+- `Train Pad`: hit moving pad targets and duck under dodge prompts.
+- `Fight`: defeat a ladder of opponents by landing prompts before your stamina runs out.
 
-- `index.html`: app shell, script loading, metadata, PWA manifest
-- `style.css`: loading screen, orientation overlay, shared page styles
-- `js/app.js`: p5/ml5 game loop, pose detection, game state, rendering
-- `js/game-utils.js`: small shared helpers covered by unit tests
-- `service-worker.js`: app shell cache for PWA/offline behavior
-- `main.js`: Electron entry point
-- `assets/`: sprites, backgrounds, logos, and sounds
+Keyboard shortcuts include `S` for Shadow, `T` for Train Pad, `F` or `I` for Fight, `C` for settings/configuration, `P` for Profile, `B` to go back, and `F` to start a round inside a game mode.
 
-## Local Face Recognition POC
+The full game rules, move list, settings, stored configuration keys, calibration behavior, and profile storage are documented in [doc/rules-and-configuration.md](doc/rules-and-configuration.md). Face recognition setup and tuning are documented in [doc/face-recognition.md](doc/face-recognition.md).
 
-Box4Fit includes a local-only proof of concept that can recognize a registered player before a workout starts. It complements the existing ml5.js BodyPose flow: pose detection still owns punch detection, while face recognition runs once after the webcam starts and then stops.
+## Project Structure
 
-The POC uses:
+- `index.html`: app shell, script loading, metadata, and PWA manifest link.
+- `style.css`: loading screen, orientation overlay, and shared page styles.
+- `js/`: game modules for config, input, rendering, flow, scoring, camera, profiles, and modes.
+- `assets/`: local models, vendor runtime files, and sounds.
+- `tests/unit/`: Vitest unit tests.
+- `tests/e2e/`: Playwright browser tests.
+- `service-worker.js`: app shell cache for PWA/offline behavior.
+- `main.js`: Electron entry point.
+- `doc/`: gameplay and configuration reference.
 
-- SCRFD ONNX for face detection
-- ONNX Runtime Web for local inference
-- A local ONNX face embedding model
-- `localStorage` for averaged face embeddings
-
-No face images are stored. No backend or cloud API is used.
-
-Before testing, place the model files in:
-
-```text
-assets/models/face-recognition/500m.onnx
-assets/models/face-recognition/w600k_mbf.onnx
-```
-
-Use `500m.onnx` as the SCRFD detector with `1x3x640x640` RGB input and `w600k_mbf.onnx` as the embedding model with `1x3x112x112` RGB input. The app reads ONNX input metadata when available, so compatible square input sizes can be used with config fallbacks. The default recognition threshold is `0.72`; override it with `window.__TFIT_FACE_RECOGNITION_CONFIG__ = { scoreThreshold: 0.68 }` before app startup when tuning the POC.
-
-To register a player:
-
-1. Start Box4Fit with `npm run serve` or `npm start`.
-2. Allow camera access.
-3. Select or create the player profile you want associated with this face.
-4. Keep your face visible for a few seconds while 5-8 samples are captured.
-
-When no face profiles are stored yet, Box4Fit automatically registers the currently selected player at startup. If a face is detected but does not match an existing profile, Box4Fit now shows `Unknown player` by default instead of creating another `Player X` profile on every reload. To re-register, clear `localStorage.box4fit_face_profiles` and reload on the main menu. To disable first-run registration, set `window.__TFIT_FACE_RECOGNITION_CONFIG__ = { autoRegisterWhenEmpty: false }` before app startup. Unknown-face auto-registration is available only if explicitly enabled with `autoRegisterUnknown: true`.
-
-Use `(P)ROFILE` on the main menu to open the profile screen after configuration. The profile screen has `(E)DIT`, `(V)IEW`, and the standard `(B)ACK` button. Use `Edit` to spell the current player name with the keyboard, `Enter` to save, `Backspace` to delete, and `Esc` to cancel. `View` shows the current selected player name in the compact profile panel. The app updates both the selected player profile and the stored face-profile name used in the panel. Train Pad now uses the `(T)RAIN PAD` shortcut so `(P)` can open Profile.
-
-To test recognition, reload the app and stay on the main menu. Recognition starts only after Box4Fit finishes the initial gesture/pose readiness check and is idle on menu `0`; if you leave and return to the main menu, recognition can run again. The panel shows `Recognizing...` while Box4Fit looks for a face for up to 5 seconds, then shows the matched player name or the registration counter. A successful match sets `selected_player` to the stored profile key and shows the player name; a detected unknown face starts automatic registration, while no detected face shows `Unknown player`. Tune the startup detection window with `window.__TFIT_FACE_RECOGNITION_CONFIG__ = { recognitionTimeoutMs: 8000 }`.
-
-Useful commands:
+## Useful Commands
 
 ```bash
 npm run serve
 npm start
 npm run test:unit
 npm run test:e2e
-npm test
-```
-
-## Testing
-
-Run all tests:
-
-```bash
-npm test
-```
-
-Run only unit tests:
-
-```bash
-npm run test:unit
-```
-
-Run only Playwright browser tests:
-
-```bash
-npm run test:e2e
-```
-
-Run Playwright in headed mode:
-
-```bash
 npm run test:e2e:headed
+npm test
+npm run build-linux
+npm run build-win
 ```
 
-Playwright starts a local static server automatically. The browser tests use fake camera flags, so they verify the app shell, canvas startup, and responsive/orientation behavior without requiring a real webcam during CI-style runs.
+Playwright starts a local static server automatically. The browser tests use fake camera flags, so CI-style runs can verify startup and layout without a physical webcam.
+
+## Face Recognition
+
+Box4Fit can recognize a registered player locally before a workout starts. It uses SCRFD ONNX for face detection, ONNX Runtime Web for local inference, an ONNX embedding model, and `localStorage` for averaged embeddings.
+
+No face images are stored, and no backend or cloud API is used.
+
+Place the model files here:
+
+```text
+assets/models/face-recognition/500m.onnx
+assets/models/face-recognition/w600k_mbf.onnx
+```
+
+See [doc/face-recognition.md](doc/face-recognition.md) for setup, tuning thresholds, sample counts, startup timing, profile behavior, and disable flags.
 
 ## Build
 
@@ -158,14 +128,12 @@ Build outputs are created by `electron-builder` and ignored by git via `dist`.
 
 ## Deployment
 
-The app is static, so it can be hosted by any static file server as long as the ml5 model files and assets are served with the project.
+The app is static, so it can be hosted by any static file server as long as all `js/`, `assets/`, model, vendor, and service-worker files are served with the project.
 
-Existing Docker example:
+Docker example:
 
 ```bash
-sudo docker run -d -p 8000:8000 \
---label traefik.http.routers.box4fit.rule=Host\(\`app.box4.fit\`\) \
---name tfit tfit
+sudo docker run -d -p 8000:8000 --name tfit tfit
 ```
 
 For webcam access in production, serve the app over HTTPS.
