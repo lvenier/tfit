@@ -35,6 +35,19 @@
     "build": {
         "appId": "app.box4.fit",
         "productName": "Box4Fit",
+        "files": [
+            "assets/**/*",
+            "favicon.ico",
+            "index.html",
+            "js/**/*",
+            "main.js",
+            "manifest.json",
+            "package.json",
+            "service-worker-assets.js",
+            "service-worker-version.js",
+            "service-worker.js",
+            "style.css"
+        ],
         "asarUnpack": [
             "assets/models/face-recognition/**/*",
             "assets/vendor/onnxruntime-web/**/*"
